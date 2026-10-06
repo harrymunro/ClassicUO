@@ -265,3 +265,10 @@ __pycache__/
 *.pyc
 /.svn
 Data
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+.beads/proxieddb/
+*.gate.lock*
