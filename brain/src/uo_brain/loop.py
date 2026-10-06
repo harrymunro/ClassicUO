@@ -1,0 +1,210 @@
+"""The decision loop: poll the client, ask Jev when something changed, act."""
+
+import asyncio
+import json
+import statistics
+import time
+from collections import deque
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from . import policy, questions, state
+from . import strategy as strategies
+from .judge import Judge
+from .rpc import AgentRpc, RpcError
+
+
+@dataclass
+class LoopConfig:
+    poll_s: float = 0.25
+    combat_interval_s: float = 1.0
+    idle_interval_s: float = 3.0
+    duration_s: float | None = None
+    price_per_million: float = 0.042  # Jev 1.13 list price per million input tokens; check your provider
+
+
+@dataclass
+class RunStats:
+    started: float = field(default_factory=time.monotonic)
+    decisions: int = 0
+    gated: int = 0
+    errors: int = 0
+    latencies: list[float] = field(default_factory=list)
+    input_tokens: int = 0
+    intents: dict[str, int] = field(default_factory=dict)
+    statuses: dict[str, int] = field(default_factory=dict)
+    assist_agree: int = 0
+    assist_disagree: int = 0
+    first_agent_stats: dict[str, int] | None = None
+    last_agent_stats: dict[str, int] | None = None
+
+    def summary(self, price: float) -> dict[str, Any]:
+        hours = max((time.monotonic() - self.started) / 3600, 1e-9)
+        a0, a1 = self.first_agent_stats or {}, self.last_agent_stats or {}
+        delta = {k: a1.get(k, 0) - a0.get(k, 0) for k in a1}
+        lat = sorted(self.latencies)
+        return {
+            "minutes": round(hours * 60, 1),
+            "decisions": self.decisions,
+            "gated_low_confidence": self.gated,
+            "errors": self.errors,
+            "latency_ms_avg": round(statistics.fmean(lat), 1) if lat else None,
+            "latency_ms_p95": round(lat[int(0.95 * (len(lat) - 1))], 1) if lat else None,
+            "input_tokens": self.input_tokens,
+            "est_cost_usd": round(self.input_tokens / 1e6 * price, 4),
+            "est_cost_usd_per_hour": round(self.input_tokens / 1e6 * price / hours, 4),
+            "intents": self.intents,
+            "act_results": self.statuses,
+            "client_stats": delta,
+            "kills_per_hour": round(delta.get("kills", 0) / hours, 1),
+            "assist_agreement": round(self.assist_agree / (self.assist_agree + self.assist_disagree), 3)
+            if self.assist_agree + self.assist_disagree else None,
+        }
+
+
+async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyConfig,
+              log_path: Path | None, stop: asyncio.Event | None = None) -> RunStats:
+    stats = RunStats()
+    mem = policy.Memory()
+    events: deque[str] = deque(maxlen=20)
+    since = 0
+    last_sig = None
+    next_decide = 0.0
+    suggested: tuple[int, float] | None = None  # (target, when) of the last attack suggestion
+    strategy_text: str | None = None
+    active = pcfg
+    last_target = 0
+    log = log_path.open("a") if log_path else None
+    stop = stop or asyncio.Event()
+
+    try:
+        while not stop.is_set():
+            now = time.monotonic()
+            if cfg.duration_s and now - stats.started > cfg.duration_s:
+                break
+
+            try:
+                snap = await rpc.call("snapshot", since=since)
+            except TimeoutError:
+                stats.errors += 1
+                continue
+            if not snap.get("in_game"):
+                await asyncio.sleep(1.0)
+                continue
+
+            since = snap["journal_seq"]
+            events.extend(state.journal_events(snap["journal"]))
+            agent_stats = snap["agent"]["stats"]
+            stats.first_agent_stats = stats.first_agent_stats or dict(agent_stats)
+            stats.last_agent_stats = dict(agent_stats)
+
+            # Assist mode: when the player next picks a target, did they pick the suggested one?
+            target = next((m["serial"] for m in snap["mobiles"] if m.get("my_target")), 0)
+            if suggested and target and target != last_target:
+                agree = target == suggested[0]
+                stats.assist_agree += agree
+                stats.assist_disagree += not agree
+                if log:
+                    log.write(json.dumps({"type": "assist_feedback", "t": time.time(), "suggested": suggested[0],
+                                          "chosen": target, "agree": agree}) + "\n")
+                suggested = None
+            if suggested and now - suggested[1] > 10:
+                suggested = None
+            last_target = target
+
+            # The player's strategy changed (or this is the first look): re-read it into settings.
+            text = (snap["agent"].get("strategy") or "").strip()
+            if text != strategy_text:
+                strategy_text = text
+                active = await load_strategy(rpc, judge, text, pcfg, stats, log)
+
+            mem.update(snap["agent"], now)
+            sit = state.build(snap, mem.looted, list(events), mem.skip_items)
+
+            busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting")
+            sig = sit.signature()
+            if not busy and (now >= next_decide or sig != last_sig):
+                for action, res in await decide_once(rpc, judge, sit, mem, active, stats, log):
+                    if action["verb"] == "attack" and res["status"] == "suggested":
+                        suggested = (action["target"], time.monotonic())
+                last_sig = sig
+                interval = cfg.combat_interval_s if sit.hostiles else cfg.idle_interval_s
+                next_decide = time.monotonic() + interval
+
+            await asyncio.sleep(cfg.poll_s)
+    finally:
+        if log:
+            log.write(json.dumps({"type": "summary", "t": time.time(), **stats.summary(cfg.price_per_million)}) + "\n")
+            log.close()
+    return stats
+
+
+async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.PolicyConfig, stats: RunStats,
+                        log) -> policy.PolicyConfig:
+    try:
+        knobs, answers = await strategies.compile_strategy(judge, text)
+    except Exception as e:
+        stats.errors += 1
+        await rpc.call("note", text=f"strategy not read: {type(e).__name__}")
+        return base
+    if answers:
+        stats.input_tokens += answers.input_tokens
+        await rpc.call("note", text=f"strategy: {knobs.describe()}")
+    if log:
+        log.write(json.dumps({"type": "strategy", "t": time.time(), "text": text, "knobs": knobs.__dict__,
+                              "answers": answers.to_log() if answers else None}) + "\n")
+    return strategies.apply(base, knobs)
+
+
+async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: policy.Memory,
+                      pcfg: policy.PolicyConfig, stats: RunStats, log) -> list[tuple[dict, dict]]:
+    """Ask, decide, act. Returns (action, result) pairs."""
+    qs = questions.build(sit)
+    try:
+        answers = await judge.ask(sit.state, qs)
+    except Exception as e:  # network, rate limit, credits: keep the loop alive
+        stats.errors += 1
+        await rpc.call("note", text=f"judge error: {type(e).__name__}")
+        if log:
+            log.write(json.dumps({"type": "error", "t": time.time(), "error": str(e)[:500]}) + "\n")
+        return []
+
+    dec = policy.decide(sit, answers, mem, pcfg)
+    stats.decisions += 1
+    stats.gated += dec.gated
+    stats.latencies.append(answers.latency_ms)
+    stats.input_tokens += answers.input_tokens
+    stats.intents[dec.intent] = stats.intents.get(dec.intent, 0) + 1
+
+    results = []
+    for action in dec.actions:
+        try:
+            res = await rpc.call("act", **action)
+        except RpcError as e:
+            res = {"status": "error", "detail": str(e)}
+        results.append(res)
+        stats.statuses[res["status"]] = stats.statuses.get(res["status"], 0) + 1
+        if action["verb"] == "loot" and res["status"] == "done":
+            mem.loot_started[action["target"]] = time.monotonic()
+
+    await rpc.call("note", text=dec.note)
+
+    if log:
+        log.write(json.dumps({
+            "type": "decision",
+            "t": time.time(),
+            "judge": judge.name,
+            "state": sit.state,
+            "questions": qs,
+            "answers": answers.to_log(),
+            "intent": dec.intent,
+            "confidence": round(dec.confidence, 3),
+            "masked": dec.masked,
+            "gated": dec.gated,
+            "actions": dec.actions,
+            "results": results,
+            "note": dec.note,
+        }) + "\n")
+        log.flush()
+    return list(zip(dec.actions, results))

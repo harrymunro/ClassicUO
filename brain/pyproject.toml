@@ -1,0 +1,24 @@
+[project]
+name = "uo-brain"
+version = "0.1.0"
+description = "Jev-driven decision loop for the ClassicUO agent"
+readme = "README.md"
+authors = [
+    { name = "harrymunro", email = "harry.j.munro@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "typesafe-sdk>=0.7.2",
+]
+
+[project.scripts]
+uo-brain = "uo_brain.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.2,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
