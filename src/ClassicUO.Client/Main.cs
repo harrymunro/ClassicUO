@@ -404,6 +404,12 @@ namespace ClassicUO
 
                         break;
 
+                    case "agent_port":
+                    case "agentport":
+                        Settings.GlobalSettings.AgentPort = ushort.Parse(value);
+
+                        break;
+
                     case "use_verdata":
                         Settings.GlobalSettings.UseVerdata = bool.Parse(value);
 

@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Agent;
 using ClassicUO.IO.Audio;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -46,6 +47,7 @@ namespace ClassicUO.Game
             NameOverHeadManager = new NameOverHeadManager(this);
             Macros = new MacroManager(this);
             CommandManager = new CommandManager(this);
+            Agent = new AgentController(this);
             Weather = new Weather(this);
             InfoBars = new InfoBarManager(this);
         }
@@ -95,6 +97,8 @@ namespace ClassicUO.Game
         public MacroManager Macros { get; }
 
         public CommandManager CommandManager { get; }
+
+        public AgentController Agent { get; }
 
         public Weather Weather { get; }
 

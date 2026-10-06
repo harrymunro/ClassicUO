@@ -764,6 +764,11 @@ namespace ClassicUO.Game.Scenes
                     _flags[3]
                 );
 
+                if (_world.InGame && dir != Direction.NONE)
+                {
+                    _world.Agent.NoteHumanInput();
+                }
+
                 if (_world.InGame && !_world.Player.Pathfinder.AutoWalking && dir != Direction.NONE)
                 {
                     _world.Player.Walk(dir, currentProfile.AlwaysRun);
@@ -796,6 +801,7 @@ namespace ClassicUO.Game.Scenes
             }
 
             _world.Macros.Update();
+            _world.Agent.Update();
 
             if (
                 (currentProfile.CorpseOpenOptions == 1 || currentProfile.CorpseOpenOptions == 3)

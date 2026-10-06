@@ -92,6 +92,9 @@ namespace ClassicUO.Configuration
         
         [JsonPropertyName("files_override")] public string OverrideFile { get; set; }
 
+        // Loopback port for the agent RPC server (Agent/AgentServer.cs). 0 = off.
+        [JsonPropertyName("agent_port")] public ushort AgentPort { get; set; }
+
         public static string GetSettingsFilepath()
         {
             if (CustomSettingsFilepath != null)

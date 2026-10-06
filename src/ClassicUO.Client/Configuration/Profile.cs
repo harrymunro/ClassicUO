@@ -132,6 +132,14 @@ namespace ClassicUO.Configuration
         public bool SaveScaleAfterClose { get; set; }
         public bool RestoreScaleAfterUnpressCtrl { get; set; }
         public bool BandageSelfOld { get; set; } = true;
+
+        // agent (Agent/AgentController.cs)
+        public string AgentMode { get; set; } = "off";
+        public string AgentAuthority { get; set; } = string.Empty;
+        public int AgentBandageBelowPercent { get; set; } = 85;
+        public int AgentHealPotionBelowPercent { get; set; } = 40;
+        public string AgentStrategy { get; set; } = string.Empty;
+
         public bool EnableDeathScreen { get; set; } = true;
         public bool EnableBlackWhiteEffect { get; set; } = true;
 

@@ -3708,6 +3708,8 @@ namespace ClassicUO.Network
                 return;
             }
 
+            world.Agent.OnMobileDied(serial);
+
             serial |= 0x80000000;
 
             if (world.Mobiles.Remove(owner.Serial))

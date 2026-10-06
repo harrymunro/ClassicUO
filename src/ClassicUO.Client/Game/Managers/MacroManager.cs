@@ -1532,6 +1532,26 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.AgentOff:
+                    _world.Agent.OnCommand(new[] { "agent", "off" });
+
+                    break;
+
+                case MacroType.AgentAssist:
+                    _world.Agent.OnCommand(new[] { "agent", "assist" });
+
+                    break;
+
+                case MacroType.AgentAuto:
+                    _world.Agent.OnCommand(new[] { "agent", "auto" });
+
+                    break;
+
+                case MacroType.AgentAccept:
+                    _world.Agent.OnCommand(new[] { "agent", "accept" });
+
+                    break;
+
                 case MacroType.UsePotion:
                     scantype = (ScanTypeObject)(macro.SubCode - MacroSubType.ConfusionBlastPotion);
 
@@ -2348,7 +2368,11 @@ namespace ClassicUO.Game.Managers
         CloseCorpses,
         UseObject,
         LookAtMouse,
-        UseCounterBarSlot
+        UseCounterBarSlot,
+        AgentOff,
+        AgentAssist,
+        AgentAuto,
+        AgentAccept
     }
 
     internal enum MacroSubType

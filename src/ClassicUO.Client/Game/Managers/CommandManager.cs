@@ -22,6 +22,8 @@ namespace ClassicUO.Game.Managers
 
         public void Initialize()
         {
+            Register("agent", s => _world.Agent.OnCommand(s));
+
             Register
             (
                 "info",

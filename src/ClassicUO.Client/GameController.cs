@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Agent;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
@@ -398,6 +399,8 @@ namespace ClassicUO
 
             Plugin.Tick();
 
+            AgentHost.Update(this);
+
             if (Scene != null && Scene.IsLoaded && !Scene.IsDestroyed)
             {
                 Profiler.EnterContext(Profiler.ProfilerContext.UPDATE_WORLD);
@@ -528,6 +531,8 @@ namespace ClassicUO
             Profiler.EnterContext(Profiler.ProfilerContext.OUT_OF_CONTEXT);
 
             Plugin.ProcessDrawCmdList(GraphicsDevice);
+
+            AgentHost.OnDraw(GraphicsDevice);
 
             base.Draw(gameTime);
         }

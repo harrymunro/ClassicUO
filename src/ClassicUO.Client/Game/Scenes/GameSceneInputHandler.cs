@@ -40,6 +40,8 @@ namespace ClassicUO.Game.Scenes
         {
             if ((_rightMousePressed || _continueRunning) && _world.InGame) // && !Pathfinder.AutoWalking)
             {
+                _world.Agent.NoteHumanInput();
+
                 if (_world.Player.Pathfinder.AutoWalking)
                 {
                     _world.Player.Pathfinder.StopAutoWalk();
@@ -277,6 +279,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDown(MouseButtonType button)
         {
+            if (UIManager.IsMouseOverWorld)
+            {
+                _world.Agent.NoteHumanInput();
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
@@ -311,6 +318,11 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseDoubleClick(MouseButtonType button)
         {
+            if (UIManager.IsMouseOverWorld)
+            {
+                _world.Agent.NoteHumanInput();
+            }
+
             switch (button)
             {
                 case MouseButtonType.Left:
