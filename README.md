@@ -6,8 +6,8 @@ model, which answers typed questions (pick one of these options, yes or no, rate
 this) with probabilities in about 100 ms. Ordinary code does everything that has a
 right answer: healing thresholds, pathfinding, looting mechanics, safety rules.
 
-Status: works end to end against a local ModernUO server with a warrior character, with Jev
-deciding through OpenRouter.
+Status: works end to end against a local ModernUO server with a warrior or a mage, with Jev
+deciding through OpenRouter, and an in-game panel that shows what Jev is thinking.
 The original ClassicUO README follows [further down](#classicuo).
 
 ## How it works
@@ -22,7 +22,7 @@ The original ClassicUO README follows [further down](#classicuo).
    loot a corpse, flee                        ├─ state in words ("badly wounded, adjacent")
    authority check per behaviour   ◄─ RPC ──  ├─ one request, all questions ────────────►  answers +
    pause while the player moves/clicks        ├─ policy: mask, confidence gate, strategy ◄─  probabilities
-   overlay, -agent command, macros            └─ act, log
+   agent panel, -agent command, macros        └─ act, report the decision to the panel, log
 ```
 
 1. **The client snapshot** gives the player, the creatures and corpses within 18
@@ -33,8 +33,9 @@ The original ClassicUO README follows [further down](#classicuo).
    code has already checked. Other players' speech is never sent to the model.
 3. **One Jev request asks every question that could matter**:
    - `intent`: fight, flee, loot, seek or rest
-   - `in_danger`: will the warrior die soon if it keeps fighting?
+   - `in_danger`: will the character die soon if it keeps fighting?
    - `target`: which creature to attack
+   - `spell` (mages): which attack spell to cast next
    - `corpse`: which corpse to loot first
    - `take_iN`: is this item worth picking up?
 
@@ -47,6 +48,26 @@ The original ClassicUO README follows [further down](#classicuo).
    anything happens, and the brain may only ever attack monsters.
 
 ## Features
+
+### The agent panel
+
+Jev's thinking is shown inside the game, in a UO-style panel that opens beside the game view
+whenever the agent is on or a brain is connected. It shows:
+
+- **Mode buttons:** off, assist and auto.
+- **What the agent is doing:** for example "fighting Vorgak", "casting Explosion" or "bandaging", and "you have the controls" while you're playing.
+- **Jev's judgment** for the latest decision:
+  - a bar for each intent with Jev's probability, plus options the facts ruled out;
+  - the danger judgment;
+  - the target and spell it picked, with confidence, or "your strategy" when your strategy chose the spell;
+  - what was done, and the latency.
+- **A pending suggestion** with an *accept* link (assist mode).
+- **Your strategy and how Jev read it**, an entry box to add a line, and the template links (see below).
+- **Earlier decisions**, with repeats collapsed ("fight an orc x5").
+- **Kills, deaths, heals and casts.**
+
+When Jev picks a new target, "jev: target" appears above that creature in the world. *less*
+collapses the panel to a few lines; its position and whether it is collapsed are saved per character.
 
 ### Modes and authority
 
@@ -71,6 +92,24 @@ loot as text above your head and in the overlay. Accept a suggestion with
 **Handing over control:** moving, clicking in the world or using the arrow keys
 hands control back to you for 4 seconds, and stops any walk the agent started.
 Healing reflexes keep running while you're in control.
+- **Your target sticks:** if you attack a different monster yourself, the agent keeps fighting that one when it takes over again.
+- **Your spell cursors are yours:** if you touch the controls while one of the agent's attack spells is being cast, its target cursor is left to you.
+- **Panel clicks don't count:** clicking the panel doesn't pause the agent.
+
+This was verified with real mouse and keyboard events; see [Results](#results-so-far).
+
+### Mages
+
+The agent plays a mage when the character has a spellbook and its Magery is at least as
+high as any weapon skill, or with `uo-brain run --archetype mage`.
+
+- **Range:** it engages from up to 7 tiles away and casts Jev's pick from the attack spells it can cast right now: Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze.
+- **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; code picks the strongest castable spell when Jev isn't sure.
+- **Queued casts:** the brain queues the next spell and the client casts it the moment the current spell and its recovery allow. Healing reflexes go first.
+- **Protection:** with a monster in melee reach it casts Protection first, since every hit otherwise interrupts a spell.
+- **Meditation:** it meditates while resting with mana below 80%.
+- **Seeing inside:** the server only says what's in a spellbook or a bag once it's opened, so the agent opens the spellbook and any unopened bags in the backpack once, and closes them again.
+- **Snapshot:** mana, reagent counts, every spell in the book with its cost and why it can't be cast ("mana", "reagents"), and the cast timing.
 
 ### Strategy, in your own words
 
@@ -99,10 +138,41 @@ The strategy is saved per character and used in two ways:
   | How aggressive? | 5-level score | Moves the danger threshold for fleeing |
   | Which target first? | choice | Current / weakest / closest / strongest when Jev isn't sure |
   | How much to loot? | choice | Everything / valuables / nothing |
+  | Which spell to open with? | choice | Mages cast it first at each new creature |
+  | Which spell after that? | choice | Mages keep casting it once the fight is under way |
 
-`uo-brain strategy explain` shows how the current text was read. Spell preferences
-("open with an explosion") need a caster with spell actions, which the warrior
-doesn't have yet.
+`uo-brain strategy explain` shows how the current text was read, and the panel shows the
+reading under your strategy.
+
+#### Templates
+
+Ready-made strategies you can pull in instead of writing your own, and combine with your own lines:
+
+| template | for | what it says |
+|---|---|---|
+| `relentless` | any | Never flee, press the attack, finish the weakest first, take only valuables |
+| `survivor` | any | Play it safe, retreat early, fight what's closest |
+| `farmer` | any | Clear everything nearby, loot every corpse completely |
+| `champion` | any | Go for the most dangerous enemy first, aggressively |
+| `no-loot` | any | Never stop to loot |
+| `nuker` | mage | Open with Explosion, then keep casting Energy Bolt |
+| `mana-saver` | mage | Open with Lightning, then cheap Magic Arrows; rest between fights |
+| `flamestriker` | mage | Open with Flamestrike on the most dangerous enemy, finish with Lightning |
+
+- **Pulling one in:** click it in the panel's *templates* row (hover for the full text; click a gold one to take it out). Or use `-agent template nuker`, or `uo-brain strategy template nuker`.
+- **Adding to or replacing your strategy:** a template is added after your own lines; use `set` / `--replace` to start over from it. `-agent template` lists them.
+- **Your own templates:** drop a `.md` file into an `AgentTemplates` folder next to the client. A file with the same name as a built-in one replaces it. The format is:
+
+  ```
+  # Title
+  for: warrior | mage | any
+  summary: one line for lists and tooltips
+
+  One instruction per line.
+  ```
+
+Jev reads all eight built-in templates as intended: every flee, target, loot and spell
+setting matches, tested by compiling each one with Jev and with the rule judge.
 
 ### Reflexes
 
@@ -111,6 +181,7 @@ The client runs these without the brain:
 - **Bandages:** bandage yourself below 85% health, or when poisoned.
 - **Heal potion:** drink one below 40%, with the 10-second cooldown respected.
 - **Cure potion:** drink one when poisoned and hurt.
+- **Healing spells** (characters with no bandages): Heal below 65%, Greater Heal below 50%, and Cure when poisoned if no cure potion is ready.
 
 Adjust them with `-agent bandage 80` and `-agent potion 35`. They're also
 available on their own: assist mode with no brain running is an auto-healer.
@@ -126,7 +197,7 @@ These are in code, whatever the model says:
 
 ### Seeing what it does
 
-- **Overlay:** an in-game panel shows the mode, what the agent is doing, the brain's last decision with its confidence, any pending suggestion, and kills, deaths and heals.
+- **Agent panel:** Jev's probabilities, choices and actions for every decision, in game (see above).
 - **Decision log:** every decision goes to a JSONL file with the state, all answers and probabilities, the actions and their results.
 - **`uo-brain report`** summarises a log.
 - **`uo-brain replay`** re-asks a log's questions to another judge offline, e.g. Jev against the rule baseline, and reports how often they agree.
@@ -156,6 +227,10 @@ cd brain && uv sync
 uv run uo-brain login --account warrior --password warrior --create-warrior Brutus
 uv run uo-brain say "[AgentGo"; uv run uo-brain say "[AgentKit"; uv run uo-brain say "[AgentArena 6"
 uv run uo-brain run --mode auto --log logs/run.jsonl
+
+# Or a mage, with a ready-made strategy
+uv run uo-brain say "[AgentKit mage"; uv run uo-brain strategy template nuker
+uv run uo-brain scenario --kit mage --monsters 4 --log logs/mage.jsonl
 ```
 
 With no model key, `--judge heuristic` runs the same loop on fixed rules (the baseline).
@@ -166,6 +241,7 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO and work
 
 - **`[AgentGo`:** go to the test field in Felucca, Green Acres (5445, 1153). It has no guards and no spawns.
 - **`[AgentKit`:** warrior template. Swords, Tactics, Healing and Anatomy at 80, katana, ringmail, 200 bandages, 5 heal and 5 cure potions.
+- **`[AgentKit mage`:** mage template. Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60. A full spellbook, a bag of 100 of each reagent, leather armour, and 5 heal and 5 cure potions.
 - **`[AgentArena [count] [kind]`:** spawns monsters in a ring 6–10 tiles out (orc, ratman, headless one and mongbat by default).
 - **`[AgentReset`:** resurrects and heals you, and removes the arena.
 
@@ -180,16 +256,19 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`-agent set <behaviour> <off|suggest|auto>`:** override one behaviour.
 - **`-agent bandage <pct>`, `-agent potion <pct>`:** reflex thresholds.
 - **`-agent strategy [set|add|clear] <text>`:** edit the strategy.
+- **`-agent template [list|<name>|set <name>|remove <name>]`:** pull in, replace with or take out a strategy template.
 - **Macros** (bindable in Options → Macros): *AgentOff*, *AgentAssist*, *AgentAuto* and *AgentAccept*.
 
 **uo-brain**
-- **`run`:** play. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--strategy FILE`, `--duration`, `--log`, `--min-confidence`.
-- **`scenario`:** arena rounds with metrics.
+- **`run`:** play. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`.
+- **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
+- **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
-- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius}`, `act {verb, …}`, `mode`, `strategy`, `accept`, `note`, `command`, `capture {path}`.
-- **Act verbs:** `attack`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`.
+- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius}`, `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
+- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`.
+- **Cast authority:** healing spells count as `heal`, Cure as `cure`, attack spells as `fight`, anything else as `misc`.
 - **Authority:** an act request is subject to authority unless it has `"source": "manual"`.
 
 ## Results so far
@@ -217,6 +296,38 @@ Both are fixed, and the state now says when the next potion can be drunk.
 - **Tokens:** about 150k input tokens per 90-second round.
 - **Price:** about $0.25 an hour at Jev's $0.042 per million list price. Check your OpenRouter bill for the actual rate.
 
+After the mage, panel and template work, a regression run of the same warrior arena
+with Jev scored 17 / 18 kills and 0 deaths.
+
+**Mage** (`[AgentKit mage`), Jev with the `nuker` template:
+
+| run | kills | deaths | notes |
+|---|---|---|---|
+| 4 monsters, no template, 60 s | 4 / 4 | 0 | Jev chose Explosion as the opener on its own |
+| 5 monsters, `nuker`, before Protection | 1 / 10 | 1 | swarmed: every hit interrupted a spell, 34 of 43 casts were self-heals, and a throttled bag peek left round 2 without reagents |
+| 4 monsters, `nuker`, 3 × 75 s | 12 / 12 | 0 | Explosion first, then Energy Bolt; Protection when monsters closed in |
+
+Spell plans need to be settings as well as context: with only the text "open with Explosion,
+then Lightning", Jev opened with Lightning in 3 of 4 offline tries. As a compiled
+`opening_spell`, the opener is used every time.
+
+**Hand-back with real input:** the client was driven with OS-level mouse and keyboard
+events posted through the macOS HID event tap, the same path as a physical device.
+
+| check | result |
+|---|---|
+| Right-mouse movement stops a walk the agent started | pass |
+| Brain actions are deferred while the player is in control | pass |
+| The agent takes over again 4 s after the last input | pass |
+| Arrow keys and a click in the world hand control back | pass |
+| A war-mode double-click on another monster: the agent follows the player's choice | pass, after a fix (below) |
+| Clicking the panel (mode, templates, typing a strategy line) doesn't pause the agent | pass |
+| Right-clicking a gump closed it without pausing the agent | pass |
+
+The real-input test found two gaps, both fixed:
+- **War mode:** the agent fought without war mode on, so a player's double-click on another monster opened its paperdoll instead of attacking. It now turns war mode on when it engages.
+- **Peek throttling:** the server throttles use requests, so a peek right after re-equipping could fail silently. It now retries after 2 s.
+
 These are single runs, so treat them as a smoke test rather than a benchmark.
 
 To reproduce, run `uo-brain scenario --judge jev --log logs/jev.jsonl`. To compare
@@ -233,17 +344,17 @@ shards that allow it.
 
 | | |
 |---|---|
-| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, human pause, strategy)<br>`ReflexPolicy` (pure)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentStatusGump` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py` |
+| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, strategy, templates)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py` |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
 | `tests/ClassicUO.UnitTests/Agent/`, `brain/tests/` | `dotnet test --filter "FullyQualifiedName~Agent"`, `cd brain && uv run pytest` |
 
 Known limits:
 - Results above are single small runs.
-- Warrior only.
-- Bandage timing is read from English server messages.
-- The hand-back to the player is wired to real mouse and keyboard input but has only been exercised by code paths, not by a person at the keyboard yet.
+- Mages use Magery only, with single-target attack spells. A mage doesn't kite: it stands and casts, so a swarm of five or more melee monsters is hard for it.
+- Bandage timing and spell failures are read from English server messages.
+- To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
 
 ---
 

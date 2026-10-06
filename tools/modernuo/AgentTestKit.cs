@@ -12,7 +12,7 @@ using Server.Targeting;
 namespace Server.Custom;
 
 /// <summary>
-/// Commands for a repeatable warrior test bed driven by an AI agent:
+/// Commands for a repeatable warrior or mage test bed driven by an AI agent:
 /// [AgentKit, [AgentArena, [AgentReset and [AgentGo.
 /// Monsters ignore staff (BaseAI skips AccessLevel > Player), so the test character must be a
 /// Player-level account; the commands therefore default to Player access on this local test shard.
@@ -93,14 +93,15 @@ public static class AgentTestKit
         logger.Information("AgentTestKit: seeded owner account {Username}", username);
     }
 
-    [Usage("AgentKit [katana|broadsword|longsword|vikingsword] [target]")]
+    [Usage("AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword] [target]")]
     [Description(
-        "Resets a warrior test kit: Swords/Tactics/Healing/Anatomy 80 (others 0), 90/70/15 stats, weapon, ring/leather armor, bandages and potions, full hits/stam/mana. Wipes previous equipment and backpack contents. 'target' (GameMaster+) applies it to another player."
+        "Resets a test kit and wipes previous equipment and backpack contents. warrior (default): Swords/Tactics/Healing/Anatomy 80, 90/70/15 stats, weapon, ring/leather armor, bandages and potions. mage: Magery 90, Eval Int/Meditation/Wrestling 80, Resisting Spells 60, 70/35/100 stats, full spellbook, reagents, leather armor and potions. 'target' (GameMaster+) applies it to another player."
     )]
     public static void AgentKit_OnCommand(CommandEventArgs e)
     {
         var from = e.Mobile;
         var weapon = typeof(Katana);
+        var mage = false;
         var useTarget = false;
 
         for (var i = 0; i < e.Length; i++)
@@ -112,10 +113,16 @@ public static class AgentTestKit
                 continue;
             }
 
+            if (arg.InsensitiveEquals("mage") || arg.InsensitiveEquals("warrior"))
+            {
+                mage = arg.InsensitiveEquals("mage");
+                continue;
+            }
+
             var type = GetWeaponType(arg);
             if (type == null)
             {
-                from.SendMessage("Usage: [AgentKit [katana|broadsword|longsword|vikingsword] [target]");
+                from.SendMessage("Usage: [AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword] [target]");
                 return;
             }
 
@@ -124,7 +131,7 @@ public static class AgentTestKit
 
         if (!useTarget)
         {
-            ApplyKit(from, weapon);
+            ApplyKit(from, mage ? null : weapon);
             return;
         }
 
@@ -135,7 +142,7 @@ public static class AgentTestKit
         }
 
         from.SendMessage("Target the player to equip.");
-        from.Target = new KitTarget(weapon);
+        from.Target = new KitTarget(mage ? null : weapon);
     }
 
     [Usage("AgentArena [count] [mix|orc|ratman|headless|mongbat|zombie|skeleton|<creature type>]")]
@@ -262,8 +269,11 @@ public static class AgentTestKit
         logger.Information("AgentGo: {Mobile} moved to {Location} on {Map}", from, TestLocation, TestMap);
     }
 
+    // A null weapon type gives the mage kit.
     public static void ApplyKit(Mobile m, Type weaponType)
     {
+        var mage = weaponType == null;
+
         if (!m.Alive)
         {
             m.Resurrect();
@@ -286,18 +296,29 @@ public static class AgentTestKit
             skills[i].Base = 0;
         }
 
-        skills[SkillName.Swords].Base = 80;
-        skills[SkillName.Tactics].Base = 80;
-        skills[SkillName.Healing].Base = 80;
-        skills[SkillName.Anatomy].Base = 80;
+        if (mage)
+        {
+            skills[SkillName.Magery].Base = 90;
+            skills[SkillName.EvalInt].Base = 80;
+            skills[SkillName.Meditation].Base = 80;
+            skills[SkillName.Wrestling].Base = 80;
+            skills[SkillName.MagicResist].Base = 60;
+        }
+        else
+        {
+            skills[SkillName.Swords].Base = 80;
+            skills[SkillName.Tactics].Base = 80;
+            skills[SkillName.Healing].Base = 80;
+            skills[SkillName.Anatomy].Base = 80;
+        }
 
         // Locked so stat gain/atrophy cannot drift a run away from the baseline.
         m.StrLock = StatLockType.Locked;
         m.DexLock = StatLockType.Locked;
         m.IntLock = StatLockType.Locked;
-        m.RawStr = 90;
-        m.RawDex = 70;
-        m.RawInt = 15;
+        m.RawStr = mage ? 70 : 90;
+        m.RawDex = mage ? 35 : 70;
+        m.RawInt = mage ? 100 : 15;
 
         using var toDelete = PooledRefQueue<Item>.Create();
         foreach (var item in m.Items)
@@ -328,16 +349,33 @@ public static class AgentTestKit
             toDelete.Dequeue().Delete();
         }
 
-        Equip(m, weaponType.CreateInstance<Item>());
-        Equip(m, new RingmailChest());
-        Equip(m, new RingmailArms());
-        Equip(m, new RingmailLegs());
-        Equip(m, new RingmailGloves());
-        Equip(m, new LeatherGorget());
-        Equip(m, new LeatherCap());
-        Equip(m, new Boots());
+        if (mage)
+        {
+            // Leather allows meditation; the spellbook stays in the pack so casting never clears hands.
+            Equip(m, new LeatherChest());
+            Equip(m, new LeatherArms());
+            Equip(m, new LeatherLegs());
+            Equip(m, new LeatherGloves());
+            Equip(m, new LeatherGorget());
+            Equip(m, new WizardsHat());
+            Equip(m, new Sandals());
 
-        m.AddToBackpack(new Bandage(200));
+            m.AddToBackpack(new Spellbook(ulong.MaxValue));
+            m.AddToBackpack(new BagOfReagents(100));
+        }
+        else
+        {
+            Equip(m, weaponType.CreateInstance<Item>());
+            Equip(m, new RingmailChest());
+            Equip(m, new RingmailArms());
+            Equip(m, new RingmailLegs());
+            Equip(m, new RingmailGloves());
+            Equip(m, new LeatherGorget());
+            Equip(m, new LeatherCap());
+            Equip(m, new Boots());
+
+            m.AddToBackpack(new Bandage(200));
+        }
 
         for (var i = 0; i < 5; i++)
         {
@@ -347,7 +385,7 @@ public static class AgentTestKit
 
         RestoreVitals(m);
 
-        m.SendMessage("Agent warrior kit applied.");
+        m.SendMessage($"Agent {(mage ? "mage" : "warrior")} kit applied.");
         logger.Information(
             "AgentKit: applied to {Mobile} (str {Str} dex {Dex} int {Int}, hits {Hits}/{HitsMax}, weapon {Weapon})",
             m,
@@ -356,7 +394,7 @@ public static class AgentTestKit
             m.RawInt,
             m.Hits,
             m.HitsMax,
-            weaponType.Name
+            weaponType?.Name ?? "spellbook"
         );
     }
 

@@ -45,10 +45,10 @@ with all maps. The server reads the client version (7.0.117.1) from `client.exe`
 ## Commands (AgentTestKit.cs)
 
 - **`[AgentGo`:** teleports you to the test location.
-- **`[AgentKit [katana|broadsword|longsword|vikingsword]`:** warrior template.
-  - Swords, Tactics, Healing and Anatomy at 80; stats 90/70/15, locked.
-  - Ringmail armour, 200 bandages, 5 greater heal and 5 greater cure potions.
-  - Removes Young status.
+- **`[AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword]`:** test character templates.
+  - Warrior (default): Swords, Tactics, Healing and Anatomy at 80; stats 90/70/15. Ringmail armour, 200 bandages.
+  - Mage: Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60; stats 70/35/100. Leather armour (it allows meditation), a wizard's hat, a full spellbook and a bag of 100 of each reagent.
+  - Both: stats locked, 5 greater heal and 5 greater cure potions. Removes Young status.
   - Wipes the old equipment and backpack first.
 - **`[AgentArena [count] [mix|orc|ratman|headless|mongbat|zombie|skeleton|<type>]`:** clears your last arena, then spawns monsters in a ring 6–10 tiles out.
 - **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, and removes your arena monsters.
