@@ -11,6 +11,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Network;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Agent
@@ -80,7 +81,27 @@ namespace ClassicUO.Agent
         private uint _fleeUntil;
         private bool _agentWalking;
 
-        private AgentStatusGump _gump;
+        // One spell at a time: the spell the agent started and whose target cursor it
+        // will answer, when its cast delay ends, and when the next spell may start.
+        private int _castSpell;
+        private uint _castTarget, _castStarted, _castUntil, _castCursorBy, _nextCastAt;
+        private bool _castSurvival;
+
+        // A spell the brain wants cast as soon as the current one allows ("queue": true).
+        private AgentAction _queuedCast;
+        private uint _queuedCastAt;
+        private int _engagedRange = 1;
+        private uint _agentAttack, _seenLastAttack;
+        private uint _peekSerial, _peekAt, _nextPeek;
+        private readonly Dictionary<uint, uint> _peekAgainAt = new Dictionary<uint, uint>();
+        private readonly Dictionary<uint, int> _peekFailures = new Dictionary<uint, int>();
+        private bool _wasTargeting;
+        private uint _cursorUpSince;
+
+        private readonly List<AgentDecision> _decisions = new List<AgentDecision>();
+        private int _decisionSeq;
+
+        private AgentGump _gump;
 
         public AgentController(World world)
         {
@@ -102,6 +123,21 @@ namespace ClassicUO.Agent
         public string BrainNote { get; private set; } = string.Empty;
         public uint BrainNoteTime { get; private set; }
 
+        // What the brain told us about itself: which judge, which archetype it plays
+        // and how it read the player's strategy.
+        public string BrainJudge { get; private set; } = string.Empty;
+        public string BrainArchetype { get; private set; } = string.Empty;
+        public string StrategyReading { get; private set; } = string.Empty;
+
+        // A decision loop is attached and has reported recently (a bare CLI connection is not a brain).
+        public bool BrainActive => AgentHost.BrainConnected && _lastBrainContact != 0 && Time.Ticks - _lastBrainContact < 15000;
+        private uint _lastBrainContact;
+
+        // The brain's structured decisions, oldest first. Changes bump DecisionSeq.
+        public IReadOnlyList<AgentDecision> Decisions => _decisions;
+        public AgentDecision LastDecision => _decisions.Count == 0 ? null : _decisions[_decisions.Count - 1];
+        public int DecisionSeq => _decisionSeq;
+
         // The player's own words on how to play ("never flee", "loot only valuables").
         // The brain reads it with every decision and turns it into policy settings.
         public string Strategy { get; private set; } = string.Empty;
@@ -117,6 +153,14 @@ namespace ClassicUO.Agent
                 ? 0
                 : Reflexes.HealPotionCooldownMs - (Time.Ticks - _lastHealPotion);
         public bool Fleeing => _fleeUntil > Time.Ticks;
+        public int EngagedRange => _engagedRange;
+
+        public string CastingSpell => _castSpell == 0 ? string.Empty : SpellsMagery.GetSpell(_castSpell).Name;
+        public string QueuedSpell => _queuedCast == null ? string.Empty : AgentSpells.Find(_queuedCast.Spell)?.Name ?? string.Empty;
+        public bool CastReady => _castSpell == 0 && Time.Ticks >= _nextCastAt && !_world.TargetManager.IsTargeting;
+        public uint CastReadyInMs =>
+            _castSpell != 0 ? Math.Max(_nextCastAt > Time.Ticks ? _nextCastAt - Time.Ticks : 0, 250)
+            : _nextCastAt > Time.Ticks ? _nextCastAt - Time.Ticks : 0;
         public bool HumanActive => _lastHumanInput != 0 && Time.Ticks - _lastHumanInput < HumanPauseMs;
         public uint LastHumanInput => _lastHumanInput;
 
@@ -152,6 +196,7 @@ namespace ClassicUO.Agent
         public void NoteHumanInput()
         {
             _lastHumanInput = Time.Ticks;
+            _queuedCast = null;
 
             if (_agentWalking && _world.Player != null && _world.Player.Pathfinder.AutoWalking)
             {
@@ -172,7 +217,47 @@ namespace ClassicUO.Agent
         public void NoteBrain(string text)
         {
             BrainNote = text ?? string.Empty;
-            BrainNoteTime = Time.Ticks;
+            BrainNoteTime = _lastBrainContact = Time.Ticks;
+        }
+
+        public void RecordDecision(AgentDecision d)
+        {
+            // Mark a newly chosen target in the world, where the player is looking.
+            if (Mode != AgentMode.Off && d.TargetSerial != 0 && d.TargetSerial != (LastDecision?.TargetSerial ?? 0)
+                && _world.Mobiles.Get(d.TargetSerial) is Mobile target)
+            {
+                target.AddMessage(MessageType.Regular, "jev: target", 3, 0x0035, true, TextType.CLIENT);
+            }
+
+            d.Seq = ++_decisionSeq;
+            d.Time = Time.Ticks;
+            _decisions.Add(d);
+
+            if (_decisions.Count > 12)
+            {
+                _decisions.RemoveAt(0);
+            }
+
+            if (!string.IsNullOrEmpty(d.Judge))
+            {
+                BrainJudge = d.Judge;
+            }
+
+            if (!string.IsNullOrEmpty(d.Archetype))
+            {
+                BrainArchetype = d.Archetype;
+            }
+
+            NoteBrain(d.Note);
+        }
+
+        public void SetBrainInfo(string judge, string archetype, string strategyReading)
+        {
+            BrainJudge = judge ?? BrainJudge;
+            BrainArchetype = archetype ?? BrainArchetype;
+            StrategyReading = strategyReading ?? StrategyReading;
+            _lastBrainContact = Time.Ticks;
+            _decisionSeq++;
         }
 
         // Called by the 0xAF death packet before the mobile is turned into a corpse.
@@ -197,6 +282,18 @@ namespace ClassicUO.Agent
                 return;
             }
 
+            // The spell never started, or was interrupted before its cursor: try again soon.
+            if (_castSpell != 0 && CastFailed(text))
+            {
+                _castSpell = 0;
+                _nextCastAt = Math.Min(_nextCastAt, Time.Ticks + 250);
+            }
+
+            if (text.Contains("not yet recovered from casting", StringComparison.OrdinalIgnoreCase))
+            {
+                _nextCastAt = Math.Max(_nextCastAt, Time.Ticks + 500);
+            }
+
             if (text.Contains("begin applying the bandages", StringComparison.OrdinalIgnoreCase))
             {
                 _bandagingUntil = Time.Ticks + 15000;
@@ -216,6 +313,30 @@ namespace ClassicUO.Agent
                     }
                 }
             }
+        }
+
+        private static readonly string[] CastFailMessages =
+        {
+            "not yet recovered from casting",
+            "already casting a spell",
+            "Insufficient mana",
+            "More reagents are needed",
+            "can not cast a spell while frozen",
+            "cannot cast a spell",
+            "concentration is disturbed"
+        };
+
+        private static bool CastFailed(string text)
+        {
+            foreach (string m in CastFailMessages)
+            {
+                if (text.Contains(m, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void Update()
@@ -253,6 +374,7 @@ namespace ClassicUO.Agent
             }
 
             UpdateGump();
+            UpdateCast(now);
 
             if (Mode == AgentMode.Off && _engaged == 0 && _lootCorpse == 0 && _takeQueue.Count == 0)
             {
@@ -263,8 +385,10 @@ namespace ClassicUO.Agent
             {
                 _nextReflex = now + REFLEX_INTERVAL_MS;
                 RunReflexes(now);
+                FireQueuedCast(now);
             }
 
+            UpdatePeek(now);
             UpdateEngagement(now);
             UpdateLoot(now);
             UpdateTakes(now);
@@ -350,7 +474,37 @@ namespace ClassicUO.Agent
             switch (a.Verb)
             {
                 case "attack":
-                    return Attack(a.Target, a.Manual);
+                    return Attack(a.Target, a.Manual, a.Range);
+
+                case "cast":
+                    (string castStatus, string castDetail) = Cast(a, false);
+
+                    if (a.Queue && castStatus == "failed" && castDetail == "not ready to cast")
+                    {
+                        _queuedCast = a;
+                        _queuedCastAt = Time.Ticks;
+
+                        return ("queued", a.Describe(_world));
+                    }
+
+                    if (castStatus == "done" && a.Queue)
+                    {
+                        _queuedCast = null;
+                    }
+
+                    return (castStatus, castDetail);
+
+                case "skill":
+                    int skill = AgentSpells.SkillIndex(player, a.Name);
+
+                    if (skill < 0)
+                    {
+                        return ("failed", $"unknown skill '{a.Name}'");
+                    }
+
+                    GameActions.UseSkill(skill);
+
+                    return ("done", string.Empty);
 
                 case "war_mode":
                     GameActions.RequestWarMode(player, a.On);
@@ -424,7 +578,7 @@ namespace ClassicUO.Agent
             }
         }
 
-        private (string, string) Attack(uint serial, bool manual)
+        private (string, string) Attack(uint serial, bool manual, int range = 1)
         {
             Mobile m = _world.Mobiles.Get(serial);
 
@@ -445,11 +599,21 @@ namespace ClassicUO.Agent
             _fleeUntil = 0;
             _lootCorpse = 0;
             _engaged = serial;
+            _engagedRange = Math.Clamp(range, 1, 10);
             _engagedLastX = m.X;
             _engagedLastY = m.Y;
             _nextPursuit = 0;
             _lastAttackSent = Time.Ticks;
             Stats.Attacks++;
+            _agentAttack = serial;
+
+            // Fight in war mode, as a player would: then the player's own double-click on
+            // another creature is an attack too, which the agent follows (UpdateEngagement).
+            if (!_world.Player.InWarMode)
+            {
+                GameActions.RequestWarMode(_world.Player, true);
+            }
+
             GameActions.Attack(_world, serial);
             GameActions.RequestMobileStatus(_world, serial);
 
@@ -474,6 +638,214 @@ namespace ClassicUO.Agent
                 default:
                     return false;
             }
+        }
+
+        // Starts a magery spell. Its target cursor is answered from UpdateCast once the
+        // cast delay ends. Survival casts (reflex heals and cures) are answered even if
+        // the player has touched the controls since; anything else is left to the player.
+        private (string, string) Cast(AgentAction a, bool survival)
+        {
+            PlayerMobile p = _world.Player;
+            SpellDefinition spell = AgentSpells.Find(a.Spell);
+
+            if (spell == null || !AgentSpells.IsMagery(spell.ID))
+            {
+                return ("failed", $"unknown spell '{a.Spell}'");
+            }
+
+            uint now = Time.Ticks;
+
+            if (_castSpell != 0 || now < _nextCastAt)
+            {
+                return ("failed", "not ready to cast");
+            }
+
+            if (_world.TargetManager.IsTargeting)
+            {
+                return ("failed", "a target cursor is up");
+            }
+
+            string missing = AgentSpells.Missing(this, p, AgentSpells.FindSpellbook(p), spell);
+
+            if (missing.Length != 0)
+            {
+                return ("failed", missing == "spellbook" ? "no spellbook" : missing == "mana" ? "not enough mana" : missing == "reagents" ? "no reagents" : missing);
+            }
+
+            uint target = a.Target == uint.MaxValue ? p.Serial : a.Target;
+
+            if (spell.TargetType != TargetType.Neutral)
+            {
+                if (target == 0)
+                {
+                    target = spell.TargetType == TargetType.Beneficial ? p.Serial : _engaged;
+                }
+
+                Mobile m = _world.Mobiles.Get(target);
+
+                if (m == null || m.IsDead)
+                {
+                    return ("failed", "no such living mobile");
+                }
+
+                if (spell.TargetType == TargetType.Harmful && !a.Manual && !IsMonsterTarget(m))
+                {
+                    Stats.Blocked++;
+
+                    return ("blocked", "not a monster");
+                }
+
+                if (m != p && m.Distance > 10)
+                {
+                    return ("failed", "out of spell range");
+                }
+            }
+
+            uint delay = AgentSpells.CastDelayMs(spell.ID);
+            _castSpell = spell.ID;
+            _castTarget = spell.TargetType == TargetType.Neutral ? 0 : target;
+            _castSurvival = survival;
+            _castStarted = now;
+            _castUntil = now + delay;
+            // Spells without a cursor (Protection is a self toggle) free the slot soon after.
+            _castCursorBy = now + delay + 1200;
+            _nextCastAt = now + delay + AgentSpells.RECOVERY_MS;
+            Stats.Casts++;
+            GameActions.CastSpell(spell.ID);
+
+            return ("done", string.Empty);
+        }
+
+        // Runs right after the reflexes, so a heal the reflexes needed has already taken the slot.
+        private void FireQueuedCast(uint now)
+        {
+            if (_queuedCast == null)
+            {
+                return;
+            }
+
+            if (now - _queuedCastAt > 4000 || HumanActive)
+            {
+                _queuedCast = null;
+            }
+            else if (CastReady)
+            {
+                AgentAction a = _queuedCast;
+                _queuedCast = null;
+                Cast(a, false);
+            }
+        }
+
+        private void UpdateCast(uint now)
+        {
+            TargetManager tm = _world.TargetManager;
+
+            if (tm.IsTargeting && !_wasTargeting)
+            {
+                _cursorUpSince = now;
+            }
+
+            _wasTargeting = tm.IsTargeting;
+
+            if (_castSpell == 0)
+            {
+                return;
+            }
+
+            // Our spell's cursor appears once the cast delay is over. One that was already
+            // up before then belongs to something else the player is doing.
+            if (tm.IsTargeting && _cursorUpSince + 300 >= _castUntil)
+            {
+                bool playerTookOver = !_castSurvival && _lastHumanInput != 0 && _lastHumanInput >= _castStarted;
+                Entity e = _castTarget == 0 ? null : _world.Get(_castTarget);
+
+                if (playerTookOver)
+                {
+                    // The player has the controls: the cursor is theirs to use or cancel.
+                }
+                else if (e != null && !(e is Mobile m && m.IsDead) && (tm.TargetingState == CursorTarget.Object || tm.TargetingState == CursorTarget.Position))
+                {
+                    tm.Target(_castTarget);
+                }
+                else
+                {
+                    tm.CancelTarget();
+                }
+
+                _nextCastAt = Math.Max(_nextCastAt, now + AgentSpells.RECOVERY_MS);
+                _castSpell = 0;
+
+                return;
+            }
+
+            if (now > _castCursorBy)
+            {
+                _castSpell = 0;
+            }
+        }
+
+        // The server only sends what is inside a spellbook or a bag once it is opened, and a
+        // caster needs both (spells known, reagent counts). Open each one once, quietly
+        // closing the gump again. An empty bag still looks unseen afterwards, so look again
+        // only after 5 min. One that did not open (the server throttles use requests: "You
+        // must wait to perform another action") is retried after 2 s, then after 30 s.
+        private void UpdatePeek(uint now)
+        {
+            if (_peekSerial != 0)
+            {
+                Gump g = (Gump) UIManager.GetGump<SpellbookGump>(_peekSerial) ?? UIManager.GetGump<ContainerGump>(_peekSerial);
+
+                if (g != null)
+                {
+                    g.Dispose();
+                    _peekAgainAt[_peekSerial] = now + 300_000;
+                    _peekSerial = 0;
+                }
+                else if (now - _peekAt > 3000)
+                {
+                    int failures = _peekFailures[_peekSerial] = _peekFailures.GetValueOrDefault(_peekSerial) + 1;
+                    Log.Trace($"[agent] 0x{_peekSerial:X8} did not open ({failures})");
+                    _peekAgainAt[_peekSerial] = now + (failures < 4 ? 2_000u : 30_000u);
+                    _peekSerial = 0;
+                }
+
+                return;
+            }
+
+            if (now < _nextPeek)
+            {
+                return;
+            }
+
+            _nextPeek = now + 1000;
+            PlayerMobile p = _world.Player;
+            Item book = AgentSpells.FindSpellbook(p);
+
+            if (book == null || AgentSpells.MagerySkill(p) <= 0 || HumanActive)
+            {
+                return;
+            }
+
+            bool Due(Item it) => !_peekAgainAt.TryGetValue(it.Serial, out uint at) || now >= at;
+            Item target = !AgentSpells.ContentKnown(book) && Due(book) ? book : null;
+
+            for (LinkedObject i = p.FindItemByLayer(Layer.Backpack)?.Items; i != null && target == null; i = i.Next)
+            {
+                if (i is Item it && it.Items == null && !it.Opened && it.ItemData.IsContainer && it.Graphic != AgentSpells.SPELLBOOK_GRAPHIC && Due(it))
+                {
+                    target = it;
+                }
+            }
+
+            if (target == null)
+            {
+                return;
+            }
+
+            _peekSerial = target.Serial;
+            _peekAt = now;
+            Log.Trace($"[agent] looking inside 0x{target.Serial:X8} (graphic 0x{target.Graphic:X4})");
+            GameActions.DoubleClick(_world, target.Serial);
         }
 
         private bool BandageOn(uint target)
@@ -629,6 +1001,8 @@ namespace ClassicUO.Agent
 
         private void ClearTasks()
         {
+            _castSpell = 0;
+            _queuedCast = null;
             _engaged = 0;
             _lootCorpse = 0;
             _fleeUntil = 0;
@@ -661,8 +1035,18 @@ namespace ClassicUO.Agent
                 LastCurePotion = _lastCurePotion,
                 Heal = GetAuthority(AgentBehavior.Heal),
                 Cure = GetAuthority(AgentBehavior.Cure),
-                Potion = GetAuthority(AgentBehavior.Potion)
+                Potion = GetAuthority(AgentBehavior.Potion),
+                CastReady = CastReady && !p.IsParalyzed
             };
+
+            Item book = AgentSpells.FindSpellbook(p);
+
+            if (book != null && input.CastReady)
+            {
+                input.CanCastHeal = AgentSpells.Missing(this, p, book, SpellsMagery.GetSpell(AgentSpells.HEAL)).Length == 0;
+                input.CanCastGreaterHeal = AgentSpells.Missing(this, p, book, SpellsMagery.GetSpell(AgentSpells.GREATER_HEAL)).Length == 0;
+                input.CanCastCure = AgentSpells.Missing(this, p, book, SpellsMagery.GetSpell(AgentSpells.CURE)).Length == 0;
+            }
 
             (ReflexAction action, AgentAuthority auth) = ReflexPolicy.Decide(input, Reflexes);
 
@@ -677,13 +1061,27 @@ namespace ClassicUO.Agent
             {
                 ReflexAction.BandageSelf => new AgentAction { Verb = "bandage_self", Reason = "reflex" },
                 ReflexAction.DrinkHeal => new AgentAction { Verb = "drink", Kind = "heal", Reason = "reflex" },
-                _ => new AgentAction { Verb = "drink", Kind = "cure", Reason = "reflex" }
+                ReflexAction.DrinkCure => new AgentAction { Verb = "drink", Kind = "cure", Reason = "reflex" },
+                ReflexAction.CastHeal => new AgentAction { Verb = "cast", Spell = AgentSpells.HEAL.ToString(), Target = uint.MaxValue, Reason = "reflex" },
+                ReflexAction.CastGreaterHeal => new AgentAction { Verb = "cast", Spell = AgentSpells.GREATER_HEAL.ToString(), Target = uint.MaxValue, Reason = "reflex" },
+                _ => new AgentAction { Verb = "cast", Spell = AgentSpells.CURE.ToString(), Target = uint.MaxValue, Reason = "reflex" }
             };
 
             if (auth == AgentAuthority.Auto)
             {
                 Stats.Reflexes++;
-                Execute(a);
+
+                if (a.Verb == "cast")
+                {
+                    if (Cast(a, true).Item1 == "done")
+                    {
+                        Stats.SpellHeals++;
+                    }
+                }
+                else
+                {
+                    Execute(a);
+                }
             }
             else if (auth == AgentAuthority.Suggest && action != _lastHintedReflex)
             {
@@ -694,6 +1092,24 @@ namespace ClassicUO.Agent
 
         private void UpdateEngagement(uint now)
         {
+            // The player attacked something else themselves: their choice stands. The
+            // server also changes the attack target (0xAA), so only a change right after
+            // the player's own input counts.
+            uint last = _world.TargetManager.LastAttack;
+
+            if (last != _seenLastAttack)
+            {
+                _seenLastAttack = last;
+
+                if (_engaged != 0 && last != 0 && last != _engaged && last != _agentAttack && _lastHumanInput != 0 && now - _lastHumanInput < 1500)
+                {
+                    Mobile chosen = _world.Mobiles.Get(last);
+                    _engaged = chosen != null && IsMonsterTarget(chosen) ? last : 0;
+                    _agentAttack = _engaged;
+                    Journal.AddAgentEvent(_engaged != 0 ? $"player switched target to 0x{last:X8}" : "player took over the fight");
+                }
+            }
+
             if (_engaged == 0)
             {
                 return;
@@ -708,7 +1124,8 @@ namespace ClassicUO.Agent
                 return;
             }
 
-            if (HumanActive || Fleeing || now < _nextPursuit)
+            // Casting roots the caster, so do not walk until the cast delay is over.
+            if (HumanActive || Fleeing || now < _nextPursuit || (_castSpell != 0 && now < _castUntil))
             {
                 return;
             }
@@ -719,10 +1136,12 @@ namespace ClassicUO.Agent
             if (_world.TargetManager.LastAttack != _engaged && now - _lastAttackSent > 2000)
             {
                 _lastAttackSent = now;
+                _agentAttack = _engaged;
                 GameActions.Attack(_world, _engaged);
             }
 
-            if (m.Distance > 1)
+            // Melee closes to adjacent; a caster only closes to spell range.
+            if (m.Distance > _engagedRange)
             {
                 bool moved = m.X != _engagedLastX || m.Y != _engagedLastY;
 
@@ -730,7 +1149,7 @@ namespace ClassicUO.Agent
                 {
                     _engagedLastX = m.X;
                     _engagedLastY = m.Y;
-                    WalkTo(m.X, m.Y, m.Z, 1);
+                    WalkTo(m.X, m.Y, m.Z, _engagedRange);
                 }
             }
         }
@@ -907,7 +1326,7 @@ namespace ClassicUO.Agent
 
             if (want && (_gump == null || _gump.IsDisposed))
             {
-                _gump = new AgentStatusGump(_world, this);
+                _gump = new AgentGump(_world, this);
                 UIManager.Add(_gump);
             }
             else if (!want && _gump != null && !_gump.IsDisposed)
@@ -997,6 +1416,85 @@ namespace ClassicUO.Agent
             SetStrategy(string.IsNullOrEmpty(Strategy) ? line : Strategy + "\n" + line);
         }
 
+        // ---------------------------------------------------------------- templates
+
+        // A template is "in use" while its text is part of the strategy.
+        public bool TemplateInUse(AgentTemplate t) => t.Text.Length != 0 && Strategy.Contains(t.Text, StringComparison.Ordinal);
+
+        // Pulls a template into the strategy (after what is there), or replaces the strategy with it.
+        public bool PullTemplate(AgentTemplate t, bool replace)
+        {
+            if (replace)
+            {
+                SetStrategy(t.Text);
+            }
+            else if (TemplateInUse(t))
+            {
+                return false;
+            }
+            else
+            {
+                AddStrategy(t.Text);
+            }
+
+            Print($"template {t.Title} {(replace ? "is now the strategy" : "pulled in")}");
+
+            return true;
+        }
+
+        public bool DropTemplate(AgentTemplate t)
+        {
+            if (!TemplateInUse(t))
+            {
+                return false;
+            }
+
+            var lines = new List<string>(Strategy.Replace(t.Text, string.Empty).Split('\n'));
+            lines.RemoveAll(string.IsNullOrWhiteSpace);
+            SetStrategy(string.Join("\n", lines));
+            Print($"template {t.Title} removed");
+
+            return true;
+        }
+
+        private void TemplateCommand(string[] args)
+        {
+            string verb = args.Length > 2 ? args[2].ToLowerInvariant() : "list";
+            bool named = verb == "set" || verb == "add" || verb == "remove";
+            string name = named ? (args.Length > 3 ? string.Join(" ", args, 3, args.Length - 3) : string.Empty)
+                : verb == "list" ? string.Empty : string.Join(" ", args, 2, args.Length - 2);
+
+            if (verb == "list" || name.Length == 0)
+            {
+                foreach (AgentTemplate t in AgentTemplates.All())
+                {
+                    Print($"{(TemplateInUse(t) ? "* " : "")}{t.Name} ({t.For}): {t.Summary}");
+                }
+
+                Print("-agent template <name> pulls one in; set <name> replaces the strategy; remove <name>");
+
+                return;
+            }
+
+            AgentTemplate found = AgentTemplates.Find(name);
+
+            if (found == null)
+            {
+                Print($"no template '{name}' (try -agent template list)");
+            }
+            else if (verb == "remove")
+            {
+                if (!DropTemplate(found))
+                {
+                    Print($"template {found.Title} is not in use");
+                }
+            }
+            else if (!PullTemplate(found, verb == "set"))
+            {
+                Print($"template {found.Title} is already in use");
+            }
+        }
+
         public void SetReflexThresholds(int? bandage, int? healPotion)
         {
             EnsureProfileLoaded();
@@ -1017,7 +1515,7 @@ namespace ClassicUO.Agent
         // ---------------------------------------------------------------- chat command
 
         // "-agent [off|assist|auto|status|accept|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>
-        //         |strategy [set <text>|add <text>|clear]]"
+        //         |strategy [set <text>|add <text>|clear]|template [list|<name>|set <name>|remove <name>]]"
         public void OnCommand(string[] args)
         {
             string sub = args.Length > 1 ? args[1].ToLowerInvariant() : "status";
@@ -1056,6 +1554,12 @@ namespace ClassicUO.Agent
                 case "potion" when args.Length > 2 && int.TryParse(args[2], out int pct):
                     SetReflexThresholds(null, pct);
                     Print($"heal potion below {Reflexes.HealPotionBelowPercent}%");
+
+                    break;
+
+                case "template":
+                case "templates":
+                    TemplateCommand(args);
 
                     break;
 
@@ -1110,7 +1614,7 @@ namespace ClassicUO.Agent
                     break;
 
                 default:
-                    Print("usage: -agent off|assist|auto|status|accept|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>|strategy [set|add|clear] <text>");
+                    Print("usage: -agent off|assist|auto|status|accept|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>|strategy [set|add|clear] <text>|template [list|<name>|set <name>|remove <name>]");
 
                     break;
             }
@@ -1120,6 +1624,6 @@ namespace ClassicUO.Agent
     internal sealed class AgentStats
     {
         public int Kills, Deaths, Attacks, Bandages, HealPotions, CurePotions, Reflexes, Flees, Looted, ItemsTaken;
-        public int BrainActions, Suggestions, Accepted, Blocked, Deferred;
+        public int BrainActions, Suggestions, Accepted, Blocked, Deferred, Casts, SpellHeals;
     }
 }

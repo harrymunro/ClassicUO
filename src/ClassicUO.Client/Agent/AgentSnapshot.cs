@@ -6,6 +6,7 @@ using System.Text.Json;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Agent
 {
@@ -17,7 +18,8 @@ namespace ClassicUO.Agent
         private static readonly string[] CombatSkills =
         {
             "Swordsmanship", "Mace Fighting", "Fencing", "Archery", "Wrestling", "Tactics",
-            "Anatomy", "Healing", "Parrying", "Focus", "Resisting Spells", "Magery"
+            "Anatomy", "Healing", "Parrying", "Focus", "Resisting Spells", "Magery",
+            "Evaluating Intelligence", "Meditation"
         };
 
         private static readonly AgentJournal.Entry[] _journalBuf = new AgentJournal.Entry[64];
@@ -43,6 +45,7 @@ namespace ClassicUO.Agent
             WriteMobiles(w, world, p, radius);
             WriteCorpses(w, world, radius);
             WriteJournal(w, agent.Journal, journalSince);
+            WriteMagic(w, p, agent);
             WriteAgent(w, world, agent);
             w.WriteEndObject();
         }
@@ -83,6 +86,14 @@ namespace ClassicUO.Agent
             w.WriteNumber("heal_potions", agent.CountByGraphic(AgentController.HEAL_POTION_GRAPHIC));
             w.WriteNumber("cure_potions", agent.CountByGraphic(AgentController.CURE_POTION_GRAPHIC));
             w.WriteNumber("refresh_potions", agent.CountByGraphic(AgentController.REFRESH_POTION_GRAPHIC));
+            w.WriteStartObject("reagents");
+
+            foreach ((_, string name, ushort graphic) in AgentSpells.ReagentGraphics)
+            {
+                w.WriteNumber(name, agent.CountByGraphic(graphic));
+            }
+
+            w.WriteEndObject();
             w.WriteEndObject();
 
             w.WriteStartObject("skills");
@@ -213,6 +224,46 @@ namespace ClassicUO.Agent
             w.WriteEndArray();
         }
 
+        // Magery: every spell in the book with its cost, and why it cannot be cast now
+        // ("" when it can). Only written for characters with a spellbook.
+        private static void WriteMagic(Utf8JsonWriter w, PlayerMobile p, AgentController agent)
+        {
+            Item book = AgentSpells.FindSpellbook(p);
+
+            if (book == null)
+            {
+                return;
+            }
+
+            w.WriteStartObject("magic");
+            w.WriteBoolean("book_known", AgentSpells.ContentKnown(book));
+            w.WriteString("casting", agent.CastingSpell);
+            w.WriteString("queued", agent.QueuedSpell);
+            w.WriteNumber("cast_ready_ms", agent.CastReadyInMs);
+            w.WriteStartArray("spells");
+
+            foreach (SpellDefinition s in SpellsMagery.GetAllSpells.Values)
+            {
+                if (!AgentSpells.InBook(book, s.ID))
+                {
+                    continue;
+                }
+
+                w.WriteStartObject();
+                w.WriteNumber("id", s.ID);
+                w.WriteString("name", s.Name);
+                w.WriteNumber("circle", AgentSpells.Circle(s.ID));
+                w.WriteNumber("mana", AgentSpells.Mana(s.ID));
+                w.WriteString("target", AgentSpells.Kind(s));
+                w.WriteString("missing", AgentSpells.Missing(agent, p, book, s));
+                w.WriteEndObject();
+            }
+
+            w.WriteEndArray();
+
+            w.WriteEndObject();
+        }
+
         private static void WriteJournal(Utf8JsonWriter w, AgentJournal journal, long since)
         {
             int n = journal.CopySince(since, _journalBuf);
@@ -256,6 +307,9 @@ namespace ClassicUO.Agent
             w.WriteNumber("heal_potion_ready_ms", agent.HealPotionReadyInMs);
             w.WriteBoolean("fleeing", agent.Fleeing);
             w.WriteNumber("engaged", agent.Engaged);
+            w.WriteNumber("engaged_range", agent.EngagedRange);
+            w.WriteString("casting", agent.CastingSpell);
+            w.WriteNumber("cast_ready_ms", agent.CastReadyInMs);
             w.WriteNumber("looting", agent.LootCorpse);
             w.WriteBoolean("targeting", world.TargetManager.IsTargeting);
 
@@ -281,6 +335,8 @@ namespace ClassicUO.Agent
             w.WriteNumber("accepted", s.Accepted);
             w.WriteNumber("blocked", s.Blocked);
             w.WriteNumber("deferred", s.Deferred);
+            w.WriteNumber("casts", s.Casts);
+            w.WriteNumber("spell_heals", s.SpellHeals);
             w.WriteEndObject();
             w.WriteEndObject();
         }

@@ -2,7 +2,9 @@
 
 using System.Text.Json;
 using ClassicUO.Game;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Agent
 {
@@ -14,11 +16,15 @@ namespace ClassicUO.Agent
         public uint Target;
         public int X, Y;
         public int Distance = 1;
+        public int Range = 1;
         public int Tiles = 8;
         public bool On = true;
+        public bool Queue;
         public string Kind = string.Empty;
         public string Text = string.Empty;
         public string Direction = string.Empty;
+        public string Spell = string.Empty;
+        public string Name = string.Empty;
         public float Confidence = -1;
         public string Reason = string.Empty;
 
@@ -42,6 +48,17 @@ namespace ClassicUO.Agent
                     case "attack":
                     case "war_mode":
                         return AgentBehavior.Fight;
+
+                    // Healing spells answer to the same authority as bandages and potions;
+                    // attack spells to fight.
+                    case "cast":
+                        SpellDefinition spell = AgentSpells.Find(Spell);
+
+                        return spell == null ? AgentBehavior.Misc
+                            : spell.ID == AgentSpells.HEAL || spell.ID == AgentSpells.GREATER_HEAL ? AgentBehavior.Heal
+                            : spell.ID == AgentSpells.CURE ? AgentBehavior.Cure
+                            : spell.TargetType == TargetType.Harmful ? AgentBehavior.Fight
+                            : AgentBehavior.Misc;
 
                     case "loot":
                     case "take":
@@ -74,8 +91,12 @@ namespace ClassicUO.Agent
                     case "x": a.X = v.GetInt32(); break;
                     case "y": a.Y = v.GetInt32(); break;
                     case "distance": a.Distance = v.GetInt32(); break;
+                    case "range": a.Range = v.GetInt32(); break;
+                    case "spell": a.Spell = v.ValueKind == JsonValueKind.Number ? v.GetInt32().ToString() : v.GetString() ?? string.Empty; break;
+                    case "name": a.Name = v.GetString() ?? string.Empty; break;
                     case "tiles": a.Tiles = v.GetInt32(); break;
                     case "on": a.On = v.GetBoolean(); break;
+                    case "queue": a.Queue = v.GetBoolean(); break;
                     case "kind": a.Kind = v.GetString() ?? string.Empty; break;
                     case "text": a.Text = v.GetString() ?? string.Empty; break;
                     case "dir": a.Direction = v.GetString() ?? string.Empty; break;
@@ -125,6 +146,11 @@ namespace ClassicUO.Agent
                 case "war_mode": return On ? "war mode on" : "peace mode";
                 case "say": return $"say \"{Text}\"";
                 case "use": return $"use {target}";
+                case "cast":
+                    string spell = AgentSpells.Find(Spell)?.Name ?? Spell;
+
+                    return Target == 0 ? $"cast {spell}" : Target == uint.MaxValue ? $"cast {spell} on self" : $"cast {spell} at {target}";
+                case "skill": return $"use {Name}";
                 default: return Verb;
             }
         }

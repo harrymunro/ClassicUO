@@ -7,7 +7,10 @@ namespace ClassicUO.Agent
         None,
         BandageSelf,
         DrinkHeal,
-        DrinkCure
+        DrinkCure,
+        CastHeal,
+        CastGreaterHeal,
+        CastCure
     }
 
     // Everything the reflex layer looks at, captured once per tick so the
@@ -28,6 +31,13 @@ namespace ClassicUO.Agent
         public AgentAuthority Heal;
         public AgentAuthority Cure;
         public AgentAuthority Potion;
+
+        // Spells: whether each can be cast now (in the book, mana, reagents), and
+        // whether the agent is free to start a spell (not casting, recovered, no cursor up).
+        public bool CanCastHeal;
+        public bool CanCastGreaterHeal;
+        public bool CanCastCure;
+        public bool CastReady;
     }
 
     internal sealed class ReflexSettings
@@ -38,6 +48,11 @@ namespace ClassicUO.Agent
         public uint HealPotionCooldownMs = 10_500;
         public uint CurePotionCooldownMs = 2_000;
         public uint BandageRetryMs = 1_500;
+
+        // Healing spells are for characters without bandages: Greater Heal when badly
+        // hurt, Heal for lighter wounds (cheaper, and quick to cast).
+        public int SpellHealBelowPercent = 65;
+        public int GreaterHealBelowPercent = 50;
     }
 
     internal static class ReflexPolicy
@@ -78,6 +93,31 @@ namespace ClassicUO.Agent
                 && Elapsed(s.Now, s.LastBandageAttempt) >= cfg.BandageRetryMs)
             {
                 return (ReflexAction.BandageSelf, s.Heal);
+            }
+
+            if (!s.CastReady)
+            {
+                return (ReflexAction.None, AgentAuthority.Off);
+            }
+
+            // Poison with no cure potion to hand (none, or on cooldown) and no bandage
+            // working on it: cast Cure. Heal spells do not work on a poisoned target.
+            if (s.Cure != AgentAuthority.Off && s.Poisoned && s.CanCastCure && !s.Bandaging)
+            {
+                return (ReflexAction.CastCure, s.Cure);
+            }
+
+            if (s.Heal != AgentAuthority.Off && !s.Poisoned && !s.Bandaging && s.Bandages == 0)
+            {
+                if (s.HitsPercent < cfg.GreaterHealBelowPercent && s.CanCastGreaterHeal)
+                {
+                    return (ReflexAction.CastGreaterHeal, s.Heal);
+                }
+
+                if (s.HitsPercent < cfg.SpellHealBelowPercent && (s.CanCastHeal || s.CanCastGreaterHeal))
+                {
+                    return (s.CanCastHeal ? ReflexAction.CastHeal : ReflexAction.CastGreaterHeal, s.Heal);
+                }
             }
 
             return (ReflexAction.None, AgentAuthority.Off);

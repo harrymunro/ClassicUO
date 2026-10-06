@@ -228,11 +228,30 @@ namespace ClassicUO.Agent
 
                     break;
 
-                // {text: "..."} replaces, {add: "..."} appends a line, {clear: true} empties.
+                // {text: "..."} replaces, {add: "..."} appends a line, {clear: true} empties,
+                // {template: "name", replace: bool} pulls a template in, {remove_template: "name"} takes it out.
                 case "strategy":
                     RequireInGame(world);
 
-                    if (Get(p, "text", out JsonElement st))
+                    if (Get(p, "template", out JsonElement tp) || Get(p, "remove_template", out tp))
+                    {
+                        AgentTemplate template = AgentTemplates.Find(tp.GetString());
+
+                        if (template == null)
+                        {
+                            throw new AgentRpcException(-32602, $"no template '{tp.GetString()}'");
+                        }
+
+                        if (Get(p, "remove_template", out _))
+                        {
+                            world.Agent.DropTemplate(template);
+                        }
+                        else
+                        {
+                            world.Agent.PullTemplate(template, Get(p, "replace", out JsonElement rp) && rp.GetBoolean());
+                        }
+                    }
+                    else if (Get(p, "text", out JsonElement st))
                     {
                         world.Agent.SetStrategy(st.GetString());
                     }
@@ -251,6 +270,34 @@ namespace ClassicUO.Agent
                         w.WriteString("strategy", world.Agent.Strategy);
                         w.WriteNumber("revision", world.Agent.StrategyRevision);
                         w.WriteEndObject();
+                    });
+
+                    break;
+
+                case "templates":
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartArray();
+
+                        foreach (AgentTemplate t in AgentTemplates.All())
+                        {
+                            w.WriteStartObject();
+                            w.WriteString("name", t.Name);
+                            w.WriteString("title", t.Title);
+                            w.WriteString("for", t.For);
+                            w.WriteString("summary", t.Summary);
+                            w.WriteString("text", t.Text);
+                            w.WriteBoolean("user", t.User);
+
+                            if (world.InGame && world.Player != null)
+                            {
+                                w.WriteBoolean("in_use", world.Agent.TemplateInUse(t));
+                            }
+
+                            w.WriteEndObject();
+                        }
+
+                        w.WriteEndArray();
                     });
 
                     break;
@@ -274,6 +321,27 @@ namespace ClassicUO.Agent
                 case "note":
                     RequireInGame(world);
                     world.Agent.NoteBrain(Get(p, "text", out JsonElement t) ? t.GetString() : string.Empty);
+                    Reply(conn, id, w => w.WriteBooleanValue(true));
+
+                    break;
+
+                // What the brain decided and why, for the agent gump.
+                case "decision":
+                    RequireInGame(world);
+                    world.Agent.RecordDecision(AgentDecision.FromJson(p));
+                    Reply(conn, id, w => w.WriteBooleanValue(true));
+
+                    break;
+
+                // {judge, archetype, strategy_reading}: any may be left out.
+                case "brain_info":
+                    RequireInGame(world);
+                    world.Agent.SetBrainInfo
+                    (
+                        Get(p, "judge", out JsonElement bj) ? bj.GetString() : null,
+                        Get(p, "archetype", out JsonElement ba) ? ba.GetString() : null,
+                        Get(p, "strategy_reading", out JsonElement bs) ? bs.GetString() : null
+                    );
                     Reply(conn, id, w => w.WriteBooleanValue(true));
 
                     break;

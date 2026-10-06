@@ -139,6 +139,9 @@ namespace ClassicUO.Configuration
         public int AgentBandageBelowPercent { get; set; } = 85;
         public int AgentHealPotionBelowPercent { get; set; } = 40;
         public string AgentStrategy { get; set; } = string.Empty;
+        public int AgentGumpX { get; set; } = -1;
+        public int AgentGumpY { get; set; } = -1;
+        public bool AgentGumpExpanded { get; set; } = true;
 
         public bool EnableDeathScreen { get; set; } = true;
         public bool EnableBlackWhiteEffect { get; set; } = true;
