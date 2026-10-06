@@ -10,6 +10,11 @@ options code has already checked.
 from dataclasses import dataclass, field
 from typing import Any
 
+from .spells import ATTACK_SPELLS, mana_words
+
+SPELL_RANGE = 10  # tiles; ModernUO's magery range from Mondain's Legacy on
+MELEE_SKILLS = ("Swordsmanship", "Mace Fighting", "Fencing", "Archery")
+
 
 # Body graphic -> what the creature is. Monsters often carry personal names
 # ("Vorgak"), which tell the model nothing about the threat.
@@ -64,6 +69,7 @@ class Candidate:
     distance: int
     info: dict[str, Any]
     hits_pct: int | None = None
+    casts: int = 0  # spells this mage has cast at it
 
 
 @dataclass
@@ -75,6 +81,18 @@ class Situation:
     items: list[Candidate] = field(default_factory=list)
     hp_pct: int = 100
     strategy: str = ""
+    archetype: str = "warrior"
+    spells: list[Candidate] = field(default_factory=list)  # attack spells castable right now
+    mana_pct: int = 100
+
+    @property
+    def is_mage(self) -> bool:
+        return self.archetype == "mage"
+
+    def can_cast(self, name: str) -> bool:
+        """In the book, with the mana and reagents for it right now."""
+        spells = (self.raw.get("magic") or {}).get("spells", [])
+        return any(s["name"] == name and not s.get("missing") for s in spells)
 
     @property
     def player(self) -> dict[str, Any]:
@@ -90,6 +108,9 @@ class Situation:
     def corpse(self, cid: str) -> Candidate | None:
         return next((c for c in self.corpses if c.id == cid), None)
 
+    def spell(self, sid: str) -> Candidate | None:
+        return next((c for c in self.spells if c.id == sid), None)
+
     def signature(self) -> tuple:
         """Changes when something worth re-deciding about happens."""
         return (
@@ -99,13 +120,29 @@ class Situation:
             tuple(sorted(c.serial for c in self.corpses)),
             tuple(sorted(c.serial for c in self.items)),
             self.agent.get("engaged"),
+            # A mage re-decides when mana crosses a band. Its next spell is queued in the
+            # client, so the moment a cast becomes possible needs no new decision.
+            mana_words(self.mana_pct) if self.is_mage else None,
         )
 
 
+def archetype_of(snapshot: dict[str, Any]) -> str:
+    """A mage has a spellbook and Magery at least as high as any weapon skill."""
+    skills = snapshot["player"].get("skills", {})
+    magery = skills.get("Magery", 0)
+    if snapshot.get("magic") and magery >= 50 and magery >= max((skills.get(s, 0) for s in MELEE_SKILLS), default=0):
+        return "mage"
+    return "warrior"
+
+
 def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_items: set[int] = frozenset(),
-          max_hostiles: int = 6) -> Situation:
+          max_hostiles: int = 6, archetype: str | None = None, casts_at: dict[int, int] | None = None) -> Situation:
     p = snapshot["player"]
+    archetype = archetype or archetype_of(snapshot)
+    mage = archetype == "mage"
+    casts_at = casts_at or {}
     hp_pct = round(100 * p["hits"] / p["hits_max"]) if p.get("hits_max") else 100
+    mana_pct = round(100 * p["mana"] / p["mana_max"]) if p.get("mana_max") else 100
     stam_pct = round(100 * p["stam"] / p["stam_max"]) if p.get("stam_max") else 100
     engaged = snapshot["agent"].get("engaged", 0)
     supplies = p.get("supplies", {})
@@ -132,7 +169,12 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 "your_current_target": bool(m.get("my_target")) or m["serial"] == engaged,
                 "aggressive": bool(m.get("war_mode")),
             }
-            hostiles.append(Candidate(cid, m["serial"], info["name"], m["distance"], info, m.get("hits_pct")))
+            if mage:
+                info["in_spell_range"] = m["distance"] <= SPELL_RANGE
+                n = casts_at.get(m["serial"], 0)
+                info["your_spells_at_it"] = "none yet" if n == 0 else f"{n} so far"
+            hostiles.append(Candidate(cid, m["serial"], info["name"], m["distance"], info, m.get("hits_pct"),
+                                      casts_at.get(m["serial"], 0)))
         elif len(others) < 5:
             kind = "your pet" if m.get("pet") else "person" if m.get("human") else "creature"
             others.append({"name": m.get("name") or "someone", "kind": kind, "distance": distance_words(m["distance"])})
@@ -156,6 +198,17 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                          "properties": it.get("props", "")}
                 items.append(Candidate(iid, it["serial"], iinfo["name"], c["distance"], iinfo))
 
+    spells: list[Candidate] = []
+    magic = snapshot.get("magic") or {}
+    if mage:
+        known = {s["name"]: s for s in magic.get("spells", [])}
+        for name, what in ATTACK_SPELLS.items():
+            s = known.get(name)
+            if s and not s.get("missing"):
+                sid = f"s{len(spells) + 1}"
+                info = {"id": sid, "name": name, "effect": what, "mana": s["mana"], "circle": s["circle"]}
+                spells.append(Candidate(sid, s["id"], name, 0, info))
+
     you = {
         "health": f"{health_words(hp_pct)} ({hp_pct}%)",
         "stamina": "tired" if stam_pct < 30 else "fine",
@@ -169,6 +222,19 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         "fighting": next((h.name for h in hostiles if h.info["your_current_target"]), "nobody"),
         "carrying": "nearly overloaded" if p.get("weight_max") and p["weight"] > 0.9 * p["weight_max"] else "light load",
     }
+    if mage:
+        del you["bandages_left"]
+        you["weapon"] = "spells (weak in melee)"
+        you["mana"] = f"{mana_words(mana_pct)} ({mana_pct}%)"
+        you["casting_now"] = magic.get("casting") or "nothing"
+        ready_ms = magic.get("cast_ready_ms", 0)
+        secs = max(1, round(ready_ms / 1000))
+        you["next_spell"] = "can cast now" if ready_ms <= 0 and not magic.get("casting") \
+            else f"in about {secs} second{'s' if secs > 1 else ''}"
+        you["attack_spells_available"] = [c.name for c in spells] or ["none: not enough mana or reagents"]
+        regs = p.get("supplies", {}).get("reagents", {})
+        low = sorted(k.replace("_", " ") for k, v in regs.items() if v < 5)
+        you["reagents"] = "plenty" if not low else "running out of " + ", ".join(low)
 
     state = {
         "you": you,
@@ -179,7 +245,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         "recent_events": events[-8:],
     }
     return Situation(snapshot, state, hostiles, corpses, items, hp_pct,
-                     strategy=(snapshot["agent"].get("strategy") or "").strip())
+                     strategy=(snapshot["agent"].get("strategy") or "").strip(),
+                     archetype=archetype, spells=spells, mana_pct=mana_pct)
 
 
 def journal_events(entries: list[dict[str, Any]]) -> list[str]:

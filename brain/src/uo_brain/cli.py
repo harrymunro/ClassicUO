@@ -2,8 +2,9 @@
 
   uo-brain login --account warrior --password warrior --create-warrior Brutus
   uo-brain run --mode auto --judge jev --log logs/run.jsonl
-  uo-brain scenario --rounds 3 --round-seconds 120
+  uo-brain scenario --rounds 3 --round-seconds 120 [--kit mage]
   uo-brain strategy add "Attack relentlessly and never flee."   (or: strategy load my-strategy.md)
+  uo-brain strategy templates | strategy template relentless [--replace] | strategy drop relentless
   uo-brain status | snapshot [--semantic] | act attack target=0x1234 | say "[AgentKit" | shot out.png
   uo-brain report logs/run.jsonl
 """
@@ -57,8 +58,10 @@ def main() -> None:
     cm.add_argument("text")
 
     st = sub.add_parser("strategy", help="show or change the character's strategy (natural language)")
-    st.add_argument("action", nargs="?", default="show", choices=["show", "set", "add", "clear", "load", "explain"])
-    st.add_argument("text", nargs="?", help="text for set/add, or a Markdown file for load")
+    st.add_argument("action", nargs="?", default="show",
+                    choices=["show", "set", "add", "clear", "load", "explain", "templates", "template", "drop"])
+    st.add_argument("text", nargs="?", help="text for set/add, a Markdown file for load, a template name for template/drop")
+    st.add_argument("--replace", action="store_true", help="template: replace the strategy instead of adding to it")
     st.add_argument("--judge", choices=["jev", "heuristic"], default="jev", help="for explain")
     st.add_argument("--provider", choices=["auto", "openrouter", "typesafe"], default="auto")
     st.add_argument("--model")
@@ -75,6 +78,7 @@ def main() -> None:
     sc.add_argument("--round-seconds", type=float, default=120)
     sc.add_argument("--monsters", type=int, default=6)
     sc.add_argument("--kind", default="", help="monster kind for [AgentArena")
+    sc.add_argument("--kit", choices=["warrior", "mage"], default="warrior", help="template for [AgentKit")
 
     rp = sub.add_parser("report", help="summarise a decision log")
     rp.add_argument("log")
@@ -102,8 +106,12 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--model", help="model id (default: ~typesafe/jev-latest on OpenRouter, jev-latest direct)")
     p.add_argument("--mode", choices=["keep", "off", "assist", "auto"], default="keep",
                    help="set the client's agent mode first (default: leave as is)")
+    p.add_argument("--archetype", choices=["auto", "warrior", "mage"], default="auto",
+                   help="how to play the character (default: tell from its skills)")
     p.add_argument("--duration", type=float, help="stop after this many seconds")
     p.add_argument("--strategy", type=Path, metavar="FILE", help="load this Markdown strategy into the character first")
+    p.add_argument("--template", action="append", default=[], metavar="NAME",
+                   help="pull this strategy template in first (repeatable; see: uo-brain strategy templates)")
     p.add_argument("--log", type=Path, help="append decisions to this JSONL file")
     p.add_argument("--min-confidence", type=float, default=policy.PolicyConfig.min_intent_confidence)
     p.add_argument("--price-per-million", type=float, default=loop.LoopConfig.price_per_million)
@@ -189,8 +197,18 @@ def make_judge(args) -> judges.Judge:
 
 async def strategy_cmd(rpc: AgentRpc, args) -> None:
     match args.action:
-        case "set" | "add" if not args.text:
-            sys.exit(f"strategy {args.action} needs text")
+        case "templates":
+            for t in await rpc.call("templates"):
+                mark = "*" if t.get("in_use") else " "
+                print(f"{mark} {t['name']:<14} {t['for']:<8} {t['summary']}{'  (yours)' if t['user'] else ''}")
+            print("\n* in use.  uo-brain strategy template NAME pulls one in (--replace to start over).")
+            return
+        case "set" | "add" | "template" | "drop" if not args.text:
+            sys.exit(f"strategy {args.action} needs {'a template name' if args.action in ('template', 'drop') else 'text'}")
+        case "template":
+            res = await rpc.call("strategy", template=args.text, replace=args.replace)
+        case "drop":
+            res = await rpc.call("strategy", remove_template=args.text)
         case "set":
             res = await rpc.call("strategy", text=args.text)
         case "add":
@@ -215,6 +233,8 @@ async def strategy_cmd(rpc: AgentRpc, args) -> None:
 async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
     if args.strategy:
         await rpc.call("strategy", text=args.strategy.read_text())
+    for name in args.template:
+        await rpc.call("strategy", template=name)
     if args.mode != "keep":
         await rpc.call("mode", mode=args.mode)
     judge = make_judge(args)
@@ -224,7 +244,8 @@ async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
     pcfg = policy.PolicyConfig(min_intent_confidence=args.min_confidence)
     print(f"running with {judge.name}; Ctrl-C to stop")
     try:
-        stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop)
+        stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop,
+                               archetype=None if args.archetype == "auto" else args.archetype)
     finally:
         await judge.close()
     print(json.dumps(stats.summary(lcfg.price_per_million), indent=2))
@@ -237,7 +258,7 @@ async def scenario(rpc: AgentRpc, args) -> None:
         args.mode = "auto"
     results = []
     for n in range(1, args.rounds + 1):
-        for cmd in ("[AgentReset", "[AgentKit", f"[AgentArena {args.monsters} {args.kind}".strip()):
+        for cmd in ("[AgentReset", f"[AgentKit {args.kit}", f"[AgentArena {args.monsters} {args.kind}".strip()):
             await rpc.call("act", verb="say", text=cmd, source="manual")
             await asyncio.sleep(1.0)
         print(f"round {n}: {args.monsters} monsters, {args.round_seconds:.0f}s")

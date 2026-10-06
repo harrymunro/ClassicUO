@@ -19,6 +19,14 @@ ROLE = (
     "to choose healing; choose what the warrior does next."
 )
 
+MAGE_ROLE = (
+    "You are deciding for a mage in the game Ultima Online. The mage fights monsters by casting "
+    "attack spells from a distance; it is weak in melee and has little health. Every spell costs mana, "
+    "which comes back slowly, faster while resting. Healing and curing spells and potions are used "
+    "automatically when health is low or the mage is poisoned, so you do not need to choose healing; "
+    "choose what the mage does next."
+)
+
 INTENTS: dict[str, Any] = {
     "fight": {
         "what": "Attack, or keep attacking, one of the hostile creatures.",
@@ -47,31 +55,64 @@ INTENTS: dict[str, Any] = {
 }
 
 
+MAGE_INTENTS: dict[str, Any] = {
+    "fight": {
+        "what": "Attack one of the hostile creatures with spells, or keep attacking it.",
+        "when": "A hostile creature is within spell range and there is mana for an attack spell, "
+                "or a creature is already attacking the mage.",
+    },
+    "flee": {
+        "what": "Run away from the hostile creatures.",
+        "when": "Staying would probably get the mage killed: health is near death or falling fast while creatures "
+                "are attacking it, and heals cannot keep up (supplies do not help if they cannot be used in time).",
+        "not_for": "Ordinary fights the mage is winning, or being lightly or moderately wounded.",
+    },
+    "loot": INTENTS["loot"],
+    "seek": {
+        "what": "Walk towards a hostile creature that is out of spell range, to start the next fight.",
+        "when": "Hostile creatures are around but none is within spell range, and the mage has health and mana to fight.",
+    },
+    "rest": {
+        "what": "Stay put and meditate to regain mana, or wait.",
+        "when": "Nothing needs doing, or mana is low and no creature is close enough to attack the mage.",
+    },
+}
+
+
+def role(sit: Situation) -> str:
+    return MAGE_ROLE if sit.is_mage else ROLE
+
+
+def character(sit: Situation) -> str:
+    return "mage" if sit.is_mage else "warrior"
+
+
 def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
     """Role, the player's own strategy when they wrote one, then the question."""
-    out: dict[str, Any] = {"role": ROLE}
+    out: dict[str, Any] = {"role": role(sit)}
     if sit.strategy:
         out["player_strategy"] = sit.strategy
-        out["using_the_strategy"] = ("These are the player's own instructions for how their warrior should play. "
-                                     "Follow them wherever they bear on this question.")
+        out["using_the_strategy"] = (f"These are the player's own instructions for how their {character(sit)} should "
+                                     "play. Follow them wherever they bear on this question.")
     out["question"] = question
     out.update(extra)
     return out
 
 
 def build(sit: Situation) -> dict[str, dict[str, Any]]:
+    who = character(sit)
     qs: dict[str, dict[str, Any]] = {
         "intent": {
             "type": "choice",
-            "instructions": instructions(sit, "What should the warrior do next?"),
-            "criteria": INTENTS,
+            "instructions": instructions(sit, f"What should the {who} do next?"),
+            "criteria": MAGE_INTENTS if sit.is_mage else INTENTS,
         },
         # A factual risk judgment, so it does not see the strategy; code combines the two.
         "in_danger": {
             "type": "noul",
             "instructions": {
-                "role": ROLE,
-                "question": "Is the warrior at serious risk of dying in the next few seconds if they keep fighting?",
+                "role": role(sit),
+                "question": f"Is the {who} at serious risk of dying in the next few seconds if they keep fighting?",
             },
             "criteria": {
                 "true": "Health is near death or badly wounded while several hostile creatures are adjacent, "
@@ -82,16 +123,40 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
     }
 
     if sit.hostiles:
-        criteria = {h.id: describe_hostile(h.info) for h in sit.hostiles}
+        criteria = {h.id: describe_hostile(h.info, who) for h in sit.hostiles}
         criteria["none"] = "None of these creatures should be attacked."
         qs["target"] = {
             "type": "choice",
             "instructions": instructions(
                 sit,
-                "If the warrior fights, which hostile creature in `hostile_creatures` should they attack?",
+                f"If the {who} fights, which hostile creature in `hostile_creatures` should they attack?",
                 guidance="Unless the player's strategy says otherwise: prefer the creature already being fought "
                          "unless another is much more dangerous or much closer; prefer close, weakened creatures "
                          "over distant ones.",
+            ),
+            "criteria": criteria,
+        }
+
+    # Which spell, asked alongside the target so a cast needs no second round trip. The
+    # question says where the fight stands, so "open with ..." strategies have a hook.
+    if sit.is_mage and sit.hostiles and sit.spells:
+        focus = next((h for h in sit.hostiles if h.info["your_current_target"]), None) \
+            or min(sit.hostiles, key=lambda h: h.distance)
+        if focus.casts == 0:
+            question = (f"The mage is about to open the fight against {focus.name} ({focus.info['health']}): no spell "
+                        "has been cast at it yet. Which spell from `you.attack_spells_available` should open the fight?")
+        else:
+            question = (f"The mage has already cast {focus.casts} spell{'s' if focus.casts > 1 else ''} at "
+                        f"{focus.name}, which is now {focus.info['health']}. Which spell from "
+                        "`you.attack_spells_available` should it cast at it next?")
+        criteria = {c.id: f"{c.name}: {c.info['effect']} ({c.info['mana']} mana)" for c in sit.spells}
+        criteria["none"] = "Cast nothing right now, for example to save mana for later."
+        qs["spell"] = {
+            "type": "choice",
+            "instructions": instructions(
+                sit, question,
+                guidance="Unless the player's strategy says otherwise: use strong spells while mana is plentiful and "
+                         "cheaper ones when mana runs low; finish a nearly dead creature with a quick, cheap spell.",
             ),
             "criteria": criteria,
         }
@@ -105,7 +170,7 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         criteria["none"] = "None of these corpses is worth going to now."
         qs["corpse"] = {
             "type": "choice",
-            "instructions": instructions(sit, "If the warrior loots, which corpse in `corpses_not_yet_looted` should they loot first?"),
+            "instructions": instructions(sit, f"If the {who} loots, which corpse in `corpses_not_yet_looted` should they loot first?"),
             "criteria": criteria,
         }
 
@@ -113,7 +178,7 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         qs[f"take_{it.id}"] = {
             "type": "noul",
             "instructions": instructions(
-                sit, f"Is the item with id {it.id} in `items_in_open_corpse` worth picking up for this warrior?"),
+                sit, f"Is the item with id {it.id} in `items_in_open_corpse` worth picking up for this {who}?"),
             "criteria": {
                 "true": "Useful or valuable: weapons, armour, jewellery, gems, reagents, scrolls, magic items, "
                         "or anything with notable properties.",
@@ -123,10 +188,12 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
     return qs
 
 
-def describe_hostile(info: dict[str, Any]) -> str:
+def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
     parts = [info["name"], info["health"], info["distance"]]
     if info.get("direction"):
         parts.append(f"to the {info['direction']}")
+    if "in_spell_range" in info:
+        parts.append("within spell range" if info["in_spell_range"] else "out of spell range")
     if info.get("your_current_target"):
-        parts.append("the warrior is already fighting it")
+        parts.append(f"the {who} is already fighting it")
     return ", ".join(parts)

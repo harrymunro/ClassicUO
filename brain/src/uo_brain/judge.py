@@ -2,10 +2,13 @@
 rule-based stand-in for running the loop without a model or credits."""
 
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
+
+from . import spells
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api"
 OPENROUTER_MODEL = "~typesafe/jev-latest"
@@ -113,12 +116,15 @@ class HeuristicJudge:
         hostiles = state["hostile_creatures"]
         hp = int(you["health"].split("(")[-1].rstrip("%)"))
         close = [h for h in hostiles if h["distance"].startswith(("adjacent", "close"))]
-        supplies = you["bandages_left"] + you["heal_potions_left"]
+        mage = "mana" in you
+        supplies = you.get("bandages_left", 0) + you["heal_potions_left"]
         danger = hp < 30 and (len(close) >= 2 or supplies == 0)
+        in_range = [h for h in hostiles if h.get("in_spell_range")]
+        mana = int(you["mana"].split("(")[-1].rstrip("%)")) if mage else 100
 
         if danger and close:
             intent = "flee"
-        elif close:
+        elif close or (mage and in_range and mana >= 15):
             intent = "fight"
         elif state["corpses_not_yet_looted"]:
             intent = "loot"
@@ -137,6 +143,12 @@ class HeuristicJudge:
             out.choices["target"] = one_hot(pick["id"], questions["target"]["criteria"])
         if "corpse" in questions:
             out.choices["corpse"] = one_hot(state["corpses_not_yet_looted"][0]["id"], questions["corpse"]["criteria"])
+        if "spell" in questions:
+            # Strongest damage spell on offer (the options come strongest first); cheap ones when mana is low.
+            options = [k for k, v in questions["spell"]["criteria"].items()
+                       if k != "none" and not v.startswith(("Poison", "Paralyze"))]
+            pick = (options[-1] if mana < 35 else options[0]) if options else "none"
+            out.choices["spell"] = one_hot(pick, questions["spell"]["criteria"])
         for name in questions:
             if name.startswith("take_"):
                 out.nouls[name] = 0.8
@@ -153,11 +165,23 @@ class HeuristicJudge:
         out.scores["aggression"] = 1.0 if has("relentless", "never flee", "to the death") else \
             0.75 if has("aggressive") else 0.0 if has("cautious", "careful", "safe") else 0.5
         target = "weakest_first" if has("weakest", "wounded first") else "closest_first" if has("closest", "nearest") \
-            else "strongest_first" if has("strongest", "biggest") else "no_preference"
+            else "strongest_first" if has("strongest", "biggest", "most dangerous") else "no_preference"
         out.choices["target_priority"] = one_hot(target, questions["target_priority"]["criteria"])
         loot = "nothing" if has("don't loot", "do not loot", "never loot", "no loot") else \
             "everything" if has("loot everything", "take everything") else "valuables" if has("valuable") else "no_preference"
         out.choices["looting"] = one_hot(loot, questions["looting"]["criteria"])
+        # Spells: the clause that says "open" names the opener; the next clause naming a spell, the main one.
+        opener = main = "no_preference"
+        for clause in re.split(r"[.;,\n]| then ", text):
+            if (spell := spells.find(clause)) is None:
+                continue
+            if "open" in clause and opener == "no_preference":
+                opener = spell
+            elif main == "no_preference":
+                main = spell
+        if "opening_spell" in questions:
+            out.choices["opening_spell"] = one_hot(opener, questions["opening_spell"]["criteria"])
+            out.choices["main_spell"] = one_hot(main, questions["main_spell"]["criteria"])
         return out
 
     async def close(self) -> None:

@@ -52,3 +52,43 @@ SNAPSHOT = {
 @pytest.fixture
 def snapshot():
     return copy.deepcopy(SNAPSHOT)
+
+
+def _spell(sid, name, circle, mana, target="harmful", missing=""):
+    return {"id": sid, "name": name, "circle": circle, "mana": mana, "target": target, "missing": missing}
+
+
+def mage_snapshot():
+    snap = copy.deepcopy(SNAPSHOT)
+    p = snap["player"]
+    p.update({"name": "Merlin", "hits": 80, "hits_max": 85, "mana": 90, "mana_max": 100, "str": 70, "dex": 35,
+              "int": 100, "weapon": ""})
+    p["skills"] = {"Magery": 90.0, "Evaluating Intelligence": 80.0, "Meditation": 80.0, "Wrestling": 80.0}
+    p["supplies"] = {"bandages": 0, "heal_potions": 5, "cure_potions": 5, "refresh_potions": 0,
+                     "reagents": {"black_pearl": 90, "blood_moss": 90, "garlic": 90, "ginseng": 90,
+                                  "mandrake_root": 90, "nightshade": 3, "sulfurous_ash": 90, "spiders_silk": 90}}
+    # t1 (the orc) is 5 tiles away, t2 (the captain) out of spell range.
+    snap["mobiles"][0].update({"distance": 5, "dx": 5, "dy": 0})
+    snap["mobiles"][1].update({"distance": 12, "dx": -12, "dy": 2})
+    snap["corpses"] = []
+    snap["magic"] = {
+        "book_known": True, "casting": "", "cast_ready_ms": 0,
+        "spells": [
+            _spell(4, "Heal", 1, 4, "beneficial"),
+            _spell(15, "Protection", 2, 6, "beneficial"),
+            _spell(5, "Magic Arrow", 1, 4),
+            _spell(18, "Fireball", 3, 9),
+            _spell(29, "Greater Heal", 4, 11, "beneficial"),
+            _spell(30, "Lightning", 4, 11),
+            _spell(42, "Energy Bolt", 6, 20),
+            _spell(43, "Explosion", 6, 20),
+            _spell(51, "Flamestrike", 7, 40, missing="reagents"),
+        ],
+    }
+    snap["agent"].update({"bandaging": False, "engaged": 0x100, "engaged_range": 7, "casting": "", "cast_ready_ms": 0})
+    return snap
+
+
+@pytest.fixture
+def mage():
+    return mage_snapshot()

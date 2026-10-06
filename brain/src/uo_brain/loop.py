@@ -64,7 +64,8 @@ class RunStats:
 
 
 async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyConfig,
-              log_path: Path | None, stop: asyncio.Event | None = None) -> RunStats:
+              log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None) -> RunStats:
+    """archetype: "warrior" or "mage", or None to tell from the character's skills."""
     stats = RunStats()
     mem = policy.Memory()
     events: deque[str] = deque(maxlen=20)
@@ -75,6 +76,9 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
     strategy_text: str | None = None
     active = pcfg
     last_target = 0
+    arch = None
+    reading = ""
+    casts_seen: int | None = None  # the client's attack-spell count, to credit spells to targets
     log = log_path.open("a") if log_path else None
     stop = stop or asyncio.Event()
 
@@ -115,12 +119,24 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
 
             # The player's strategy changed (or this is the first look): re-read it into settings.
             text = (snap["agent"].get("strategy") or "").strip()
+            new_arch = archetype or state.archetype_of(snap)
             if text != strategy_text:
                 strategy_text = text
-                active = await load_strategy(rpc, judge, text, pcfg, stats, log)
+                active, reading = await load_strategy(rpc, judge, text, pcfg, stats, log)
+                arch = None  # resend brain_info with the new reading
+            if new_arch != arch:
+                arch = new_arch
+                await rpc.call("brain_info", judge=judge.name, archetype=arch, strategy_reading=reading)
+
+            # Spells the client cast since the last look (queued ones included) went at the engaged creature.
+            casts = agent_stats.get("casts", 0) - agent_stats.get("spell_heals", 0)
+            if casts_seen is not None and casts > casts_seen and snap["agent"].get("engaged"):
+                engaged = snap["agent"]["engaged"]
+                mem.casts_at[engaged] = mem.casts_at.get(engaged, 0) + casts - casts_seen
+            casts_seen = casts
 
             mem.update(snap["agent"], now)
-            sit = state.build(snap, mem.looted, list(events), mem.skip_items)
+            sit = state.build(snap, mem.looted, list(events), mem.skip_items, archetype=arch, casts_at=mem.casts_at)
 
             busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting")
             sig = sit.signature()
@@ -141,20 +157,22 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
 
 
 async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.PolicyConfig, stats: RunStats,
-                        log) -> policy.PolicyConfig:
+                        log) -> tuple[policy.PolicyConfig, str]:
+    """The strategy as settings, and how it was read in words ("" when there is none)."""
     try:
         knobs, answers = await strategies.compile_strategy(judge, text)
     except Exception as e:
         stats.errors += 1
         await rpc.call("note", text=f"strategy not read: {type(e).__name__}")
-        return base
+        return base, "not read (judge error)"
+    reading = knobs.describe() if answers else ""
     if answers:
         stats.input_tokens += answers.input_tokens
-        await rpc.call("note", text=f"strategy: {knobs.describe()}")
+        await rpc.call("note", text=f"strategy: {reading}")
     if log:
         log.write(json.dumps({"type": "strategy", "t": time.time(), "text": text, "knobs": knobs.__dict__,
                               "answers": answers.to_log() if answers else None}) + "\n")
-    return strategies.apply(base, knobs)
+    return strategies.apply(base, knobs), reading
 
 
 async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: policy.Memory,
@@ -188,7 +206,8 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
         if action["verb"] == "loot" and res["status"] == "done":
             mem.loot_started[action["target"]] = time.monotonic()
 
-    await rpc.call("note", text=dec.note)
+    # What was decided and why, for the in-game panel.
+    await rpc.call("decision", **decision_payload(judge, sit, qs, answers, dec, results))
 
     if log:
         log.write(json.dumps({
@@ -205,6 +224,40 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
             "actions": dec.actions,
             "results": results,
             "note": dec.note,
+            "target": dec.target.serial if dec.target else None,
+            "spell": dec.spell.name if dec.spell else None,
         }) + "\n")
         log.flush()
     return list(zip(dec.actions, results))
+
+
+def decision_payload(judge: Judge, sit: state.Situation, qs: dict[str, Any], answers, dec: policy.Decision,
+                     results: list[dict]) -> dict[str, Any]:
+    """The decision as the client's agent panel shows it: Jev's probabilities in the
+    order the options were asked, what code made of them, and what happened."""
+    intent = answers.choices.get("intent")
+    order = list(qs["intent"]["criteria"])
+    out: dict[str, Any] = {
+        "judge": judge.name,
+        "archetype": sit.archetype,
+        "latency_ms": round(answers.latency_ms, 1),
+        "intent": dec.intent,
+        "confidence": round(dec.confidence, 3),
+        "gated": dec.gated,
+        "masked": dec.masked,
+        "intents": {k: round(intent.probabilities.get(k, 0.0), 3) for k in order} if intent else {},
+        "actions": dec.actions,
+        "results": [r.get("status", "?") for r in results],
+        "note": dec.note,
+    }
+    if "in_danger" in answers.nouls:
+        out["danger"] = round(answers.nouls["in_danger"], 3)
+    if dec.target:
+        out["target"] = {"serial": dec.target.serial, "name": dec.target.name}
+        if dec.target_confidence is not None:
+            out["target"]["confidence"] = round(dec.target_confidence, 3)
+    if dec.spell:
+        out["spell"] = {"name": dec.spell.name, "why": dec.spell_why}
+        if dec.spell_confidence is not None:
+            out["spell"]["confidence"] = round(dec.spell_confidence, 3)
+    return out
