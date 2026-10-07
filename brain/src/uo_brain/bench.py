@@ -217,8 +217,10 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "warrior", ["[AgentArena 4 mix", "[AgentSpawn OgreLord 1 13 n 8"], 75, check_mismatch),
     Scenario(
         "priority", "cuo-46e.3",
-        "Three orcs close by and an orcish mage casting from range: kill the mage first.",
-        "warrior", ["[AgentSpawn Orc 3 3 s", "[AgentSpawn OrcishMage 1 9 n"], 120, check_priority, quiet_after=20),
+        "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+        # Zombies, not orcs: three orcs and the mage's spells killed the test warrior in most rounds
+        # whatever it targeted, so the scenario measured luck rather than the choice.
+        "warrior", ["[AgentSpawn Zombie 3 3 s", "[AgentSpawn OrcishMage 1 9 n"], 120, check_priority, quiet_after=20),
     Scenario(
         "loot", "cuo-46e.4",
         "A corpse holds valuables and junk while an orc walks up: take the valuables, skip the junk, "

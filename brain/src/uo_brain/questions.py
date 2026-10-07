@@ -162,9 +162,11 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             "instructions": instructions(
                 sit,
                 f"If the {who} fights, which hostile creature in `hostile_creatures` should they attack?",
-                guidance="Unless the player's strategy says otherwise: prefer the creature already being fought "
-                         "unless another is much more dangerous or much closer; prefer close, weakened creatures "
-                         "over distant ones.",
+                guidance="Unless the player's strategy says otherwise: a creature that casts spells hurts from any "
+                         "distance and can paralyse, so go for it first, even past closer ones, unless the creature "
+                         "being fought is nearly dead. Otherwise prefer the creature already being fought unless "
+                         "another is much more dangerous or much closer, and close, weakened creatures over distant "
+                         "ones.",
             ),
             "criteria": criteria,
         }
