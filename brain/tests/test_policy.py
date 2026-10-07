@@ -347,3 +347,24 @@ def test_jev_saying_attack_none_is_respected_unless_something_is_on_the_characte
     snapshot["mobiles"][0].update({"distance": 1, "dx": 1, "war_mode": True})
     dec = policy.decide(state.build(snapshot, set(), []), a, policy.Memory(), CFG)
     assert dec.target is not None
+
+
+def test_two_stronger_creatures_on_the_character_are_a_reason_to_leave(snapshot):
+    knights = {50: {"type": "BoneKnight", "name": "a bone knight", "hits": 120, "damage": "8-18", "difficulty": "strong",
+                    "caster": False}}
+    for i, m in enumerate(snapshot["mobiles"][:2]):
+        m.update({"body": 50, "name": "a bone knight", "distance": 1, "dx": 1, "war_mode": True})
+    sit = state.build(snapshot, set(), [], bestiary=knights)
+    assert questions.build(sit)["leave_now"]["instructions"]["reason"].startswith("2 creatures stronger than the")
+    cfg = policy.PolicyConfig(flee_danger=0.625)
+    assert policy.decide(sit, answers("fight", danger=0.88), policy.Memory(), cfg).intent == "leave"
+    assert policy.decide(sit, answers("fight", danger=0.4), policy.Memory(), cfg).intent == "fight"
+
+
+def test_defending_only_lets_an_idle_bird_be(snapshot):
+    snapshot["mobiles"][0].update({"name": "a crossbill", "body": 6, "distance": 2, "dx": 2, "war_mode": False,
+                                   "attacking_me": False})
+    snapshot["mobiles"] = snapshot["mobiles"][:1]
+    sit = state.build(snapshot, set(), [])
+    dec = policy.decide(sit, answers("fight", target="t1"), policy.Memory(), policy.PolicyConfig(defend_only=True))
+    assert not any(a["verb"] == "attack" for a in dec.actions)

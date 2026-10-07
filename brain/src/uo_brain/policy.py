@@ -141,8 +141,10 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
 def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: float | None = None) -> Decision:
     now = time.monotonic() if now is None else now
     if cfg.defend_only:
+        # Only what is attacking: in war mode close by, or hitting the character. "Anything close"
+        # had a soak run's warrior chase a crossbill while its walk waited.
         for h in sit.hostiles:
-            h.allowed = h.allowed and (h.distance <= cfg.close_tiles or bool(h.info.get("aggressive")) and h.distance <= 6)
+            h.allowed = h.allowed and (bool(h.info.get("aggressive")) and h.distance <= 6 or attacking_me(sit, h))
     dec = decide_intent(sit, ans, mem, cfg, now)
     if sit.is_tamer:
         tend_pet(sit, dec, mem, cfg, now)
@@ -212,6 +214,13 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     if cfg.allow_flee and cfg.flee_danger <= 0.45 and sit.hp_pct < 45 and len(close) >= 2 \
             and sit.authority("move") == "auto" and intent != "leave":
         intent, conf = "leave", 1.0
+    # Two or more creatures stronger than the character on it, and Jev judging it in danger: in a
+    # soak run two bone knights took a warrior from 100% to 25% in 10 s while Jev's intent stayed
+    # on fighting (danger 0.88).
+    strong_close = [h for h in close if str(h.info.get("strength", "")).startswith(("far stronger", "stronger"))]
+    if len(strong_close) >= 2 and danger >= cfg.flee_danger and cfg.allow_flee and sit.authority("move") == "auto" \
+            and not sit.assisting and intent != "leave":
+        intent, conf = "leave", danger
     # Code's call for a mage or archer with four or more on it once Jev judges it in danger: its
     # spells or shots are interrupted by every hit, and Jev, seeing each creature as "an easy
     # kill", put only 0.2-0.4 on leaving in swarm rounds that ended in death (2026-10-07).
@@ -229,7 +238,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg)
     cannot_fight = bool(sit.targets) and "fight" in masked
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
-                                  or cannot_fight or outnumbered):
+                                  or cannot_fight or outnumbered or len(strong_close) >= 2):
         intent = "fight" if close and "fight" not in masked else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.

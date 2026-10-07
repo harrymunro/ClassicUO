@@ -429,6 +429,10 @@ def leave_reason(sit: Situation) -> str:
     strong = [h for h in sit.hostiles if str(h.info.get("strength", "")).startswith("far stronger") and h.distance <= 12]
     if strong:
         return f"{strong[0].name} is {strong[0].info['distance']}, and far stronger than the character."
+    stronger = [h for h in sit.hostiles if str(h.info.get("strength", "")).startswith("stronger") and h.distance <= 12]
+    if len(stronger) >= 2:
+        return f"{len(stronger)} creatures stronger than the character are near: " + \
+            ", ".join(f"{h.name} {h.info['distance']}" for h in stronger[:3]) + "."
     close = [h for h in sit.hostiles if h.distance <= CLOSE_TILES]
     if str(sit.state["you"].get("supplies", "")).startswith("nearly gone") and len(close) >= 2:
         return f"Supplies are {sit.state['you']['supplies']}, with {len(close)} creatures close."

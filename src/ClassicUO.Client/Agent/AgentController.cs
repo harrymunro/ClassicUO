@@ -58,6 +58,8 @@ namespace ClassicUO.Agent
         private ReflexAction _lastHintedReflex;
 
         private uint _engaged;
+        private const uint ENGAGE_OUT_OF_REACH_MS = 15000;
+        private uint _engagedInReachAt; // last time the engaged creature was within reach
         private uint _nextPursuit, _lastAttackSent;
         private int _engagedLastX, _engagedLastY;
 
@@ -957,6 +959,7 @@ namespace ClassicUO.Agent
             _fleeUntil = 0;
             _lootCorpse = 0;
             _engaged = serial;
+            _engagedInReachAt = Time.Ticks;
             _engagedRange = Math.Clamp(range, 1, 10);
             _engagedLastX = m.X;
             _engagedLastY = m.Y;
@@ -2135,6 +2138,21 @@ namespace ClassicUO.Agent
 
             if (m == null || m.IsDead || m.Distance > _world.ClientViewRange)
             {
+                _engaged = 0;
+
+                return;
+            }
+
+            // A creature that stays out of reach (a bird, something behind a wall) is let go: travel
+            // waits while the agent is engaged, and in a soak run a crossbill held a walk 10 tiles
+            // short of the healer for 10 minutes.
+            if (m.Distance <= _engagedRange)
+            {
+                _engagedInReachAt = now;
+            }
+            else if (now - _engagedInReachAt > ENGAGE_OUT_OF_REACH_MS && _engaged != _playerTarget)
+            {
+                Journal.AddAgentEvent($"gave up on 0x{_engaged:X8}: out of reach");
                 _engaged = 0;
 
                 return;
