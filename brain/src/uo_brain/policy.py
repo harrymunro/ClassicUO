@@ -25,6 +25,9 @@ class PolicyConfig:
     avoid_players: bool = True      # auto mode leaves when a red or criminal player comes close
     kite: bool = True               # a mage or archer steps back from melee between spells or shots
     pet_heal_below: int = 70        # a tamer bandages its pet below this health %, when within reach
+    # Between hunts (travel, rest, errands): fight only what is close or attacking, never seek or
+    # loot, so the character isn't defenceless while the planner's other goals run.
+    defend_only: bool = False
     pull_back: float = 0.6          # Jev's "call the pet back" at or above this does it
     pet_last_stand: int = 20        # ...and below this pet health % code calls it back anyway
     song_every: float = 6.0         # seconds between a bard's songs (the server's skill delay, with room)
@@ -118,6 +121,8 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
         "leave": bool(sit.hostiles) and cfg.allow_flee and move,
         "rest": True,
     }
+    if cfg.defend_only:
+        valid["seek"] = valid["loot"] = False
     masked = [k for k, ok in valid.items() if not ok and k in answer.probabilities]
     probs = {k: p for k, p in answer.probabilities.items() if valid.get(k, False)}
     total = sum(probs.values())
@@ -135,6 +140,9 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
 
 def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: float | None = None) -> Decision:
     now = time.monotonic() if now is None else now
+    if cfg.defend_only:
+        for h in sit.hostiles:
+            h.allowed = h.allowed and (h.distance <= cfg.close_tiles or bool(h.info.get("aggressive")) and h.distance <= 6)
     dec = decide_intent(sit, ans, mem, cfg, now)
     if sit.is_tamer:
         tend_pet(sit, dec, mem, cfg, now)

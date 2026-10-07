@@ -171,19 +171,20 @@ class Planner:
                     place = str(args.get("place", ""))
                     xy = place.split(",")
                     if len(xy) == 2 and all(v.strip().lstrip("-").isdigit() for v in xy):
-                        r = await s.travel_to(x=int(xy[0]), y=int(xy[1]))
+                        r = await s.defended(s.travel_to(x=int(xy[0]), y=int(xy[1])))
                     else:
-                        r = await s.travel_to(place)
+                        r = await s.defended(s.travel_to(place))
                 case "hunt":
                     r = await s.hunt(str(args.get("area", "")), max(3.0, min(20.0, float(args.get("minutes", 10)))))
                 case "bank":
-                    r = await s.bank(str(args.get("deposit", "gold,loot")), str(args.get("withdraw", "")))
+                    r = await s.defended(s.bank(str(args.get("deposit", "gold,loot")), str(args.get("withdraw", ""))))
                 case "buy":
-                    r = await s.buy(str(args.get("item", "")), int(args.get("count", 1)), args.get("vendor_kind") or None)
+                    r = await s.defended(s.buy(str(args.get("item", "")), int(args.get("count", 1)),
+                                               args.get("vendor_kind") or None))
                 case "sell":
-                    r = await s.sell(str(args.get("items", "loot")), str(args.get("vendor_kind", "weaponsmith")))
+                    r = await s.defended(s.sell(str(args.get("items", "loot")), str(args.get("vendor_kind", "weaponsmith"))))
                 case "rest":
-                    r = await s.rest(max(5.0, min(300.0, float(args.get("seconds", 30)))))
+                    r = await s.defended(s.rest(max(5.0, min(300.0, float(args.get("seconds", 30))))))
                 case "set_strategy":
                     await s.rpc.call("strategy", text=str(args.get("text", "")))
                     r = Result(True, "strategy replaced")

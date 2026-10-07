@@ -323,3 +323,14 @@ def test_idle_creatures_are_described_as_not_fighting():
             "your_current_target": False}
     assert questions.describe_hostile(idle).endswith("a spellcaster, not fighting")
     assert "not fighting" not in questions.describe_hostile(dict(idle, aggressive=True))
+
+
+def test_defending_only_fights_what_is_close_or_attacking_and_never_seeks_or_loots(snapshot):
+    cfg = policy.PolicyConfig(defend_only=True)
+    snapshot["mobiles"][0].update({"distance": 6, "dx": 6, "war_mode": False})   # an idle orc 6 tiles off
+    snapshot["mobiles"][1].update({"distance": 5, "war_mode": True})            # the captain coming, 5 tiles
+    sit = state.build(snapshot, set(), [])
+    a = answers("seek", target="t1")
+    dec = policy.decide(sit, a, policy.Memory(), cfg)
+    assert dec.intent != "seek" and "seek" in dec.masked and "loot" in dec.masked
+    assert [h.serial for h in sit.hostiles if h.allowed] == [0x101]

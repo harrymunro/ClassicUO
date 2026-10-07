@@ -45,3 +45,27 @@ def test_an_errand_that_times_out_is_stopped_in_the_client(tmp_path):
     assert e == {"state": "failed", "detail": "timed out"}
     assert rpc.calls[-1][0] == "act" and rpc.calls[-1][1]["verb"] == "stop"
     w.close()
+
+
+def test_a_defended_goal_returns_its_result_and_stops_the_fight_loop(tmp_path):
+    from uo_brain.judge import HeuristicJudge
+    from uo_brain.session import Result
+    w = World.open("test", root=tmp_path)
+    rpc = FakeRpc(copy.deepcopy(SNAPSHOT))
+    s = Session(rpc, w, HeuristicJudge())
+
+    async def work():
+        await asyncio.sleep(1.5)
+        return Result(True, "rested 1 s")
+
+    async def go():
+        r = await s.defended(work())
+        await asyncio.sleep(0.3)
+        return r, len([c for c in rpc.calls if c[0] == "snapshot"])
+
+    r, polls = asyncio.run(go())
+    assert r.ok and r.summary == "rested 1 s"
+    assert polls > 0  # the fight loop looked at the game meanwhile
+    after = len([c for c in rpc.calls if c[0] == "snapshot"])
+    assert after == polls  # and stopped with the goal
+    w.close()

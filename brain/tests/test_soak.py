@@ -38,3 +38,13 @@ def test_report_puts_goals_hunts_time_and_cost_together(tmp_path):
     assert r["cost_usd"] == {"planner": 0.03, "jev": 0.00015}
     assert r["disruptions"] == [{"minute": 10.0, "what": "despawn the graveyard", "next_goals": ["bank: bank it"]}]
     assert "1 hunts, 9 kills, 0 deaths; 300 gold banked" in soak.markdown(r)
+
+
+def test_a_death_outside_a_hunt_counts(tmp_path):
+    log = write(tmp_path / "s.jsonl", [
+        {"type": "goal", "t": T0, "tool": "rest", "args": {"seconds": 300, "why": "wait for respawn"}},
+        {"type": "goal_result", "t": T0 + 300, "tool": "rest", "result": {"ok": True, "result": "rested 300 s",
+                                                                          "health": "0/95"}},
+        {"type": "session_summary", "t": T0 + 301, "finished": "the character died"},
+    ])
+    assert soak.report(log)["deaths"] == 1

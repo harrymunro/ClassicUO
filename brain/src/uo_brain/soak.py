@@ -71,7 +71,10 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
                          for r in results if not (r.get("result") or {}).get("ok", True)],
         "hunts": len(hunts),
         "kills": sum(h.get("kills", 0) for h in hunts),
-        "deaths": sum(h.get("deaths", 0) for h in hunts) + sum(1 for r in results if "died" in str(r.get("result"))),
+        # A death outside a hunt ends the session: its summary says so, or a goal ends at 0 health.
+        "deaths": sum(h.get("deaths", 0) for h in hunts) + (1 if any(
+            "died" in str(r.get("finished", "")) for r in records if r["type"] == "session_summary") or any(
+            str((r.get("result") or {}).get("health", "")).startswith("0/") for r in results) else 0),
         "minutes_per_loop": round((t1 - t0) / 60 / len(hunts), 1) if hunts else None,
         "hunt_stops": [h.get("stopped_because", "") for h in hunts],
         "time_minutes": {**{k: round(v / 60, 1) for k, v in sorted(spans.items())},

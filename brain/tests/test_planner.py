@@ -45,6 +45,9 @@ class FakeSession:
     async def rest(self, seconds):
         return Result(True, "rested")
 
+    async def defended(self, work):
+        return await work
+
 
 def call(name, args, cid="c1"):
     return llm.ToolCall(cid, name, args, json.dumps(args))

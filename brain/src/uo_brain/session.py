@@ -17,7 +17,7 @@ import math
 import random
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -348,6 +348,25 @@ class Session:
         ok = e.get("state") == "done"
         self.log("sell", place=place["name"], items=items, ok=ok, detail=e.get("detail"), gold=e.get("gold_change"))
         return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}", {"gold_change": e.get("gold_change")})
+
+    async def defended(self, work: Any) -> Any:
+        """Run a goal (a coroutine: travel, rest, an errand) with Jev fighting beside it, but only
+        what is close or attacking, and never seeking or looting. In a soak run the character
+        rested at the graveyard while a lich walked up, and nothing fought back."""
+        if self.judge is None:
+            return await work
+        stop = asyncio.Event()
+        fight = asyncio.get_running_loop().create_task(loop.run(
+            self.rpc, self.judge, loop.LoopConfig(), replace(self.pcfg, defend_only=True), self.decisions_log, stop,
+            archetype=self.archetype, on_snapshot=self.seen, bestiary=self.world.bestiary()))
+        try:
+            return await work
+        finally:
+            stop.set()
+            try:
+                await asyncio.wait_for(fight, 5)
+            except (asyncio.TimeoutError, Exception):  # noqa: BLE001 - the goal's result matters, not the guard's
+                fight.cancel()
 
     async def rest(self, seconds: float = 30) -> Result:
         await self.rpc.call("mode", mode="auto")
