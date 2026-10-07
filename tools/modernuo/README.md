@@ -71,10 +71,12 @@ Green Acres stays empty, so the arena tests are unaffected.
 
 ## Commands (AgentTestKit.cs)
 
-- **`[AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword]`:** test character templates.
+- **`[AgentKit [warrior|mage|archer|tamer|bard|warriormage|magetamer|necro|paladin] [katana|broadsword|longsword|vikingsword]`:** test character templates.
   - Warrior (default): Swords, Tactics, Healing and Anatomy at 80; stats 90/70/15. Ringmail armour, 200 bandages.
   - Mage: Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60; stats 70/35/100. Leather armour (it allows meditation), a wizard's hat, a full spellbook and a bag of 100 of each reagent.
-  - Both: stats locked, 5 greater heal and 5 greater cure potions. Removes Young status.
+  - Necro (AOS rules): Necromancy 90, Spirit Speak 80, Meditation 70, Healing 70, Anatomy 60, Wrestling 70; a full book of necromancy, 100 of each necromancer's reagent, 100 bandages, leather.
+  - Paladin (AOS rules): the warrior kit with Chivalry 90, intelligence 60, a full book of chivalry and 10,000 tithing points.
+  - All: stats locked, 5 greater heal and 5 greater cure potions. Removes Young status.
   - Wipes the old equipment and backpack first.
 - **`[AgentArena [count] [mix|orc|ratman|headless|mongbat|zombie|skeleton|<type>]`:** clears your last arena, then spawns monsters in a ring 6–10 tiles out.
 - **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, cancels pending spawns, and removes your arena monsters and the corpses around you.

@@ -378,6 +378,14 @@ namespace ClassicUO.Agent
                     break;
 
                 // {judge, archetype, strategy_reading}: any may be left out.
+                // One model call other than a fight decision, for the live view of calls.
+                case "ai_call":
+                    RequireInGame(world);
+                    world.Agent.RecordCall(AgentCall.FromJson(p));
+                    Reply(conn, id, w => w.WriteBooleanValue(true));
+
+                    break;
+
                 case "brain_info":
                     RequireInGame(world);
                     world.Agent.SetBrainInfo

@@ -1,0 +1,46 @@
+{
+  "name": "mage against a crowd",
+  "why": "keep spells landing when several melee creatures come at once: hit them together while they bunch up, then finish the weakest",
+  "start": "open",
+  "states": {
+    "open": {
+      "says": "Attack from range with strong single-target spells while the creatures are still coming.",
+      "allow": ["fight", "seek", "rest", "loot"],
+      "transitions": [
+        {"to": "blast", "when": "Three or more creatures are bunched up close together near the mage.",
+         "requires": ["area spell ready"], "at": 0.5}
+      ]
+    },
+    "blast": {
+      "says": "Stand and cast area spells at the bunch: every creature there takes damage from each cast.",
+      "allow": ["fight", "rest"],
+      "spell": "Chain Lightning",
+      "kite": false,
+      "transitions": [
+        {"to": "finish", "when": "Only one or two creatures are left close, or most of them are badly hurt.",
+         "unless": "Three or more fairly healthy creatures are still bunched up together."},
+        {"to": "out", "when": "Mana is nearly gone and several creatures are still fighting.",
+         "requires": ["mana below 25"]}
+      ]
+    },
+    "finish": {
+      "says": "Finish the creature with the least health left with quick single-target spells.",
+      "allow": ["fight", "rest", "loot"],
+      "target": "weakest_first",
+      "transitions": [
+        {"to": "blast", "when": "Three or more creatures are bunched up close together again.",
+         "requires": ["area spell ready"], "at": 0.5},
+        {"to": "out", "when": "Mana is nearly gone and creatures are still fighting.", "requires": ["mana below 15"]}
+      ]
+    },
+    "out": {
+      "says": "Get away from the fight and recover mana at a distance.",
+      "allow": ["leave", "flee", "rest"],
+      "max_s": 30,
+      "then": "open",
+      "transitions": [
+        {"to": "open", "when": "Mana is back above half and nothing is close.", "requires": ["mana above 50", "none close"]}
+      ]
+    }
+  }
+}

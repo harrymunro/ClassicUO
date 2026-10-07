@@ -17,8 +17,13 @@ namespace ClassicUO.Agent
         private Layer _rearmLayer;
         private int _rearmTries;
 
-        // Called as a spell starts.
-        private void NoteWeaponForRearm()
+        // The last weapon seen in hand, so auto mode can put it back on if it ends up in the pack.
+        private uint _heldWeapon, _nextHandsCheck;
+        private Layer _heldLayer;
+
+        // Called as a spell starts. A recall through a runebook's gump is a magery cast the client
+        // doesn't time, and equipping during a cast breaks it, so that waits until it is through.
+        private void NoteWeaponForRearm(uint afterMs = 400)
         {
             PlayerMobile p = _world.Player;
             Item weapon = p.FindItemByLayer(Layer.OneHanded) ?? p.FindItemByLayer(Layer.TwoHanded);
@@ -31,11 +36,46 @@ namespace ClassicUO.Agent
             _rearmWeapon = weapon.Serial;
             _rearmLayer = weapon.Layer;
             _rearmTries = 0;
-            _rearmAt = Time.Ticks + 400;
+            _rearmAt = Time.Ticks + afterMs;
+        }
+
+        // In auto mode the weapon goes back in hand whenever it is found in the pack with the hands
+        // empty: a soak run's warrior recalled by runebook at the start (magery drops the weapon,
+        // even from a runebook) and fought bare-handed for 16 minutes.
+        private void KeepWeaponInHand(uint now)
+        {
+            PlayerMobile p = _world.Player;
+            Item held = p.FindItemByLayer(Layer.OneHanded) ?? p.FindItemByLayer(Layer.TwoHanded);
+
+            if (held != null && held.Graphic != AgentSpells.SPELLBOOK_GRAPHIC && !AgentSpells.IsBook(held))
+            {
+                _heldWeapon = held.Serial;
+                _heldLayer = held.Layer;
+
+                return;
+            }
+
+            if (held != null || _heldWeapon == 0 || _rearmWeapon != 0 || now < _nextHandsCheck || Mode != AgentMode.Auto
+                || HumanActive || _castSpell != 0 || _world.TargetManager.IsTargeting || p.IsDead)
+            {
+                return;
+            }
+
+            _nextHandsCheck = now + 3000;
+            Item weapon = _world.Items.Get(_heldWeapon);
+
+            if (weapon != null && p.FindItemByLayer(Layer.Backpack) is Item pack && weapon.Container == pack.Serial)
+            {
+                NetClient.Socket.Send_PickUpRequest(weapon.Serial, 1);
+                NetClient.Socket.Send_EquipRequest(weapon.Serial, _heldLayer, p.Serial);
+                Stats.Rearms++;
+            }
         }
 
         private void UpdateRearm(uint now)
         {
+            KeepWeaponInHand(now);
+
             if (_rearmWeapon == 0 || now < _rearmAt || _castSpell != 0 || _world.TargetManager.IsTargeting)
             {
                 return;

@@ -271,7 +271,8 @@ def test_leave_runs_and_keeps_running_until_out_of_sight(snapshot):
     sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
     mem = policy.Memory()
     dec = policy.decide(sit, answers("leave", probs={"leave": 0.9, "fight": 0.1}), mem, CFG, now=10.0)
-    assert dec.intent == "leave" and dec.actions[-1]["verb"] == "flee" and dec.actions[-1]["target"] == 0x101
+    # The ogre lord and the orc are coming at once: away from the pack (the client weighs them all).
+    assert dec.intent == "leave" and dec.actions[-1]["verb"] == "flee" and dec.actions[-1]["target"] == 0
     # Still leaving on the next look, whatever Jev says, while something is in sight.
     again = policy.decide(sit, answers("fight"), mem, CFG, now=12.0)
     assert again.intent == "leave" and again.actions[0]["verb"] == "flee"
@@ -310,6 +311,7 @@ def test_leaving_is_asked_on_its_own_when_there_is_a_reason(snapshot):
 def test_jev_leaving_decides_below_the_danger_threshold(snapshot):
     # Jev's "leave now" rarely goes past 0.6 even when staying kills the character, so it decides
     # at 0.2 under the strategy's danger threshold (0.425 with no strategy), and never under 0.4.
+    snapshot["mobiles"][1]["war_mode"] = False  # the ogre lord isn't coming yet: no pack for code to leave
     sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
     default = policy.PolicyConfig(flee_danger=0.625)
     assert policy.leave_cut(default) == pytest.approx(0.425)
@@ -379,3 +381,129 @@ def test_jevs_yes_on_leaving_stands_with_the_reason_it_was_asked_for(snapshot):
     cfg = policy.PolicyConfig(flee_danger=0.625)
     dec = policy.decide(sit, answers("rest", danger=0.15, leave_now=0.44), policy.Memory(), cfg)
     assert dec.intent == "leave"
+
+
+# ---------------------------------------------------------------- packs (cuo-d28.9)
+
+PACK_BESTIARY = {
+    4: {"type": "Gargoyle", "name": "a gargoyle", "hits": 105, "damage": "7-14", "difficulty": "moderate", "caster": True},
+    47: {"type": "Reaper", "name": "a reaper", "hits": 129, "damage": "9-11", "difficulty": "moderate", "caster": True},
+    53: {"type": "Troll", "name": "a troll", "hits": 123, "damage": "8-14", "difficulty": "moderate", "caster": False},
+    26: {"type": "Spectre", "name": "a spectre", "hits": 60, "damage": "7-11", "difficulty": "moderate", "caster": True},
+    211: {"type": "Grobu", "name": "Grobu", "hits": 1100, "damage": "20-25", "difficulty": "deadly", "caster": False,
+          "kinds": [{"type": "BlackBear", "name": "a black bear", "hits": 60, "damage": "4-10", "difficulty": "weak",
+                     "caster": False},
+                    {"type": "Grobu", "name": "Grobu", "hits": 1100, "damage": "20-25", "difficulty": "deadly",
+                     "caster": False}]},
+}
+
+
+def pack_snapshot(snapshot, *creatures):
+    """A warrior on its own with the given (body, name, distance, war_mode, hits_pct) creatures."""
+    snapshot["mobiles"] = [
+        {"serial": 0x200 + i, "name": name, "body": body, "notoriety": "gray", "human": False, "pet": False,
+         "monster": True, "hits_pct": hp, "dead": False, "poisoned": False, "war_mode": war, "distance": d,
+         "dx": d, "dy": 0, "dir": "east", "my_target": False}
+        for i, (body, name, d, war, hp) in enumerate(creatures)]
+    snapshot["agent"]["engaged"] = 0
+    snapshot["player"]["hits"] = snapshot["player"]["hits_max"] = 95
+    return snapshot
+
+
+def test_three_fair_fights_coming_at_once_are_a_pack_to_leave_while_they_come(snapshot):
+    """The open-goal soak run's death: two gargoyles and a reaper, a fair fight each, while Jev
+    kept on fighting (leave 0.39-0.44)."""
+    pack_snapshot(snapshot, (4, "a gargoyle", 8, True, 100), (4, "a gargoyle", 10, True, 100),
+                  (47, "a reaper", 11, True, 100))
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    # Each a fair fight weighed by its hits against the warrior's 95, and spellcasters half as much again.
+    assert sit.pack_weight == pytest.approx(1.5 * (105 / 95 * 2 + 129 / 95), abs=0.02)
+    assert sit.state["coming_at_you"] == ("2 gargoyles (a fair fight and a spellcaster each) and a reaper (a fair "
+                                          "fight and a spellcaster); together far stronger than you: too many to "
+                                          "fight at once")
+    assert "coming at the warrior at once" in questions.build(sit)["leave_now"]["instructions"]["reason"]
+    dec = policy.decide(sit, answers("fight", leave_now=0.2, danger=0.1), policy.Memory(), CFG)
+    assert dec.intent == "leave" and dec.actions[-1] == {**dec.actions[-1], "verb": "flee", "target": 0}
+    assert dec.leave_why.startswith("3 coming at once: 2 gargoyles")
+
+
+def test_two_fair_fights_or_a_beaten_pack_are_fought(snapshot):
+    pack_snapshot(snapshot, (53, "a troll", 3, True, 100), (53, "a troll", 5, True, 100))
+    two = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert two.state["coming_at_you"].endswith("together stronger than you: a hard fight")
+    neutral = policy.PolicyConfig(flee_danger=0.625)  # what an empty or neutral strategy reads as
+    assert policy.decide(two, answers("fight", danger=0.1), policy.Memory(), neutral).intent == "fight"
+    # Two spectres at the graveyard a warrior hunts: spellcasters, but with 60 hits to its 95.
+    pack_snapshot(snapshot, (26, "a spectre", 3, True, 100), (26, "a spectre", 5, True, 100))
+    spectres = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert spectres.pack_weight < policy.pack_cut(neutral)
+    assert policy.decide(spectres, answers("fight", danger=0.1), policy.Memory(), neutral).intent == "fight"
+    # Two gargoyles are another matter: they cast from a distance (two killed a warrior in 6 s).
+    pack_snapshot(snapshot, (4, "a gargoyle", 6, True, 100), (4, "a gargoyle", 8, True, 100))
+    casters = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert policy.decide(casters, answers("fight", danger=0.1), policy.Memory(), CFG).intent == "leave"
+    # Three, but badly hurt: nearly done, so they weigh less.
+    pack_snapshot(snapshot, (4, "a gargoyle", 1, True, 30), (4, "a gargoyle", 2, True, 40), (47, "a reaper", 3, True, 35))
+    beaten = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert beaten.pack_weight < policy.pack_cut(CFG)
+    assert policy.decide(beaten, answers("fight", danger=0.1), policy.Memory(), CFG).intent == "fight"
+
+
+def test_idle_creatures_far_off_are_not_coming(snapshot):
+    pack_snapshot(snapshot, (4, "a gargoyle", 9, False, 100), (4, "a gargoyle", 10, False, 100),
+                  (47, "a reaper", 11, False, 100), (47, "a reaper", 14, True, 100))
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert sit.pack == [] and "coming_at_you" not in sit.state
+
+
+def test_a_pack_is_left_by_code_only_when_the_agent_may_walk_and_flee(snapshot):
+    pack_snapshot(snapshot, (4, "a gargoyle", 8, True, 100), (4, "a gargoyle", 9, True, 100),
+                  (47, "a reaper", 10, True, 100))
+    relentless = policy.PolicyConfig(allow_flee=False)
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert policy.decide(sit, answers("fight", danger=0.1), policy.Memory(), relentless).intent != "leave"
+    snapshot["agent"]["mode"] = "assist"
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert policy.decide(sit, answers("fight", danger=0.1), policy.Memory(), CFG).intent != "leave"
+    # An aggressive strategy needs a heavier pack; a cautious one leaves from less.
+    # No strategy reads as aggression 0.5, a danger threshold of 0.625: three fair fights.
+    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.625)) == pytest.approx(3)
+    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.885)) > 4
+    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.3)) == 2
+
+
+def test_a_creature_is_known_by_its_name_among_those_sharing_its_body(snapshot):
+    """A black bear shares its graphic with Grobu, and read as "far stronger" in a soak run."""
+    pack_snapshot(snapshot, (211, "a black bear", 4, True, 100), (211, "Grobu", 9, False, 100))
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert sit.hostiles[0].info["strength"] == "weak: an easy kill"
+    assert sit.hostiles[1].info["strength"].startswith("far stronger")
+
+
+def test_after_leaving_it_does_not_go_back_for_a_while(snapshot):
+    """A pack round: away untouched, then back after the orc it had left, into the gargoyles."""
+    pack_snapshot(snapshot, (4, "a gargoyle", 8, True, 100), (4, "a gargoyle", 9, True, 100),
+                  (47, "a reaper", 10, True, 100))
+    mem = policy.Memory()
+    assert policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), mem, CFG,
+                         now=10.0).intent == "leave"
+    pack_snapshot(snapshot, (17, "an orc", 14, True, 40))
+    far = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    later = policy.decide(far, answers("seek", target="t1"), mem, CFG, now=60.0)
+    assert later.intent == "rest"  # the orc further off is no target now
+    again = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert policy.decide(again, answers("seek", target="t1"), mem, CFG, now=200.0).intent == "seek"
+    # Nor is one further off fought in that time: chasing it is going back too.
+    mem.no_seek_until = 300.0
+    fight = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight", target="t1"), mem,
+                          CFG, now=250.0)
+    assert not any(a["verb"] == "attack" for a in fight.actions)
+
+
+def test_a_leave_says_which_rule_chose_it(snapshot):
+    """A soak run's hunt ended on "Jev: leave (1.00)" when it was the cautious strategy's rule."""
+    snapshot["player"]["hits"] = 40
+    snapshot["mobiles"][1].update(distance=2, war_mode=True)
+    cautious = policy.PolicyConfig(flee_danger=0.4)
+    dec = policy.decide(state.build(snapshot, set(), []), answers("fight", danger=0.5), policy.Memory(), cautious)
+    assert dec.intent == "leave" and dec.leave_why == "badly hurt (40%) with 2 close, and the strategy is cautious"

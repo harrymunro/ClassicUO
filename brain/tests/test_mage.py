@@ -211,6 +211,7 @@ def test_spell_question_says_where_the_fight_stands(mage):
 
 
 def test_protection_first_when_a_creature_is_in_melee_reach(mage):
+    mage["player"]["buffs"] = []
     mage["mobiles"][0].update({"distance": 1, "dx": 1})
     dec = policy.decide(sit_of(mage), answers(), policy.Memory(), CFG)
     assert [(a["verb"], a["spell"], a["target"]) for a in dec.actions] == [("cast", "Protection", "self")]
@@ -219,7 +220,18 @@ def test_protection_first_when_a_creature_is_in_melee_reach(mage):
     assert [(a["verb"], a["spell"]) for a in dec.actions] == [("cast", "Energy Bolt")]
 
 
+def test_protection_goes_up_while_melee_creatures_are_still_coming(mage):
+    """Cast once they were adjacent, it and every spell after it were broken by their hits."""
+    mage["player"]["buffs"] = []
+    coming = policy.decide(sit_of(mage), answers(), policy.Memory(), CFG)  # an orc in war mode, 5 tiles off
+    assert [a["spell"] for a in coming.actions if a["verb"] == "cast"] == ["Protection"]
+    mage["mobiles"][0]["war_mode"] = False  # not coming: no need yet
+    idle = policy.decide(sit_of(mage), answers(), policy.Memory(), CFG)
+    assert "Protection" not in [a.get("spell") for a in idle.actions]
+
+
 def test_protection_only_where_it_stops_interruptions(mage):
+    mage["player"]["buffs"] = []
     from uo_brain import policy, state
     from test_policy import answers
     mage["mobiles"][0].update({"distance": 1, "dx": 1, "dy": 0})
@@ -231,15 +243,20 @@ def test_protection_only_where_it_stops_interruptions(mage):
     assert not any(a.get("spell") == "Protection" for a in pre.actions)
 
 
-def test_protection_is_not_recast_while_its_icon_is_missing(mage):
+def test_protection_is_asked_for_until_its_icon_shows_but_not_endlessly(mage):
+    """A hit can break the cast, so it is asked for again; but it is a toggle, and a server with no
+    buff icons would see it turned off again, so no more than three times in 20 s."""
+    mage["player"]["buffs"] = []
     from uo_brain import policy, state
     from test_policy import answers
     mage["mobiles"][0].update({"distance": 1, "dx": 1, "dy": 0})
     cfg, mem = policy.PolicyConfig(kite=False), policy.Memory()
-    first = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), mem, cfg, now=50.0)
-    again = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), mem, cfg, now=55.0)
-    assert any(a.get("spell") == "Protection" for a in first.actions)
-    assert not any(a.get("spell") == "Protection" for a in again.actions)
+
+    def asks(now):
+        dec = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), mem, cfg, now=now)
+        return any(a.get("spell") == "Protection" for a in dec.actions)
+
+    assert [asks(t) for t in (50.0, 50.5, 52.0, 54.0, 56.0, 60.0, 71.0)] == [True, False, True, True, False, False, True]
 
 
 def test_a_mage_with_four_close_is_asked_whether_to_leave(mage):
@@ -262,3 +279,81 @@ def test_a_mage_with_four_on_it_leaves_once_jev_says_it_is_in_danger(mage):
     calm = policy.decide(sit, answers(danger=0.3), policy.Memory(), CFG, now=10.0)
     assert calm.intent == "fight"
     assert policy.decide(sit_of(mage), answers(danger=0.55), policy.Memory(), CFG, now=10.0).intent == "leave"
+
+
+# ---------------------------------------------------------------- swarms (cuo-cvl.4)
+
+from conftest import _spell, mage_snapshot  # noqa: E402
+
+
+def swarm_answers(target="t1", target_conf=0.9, leave_now=None, **kw):
+    a = answers(**kw)
+    a.choices["target"] = ChoiceResult(target, {target: target_conf}, target_conf)
+    if leave_now is not None:
+        a.nouls["leave_now"] = leave_now
+    return a
+
+def swarm(mage, n=4, spread=1, others=()):
+    """n monsters around the mage within `spread` tiles of each other, healthiest first."""
+    mage["mobiles"] = [
+        {"serial": 0x300 + i, "name": "an orc", "body": 17, "notoriety": "gray", "human": False, "pet": False,
+         "monster": True, "hits_pct": 100 - 20 * i, "dead": False, "poisoned": False, "war_mode": True,
+         "distance": 1, "dx": dx, "dy": dy, "dir": "east", "my_target": i == 0}
+        for i, (dx, dy) in enumerate([(1, 0), (1, 1), (0, 1), (-1, 0), (0, -1), (-1, -1)][:n])]
+    for j, (dx, dy, human, pet) in enumerate(others):
+        mage["mobiles"].append({"serial": 0x400 + j, "name": "someone", "body": 400, "notoriety": "innocent",
+                                "human": human, "pet": pet, "monster": False, "hits_pct": 100, "dead": False,
+                                "war_mode": False, "distance": max(abs(dx), abs(dy)), "dx": dx, "dy": dy, "dir": "",
+                                "my_target": False})
+    mage["agent"]["engaged"] = 0x300
+    mage["player"]["buffs"] = ["Protection"]  # already up: hits don't break its spells
+    mage["magic"]["spells"] += [_spell(49, "Chain Lightning", 7, 40), _spell(55, "Meteor Swarm", 7, 40)]
+    return mage
+
+
+def test_area_spells_are_offered_for_a_cluster_and_aimed_at_its_middle(mage):
+    sit = state.build(swarm(mage), set(), [])
+    assert [c.name for c in sit.area_spells] == ["Chain Lightning", "Meteor Swarm"]
+    assert sit.area_count == 4 and "hits 4 creatures now" in sit.area_spells[0].info["effect"]
+    qs = questions.build(sit)
+    cl = next(k for k, v in qs["spell"]["criteria"].items() if v.startswith("Chain Lightning"))
+    dec = policy.decide(sit, answers("fight", spell=cl), policy.Memory(), policy.PolicyConfig())
+    cast = next(a for a in dec.actions if a["verb"] == "cast" and a["spell"] == "Chain Lightning")
+    assert cast["target"] == sit.area_center.serial and cast["reason"] == "area 4"
+    # No step back from melee: they are where the spell hits them all.
+    assert not any(a["verb"] == "kite" for a in dec.actions)
+
+
+def test_unsure_jev_falls_back_on_an_area_spell_for_three_or_more(mage):
+    sit = state.build(swarm(mage, n=3), set(), [])
+    dec = policy.decide(sit, answers("fight", spell="none", spell_conf=0.1), policy.Memory(), policy.PolicyConfig())
+    assert dec.spell.name == "Chain Lightning" and dec.spell_why == "fallback"
+    two = state.build(swarm(mage_snapshot(), n=2), set(), [])
+    assert two.area_spells == []
+
+
+def test_no_area_spell_with_anyone_else_near_the_blast(mage):
+    """It hits whatever stands there: a pet, a townsperson or another player."""
+    sit = state.build(swarm(mage, others=[(2, 1, True, False)]), set(), [])
+    assert sit.area_spells == [] or sit.area_center.serial not in (0x300, 0x301)
+    sit = state.build(swarm(mage_snapshot(), n=4, others=[(0, 0, False, True)]), set(), [])
+    assert sit.area_spells == []
+
+
+def test_a_swarmed_mage_finishes_the_weakest_first_and_stays_to_cast(mage):
+    sit = state.build(swarm(mage, n=4), set(), [])
+    target, conf = policy.pick_target(sit, swarm_answers(target="none", target_conf=0.1), policy.PolicyConfig())
+    assert target.serial == 0x303 and conf is None  # 40% health: least left
+    assert "least health left first" in questions.build(sit)["target"]["instructions"]["guidance"]
+    # Four on it would be a reason to leave, but not with an area spell ready to hit them all.
+    dec = policy.decide(sit, answers("fight", danger=0.9), policy.Memory(), policy.PolicyConfig())
+    assert dec.intent == "fight"
+
+
+def test_a_cornered_character_stops_trying_to_leave(mage):
+    sit = state.build(swarm(mage, n=4), set(), [])
+    mem = policy.Memory(leaving_until=100.0, flee_failed=2)
+    dec = policy.decide(sit, swarm_answers(danger=0.9, leave_now=0.9), mem, policy.PolicyConfig(), now=10.0)
+    assert dec.intent == "fight" and mem.cornered_until == 25.0
+    assert policy.decide(sit, swarm_answers(danger=0.9, leave_now=0.9), mem, policy.PolicyConfig(),
+                         now=20.0).intent == "fight"

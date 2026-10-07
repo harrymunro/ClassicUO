@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from . import questions
+from . import calls
 from .judge import Judge
 from .logs import creature_kind
 from .state import Situation
@@ -100,7 +101,10 @@ def shortlist(world: World, x: int, y: int, kinds: set[str] | frozenset[str] = f
               limit: int = 50) -> list[Fact]:
     """Facts that might matter here, generously: notes about the areas around (outcome notes
     included), notes naming the creatures in view, what spawns nearby, notes matching the goal
-    and the archetype. Stale rows are left out; duplicates once."""
+    and the archetype. Stale rows are left out; duplicates once. Danger sightings from play
+    ("Had to leave...", "Stronger than a new character, seen...") are left to the planner: the
+    fight sees the creatures themselves, and picked here they made every later hunt there end in
+    a leave, each writing another such note."""
     facts: dict[str, Fact] = {}
 
     def add(text: str, why: str, source: str = "") -> None:
@@ -108,13 +112,18 @@ def shortlist(world: World, x: int, y: int, kinds: set[str] | frozenset[str] = f
         if text and text not in facts and len(facts) < limit:
             facts[text] = Fact(text, why, source)
 
+    def sighting(n: dict) -> bool:
+        return n.get("source") == "seen" and "danger" in (n.get("tags") or [])
+
     areas = areas_at(world, x, y, map, focus)
     for a in areas:
         for n in world.notes(area=a, limit=20):
-            add(n["text"], f"area: {a}", n.get("source", ""))
+            if not sighting(n):
+                add(n["text"], f"area: {a}", n.get("source", ""))
     for kind in sorted(kinds):
         for n in world.notes(keywords=kind, limit=6):
-            add(n["text"], f"creature: {kind}", n.get("source", ""))
+            if not sighting(n):
+                add(n["text"], f"creature: {kind}", n.get("source", ""))
     for s in world.what_spawns(near=[x, y], radius=40, map=map, limit=4):
         add(spawn_words(s), "spawns", s.get("source", ""))
     if goal and (words := keywords(goal)):
@@ -293,6 +302,15 @@ class FactPicker:
             "input_tokens": tokens, "est_cost_usd": round(tokens / 1e6 * self.price, 5),
             "seconds": round(time.perf_counter() - t0, 2)})
         self.log(rec)
+        if any(s is not None for s in scores):
+            kept = {id(f) for f, _ in chosen}
+            ranked = sorted(zip(facts, scores), key=lambda fs: -(fs[1] or 0.0))[:6]
+            calls.emit({"kind": "facts", "title": f"which facts matter here? ({len(facts)} on the shortlist)",
+                        "model": getattr(self.judge, "name", ""), "latency_ms": rec.get("latency_ms", 0),
+                        "questions": [{"q": "facts", "title": f"a yes/no for each, kept at {self.threshold}",
+                                       "kind": "many", "options": [{"label": f.text[:70], "p": round(s or 0.0, 3),
+                                                                     "kept": id(f) in kept} for f, s in ranked]}],
+                        "note": f"{len(chosen)} kept ({trigger})"})
 
     def close(self) -> None:
         if self._task and not self._task.done():

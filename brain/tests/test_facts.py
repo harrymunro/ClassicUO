@@ -92,6 +92,18 @@ def test_the_shortlist_is_generous_and_from_every_angle(w):
     assert len(facts.shortlist(w, *LANE_1, {"wisp", "orc"}, limit=5)) == 5
 
 
+def test_danger_sightings_are_left_to_the_planner(w):
+    """Picked in fights, "Had to leave" notes made every later hunt there end in a leave, each
+    writing another such note."""
+    w.add_note("Had to leave, 2026-10-07 14:41: 3 coming at once: 2 gargoyles and a zombie", area=bench.TEST_FIELD,
+               tags=["danger"], source="seen")
+    w.add_note("Stronger than a new character, seen 2026-10-07 04:55: 1 wisp.", area=bench.TEST_FIELD,
+               tags=["danger"], source="seen")
+    texts = [f.text for f in facts.shortlist(w, *LANE_1, {"wisp", "orc"})]
+    assert not any(t.startswith(("Had to leave", "Stronger than a new character")) for t in texts)
+    assert any("never attack first" in t for t in texts)
+
+
 def picker_with(w, judge, **kw):
     p = facts.FactPicker(w, judge, min_interval_s=0, **kw)
     p.records = []

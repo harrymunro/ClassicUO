@@ -20,7 +20,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from . import llm, world as worlds
+from . import calls, llm, world as worlds
+from . import machine as machines
 from .facts import Ranker
 from .session import Result, Session, describe
 
@@ -35,7 +36,9 @@ hunt for a while, come back when supplies run low or the bag gets heavy, bank go
 restock, and go again. Before hunting, make sure there are enough supplies: a warrior wants
 at least 50 bandages, a mage at least 30 of each reagent, an archer at least 50 bandages and
 150 arrows or bolts for the bow in hand (a bowyer or a provisioner sells them), a tamer at least
-80 bandages, for itself and its pet. A tamer whose pet has died can't hunt: finish the goal and say so. Selling loot is optional; banking
+80 bandages, for itself and its pet, a necromancer at least 30 of each of its own reagents (bat wing,
+grave dust, daemon blood, nox crystal, pig iron) and 30 bandages, a paladin what a warrior wants plus
+tithing points for its blessings (it fights on without them). A tamer whose pet has died can't hunt: finish the goal and say so. Selling loot is optional; banking
 it is enough. Vendors take gold from the backpack, not the bank: buy before banking, or keep
 some back when banking (withdraw 'gold:200').
 
@@ -49,10 +52,23 @@ Rules:
 - A hunt is time-boxed (`minutes`, at most 20) and also ends early when supplies run low,
   the bag gets heavy, the character is in danger, or nothing has shown up for a while. Its
   result says why it ended; plan the next goal from that.
+- If a hunt ended because the character left the area (stronger creatures or a pack came at it;
+  the result names them), don't hunt there again for at least 30 minutes: they are still about,
+  and another spot of the same place counts as there. Code refuses goals within 30 tiles of it
+  for 15 minutes. Bank, restock or hunt somewhere else. hunting_spots marks areas with danger
+  seen recently.
 - If a goal fails, read why and try something different (another vendor, another area,
   waiting for a respawn) rather than repeating the same thing. A vendor that is sold out
   restocks in about an hour: buy elsewhere, or go on with what you have if it is enough.
 - If the character is dead, or the player's goal is done or impossible, call finish.
+
+How it fights: by default code plays every fight the same way. With set_machine you can give it
+a plan for its fights instead, as a small state machine (states in words, which intents each
+allows, yes/no transitions Jev judges; see the tool). Use it when the fights call for a shape the
+default doesn't have, for example pulling one creature at a time, backing off to heal before
+going on, or a mage keeping its spells landing against a crowd. It applies to hunts, and stays
+until replaced or cleared. Change it only on evidence: a hunt's result reports the time spent in
+each of its states and how the hunt went.
 """
 
 
@@ -91,7 +107,19 @@ def goal_tools() -> list[dict[str, Any]]:
     ]
 
 
-GOALS = {"travel_to", "hunt", "bank", "buy", "sell", "rest", "set_strategy", "finish"}
+def machine_tool() -> dict[str, Any]:
+    return {"type": "function", "function": {
+        "name": "set_machine",
+        "description": "Give the character a plan for its fights in hunts, as a state machine, or clear it to go "
+                       "back to the default way of fighting. Code checks it and says what is wrong if it can't be used.",
+        "parameters": {"type": "object", "properties": {
+            "machine": machines.schema(),
+            "clear": {"type": "boolean", "description": "Go back to the default way of fighting."},
+            "why": {"type": "string", "description": "One short sentence for the player: why this plan now."}},
+            "required": ["why"]}}}
+
+
+GOALS = {"travel_to", "hunt", "bank", "buy", "sell", "rest", "set_strategy", "set_machine", "finish"}
 
 
 @dataclass
@@ -109,7 +137,8 @@ class PlanStep:
 class Planner:
     def __init__(self, session: Session, goal: str, model: str | None = None,
                  chat_fn: llm.ChatFn = llm.chat, log: Callable[[dict[str, Any]], None] | None = None,
-                 max_queries: int = 6, on_goal: Callable[[str, str, str], Any] | None = None):
+                 max_queries: int = 6, on_goal: Callable[[str, str, str], Any] | None = None,
+                 machines_allowed: bool = True):
         self.session = session
         self.goal = goal
         self.model = llm.planner_model(model)
@@ -121,7 +150,9 @@ class Planner:
         self.usage = llm.LlmUsage(calls=0)
         self.finished: str | None = None
         self.started = time.monotonic()
-        self.tools = goal_tools() + worlds.tool_schemas()
+        self.tools = goal_tools() + ([machine_tool()] if machines_allowed else []) + worlds.tool_schemas()
+        # The plan for its fights (cuo-6om), kept across goals and handovers until replaced.
+        self.machine: machines.Runner | None = getattr(session, "machine", None)
         # Jev re-ranks list answers against the planner's question (facts.py); the rule judge doesn't.
         self.ranker = Ranker(getattr(session, "judge", None), log=self.log)
 
@@ -138,13 +169,30 @@ class Planner:
         return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]
 
     async def step(self) -> PlanStep | None:
-        """One planning decision, with any world queries it needs, then the goal carried out."""
+        """One planning decision, with any world queries it needs, then the goal carried out. Jev
+        fights what attacks while the model thinks (Session.defended): a hunt that ended in a leave
+        hands over with the creatures possibly still about."""
         snap = await self.session.snap()
         situation = describe(snap, self.session.world)
         msgs = self.messages(situation)
+        defended = getattr(self.session, "defended", None)
+        tool, args = await (defended(self.choose(msgs)) if defended else self.choose(msgs))
+        return await self.carry_out(tool, args)
+
+    async def choose(self, msgs: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
+        """The model's next goal (tool, arguments), after the world queries it asks first."""
         for _ in range(self.max_queries + 1):
             res = await self.chat(msgs, tools=self.tools, tool_choice="auto", model=self.model, max_tokens=600)
             self.usage = self.usage + res.usage
+            if res.tool_calls:
+                c = res.tool_calls[0]
+                args = {k: v for k, v in (c.arguments or {}).items() if k != "why"}
+                calls.emit({"kind": "planner", "title": f"planner: {c.name}" + (" (a world query)" if c.name not in GOALS else ""),
+                            "model": res.usage.model or self.model, "latency_ms": round(res.usage.latency_ms or 0, 1),
+                            "cost": round(res.usage.cost or 0.0, 5),
+                            "questions": [{"q": c.name, "kind": "text",
+                                           "title": ", ".join(f"{k}: {str(v)[:60]}" for k, v in args.items())[:200]}],
+                            "note": str((c.arguments or {}).get("why", ""))[:200]})
             self.log({"type": "planner", "t": time.time(), "usage": res.usage.to_log(),
                       "content": (res.content or "")[:500], "calls": [{"name": c.name, "args": c.arguments} for c in res.tool_calls]})
             if not res.tool_calls:
@@ -157,8 +205,8 @@ class Planner:
                 msgs += [{**res.message, "tool_calls": res.message.get("tool_calls", [])[:1]},
                          llm.tool_result(call, answer)]
                 continue
-            return await self.carry_out(call.name, call.arguments)
-        return await self.carry_out("rest", {"seconds": 30, "why": "the planner gave no goal"})
+            return call.name, call.arguments
+        return "rest", {"seconds": 30, "why": "the planner gave no goal"}
 
     async def carry_out(self, tool: str, args: dict[str, Any]) -> PlanStep:
         why = str(args.get("why", ""))
@@ -190,6 +238,17 @@ class Planner:
                 case "set_strategy":
                     await s.rpc.call("strategy", text=str(args.get("text", "")))
                     r = Result(True, "strategy replaced")
+                case "set_machine":
+                    if args.get("clear"):
+                        self.machine = None
+                        r = Result(True, "back to the default way of fighting")
+                    else:
+                        try:
+                            self.machine = machines.Runner(machines.parse(args.get("machine") or {}))
+                            r = Result(True, "plan set: " + self.machine.machine.describe())
+                        except machines.MachineError as e:
+                            r = Result(False, f"plan not used: {e}")
+                    s.machine = self.machine
                 case _:
                     self.finished = str(args.get("summary", "finished"))
                     r = Result(True, self.finished)
@@ -253,4 +312,7 @@ def describe_goal(tool: str, args: dict[str, Any]) -> str:
             return f"resting {args.get('seconds')} s"
         case "set_strategy":
             return "changing the strategy"
+        case "set_machine":
+            return "dropping its fight plan" if args.get("clear") else \
+                f"new fight plan: {(args.get('machine') or {}).get('name', 'a plan')}"
     return "finishing"

@@ -6,9 +6,11 @@ items, so the code can act on whichever branch wins without a second round trip.
 Questions only see the state; each one is complete on its own.
 """
 
+import re
 from typing import Any
 
-from .state import Situation
+from .spells import BLESSINGS
+from .state import PACK_FAR, Situation
 
 CLOSE_TILES = 3  # matches policy.PolicyConfig.close_tiles
 
@@ -49,6 +51,20 @@ BARD_ROLE = (
     "stops attacking for a while, and discordance weakens one. Songs can fail, more often against strong "
     "creatures, and it is weak in a fight itself. Bandages and potions are applied automatically when health is "
     "low, so you do not need to choose healing; choose what the bard does next."
+)
+
+NECRO_ROLE = (
+    "You are deciding for a necromancer in the game Ultima Online. The necromancer fights monsters by casting "
+    "necromancy from a distance: curses and poisons that do damage, some of it over time. It is weak in melee and "
+    "every spell costs mana, which comes back slowly, faster while resting. Bandages and potions are used "
+    "automatically when health is low, so you do not need to choose healing; choose what the necromancer does next."
+)
+
+PALADIN_ROLE = (
+    "You are deciding for a paladin in the game Ultima Online. The paladin is a warrior: it fights monsters in melee "
+    "with a weapon. It also knows chivalry, holy blessings paid for in mana and tithing points that make its "
+    "weapon and its fighting stronger for a while. Bandages, potions and its healing prayer (Close Wounds) are used "
+    "automatically when health is low, so you do not need to choose healing; choose what the paladin does next."
 )
 
 INTENTS: dict[str, Any] = {
@@ -198,6 +214,8 @@ TARGET_GUIDANCE = (
     "another is much more dangerous or much closer, and close, weakened creatures over distant ones."
 )
 TAMER_TARGETS = "For a tamer this is the creature to set its pet on; anything attacking the tamer itself comes first. "
+SWARMED_CASTER = ("With three or more creatures on a spellcaster, finish the one with least health left first: every "
+                  "kill is one fewer hitting it and breaking its spells. ")
 
 BARD_INTENTS: dict[str, Any] = {
     "fight": {
@@ -234,7 +252,21 @@ SONG_CHOICES = {
 }
 
 
+def worded_for(intents: dict[str, Any], old: str, new: str) -> dict[str, Any]:
+    """The same intents for another kind of character ("the mage" -> "the necromancer"), whole
+    words only ("damage" stays)."""
+    return {k: {f: re.sub(rf"\b{old}\b", new, v) for f, v in d.items()} for k, d in intents.items()}
+
+
+NECRO_INTENTS = worded_for(MAGE_INTENTS, "mage", "necromancer")
+PALADIN_INTENTS = worded_for(INTENTS, "warrior", "paladin")
+
+
 def role(sit: Situation) -> str:
+    if sit.is_necromancer:
+        return NECRO_ROLE
+    if sit.is_paladin:
+        return PALADIN_ROLE
     if sit.archetype == "mage-tamer":
         return f"{TAMER_ROLE} {MAGE_TAMER}"
     if sit.is_warrior_mage:
@@ -245,8 +277,8 @@ def role(sit: Situation) -> str:
 
 def character(sit: Situation) -> str:
     """The word the questions use for the character; a hybrid goes by its main way of fighting."""
-    return "tamer" if sit.is_tamer else "mage" if sit.is_mage else "archer" if sit.is_archer \
-        else "bard" if sit.is_bard else "warrior"
+    return "tamer" if sit.is_tamer else "necromancer" if sit.is_necromancer else "mage" if sit.is_mage \
+        else "archer" if sit.is_archer else "bard" if sit.is_bard else "paladin" if sit.is_paladin else "warrior"
 
 
 def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
@@ -256,6 +288,10 @@ def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
         out["player_strategy"] = sit.strategy
         out["using_the_strategy"] = (f"These are the player's own instructions for how their {character(sit)} should "
                                      "play. Follow them wherever they bear on this question.")
+    if sit.plan:
+        out.update(sit.plan)
+        out["following_the_plan"] = (f"`plan` is how the {character(sit)} means to play this fight, and `plan_step` "
+                                     "where it is in it. Choose what that step calls for.")
     if sit.known:
         out["what_you_know"] = ("`what_you_know_about_this_place` holds facts from earlier play and guides about "
                                 "this place and these creatures. Use them wherever they bear on this question.")
@@ -270,7 +306,8 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         "intent": {
             "type": "choice",
             "instructions": instructions(sit, f"What should the {who} do next?"),
-            "criteria": TAMER_INTENTS if sit.is_tamer else MAGE_INTENTS if sit.is_mage
+            "criteria": TAMER_INTENTS if sit.is_tamer else NECRO_INTENTS if sit.is_necromancer
+            else MAGE_INTENTS if sit.is_mage else PALADIN_INTENTS if sit.is_paladin
             else ARCHER_INTENTS if sit.is_archer else BARD_INTENTS if sit.is_bard else INTENTS,
         },
         # A factual risk judgment, so it does not see the strategy; code combines the two.
@@ -304,8 +341,8 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             "criteria": {
                 "true": f"Staying means dying: there isn't enough healing left to outlast the creatures attacking "
                         f"(supplies nearly gone with three or more close), a creature far stronger than the {who} is "
-                        f"close or coming for it, or what is known about this place says the {who} can't win against "
-                        "what is here.",
+                        f"close or coming for it, several are coming at once that together are too many for the "
+                        f"{who}, or what is known about this place says the {who} can't win against what is here.",
                 "false": f"The {who} can win here: only one or two weak or nearly dead creatures are left, or supplies "
                          "are plentiful, or the strong creature is far off and not coming.",
             },
@@ -328,12 +365,14 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
     if sit.targets:
         criteria = {h.id: describe_hostile(h.info, who) for h in sit.targets}
         criteria["none"] = "None of these creatures should be attacked."
+        swarmed = sit.casts and sum(1 for h in sit.hostiles if h.distance <= CLOSE_TILES) >= 3
         qs["target"] = {
             "type": "choice",
             "instructions": instructions(
                 sit,
                 f"If the {who} fights, which hostile creature in `hostile_creatures` should they attack?",
-                guidance=(TAMER_TARGETS if sit.is_tamer else "") + TARGET_GUIDANCE,
+                guidance=(TAMER_TARGETS if sit.is_tamer else "") + (SWARMED_CASTER if swarmed else "")
+                + TARGET_GUIDANCE,
             ),
             "criteria": criteria,
         }
@@ -374,9 +413,23 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             "instructions": instructions(
                 sit, question,
                 guidance="Unless the player's strategy says otherwise: use strong spells while mana is plentiful and "
-                         "cheaper ones when mana runs low; finish a nearly dead creature with a quick, cheap spell.",
+                         "cheaper ones when mana runs low; finish a nearly dead creature with a quick, cheap spell. "
+                         "With three or more creatures close together, an area spell hurts them all for less mana "
+                         "a creature than casting at each in turn.",
             ),
             "criteria": criteria,
+        }
+
+    # A paladin's blessing for the fight at hand, asked alongside the target (cuo-cvl.5).
+    if sit.is_paladin and sit.targets and sit.blessings and any(h.distance <= CLOSE_TILES for h in sit.targets):
+        options = {k: v for k, v in BLESSINGS.items() if k in sit.blessings or k == "none"}
+        qs["blessing"] = {
+            "type": "choice",
+            "instructions": instructions(
+                sit, "Which blessing should the paladin use in this fight now?",
+                guidance="Blessings already in effect are listed under `you.blessings_active`; don't use one again "
+                         "while it lasts. Tithing points and mana are limited, so bless the fights that need it."),
+            "criteria": options,
         }
 
     # Looting questions only matter with no hostile close (policy masks loot otherwise),
@@ -433,6 +486,10 @@ def leave_reason(sit: Situation) -> str:
     if len(stronger) >= 2:
         return f"{len(stronger)} creatures stronger than the character are near: " + \
             ", ".join(f"{h.name} {h.info['distance']}" for h in stronger[:3]) + "."
+    # A pack: several coming at once that together outweigh the character, asked about while they
+    # are still coming. In a soak run two gargoyles and a reaper, "a fair fight" each, killed a warrior.
+    if len(sit.pack) >= 2 and sit.pack_weight >= PACK_FAR:
+        return f"{len(sit.pack)} creatures are coming at the {character(sit)} at once: {sit.state['coming_at_you']}."
     close = [h for h in sit.hostiles if h.distance <= CLOSE_TILES]
     if str(sit.state["you"].get("supplies", "")).startswith("nearly gone") and len(close) >= 2:
         return f"Supplies are {sit.state['you']['supplies']}, with {len(close)} creatures close."

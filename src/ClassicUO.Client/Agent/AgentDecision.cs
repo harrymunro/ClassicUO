@@ -41,6 +41,17 @@ namespace ClassicUO.Agent
         public readonly List<string> Results = new List<string>();
         public string Note = string.Empty;
 
+        // The plan being followed, when the brain runs one (a state machine): its name, the step
+        // it is at and what that step means, every step in order, and the last move between them.
+        public string PlanName = string.Empty;
+        public string PlanStep = string.Empty;
+        public string PlanSays = string.Empty;
+        public string PlanLast = string.Empty;
+        public readonly List<string> PlanSteps = new List<string>();
+
+        // Every question of the call with Jev's options and pick, for the live view of calls.
+        public readonly List<AgentCallQuestion> Questions = new List<AgentCallQuestion>();
+
         public static AgentDecision FromJson(JsonElement p)
         {
             var d = new AgentDecision();
@@ -117,6 +128,33 @@ namespace ClassicUO.Agent
                         {
                             d.Actions.Add(AgentAction.FromJson(a));
                         }
+
+                        break;
+
+                    case "machine" when v.ValueKind == JsonValueKind.Object:
+                        foreach (JsonProperty t in v.EnumerateObject())
+                        {
+                            switch (t.Name)
+                            {
+                                case "name": d.PlanName = t.Value.GetString() ?? string.Empty; break;
+                                case "state": d.PlanStep = t.Value.GetString() ?? string.Empty; break;
+                                case "says": d.PlanSays = t.Value.GetString() ?? string.Empty; break;
+                                case "last": d.PlanLast = t.Value.GetString() ?? string.Empty; break;
+
+                                case "states" when t.Value.ValueKind == JsonValueKind.Array:
+                                    foreach (JsonElement st in t.Value.EnumerateArray())
+                                    {
+                                        d.PlanSteps.Add(st.GetString() ?? string.Empty);
+                                    }
+
+                                    break;
+                            }
+                        }
+
+                        break;
+
+                    case "questions":
+                        d.Questions.AddRange(AgentCall.ParseQuestions(v));
 
                         break;
 

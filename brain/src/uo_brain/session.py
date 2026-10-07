@@ -21,7 +21,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from . import loop, policy
+from . import calls, loop, policy
 from .facts import FactPicker
 from .judge import Judge
 from .logs import session_name
@@ -65,6 +65,7 @@ class Session:
                  pcfg: policy.PolicyConfig | None = None, archetype: str | None = None,
                  decisions_log: Path | None = None):
         self.rpc = rpc
+        calls.sink = lambda rec: rpc.call("ai_call", **rec)  # the client's live view of every model call
         self.decisions_log = decisions_log  # where hunts append Jev's decisions
         self.world = world
         self.judge = judge
@@ -77,6 +78,25 @@ class Session:
         self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}  # all hunts
         self.dangers: dict[str, dict[int, str]] = {}  # area -> creature serial -> kind, stronger than the character
         self.facts_mode = "jev"  # which world facts reach the fights: jev (Jev picks), all, none (facts.py)
+        self.machine = None      # machine.Runner: a plan for the fights in hunts (cuo-6om); None for the default
+        # Where hunts ended in a leave from creatures: (x, y, monotonic time, area, why). Goals back
+        # there are refused for a while: told not to, a soak run's planner still sent its warrior to
+        # "the skeleton spawner" of the graveyard it had just left two gargoyles at, and it died.
+        self.left_from: list[tuple[int, int, float, str, str]] = []
+
+    AVOID_TILES = 30
+    AVOID_MINUTES = 15
+
+    def avoided(self, x: int, y: int) -> str | None:
+        """Why a goal at (x, y) is refused, or None: within AVOID_TILES of where a hunt ended in a
+        leave from creatures in the last AVOID_MINUTES."""
+        now = time.monotonic()
+        for lx, ly, at, area, why in self.left_from:
+            ago = (now - at) / 60
+            if ago < self.AVOID_MINUTES and tiles(x, y, lx, ly) <= self.AVOID_TILES:
+                return (f"not going back near {area} yet: it left there {ago:.0f} min ago ({why}); choose somewhere "
+                        f"at least {self.AVOID_TILES} tiles away, or wait {self.AVOID_MINUTES - ago:.0f} min")
+        return None
 
     def seen(self, snap: dict[str, Any]) -> None:
         self.note_dangers(snap)
@@ -92,11 +112,11 @@ class Session:
         two bone knights had driven it off, because nothing it could see or query said so."""
         if not snap.get("in_game") or "player" not in snap:
             return
-        from .state import BODY_KINDS, threat_words
+        from .state import BODY_KINDS, known_creature, threat_words
         p = snap["player"]
         bestiary = self.world.bestiary()
         for m in snap.get("mobiles", []):
-            known = bestiary.get(m.get("body", 0)) if m.get("monster") and not m.get("dead") else None
+            known = known_creature(bestiary, m) if m.get("monster") and not m.get("dead") else None
             if not known or not threat_words(known, p.get("hits_max") or 100).startswith(("stronger", "far stronger")):
                 continue
             kind = BODY_KINDS.get(m.get("body", 0)) or str(known.get("name") or m.get("name") or "a creature")
@@ -159,6 +179,8 @@ class Session:
         if target is None:
             return Result(False, f"no place called {place!r} in the world store")
         tx, ty, name = target
+        if refused := self.avoided(tx, ty):
+            return Result(False, refused)
         snap = await self.snap()
         start = self.where(snap)
         if tiles(*start, tx, ty) <= distance:
@@ -211,9 +233,12 @@ class Session:
 
     def rune_for(self, name: str, tx: int, ty: int, snap: dict[str, Any]) -> tuple[int, int, str] | None:
         """(serial, runebook entry or -1, label) of the rune or runebook entry that goes to a
-        place: by its name, or by a name the world store puts within 20 tiles of it."""
+        place: by its name, or by a name the world store puts within 20 tiles of it. A loose rune
+        needs the Recall spell; without it only runebook entries (charges) count."""
         items = snap.get("travel_items") or {}
-        options = [(r["serial"], -1, r["name"]) for r in items.get("runes", [])]
+        spells = {sp["name"]: sp for sp in (snap.get("magic") or {}).get("spells", [])}
+        castable = "Recall" in spells and not spells["Recall"].get("missing")
+        options = [(r["serial"], -1, r["name"]) for r in items.get("runes", [])] if castable else []
         for book in items.get("runebooks", []):
             options += [(book["serial"], i, e) for i, e in enumerate(book.get("entries", []))]
         best, best_score = None, 0.0
@@ -442,6 +467,8 @@ class Session:
             radius = 10
         else:
             return Result(False, f"no hunting area called {area!r} in the world store")
+        if refused := self.avoided(cx, cy):
+            return Result(False, refused)
 
         r = await self.travel_to(name, cx, cy, distance=3)
         if not r.ok:
@@ -482,14 +509,32 @@ class Session:
             if why:
                 stop.set()
 
+        def decided(_sit: Any, dec: policy.Decision) -> None:
+            if dec.intent == "leave" and dec.leave_why:
+                hw.left(dec.leave_why)
+
         lcfg = loop.LoopConfig(duration_s=minutes * 60)
         began = time.monotonic()
+        if self.machine is not None:
+            self.machine.reset()
         facts = FactPicker(self.world, self.judge, mode=self.facts_mode, focus=name)
         stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path or self.decisions_log, stop,
                                archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary(),
-                               facts=facts)
+                               facts=facts, on_decision=decided, machine=self.machine)
         for task in asking:
             task.cancel()  # a question still out when the hunt ends has nothing left to decide
+        retreat = ""
+        if why and why[0].startswith("left the area"):
+            # A pack of creatures that are each "a fair fight" isn't in the stronger-creature notes:
+            # note what drove the character off, so the planner and hunting_spots know. Only creatures:
+            # low supplies or a cautious strategy say nothing about the place.
+            if hw.left_why and (" coming at once: " in hw.left_why or "stronger" in hw.left_why):
+                self.world.add_note(f"Had to leave, {time.strftime('%Y-%m-%d %H:%M')}: {hw.left_why}", area=name,
+                                    tags=["danger"], source="seen")
+                p = (last or first).get("player") or {}
+                for lx, ly in {(cx, cy), (p.get("x", cx), p.get("y", cy))}:
+                    self.left_from.append((lx, ly, time.monotonic(), name, hw.left_why.split(";")[0]))
+            retreat = await self.defended(self.retreat())
         s = stats.summary(lcfg.price_per_million)["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         routine = hw.summary()
@@ -507,6 +552,10 @@ class Session:
             "health": f"{p1.get('hits')}/{p1.get('hits_max')}",
             "stopped_because": why[0] if why else f"{minutes} minutes up",
         }
+        if retreat:
+            data["then"] = retreat
+        if self.machine is not None:
+            data["plan"] = self.machine.summary()
         from .state import archetype_of
         kit = self.archetype or (archetype_of(last) if last else "warrior")
         # Named after the log, so importing the log later (outcomes.py) replaces these rows.
@@ -515,12 +564,45 @@ class Session:
         self.world.add_outcome(name, kit, "deaths", data["deaths"], session=session)
         self.log("hunted", area=name, kit=kit, routine=routine, **data)
         return Result(data["deaths"] == 0, f"hunted {name} for {mins} min: {data['kills']} kills, "
-                                           f"stopped because {data['stopped_because']}", data)
+                                           f"stopped because {data['stopped_because']}"
+                                           + (f"; then {retreat}" if retreat else ""), data)
+
+    async def retreat(self) -> str:
+        """After leaving a hunt from danger, recall to a guarded town when a rune or runebook entry goes
+        to one (a bank first, then the nearest), since the creatures may still be about. What
+        happened, in words; "" with nothing to recall by."""
+        snap = await self.snap()
+        here = self.where(snap)
+        # A recall takes seconds standing still, and a hit breaks it: not with anything close or fighting.
+        about = [m for m in snap.get("mobiles", []) if m.get("monster") and not m.get("dead")
+                 and (m["distance"] <= 10 or m.get("war_mode"))]
+        if about:
+            return f"didn't stop to recall: {len(about)} creature{'s' if len(about) > 1 else ''} still about"
+        items = snap.get("travel_items") or {}
+        labels = [r["name"] for r in items.get("runes", [])] + \
+            [e for book in items.get("runebooks", []) for e in book.get("entries", [])]
+        best = None
+        for label in labels:
+            text = label.split(":", 1)[-1].lower().split(" for ", 1)[-1].replace("(felucca)", "").strip()
+            hit = self.world.place(text, limit=1)
+            region = self.world.region_at(hit[0]["x"], hit[0]["y"]) if hit else None
+            if not region or not region.get("guarded"):
+                continue
+            rank = ("bank" not in text, tiles(*here, hit[0]["x"], hit[0]["y"]))
+            if best is None or rank < best[0]:
+                best = (rank, hit[0])
+        if best is None:
+            return ""
+        place = best[1]
+        await self.act("stop")
+        how = await self.recall_to(place["name"], place["x"], place["y"], snap)
+        self.log("retreat", to=place["name"], recalled=bool(how))
+        return f"recalled to {place['name']} ({how})" if how else f"could not recall to {place['name']}"
 
     @staticmethod
     def mage(snap: dict[str, Any]) -> bool:
         from .state import archetype_of
-        return archetype_of(snap) in ("mage", "mage-tamer")
+        return archetype_of(snap) in ("mage", "mage-tamer", "necromancer")
 
     def routine_summary(self) -> dict[str, Any]:
         """Jev's routine questions over all hunts so far, and what they cost an hour of hunting."""
@@ -573,6 +655,10 @@ def describe(snap: dict[str, Any], world: World | None = None) -> dict[str, Any]
     regs = s.get("reagents") or {}
     if regs and any(regs.values()):
         out["reagents"] = {k.replace("_", " "): v for k, v in regs.items()}
+    if pagan := s.get("pagan_reagents"):
+        out["necromancer_reagents"] = {k.replace("_", " "): v for k, v in pagan.items()}
+    if "chivalry" in ((snap.get("magic") or {}).get("schools") or []):
+        out["tithing_points"] = snap["magic"].get("tithing", 0)
     return out
 
 

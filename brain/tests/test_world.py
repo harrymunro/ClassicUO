@@ -252,3 +252,17 @@ def test_cli_world_commands_do_not_need_the_game(tmp_path, monkeypatch, capsys):
     assert run("notes", "graveyard")[0]["area"] == "Britain"
     assert run("stats")["notes"]["rows"] == 1
     assert run("find", "bank") == []
+
+
+def test_hunting_spots_put_an_area_with_danger_this_hour_last(w):
+    first = w.hunting_spots("warrior", "moderate")[0]["area"]
+    w.add_note("Had to leave, 2026-10-07 12:00: 3 coming at once: 2 gargoyles and a reaper", area=first,
+               tags=["danger"], source="seen")
+    spots = w.hunting_spots("warrior", "moderate")
+    moved = next(s for s in spots if s["area"] == first)
+    assert moved["recent_danger"].startswith("0 min ago: Had to leave")
+    assert spots[0]["area"] != first
+    # An old sighting is listed but doesn't move the spot.
+    w.db.execute("UPDATE notes SET last_seen = '2026-01-01T00:00:00+00:00'")
+    again = w.hunting_spots("warrior", "moderate")
+    assert again[0]["area"] == first and "recent_danger" not in again[0]

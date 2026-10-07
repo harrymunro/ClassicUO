@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .judge import Answers, ChoiceResult
-from .spells import GREATER_HEAL, MEDITATION, PROTECTION
+from .spells import BLESSING_SPELLS, GREATER_HEAL, MEDITATION, PROTECTION
 from .questions import leave_reason
-from .state import SPELL_RANGE, Candidate, Situation
+from .state import PACK_FAR, SPELL_RANGE, Candidate, Situation, around_target
 
 
 @dataclass
@@ -25,6 +25,10 @@ class PolicyConfig:
     meditate_below: int = 80        # mana %: a resting mage meditates below this
     avoid_players: bool = True      # auto mode leaves when a red or criminal player comes close
     kite: bool = True               # a mage or archer steps back from melee between spells or shots
+    leave_packs: bool = True        # code leaves when a pack coming at the character outweighs it (pack_cut)
+    # A plan's state (machine.py): the intents Jev may choose from; None for all. The floors (the
+    # emergency flee, leaving from players and packs) apply whatever it allows.
+    allowed_intents: tuple[str, ...] | None = None
     pet_heal_below: int = 70        # a tamer bandages its pet below this health %, when within reach
     # Between hunts (travel, rest, errands): fight only what is close or attacking, never seek or
     # loot, so the character isn't defenceless while the planner's other goals run.
@@ -51,8 +55,9 @@ class Memory:
     last_meditate: float = 0.0
     hinted: dict[str, float] = field(default_factory=dict)  # combat assist: when each hint was last shown
     leaving_until: float = 0.0  # leaving the area: keep running from whatever is in sight until then
+    no_seek_until: float = 0.0  # ...and after it, don't go looking for creatures again until then
     last_kite: float = 0.0      # a mage's last step back from melee
-    last_protection: float = -1e9  # when Protection was last cast: buff icons may not show it
+    protection_asks: list[float] = field(default_factory=list)  # when Protection was last asked for
     kite_casts: int = -1        # attack spells cast by then: the next step back waits for one more
     kite_ammo: int = 1 << 30    # an archer's arrows by then: the next step back waits for a shot
     last_pet_bandage: float = -1e9  # a tamer's last bandage on its pet
@@ -60,6 +65,12 @@ class Memory:
     last_song: float = -1e9         # a bard's last song
     last_pet_call: float = -1e9     # a tamer's last "all follow me"
     sung: dict[int, float] = field(default_factory=dict)  # creature -> when a song last hit it (provoked or calmed)
+    last_blessing: float = -1e9     # a paladin's last blessing, and its Consecrate Weapon (no buff icon: it lasts 3-11 s)
+    last_consecrate: float = -1e9
+    consecrated_at: int = 0         # the creature it was cast for
+    flee_failed: int = 0            # flee actions in a row the client couldn't do ("no path away")
+    cornered_until: float = 0.0     # surrounded: code doesn't try to leave again until then
+    blessing_action: dict[str, Any] = field(default_factory=dict)  # the last blessing cast, for the decision
 
     def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
         if now - self.hinted.get(key, -1e9) < every:
@@ -94,6 +105,7 @@ class Decision:
     spell: Candidate | None = None
     spell_confidence: float | None = None
     spell_why: str = ""  # "strategy" (the player's named spell), "jev", or "fallback"
+    leave_why: str = ""  # why it is leaving the area, in words, when intent is "leave"
 
     @property
     def next_move(self) -> dict[str, Any] | None:
@@ -124,6 +136,14 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
     }
     if cfg.defend_only:
         valid["seek"] = valid["loot"] = False
+    if cfg.allowed_intents is not None:
+        # A plan's state limits the choice; something on the character is still fought back
+        # when the state gives no way to get away from it.
+        on_me = any(h.distance <= 1 and h.info.get("aggressive") for h in sit.hostiles)
+        away = any(k in cfg.allowed_intents and valid[k] for k in ("flee", "leave"))
+        for k in valid:
+            if k != "rest" and k not in cfg.allowed_intents and not (k == "fight" and on_me and not away):
+                valid[k] = False
     masked = [k for k, ok in valid.items() if not ok and k in answer.probabilities]
     probs = {k: p for k, p in answer.probabilities.items() if valid.get(k, False)}
     total = sum(probs.values())
@@ -146,6 +166,11 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         # had a soak run's warrior chase a crossbill while its walk waited.
         for h in sit.hostiles:
             h.allowed = h.allowed and (bool(h.info.get("aggressive")) and h.distance <= 6 or attacking_me(sit, h))
+    if now < mem.no_seek_until:
+        # After leaving, only what is close or attacking is fought: going after one further off took a
+        # warrior in a pack round back to the gargoyles it had left, as seeking would have.
+        for h in sit.hostiles:
+            h.allowed = h.allowed and (h.distance <= cfg.close_tiles or attacking_me(sit, h))
     dec = decide_intent(sit, ans, mem, cfg, now)
     if sit.is_tamer:
         tend_pet(sit, dec, mem, cfg, now)
@@ -179,6 +204,10 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # Leaving: keep running from whatever is still in sight, then stay clear for a while. A
     # tamer goes in short legs and keeps calling its pet, which may still be fighting: a pet
     # left out of sight is lost.
+    # Cornered: every way out is blocked (in swarm rounds a mage kept "leaving" for 40 s, each flee
+    # failing, while six monsters hit it). Fight instead, and don't try to leave for a while.
+    if mem.flee_failed >= 2:
+        mem.flee_failed, mem.leaving_until, mem.cornered_until = 0, 0.0, now + 15
     if mem.leaving_until > now and sit.authority("move") == "auto":
         near = [h for h in sit.hostiles if h.distance <= 14]
         call = [{"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "leave"}] \
@@ -203,18 +232,24 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             return Decision("leave", 1.0, call, "leaving, waiting for the pet", masked)
         nearest = min(near, key=lambda h: h.distance)
         tiles = 8 if sit.is_tamer else 15
-        return Decision("leave", 1.0, call + [{"verb": "flee", "target": nearest.serial, "tiles": tiles, "confidence": 1.0,
-                                               "reason": "leave"}], f"leaving, away from {nearest.name}", masked,
-                        target=nearest)
+        away = 0 if len(sit.pack) >= 2 else nearest.serial  # from the whole pack, weighed by the client
+        return Decision("leave", 1.0, call + [{"verb": "flee", "target": away, "tiles": tiles, "confidence": 1.0,
+                                               "reason": "leave"}],
+                        f"leaving, away from {'the pack' if away == 0 else nearest.name}", masked, target=nearest)
 
     # A cautious strategy gets out early: badly hurt with several creatures on the character.
     outmatched = any(str(h.info.get("strength", "")).startswith("far stronger") for h in sit.hostiles)
     low = str(sit.state["you"].get("supplies", "")).startswith("nearly gone")
-    # A mage or archer with four or more on it is outnumbered: a reason to leave, as low supplies are.
-    outnumbered = (sit.is_mage or sit.is_archer) and len(close) >= 4
+    # A mage or archer with four or more on it is outnumbered: a reason to leave, as low supplies are,
+    # unless an area spell can hit them where they stand (cuo-cvl.4), or every way out is blocked.
+    cornered = now < mem.cornered_until
+    area_ready = bool(sit.area_center and sit.area_spells)
+    outnumbered = (sit.is_mage or sit.is_archer) and len(close) >= 4 and not area_ready and not cornered
+    why_leave = ""  # the code rule that chose to leave, in words, for the hunt's result and the log
     if cfg.allow_flee and cfg.flee_danger <= 0.45 and sit.hp_pct < 45 and len(close) >= 2 \
             and sit.authority("move") == "auto" and intent != "leave":
         intent, conf = "leave", 1.0
+        why_leave = f"badly hurt ({sit.hp_pct}%) with {len(close)} close, and the strategy is cautious"
     # Two or more creatures stronger than the character on it, and Jev judging it in danger: in a
     # soak run two bone knights took a warrior from 100% to 25% in 10 s while Jev's intent stayed
     # on fighting (danger 0.88).
@@ -222,16 +257,26 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     if len(strong_close) >= 2 and danger >= cfg.flee_danger and cfg.allow_flee and sit.authority("move") == "auto" \
             and not sit.assisting and intent != "leave":
         intent, conf = "leave", danger
+        why_leave = f"{len(strong_close)} stronger creatures close: " + ", ".join(h.name for h in strong_close[:3])
+    # A pack coming at the character that together outweighs it: leave while it is still coming
+    # (cuo-d28.9). Leaving once it was on the character came too late, since most monsters run as
+    # fast as a character: two gargoyles and a reaper, "a fair fight" each, killed a warrior in a
+    # soak run after Jev's intent stayed on fighting (leave 0.39-0.44).
+    pack = cfg.leave_packs and len(sit.pack) >= 2 and sit.pack_weight >= pack_cut(cfg) and not cornered
+    if pack and cfg.allow_flee and sit.authority("move") == "auto" and not sit.assisting and intent != "leave":
+        intent, conf = "leave", 1.0
     # Code's call for a mage or archer with four or more on it once Jev judges it in danger: its
     # spells or shots are interrupted by every hit, and Jev, seeing each creature as "an easy
     # kill", put only 0.2-0.4 on leaving in swarm rounds that ended in death (2026-10-07).
     if outnumbered and len([h for h in close if h.distance <= 1]) >= 4 and danger >= 0.5 and cfg.allow_flee \
             and sit.authority("move") == "auto" and not sit.assisting and intent != "leave":
         intent, conf = "leave", danger
+        why_leave = f"{len([h for h in close if h.distance <= 1])} on the {sit.archetype}, who is weak in melee"
     # Jev's yes/no on leaving, asked when there is a reason to: it decides, not the intent vote.
     # A cautious strategy leaves on weaker signals; relentless ones never (allow_flee off).
-    if ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg) and cfg.allow_flee \
-            and sit.authority("move") == "auto" and not sit.assisting:
+    leave_allowed = cfg.allowed_intents is None or "leave" in cfg.allowed_intents
+    if ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg) and cfg.allow_flee and leave_allowed \
+            and sit.authority("move") == "auto" and not sit.assisting and not cornered:
         intent, conf = "leave", ans.nouls["leave_now"]
     # Leaving needs a reason the facts back up, as fleeing needs the danger judgment. A stored
     # fact Jev picked for this place counts when Jev's own yes/no on leaving agrees, and so does
@@ -242,7 +287,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     asked = ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg) and bool(leave_reason(sit))
     cannot_fight = bool(sit.targets) and "fight" in masked
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
-                                  or cannot_fight or outnumbered or len(strong_close) >= 2 or asked):
+                                  or cannot_fight or outnumbered or len(strong_close) >= 2 or asked or pack):
         intent = "fight" if close and "fight" not in masked else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.
@@ -270,6 +315,12 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                 actions.append({"verb": "flee", "target": foe.serial, "tiles": 8, "confidence": 1.0, "reason": "pull back"})
             return Decision("flee", 1.0, hints + actions, f"call the pet back ({why})", masked, target=foe)
 
+    if intent == "seek" and now < mem.no_seek_until:
+        intent, conf = "rest", 1.0
+        note_rest = "not going back after leaving"
+    else:
+        note_rest = ""
+
     if conf < cfg.min_intent_confidence:
         dec = Decision(intent, conf, hints, f"unsure ({conf:.2f}), keeping course", masked, gated=True)
         # Keeping course for a mage in a fight means casting again: the client does not
@@ -279,7 +330,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             dec.target = current
             dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, current)
             if dec.spell:
-                dec.actions.append({"verb": "cast", "spell": dec.spell.name, "target": current.serial, "queue": True,
+                at = sit.area_center if dec.spell.info.get("area") and sit.area_center else current
+                dec.actions.append({"verb": "cast", "spell": dec.spell.name, "target": at.serial, "queue": True,
                                     "confidence": round(conf, 3), "reason": "keep course"})
         return dec
 
@@ -316,15 +368,25 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             adjacent = [h for h in sit.hostiles if h.distance <= 1]
             stats = sit.agent.get("stats", {})
             attack_casts = stats.get("casts", 0) - stats.get("spell_heals", 0)
-            if cfg.kite and len(adjacent) >= 2 and not (sit.raw.get("magic") or {}).get("casting") \
+            # Not with an area spell to cast: they are where it hits them all.
+            if cfg.kite and len(adjacent) >= 2 and not (sit.raw.get("magic") or {}).get("casting") and not area_ready \
                     and sit.authority("move") == "auto" and now - mem.last_kite > 3 and attack_casts > mem.kite_casts:
                 mem.last_kite, mem.kite_casts = now, attack_casts
                 actions.append({"verb": "kite", "tiles": 5, **meta, "reason": "kite"})
             # With creatures in melee reach every hit interrupts a spell, unless Protection is up.
             # That is AOS: before it Protection only adds armour, and servers send no buff icons.
-            if close and sit.raw.get("era", "aos") == "aos" and PROTECTION not in sit.player.get("buffs", []) \
-                    and sit.can_cast(PROTECTION) and now - mem.last_protection > 20:
-                mem.last_protection = now
+            # Raised as soon as melee creatures are coming, not once they arrive: in a swarm round
+            # cast with one already adjacent, it and every spell after it were broken (cuo-cvl.4).
+            # It is a toggle, so it is never cast while its buff icon shows.
+            coming = close or any(h.info.get("aggressive") and h.distance <= 10 and not h.info.get("casts_spells")
+                                  for h in sit.hostiles)
+            # Asked for again until its icon shows (a hit can break the cast), but no more than three
+            # times in 20 s: a server that sends no icon would otherwise have it toggled off again.
+            mem.protection_asks = [t for t in mem.protection_asks if now - t < 20]
+            if coming and sit.raw.get("era", "aos") == "aos" and PROTECTION not in sit.player.get("buffs", []) \
+                    and sit.can_cast(PROTECTION) and len(mem.protection_asks) < 3 \
+                    and (not mem.protection_asks or now - mem.protection_asks[-1] >= 1.5):
+                mem.protection_asks.append(now)
                 actions.append({"verb": "cast", "spell": PROTECTION, "target": "self", "queue": True,
                                 **meta, "reason": "protection"})
                 dec.note = f"fight {target.name}, Protection first ({conf:.2f})"
@@ -335,9 +397,14 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             elif sit.assisting and mem.hint_due(f"range{target.serial}", now, 8):
                 actions.append({"verb": "hint", "text": f"{target.name} is out of spell range", "reason": "range"})
             if dec.spell:
-                actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True, **meta})
+                # An area spell goes where it hits the most of them, which may not be the target.
+                at = sit.area_center if dec.spell.info.get("area") and sit.area_center else target
+                actions.append({"verb": "cast", "spell": dec.spell.name, "target": at.serial, "queue": True, **meta,
+                                **({"reason": f"area {sit.area_count}"} if at is not target or dec.spell.info.get("area")
+                                   else {})})
             dec.note = (f"{pet_note}, " if pet_note else "") + f"fight {target.name}" \
-                + (f" with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
+                + (f" with {dec.spell.name}" if dec.spell else "") \
+                + (f" on {sit.area_count}" if dec.spell and dec.spell.info.get("area") else "") + f" ({conf:.2f})"
         elif sit.is_bard:
             sing(sit, ans, mem, cfg, target, dec, meta, now)
         elif sit.is_tamer:
@@ -367,18 +434,29 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                                     **meta, "reason": "opener"})
             if target.serial != engaged:
                 actions.append({"verb": "attack", "target": target.serial, **meta})
+            blessed = bless(sit, ans, mem, cfg, target, meta, now) if sit.is_paladin else ""
             dec.note = f"{'fight' if target.serial != engaged else 'keep fighting'} {target.name}" \
-                + (f", opening with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
+                + (f", opening with {dec.spell.name}" if dec.spell else "") + (f", {blessed}" if blessed else "") \
+                + f" ({conf:.2f})"
+            if blessed:
+                actions.append(mem.blessing_action)
 
     elif intent == "leave":
         mem.leaving_until = now + 40
+        # Not back to where it ran from: in a pack round the warrior got away untouched, then went
+        # after the orc it had left once the 40 s were up and walked into the gargoyles again.
+        mem.no_seek_until = mem.leaving_until + 120
         threat = max(sit.hostiles, key=lambda h: (str(h.info.get("strength", "")).startswith("far"), -h.distance))
         dec.target = threat
+        dec.leave_why = (f"{len(sit.pack)} coming at once: {sit.state['coming_at_you']}" if pack
+                         else why_leave or leave_reason(sit) or f"Jev: leave ({conf:.2f})")
         if sit.is_tamer and sit.pet:
             mem.last_pet_call = now
             actions.append({"verb": "pet", "kind": "follow", **meta})
-        actions.append({"verb": "flee", "target": threat.serial, "tiles": 8 if sit.is_tamer else 15, **meta})
-        dec.note = f"leave, away from {threat.name} ({conf:.2f})"
+        # Away from the whole pack (the client weighs the creatures within 10 tiles), else the threat.
+        actions.append({"verb": "flee", "target": 0 if pack else threat.serial, "tiles": 8 if sit.is_tamer else 15,
+                        **meta})
+        dec.note = f"leave, away from {'the pack' if pack else threat.name} ({conf:.2f})"
 
     elif intent == "flee":
         threat = min(close, key=lambda h: h.distance)
@@ -418,7 +496,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         dec.note = f"seek {target.name} ({conf:.2f})"
 
     else:
-        dec.note = f"rest ({conf:.2f})"
+        dec.note = note_rest or f"rest ({conf:.2f})"
         # A mage regains mana faster in a trance; the skill has a 10 s delay of its own.
         if sit.is_mage and sit.mana_pct < cfg.meditate_below and not close \
                 and "ActiveMeditation" not in sit.player.get("buffs", []) and now - mem.last_meditate > 10:
@@ -427,6 +505,53 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             dec.note = f"meditate ({conf:.2f})"
 
     return dec
+
+
+NEUTRAL_FLEE_DANGER = 0.625  # what strategy.apply sets for a neutral strategy, and with no text at all
+
+
+def pack_cut(cfg: PolicyConfig) -> float:
+    """What a pack coming at the character must weigh, in fair fights, before code leaves: 3 with
+    no strategy (three fair fights at once, two stronger creatures, an ogre lord and anything else),
+    less for a cautious strategy, more for an aggressive one."""
+    return min(5.0, max(2.0, PACK_FAR + 4 * (cfg.flee_danger - NEUTRAL_FLEE_DANGER)))
+
+
+def bless(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, target: Candidate, meta: dict[str, Any],
+          now: float) -> str:
+    """A paladin's blessing for the fight at hand (cuo-cvl.5): Jev's pick when it is sure, else the
+    rule of thumb: Holy Light with three or more on it, Divine Fury for several or a strong one,
+    Enemy of One for a strong one, else Consecrate Weapon, renewed as it wears off. One every 2 s at
+    most. Sets mem.blessing_action and returns what it does in words, or "" for none."""
+    if not sit.blessings or target.distance > cfg.close_tiles or now - mem.last_blessing < 2.0:
+        return ""
+    buffs = sit.player.get("buffs", [])
+    crowd, n = around_target(sit.raw, sit.hostiles, 3, 4)
+    # Consecrate Weapon lasts seconds and shows no icon: renewed on a new target, or after 20 s. The
+    # longer blessings only with a quarter of the mana left, which also pays for Close Wounds.
+    fresh = target.serial != mem.consecrated_at
+    mana = sit.mana_pct >= 25
+    ready = {"consecrate": fresh or now - mem.last_consecrate > 20, "divine_fury": "DivineFury" not in buffs and mana,
+             "enemy_of_one": "EnemyOfOne" not in buffs and mana, "holy_light": crowd is not None, "none": True}
+    usable = {k for k, ok in ready.items() if ok and (k == "none" or k in sit.blessings)}
+    choice = ans.choices.get("blessing")
+    pick, why = (choice.choice, "jev") if choice and choice.confidence >= cfg.min_spell_confidence \
+        and choice.choice in usable else (None, "rule")
+    if pick is None:
+        strong = str(target.info.get("strength", "")).startswith(("stronger", "far stronger"))
+        several = sum(1 for h in sit.hostiles if h.distance <= cfg.close_tiles) >= 2
+        pick = next((k for k, want in (("holy_light", True), ("divine_fury", several or strong),
+                                         ("enemy_of_one", strong), ("consecrate", True)) if want and k in usable), "none")
+    if pick == "none":
+        return ""
+    mem.last_blessing = now
+    if pick == "consecrate":
+        mem.last_consecrate, mem.consecrated_at = now, target.serial
+    spell = BLESSING_SPELLS[pick]
+    # Holy Light hits all around; the client wants a creature to cast a harmful spell at.
+    mem.blessing_action = {"verb": "cast", "spell": spell, "target": crowd.serial if pick == "holy_light" else "self",
+                           "queue": True, **meta, "reason": f"blessing {why}"}
+    return f"{spell}" + (f" on {n}" if pick == "holy_light" else "") + f" ({why})"
 
 
 def leave_cut(cfg: PolicyConfig) -> float:
@@ -568,10 +693,16 @@ def pick_target(sit: Situation, ans: Answers, cfg: PolicyConfig) -> tuple[Candid
         return None, choice.confidence
     if not targets:
         return None, None
+    hp = lambda h: 100 if h.hits_pct is None else h.hits_pct  # noqa: E731
+    # A caster with three or more on it finishes the one with least left first: every kill is one
+    # fewer hitting it and interrupting its spells (cuo-cvl.4).
+    # The player's own target still comes first in combat assist.
+    if sit.casts and sum(1 for h in sit.hostiles if h.distance <= cfg.close_tiles) >= 3 \
+            and cfg.target_priority == "current_first" and not any(h.info.get("the_players_target") for h in targets):
+        return min(targets, key=lambda h: (hp(h) * (h.max_hits or 100), h.distance)), None
     # In combat assist the player's own target comes first.
     current = next((h for h in targets if h.info.get("the_players_target")), None) \
         or next((h for h in targets if h.info["your_current_target"]), None)
-    hp = lambda h: 100 if h.hits_pct is None else h.hits_pct  # noqa: E731
     match cfg.target_priority:
         case "weakest_first":
             return min(targets, key=lambda h: (hp(h), h.distance)), None
@@ -598,7 +729,10 @@ def pick_spell(sit: Situation, ans: Answers, cfg: PolicyConfig,
             return None, choice.confidence, "jev"
         if (c := sit.spell(choice.choice)) is not None:
             return c, choice.confidence, "jev"
-    damage = [c for c in sit.spells if c.name not in ("Poison", "Paralyze")]
+    # Three or more close together: an area spell hits them all for less mana a creature.
+    if sit.area_spells and sit.area_count >= 3:
+        return sit.area_spells[0], None, "fallback"
+    damage = [c for c in sit.spells if c.name not in ("Poison", "Paralyze") and not c.info.get("area")]
     return (damage[0] if damage else None), None, "fallback"
 
 

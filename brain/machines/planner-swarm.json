@@ -1,0 +1,123 @@
+{
+  "name": "open-ground mage vs weak packs",
+  "why": "Kill weak melee groups with area spells while they bunch, finish stragglers, and drink potions or escape before hits break casting and health collapses.",
+  "start": "hunt",
+  "states": {
+    "hunt": {
+      "says": "Attack the nearest monster from range with strong single-target spells (Energy Bolt or Flamestrike) while they approach; loot when the area is clear.",
+      "allow": [
+        "fight",
+        "seek",
+        "loot",
+        "rest"
+      ],
+      "target": "closest_first",
+      "kite": true,
+      "spell": "Energy Bolt",
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more monsters are bunched up close around or near the mage.",
+          "requires": [
+            "area spell ready"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "escape",
+          "when": "Health is low, or many monsters are on the mage and hits keep breaking spells.",
+          "requires": [
+            "health below 45"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "blast": {
+      "says": "Stand and cast area spells (Explosion or Chain Lightning) at the bunch so each cast hurts them all.",
+      "allow": [
+        "fight",
+        "rest"
+      ],
+      "target": "strongest_first",
+      "kite": false,
+      "spell": "Chain Lightning",
+      "transitions": [
+        {
+          "to": "hunt",
+          "when": "Only one or two monsters are left close, or most are nearly dead.",
+          "unless": "Three or more fairly healthy monsters are still bunched up.",
+          "at": 0.6
+        },
+        {
+          "to": "escape",
+          "when": "Health is below half with several monsters still hitting the mage, or mana is nearly gone with monsters still alive.",
+          "requires": [
+            "health below 50"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "escape",
+          "when": "Mana is nearly gone and several monsters are still fighting.",
+          "requires": [
+            "mana below 15",
+            "2+ coming"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "escape": {
+      "says": "Run away from the monsters to break contact, drink heal potions when hurt, and recover; do not stand and cast while surrounded.",
+      "allow": [
+        "flee",
+        "leave",
+        "rest"
+      ],
+      "loot": "nothing",
+      "max_s": 25.0,
+      "then": "recover",
+      "transitions": [
+        {
+          "to": "recover",
+          "when": "Nothing is close to the mage any more.",
+          "requires": [
+            "none close"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "recover": {
+      "says": "Rest to regain health and mana while nothing is near; fight only what reaches the mage.",
+      "allow": [
+        "fight",
+        "rest",
+        "loot"
+      ],
+      "max_s": 40.0,
+      "then": "hunt",
+      "transitions": [
+        {
+          "to": "hunt",
+          "when": "Health is high and mana is above two thirds.",
+          "requires": [
+            "health above 70",
+            "mana above 60"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "escape",
+          "when": "Several monsters are coming at the mage again and health is not high.",
+          "requires": [
+            "2+ coming",
+            "health below 60"
+          ],
+          "at": 0.6
+        }
+      ]
+    }
+  }
+}

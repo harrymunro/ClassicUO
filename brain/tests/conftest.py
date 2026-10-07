@@ -65,6 +65,7 @@ def mage_snapshot():
     p.update({"name": "Merlin", "hits": 80, "hits_max": 85, "mana": 90, "mana_max": 100, "str": 70, "dex": 35,
               "int": 100, "weapon": ""})
     p["skills"] = {"Magery": 90.0, "Evaluating Intelligence": 80.0, "Meditation": 80.0, "Wrestling": 80.0}
+    p["buffs"] = ["Protection"]  # up already: the orc coming at it would otherwise come first (policy)
     p["supplies"] = {"bandages": 0, "heal_potions": 5, "cure_potions": 5, "refresh_potions": 0,
                      "reagents": {"black_pearl": 90, "blood_moss": 90, "garlic": 90, "ginseng": 90,
                                   "mandrake_root": 90, "nightshade": 3, "sulfurous_ash": 90, "spiders_silk": 90}}

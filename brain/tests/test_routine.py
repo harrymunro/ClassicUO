@@ -274,3 +274,26 @@ def test_walking_round_an_empty_spawn_hands_over_after_four_tries():
     # A fight in between starts the count again.
     asyncio.run(hw.ask(snap(), "kill"))
     assert asyncio.run(hw.ask(snap(hostiles=False), "quiet")).kind == "patrol" and hw.patrols == 1
+
+
+def test_a_hunt_left_from_a_pack_ends_once_nothing_is_coming():
+    """cuo-d28.9: in a soak run the warrior's 40 s of leaving ran out and it walked back into the
+    gargoyles it had left. Leaving ends the hunt, once the pack is shaken off."""
+    hw, clock = watch(FakeJev())
+    hw.observe(snap())
+    hw.left("3 coming at once: 2 gargoyles and a reaper")
+    chased = snap()
+    chased["agent"]["fleeing"] = True
+    assert hw.observe(chased).stop is None
+    clear = snap(hostiles=False)
+    clock.t += 5
+    assert hw.observe(clear).stop == "left the area: 3 coming at once: 2 gargoyles and a reaper"
+    # Still chased after the wait: the hunt ends anyway.
+    hw2, clock2 = watch(FakeJev())
+    hw2.left("a pack")
+    clock2.t += 50
+    assert hw2.observe(chased).stop == "left the area: a pack"
+    # Without Jev too.
+    hw3, _ = watch(HeuristicJudge())
+    hw3.left("a pack")
+    assert hw3.observe(clear).stop == "left the area: a pack"

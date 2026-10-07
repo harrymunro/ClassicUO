@@ -166,3 +166,23 @@ def test_the_rune_for_a_place_matches_names_and_runebook_entries(tmp_path):
     assert s.rune_for("West Britain bank", 1425, 1690, snap) == (9, 1, "west britain bank")
     assert s.rune_for("Green Acres test field", 5445, 1153, snap)[0] in (7, 9)
     assert s.rune_for("Moonglow", 4436, 1083, snap) is None
+
+
+def test_the_planner_thinks_with_the_character_defended(tmp_path):
+    """Between goals nothing fought: a hunt that ended in a leave handed over with the creatures
+    maybe still about, and the planner can take seconds."""
+    w = world(tmp_path)
+    session = FakeSession(w)
+    order = []
+
+    async def defended(work):
+        order.append("defend")
+        r = await work
+        order.append("done")
+        return r
+
+    session.defended = defended
+    p = planner.Planner(session, "hunt", chat_fn=scripted(reply(call("rest", {"seconds": 10, "why": "wait"}))))
+    asyncio.run(p.step())
+    # Thinking ran inside one defended stretch, and the rest goal inside another.
+    assert order == ["defend", "done", "defend", "done"]

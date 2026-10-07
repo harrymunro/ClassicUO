@@ -10,7 +10,9 @@ namespace ClassicUO.Agent
         DrinkCure,
         CastHeal,
         CastGreaterHeal,
-        CastCure
+        CastCure,
+        CastCloseWounds,
+        CastCleanse
     }
 
     // Everything the reflex layer looks at, captured once per tick so the
@@ -37,6 +39,8 @@ namespace ClassicUO.Agent
         public bool CanCastHeal;
         public bool CanCastGreaterHeal;
         public bool CanCastCure;
+        public bool CanCastCloseWounds; // chivalry: a paladin's heal and cure, paid in tithing points
+        public bool CanCastCleanse;
         public bool CastReady;
     }
 
@@ -105,6 +109,18 @@ namespace ClassicUO.Agent
             if (s.Cure != AgentAuthority.Off && s.Poisoned && s.CanCastCure && !s.Bandaging)
             {
                 return (ReflexAction.CastCure, s.Cure);
+            }
+
+            // A paladin cures with Cleanse by Fire when no potion is to hand, and heals with Close
+            // Wounds when badly hurt, bandages or not: a bandage takes seconds, the spell one and a half.
+            if (s.Cure != AgentAuthority.Off && s.Poisoned && s.CanCastCleanse && !s.Bandaging)
+            {
+                return (ReflexAction.CastCleanse, s.Cure);
+            }
+
+            if (s.Heal != AgentAuthority.Off && !s.Poisoned && s.CanCastCloseWounds && s.HitsPercent < cfg.GreaterHealBelowPercent)
+            {
+                return (ReflexAction.CastCloseWounds, s.Heal);
             }
 
             if (s.Heal != AgentAuthority.Off && !s.Poisoned && !s.Bandaging && s.Bandages == 0)

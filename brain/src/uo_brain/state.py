@@ -10,12 +10,14 @@ options code has already checked.
 from dataclasses import dataclass, field
 from typing import Any
 
-from .spells import ATTACK_SPELLS, mana_words
+from .spells import (AREA_MIN, AREA_RADIUS, AREA_SPELLS, ATTACK_SPELLS, BLESSING_SPELLS, NECRO_AREA_SPELLS,
+                     NECRO_ATTACK_SPELLS, WITHER_RADIUS, mana_words)
 
 SPELL_RANGE = 10  # tiles; ModernUO's magery range from Mondain's Legacy on
 MELEE_SKILLS = ("Swordsmanship", "Mace Fighting", "Fencing", "Archery")
 SONGS = ("Provocation", "Peacemaking", "Discordance")
-CASTERS = ("mage", "mage-tamer", "warrior-mage")  # archetypes that cast attack spells
+CASTERS = ("mage", "mage-tamer", "warrior-mage", "necromancer")  # archetypes that cast attack spells
+RANGED_CASTERS = ("mage", "mage-tamer", "necromancer")  # ...and fight with them from a distance
 
 
 # Body graphic -> what the creature is. Monsters often carry personal names
@@ -43,6 +45,68 @@ def threat_words(creature: dict[str, Any], your_hits: int) -> str:
     if grade == "moderate":
         return "a fair fight"
     return "weak: an easy kill"
+
+
+def known_creature(bestiary: dict[int, dict[str, Any]] | None, m: dict[str, Any]) -> dict[str, Any] | None:
+    """The bestiary's entry for a creature in view: the kind that shares its body graphic and its
+    name, else the strongest kind with that body. By body alone a black bear read as "far stronger"
+    in a soak run: it shares its graphic with a raging grizzly."""
+    known = (bestiary or {}).get(m.get("body", 0))
+    if not known:
+        return None
+    name = (m.get("name") or "").strip().lower()
+    return next((k for k in known.get("kinds", ()) if (k.get("name") or "").lower() == name), known)
+
+
+# What one creature coming at the character weighs against it, in fair fights, by its strength
+# words; scaled by its health, since a badly hurt one is nearly done.
+THREAT_WEIGHTS = {"far stronger": 4.0, "stronger": 2.0, "a fair fight": 1.0, "weak": 0.4}
+UNKNOWN_WEIGHT = 0.5  # no stats in the bestiary
+PACK_FAR = 3.0        # the group together outweighs the character: too many to fight at once
+PACK_HARD = 2.0
+
+
+CASTER_FACTOR = 1.5   # a spellcaster hurts from a distance, running or not: two gargoyles killed a warrior in 6 s
+
+
+def threat_weight(info: dict[str, Any], hits_pct: int | None, size: float = 1.0) -> float:
+    """size: the creature's hits over the character's. A fair fight is weighed by it (between half
+    and one and a half): graded alike, a spectre has 60 hits and a gargoyle 105, and two spectres
+    weighed as two gargoyles made a warrior leave the graveyard it hunts at."""
+    words = str(info.get("strength", ""))
+    base = next((w for k, w in THREAT_WEIGHTS.items() if words.startswith(k)), UNKNOWN_WEIGHT)
+    if words.startswith("a fair fight"):
+        base *= min(1.5, max(0.5, size))
+    if info.get("casts_spells"):
+        base *= CASTER_FACTOR
+    return base * max(0.25, (100 if hits_pct is None else hits_pct) / 100)
+
+
+def coming_at(m: dict[str, Any]) -> bool:
+    """Is this monster coming at the character: within 12 tiles and fighting (war mode), attacking
+    it, or already on it."""
+    return m["distance"] <= 12 and (bool(m.get("war_mode")) or bool(m.get("attacking_me")) or m["distance"] <= 2)
+
+
+def pack_words(pack: list["Candidate"], weight: float) -> str:
+    """The creatures coming at the character, together, in words: "2 gargoyles (a fair fight each)
+    and a reaper (a fair fight); together far stronger than you: too many to fight at once"."""
+    kinds: dict[str, list[str]] = {}
+    for h in pack:
+        kind = h.name.split(" (", 1)[-1].rstrip(")") if " (" in h.name else h.name
+        kinds.setdefault(kind.removeprefix("a ").removeprefix("an "), []).append(
+            (str(h.info.get("strength", "")).split(":", 1)[0] or "unknown strength")
+            + (" and a spellcaster" if h.info.get("casts_spells") else ""))
+    parts = []
+    for kind, strengths in kinds.items():
+        n = len(strengths)
+        what = strengths[0] + (" each" if n > 1 else "")
+        parts.append(f"{n} {kind}{'s' if n > 1 and not kind.endswith('s') else ''} ({what})" if n > 1
+                     else f"{'an' if kind[:1] in 'aeiou' else 'a'} {kind} ({what})")
+    listed = ", ".join(parts[:-1]) + (" and " if len(parts) > 1 else "") + parts[-1]
+    together = "together far stronger than you: too many to fight at once" if weight >= PACK_FAR \
+        else "together stronger than you: a hard fight" if weight >= PACK_HARD else "together a fair fight"
+    return f"{listed}; {together}"
 
 
 def health_words(pct: int | None) -> str:
@@ -104,6 +168,11 @@ class Situation:
     traveling: bool = False    # on a long walk (travel): no seeking or looting on the way
     engage: str = "defend"     # combat assist: follow (the player's target), defend (+ attackers), nearby
     known: list[str] = field(default_factory=list)  # world facts picked for this situation (facts.py)
+    plan: dict[str, str] = field(default_factory=dict)  # the plan being followed and its step (machine.py)
+    area_center: Candidate | None = None  # where an area spell hits most creatures and nobody else (casters)
+    area_count: int = 0                   # ...and how many it hits there
+    pack: list[Candidate] = field(default_factory=list)  # the creatures coming at the character
+    pack_weight: float = 0.0  # ...and what they weigh against it together, in fair fights (THREAT_WEIGHTS)
 
     @property
     def assisting(self) -> bool:
@@ -119,8 +188,21 @@ class Situation:
 
     @property
     def is_mage(self) -> bool:
-        """Fights with spells from a distance (a mage, or a mage-tamer behind its pet)."""
-        return self.archetype in ("mage", "mage-tamer")
+        """Fights with spells from a distance (a mage, a mage-tamer behind its pet, a necromancer)."""
+        return self.archetype in RANGED_CASTERS
+
+    @property
+    def is_necromancer(self) -> bool:
+        return self.archetype == "necromancer"
+
+    @property
+    def is_paladin(self) -> bool:
+        return self.archetype == "paladin"
+
+    @property
+    def blessings(self) -> list[str]:
+        """A paladin's blessings it can cast right now (spells.BLESSINGS keys)."""
+        return [k for k, name in BLESSING_SPELLS.items() if self.can_cast(name)] if self.is_paladin else []
 
     @property
     def casts(self) -> bool:
@@ -189,6 +271,10 @@ class Situation:
     def spell(self, sid: str) -> Candidate | None:
         return next((c for c in self.spells if c.id == sid), None)
 
+    @property
+    def area_spells(self) -> list[Candidate]:
+        return [c for c in self.spells if c.info.get("area")]
+
     def signature(self) -> tuple:
         """Changes when something worth re-deciding about happens."""
         return (
@@ -205,6 +291,10 @@ class Situation:
             ammo_band(self.ammo) if self.is_archer else None,
             # A tamer when its pet's health changes band, or the pet is lost.
             (bool(self.pet), health_words(self.pet_pct)) if self.is_tamer else None,
+            # When something starts coming at the character, or a pack grows past a band: decided
+            # at once rather than at the next second's tick, while the creatures are still far off.
+            tuple(sorted(h.serial for h in self.pack)),
+            "far" if self.pack_weight >= PACK_FAR else "hard" if self.pack_weight >= PACK_HARD else "fair",
         )
 
 
@@ -216,7 +306,9 @@ def ammo_band(n: int) -> str:
 
 
 def archetype_of(snapshot: dict[str, Any]) -> str:
-    """From the skills and what is in hand. With a spellbook and Magery 50 or more: a mage-tamer
+    """From the skills and what is in hand. A paladin (Chivalry 50, its book and a melee weapon with
+    a weapon skill of 50) or a necromancer (Necromancy 50, its book, and no higher Magery or weapon
+    skill) first. Then with a spellbook and Magery 50 or more: a mage-tamer
     if Animal Taming is 50 too, a warrior-mage with a melee weapon in hand and a weapon skill of
     50, else a mage if Magery is at least as high as any weapon skill. Then a tamer, a bard, an
     archer (a bow or crossbow in hand) or a warrior."""
@@ -225,6 +317,15 @@ def archetype_of(snapshot: dict[str, Any]) -> str:
     magery = skills.get("Magery", 0)
     weapon_skill = max((skills.get(s, 0) for s in MELEE_SKILLS), default=0)
     taming = skills.get("Animal Taming", 0)
+    schools = (snapshot.get("magic") or {}).get("schools") or (["magery"] if snapshot.get("magic") else [])
+    # AOS-era schools (cuo-cvl.5): a paladin is a warrior with Chivalry and its book; a
+    # necromancer casts necromancy from a distance, as a mage does magery.
+    if "chivalry" in schools and skills.get("Chivalry", 0) >= 50 and weapon_skill >= 50 and p.get("weapon") \
+            and not p.get("ranged"):
+        return "paladin"
+    if "necromancy" in schools and skills.get("Necromancy", 0) >= 50 and skills.get("Necromancy", 0) >= magery \
+            and skills.get("Necromancy", 0) >= weapon_skill:
+        return "necromancer"
     if snapshot.get("magic") and magery >= 50:
         if taming >= 50:
             return "mage-tamer"
@@ -264,6 +365,7 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     traveling = (snapshot["agent"].get("travel") or {}).get("state") == "walking"
 
     hostiles: list[Candidate] = []
+    pack: list[Candidate] = []
     others: list[dict[str, Any]] = []
     for m in snapshot.get("mobiles", []):
         if m.get("dead"):
@@ -285,7 +387,7 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 "your_current_target": bool(m.get("my_target")) or m["serial"] == engaged,
                 "aggressive": bool(m.get("war_mode")),
             }
-            known = (bestiary or {}).get(m.get("body", 0))
+            known = known_creature(bestiary, m)
             if known:
                 info["strength"] = threat_words(known, p.get("hits_max") or 100)
                 if known.get("caster"):
@@ -306,6 +408,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 info["your_spells_at_it"] = "none yet" if n == 0 else f"{n} so far"
             hostiles.append(Candidate(cid, m["serial"], info["name"], m["distance"], info, m.get("hits_pct"),
                                       casts_at.get(m["serial"], 0), allowed, known["hits"] if known else 0))
+            if coming_at(m):
+                pack.append(hostiles[-1])
         elif m.get("pet") and tamer:
             continue  # a tamer's own pets are described under `you`
         elif len(others) < 5:
@@ -342,13 +446,28 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
 
     spells: list[Candidate] = []
     magic = snapshot.get("magic") or {}
+    area_center, area_count = None, 0
     if mage:
         known = {s["name"]: s for s in magic.get("spells", [])}
-        for name, what in ATTACK_SPELLS.items():
+        necro = archetype == "necromancer"
+        for name, what in (NECRO_ATTACK_SPELLS if necro else ATTACK_SPELLS).items():
             s = known.get(name)
             if s and not s.get("missing"):
                 sid = f"s{len(spells) + 1}"
                 info = {"id": sid, "name": name, "effect": what, "mana": s["mana"], "circle": s["circle"]}
+                spells.append(Candidate(sid, s["id"], name, 0, info))
+        # Mages and necromancers only: a warrior-mage casts one opener at a creature that is still coming.
+        if archetype in ("mage", "mage-tamer"):
+            area_center, area_count = area_target(snapshot, hostiles)
+        elif necro:
+            area_center, area_count = around_target(snapshot, hostiles, WITHER_RADIUS - 1, WITHER_RADIUS + 1)
+        for name, what in (NECRO_AREA_SPELLS if necro else AREA_SPELLS).items() if area_center else ():
+            s = known.get(name)
+            if s and not s.get("missing"):
+                sid = f"s{len(spells) + 1}"
+                info = {"id": sid, "name": name, "mana": s["mana"], "circle": s["circle"], "area": True,
+                        "effect": f"{what} ({area_count} creatures there now)" if necro else
+                        f"{what} (cast at {area_center.name} it hits {area_count} creatures now)"}
                 spells.append(Candidate(sid, s["id"], name, 0, info))
 
     you = {
@@ -402,6 +521,16 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         del you["bandages_left"]
         you["supplies"] = "plenty" if potions > 1 else f"{potions} heal potions left"
         you["weapon"] = "spells (weak in melee)"
+    elif archetype == "necromancer":
+        you["weapon"] = "necromancy spells (weak in melee); it heals with bandages and potions, not spells"
+    elif archetype == "paladin":
+        you["weapon"] = f"{you['weapon']}, and chivalry: blessings for its fighting, and it heals itself with " \
+                        "Close Wounds"
+        you["tithing_points"] = (snapshot.get("magic") or {}).get("tithing", 0)
+        you["mana"] = f"{mana_words(mana_pct)} ({mana_pct}%)"
+        active = [n for n, b in (("Divine Fury", "DivineFury"), ("Enemy of One", "EnemyOfOne"))
+                  if b in p.get("buffs", [])]
+        you["blessings_active"] = active or ["none"]
     elif archetype == "mage-tamer":
         you["weapon"] = "its pet, and spells (the tamer is weak in a fight itself)"
     elif archetype == "warrior-mage":
@@ -414,7 +543,7 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         you["next_spell"] = "can cast now" if ready_ms <= 0 and not magic.get("casting") \
             else f"in about {secs} second{'s' if secs > 1 else ''}"
         you["attack_spells_available"] = [c.name for c in spells] or ["none: not enough mana or reagents"]
-        regs = p.get("supplies", {}).get("reagents", {})
+        regs = reagents_of(p, archetype)
         low = sorted(k.replace("_", " ") for k, v in regs.items() if v < 5)
         you["reagents"] = "plenty" if not low else "running out of " + ", ".join(low)
 
@@ -426,13 +555,59 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         "other_beings_nearby": others,
         "recent_events": events[-8:],
     }
+    your_hits = p.get("hits_max") or 100
+    weight = round(sum(threat_weight(h.info, h.hits_pct, h.max_hits / your_hits if h.max_hits else 1.0)
+                       for h in pack), 2)
+    if len(pack) >= 2:
+        state["coming_at_you"] = pack_words(pack, weight)
     if mode == "assist":
         state["player_drives"] = ("The player is moving the character themselves; you only choose its fighting. "
                                   "It never walks on its own.")
     return Situation(snapshot, state, hostiles, corpses, items, hp_pct,
                      strategy=(snapshot["agent"].get("strategy") or "").strip(),
                      archetype=archetype, spells=spells, mana_pct=mana_pct, mode=mode, engage=engage,
-                     traveling=traveling)
+                     traveling=traveling, pack=pack, pack_weight=weight, area_center=area_center,
+                     area_count=area_count)
+
+
+def reagents_of(p: dict[str, Any], archetype: str | None) -> dict[str, int]:
+    """The reagent counts that matter to this character: a necromancer's own, or a mage's."""
+    supplies = p.get("supplies", {})
+    return (supplies.get("pagan_reagents") if archetype == "necromancer" else supplies.get("reagents")) or {}
+
+
+def around_target(snapshot: dict[str, Any], hostiles: list[Candidate], radius: int, clear: int
+                  ) -> tuple[Candidate | None, int]:
+    """For a spell that hits everything around the caster (Wither, Holy Light): how many monsters
+    are within `radius`, with the nearest one as the cast's target. None unless AREA_MIN or more,
+    or when anyone else (a player, a pet, a townsperson) is within `clear` tiles."""
+    alive = [m for m in snapshot.get("mobiles", []) if not m.get("dead")]
+    if any(not m.get("monster") and m["distance"] <= clear for m in alive):
+        return None, 0
+    n = sum(1 for m in alive if m.get("monster") and m["distance"] <= radius)
+    near = [h for h in hostiles if h.allowed and h.distance <= radius]
+    return (min(near, key=lambda h: h.distance), n) if n >= AREA_MIN and near else (None, 0)
+
+
+def area_target(snapshot: dict[str, Any], hostiles: list[Candidate]) -> tuple[Candidate | None, int]:
+    """The creature to aim an area spell at: the one with the most monsters within AREA_RADIUS
+    tiles of it (itself included), in spell range, the nearest on a tie. None unless that is
+    AREA_MIN or more, or when anyone else (a player, a pet, a townsperson) is within a tile of the
+    blast: an area spell hits whatever stands there."""
+    pos = {m["serial"]: (m.get("dx", 0), m.get("dy", 0)) for m in snapshot.get("mobiles", []) if not m.get("dead")}
+    monsters = [pos[m["serial"]] for m in snapshot.get("mobiles", []) if m.get("monster") and not m.get("dead")]
+    others = [pos[m["serial"]] for m in snapshot.get("mobiles", []) if not m.get("monster") and not m.get("dead")]
+    best, best_n = None, 0
+    for h in hostiles:
+        if not h.allowed or h.distance > SPELL_RANGE or h.serial not in pos:
+            continue
+        x, y = pos[h.serial]
+        if any(max(abs(ox - x), abs(oy - y)) <= AREA_RADIUS + 1 for ox, oy in others):
+            continue
+        n = sum(1 for mx, my in monsters if max(abs(mx - x), abs(my - y)) <= AREA_RADIUS)
+        if n > best_n or n == best_n and best is not None and h.distance < best.distance:
+            best, best_n = h, n
+    return (best, best_n) if best_n >= AREA_MIN else (None, 0)
 
 
 def journal_events(entries: list[dict[str, Any]]) -> list[str]:

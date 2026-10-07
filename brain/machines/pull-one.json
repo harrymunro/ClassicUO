@@ -1,0 +1,36 @@
+{
+  "name": "pull one at a time",
+  "why": "fight one creature at a time, back off to heal before health runs low, and get out when several come at once",
+  "start": "pull",
+  "states": {
+    "pull": {
+      "says": "Take on the nearest creature and finish it; don't go looking for more while one is fighting.",
+      "allow": ["fight", "loot", "seek", "rest"],
+      "target": "closest_first",
+      "transitions": [
+        {"to": "regroup", "when": "Health is falling faster than the bandages bring it back, or is already below half.",
+         "requires": ["health below 60"]},
+        {"to": "out", "when": "Several creatures are coming at once and together they are too many for the warrior.",
+         "requires": ["3+ coming"], "at": 0.5}
+      ]
+    },
+    "regroup": {
+      "says": "Back away from the fight and let the bandages work; fight only what is on the warrior.",
+      "allow": ["flee", "rest"],
+      "loot": "nothing",
+      "max_s": 25,
+      "then": "pull",
+      "transitions": [
+        {"to": "pull", "when": "Health is back above three quarters, or nothing is attacking any more.",
+         "requires": ["health above 70"]}
+      ]
+    },
+    "out": {
+      "says": "Leave the area: run until nothing hostile is in sight.",
+      "allow": ["leave", "rest"],
+      "transitions": [
+        {"to": "pull", "when": "Nothing is coming at the warrior any more.", "requires": ["none close"]}
+      ]
+    }
+  }
+}

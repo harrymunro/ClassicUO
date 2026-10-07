@@ -621,6 +621,7 @@ namespace ClassicUO.Agent
             }
 
             if (g == AgentController.BANDAGE_GRAPHIC || g >= 0x0F06 && g <= 0x0F0D || g == AgentSpells.SPELLBOOK_GRAPHIC
+                || g == AgentSpells.NECRO_BOOK_GRAPHIC || g == AgentSpells.CHIVALRY_BOOK_GRAPHIC
                 || g == 0x22C5 /* runebook */ || g >= 0x1F14 && g <= 0x1F17 /* recall runes */ || g >= 0x1F2D && g <= 0x1F72 /* scrolls */
                 || AgentWeapons.IsAmmo(g) || AgentBard.IsInstrument(g))
             {
@@ -628,6 +629,14 @@ namespace ClassicUO.Agent
             }
 
             foreach ((_, _, ushort reagent) in AgentSpells.ReagentGraphics)
+            {
+                if (g == reagent)
+                {
+                    return false;
+                }
+            }
+
+            foreach ((_, _, ushort reagent) in AgentSpells.PaganReagentGraphics)
             {
                 if (g == reagent)
                 {
@@ -681,6 +690,14 @@ namespace ClassicUO.Agent
             }
 
             foreach ((_, string reagent, ushort g) in AgentSpells.ReagentGraphics)
+            {
+                if (word == reagent.Replace('_', ' ') && graphic == g)
+                {
+                    return true;
+                }
+            }
+
+            foreach ((_, string reagent, ushort g) in AgentSpells.PaganReagentGraphics)
             {
                 if (word == reagent.Replace('_', ' ') && graphic == g)
                 {

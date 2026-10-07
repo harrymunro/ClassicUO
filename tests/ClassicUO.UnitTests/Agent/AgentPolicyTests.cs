@@ -1,5 +1,6 @@
 using System.Linq;
 using ClassicUO.Agent;
+using ClassicUO.Game.Data;
 using FluentAssertions;
 using Xunit;
 
@@ -34,6 +35,31 @@ namespace ClassicUO.UnitTests.Agent
             s.HitsPercent = Cfg.BandageBelowPercent - 1;
 
             ReflexPolicy.Decide(s, Cfg).Should().Be((ReflexAction.BandageSelf, AgentAuthority.Auto));
+        }
+
+        [Fact]
+        public void A_paladin_heals_with_close_wounds_when_badly_hurt_even_with_bandages()
+        {
+            var s = Healthy();
+            s.CastReady = true;
+            s.CanCastCloseWounds = true;
+            s.Bandaging = true;
+            s.HitsPercent = Cfg.GreaterHealBelowPercent - 1;
+            ReflexPolicy.Decide(s, Cfg).Should().Be((ReflexAction.CastCloseWounds, AgentAuthority.Auto));
+            s.HitsPercent = Cfg.GreaterHealBelowPercent + 5;
+            ReflexPolicy.Decide(s, Cfg).Action.Should().Be(ReflexAction.None);
+        }
+
+        [Fact]
+        public void A_paladin_cures_with_cleanse_by_fire_without_a_potion()
+        {
+            var s = Healthy();
+            s.CastReady = true;
+            s.CanCastCleanse = true;
+            s.Poisoned = true;
+            s.CurePotions = 0;
+            s.Bandages = 0;
+            ReflexPolicy.Decide(s, Cfg).Should().Be((ReflexAction.CastCleanse, AgentAuthority.Auto));
         }
 
         [Fact]
@@ -261,6 +287,24 @@ namespace ClassicUO.UnitTests.Agent
             AgentSpells.Find(text).ID.Should().Be(id);
         }
 
+        [Theory]
+        [InlineData("Pain Spike", 109, "Necromancy", 5, 0, 1000u)]
+        [InlineData("poison strike", 110, "Necromancy", 17, 0, 1750u)]
+        [InlineData("Strangle", 111, "Necromancy", 29, 0, 2000u)]
+        [InlineData("Consecrate Weapon", 203, "Chivalry", 10, 10, 500u)]
+        [InlineData("Close Wounds", 202, "Chivalry", 10, 10, 1500u)]
+        [InlineData("202", 202, "Chivalry", 10, 10, 1500u)]
+        public void Necromancy_and_chivalry_have_their_own_costs_and_delays(string text, int id, string school, int mana,
+            int tithing, uint delayMs)
+        {
+            SpellDefinition s = AgentSpells.Find(text);
+            s.ID.Should().Be(id);
+            AgentSpells.SchoolOf(id).ToString().Should().Be(school);
+            AgentSpells.Mana(id).Should().Be(mana);
+            AgentSpells.Tithing(id).Should().Be(tithing);
+            AgentSpells.CastDelayMs(id).Should().Be(delayMs);
+        }
+
         [Fact]
         public void Unknown_spells_are_null()
         {
@@ -286,6 +330,13 @@ namespace ClassicUO.UnitTests.Agent
         [InlineData("Heal", "heal")]
         [InlineData("Cure", "cure")]
         [InlineData("Teleport", "misc")]
+        [InlineData("Close Wounds", "heal")]
+        [InlineData("Cleanse by Fire", "cure")]
+        [InlineData("Consecrate Weapon", "fight")]
+        [InlineData("Divine Fury", "fight")]
+        [InlineData("Pain Spike", "fight")]
+        [InlineData("Wither", "fight")]
+        [InlineData("Sacred Journey", "misc")]
         public void Cast_authority_follows_the_spell(string spell, string behavior)
         {
             new AgentAction { Verb = "cast", Spell = spell }.Behavior.Name().Should().Be(behavior);
@@ -311,6 +362,45 @@ namespace ClassicUO.UnitTests.Agent
             d.Actions.Should().ContainSingle().Which.Spell.Should().Be("Energy Bolt");
             d.Results.Should().Equal("done");
             d.Archetype.Should().Be("mage");
+        }
+
+        [Fact]
+        public void Parses_the_calls_view_of_a_decision_and_of_other_calls()
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(
+                "{\"intent\": \"fight\", \"questions\": [" +
+                "{\"q\": \"target\", \"title\": \"which creature?\", \"kind\": \"choice\", \"picked\": \"t2\", \"used\": \"t1\"," +
+                " \"confidence\": 0.6, \"options\": [{\"id\": \"t2\", \"label\": \"an orc captain\", \"p\": 0.6}," +
+                " {\"id\": \"t1\", \"label\": \"an orc\", \"p\": 0.3}]}," +
+                "{\"q\": \"leave_now\", \"title\": \"leave now?\", \"kind\": \"yesno\", \"p\": 0.44, \"cut\": 0.425, \"verdict\": \"yes\"}]}");
+            AgentDecision d = AgentDecision.FromJson(doc.RootElement);
+            d.Questions.Should().HaveCount(2);
+            d.Questions[0].LabelOf(d.Questions[0].Used).Should().Be("an orc");
+            d.Questions[1].Verdict.Should().Be("yes");
+            d.Questions[1].Cut.Should().BeApproximately(0.425f, 0.001f);
+
+            using var call = System.Text.Json.JsonDocument.Parse(
+                "{\"kind\": \"facts\", \"title\": \"which facts matter here?\", \"latency_ms\": 300, \"questions\": [" +
+                "{\"q\": \"facts\", \"kind\": \"many\", \"options\": [{\"label\": \"Wisps never attack first\", \"p\": 0.74, \"kept\": true}]}]}");
+            AgentCall c = AgentCall.FromJson(call.RootElement);
+            c.Kind.Should().Be("facts");
+            c.Questions[0].Options[0].Kept.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Parses_the_plan_a_decision_follows()
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(
+                "{\"intent\": \"fight\", \"machine\": {\"name\": \"mage against a crowd\", \"state\": \"blast\"," +
+                " \"says\": \"Cast area spells at the bunch.\", \"states\": [\"open\", \"blast\", \"finish\"]," +
+                " \"last\": \"open -> blast (0.71)\", \"since_s\": 3.5}}");
+
+            AgentDecision d = AgentDecision.FromJson(doc.RootElement);
+
+            d.PlanName.Should().Be("mage against a crowd");
+            d.PlanStep.Should().Be("blast");
+            d.PlanSteps.Should().Equal("open", "blast", "finish");
+            d.PlanLast.Should().Be("open -> blast (0.71)");
         }
     }
 

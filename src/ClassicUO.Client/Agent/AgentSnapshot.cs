@@ -20,7 +20,7 @@ namespace ClassicUO.Agent
             "Swordsmanship", "Mace Fighting", "Fencing", "Archery", "Wrestling", "Tactics",
             "Anatomy", "Healing", "Parrying", "Focus", "Resisting Spells", "Magery",
             "Evaluating Intelligence", "Meditation", "Animal Taming", "Animal Lore", "Veterinary",
-            "Musicianship", "Provocation", "Peacemaking", "Discordance"
+            "Musicianship", "Provocation", "Peacemaking", "Discordance", "Necromancy", "Spirit Speak", "Chivalry"
         };
 
         private static readonly AgentJournal.Entry[] _journalBuf = new AgentJournal.Entry[64];
@@ -121,6 +121,19 @@ namespace ClassicUO.Agent
             }
 
             w.WriteEndObject();
+
+            // A necromancer's, only when it has a book of necromancy, so a mage's counts stay as they were.
+            if (AgentSpells.FindBook(p, AgentSchool.Necromancy) != null)
+            {
+                w.WriteStartObject("pagan_reagents");
+
+                foreach ((_, string name, ushort graphic) in AgentSpells.PaganReagentGraphics)
+                {
+                    w.WriteNumber(name, agent.CountByGraphic(graphic));
+                }
+
+                w.WriteEndObject();
+            }
             w.WriteEndObject();
 
             w.WriteStartObject("skills");
@@ -309,39 +322,75 @@ namespace ClassicUO.Agent
             w.WriteEndArray();
         }
 
-        // Magery: every spell in the book with its cost, and why it cannot be cast now
-        // ("" when it can). Only written for characters with a spellbook.
+        // Every spell in each book the character carries (Magery, Necromancy, Chivalry) with its
+        // cost, and why it cannot be cast now ("" when it can). Only written for characters with a book.
         private static void WriteMagic(Utf8JsonWriter w, PlayerMobile p, AgentController agent)
         {
-            Item book = AgentSpells.FindSpellbook(p);
+            bool any = false, known = true;
 
-            if (book == null)
+            foreach (AgentSchool school in AgentSpells.Schools)
+            {
+                Item book = AgentSpells.FindBook(p, school);
+                any |= book != null;
+                known &= book == null || AgentSpells.ContentKnown(book);
+            }
+
+            if (!any)
             {
                 return;
             }
 
             w.WriteStartObject("magic");
-            w.WriteBoolean("book_known", AgentSpells.ContentKnown(book));
+            w.WriteBoolean("book_known", known);
             w.WriteString("casting", agent.CastingSpell);
             w.WriteString("queued", agent.QueuedSpell);
             w.WriteNumber("cast_ready_ms", agent.CastReadyInMs);
+            w.WriteNumber("tithing", p.TithingPoints);
+            w.WriteStartArray("schools");
+
+            foreach (AgentSchool school in AgentSpells.Schools)
+            {
+                if (AgentSpells.FindBook(p, school) != null)
+                {
+                    w.WriteStringValue(school.ToString().ToLowerInvariant());
+                }
+            }
+
+            w.WriteEndArray();
             w.WriteStartArray("spells");
 
-            foreach (SpellDefinition s in SpellsMagery.GetAllSpells.Values)
+            foreach (AgentSchool school in AgentSpells.Schools)
             {
-                if (!AgentSpells.InBook(book, s.ID))
+                Item book = AgentSpells.FindBook(p, school);
+
+                if (book == null)
                 {
                     continue;
                 }
 
-                w.WriteStartObject();
-                w.WriteNumber("id", s.ID);
-                w.WriteString("name", s.Name);
-                w.WriteNumber("circle", AgentSpells.Circle(s.ID));
-                w.WriteNumber("mana", AgentSpells.Mana(s.ID));
-                w.WriteString("target", AgentSpells.Kind(s));
-                w.WriteString("missing", AgentSpells.Missing(agent, p, book, s));
-                w.WriteEndObject();
+                foreach (SpellDefinition s in AgentSpells.SpellsOf(school))
+                {
+                    if (!AgentSpells.InBook(book, s.ID))
+                    {
+                        continue;
+                    }
+
+                    w.WriteStartObject();
+                    w.WriteNumber("id", s.ID);
+                    w.WriteString("name", s.Name);
+                    w.WriteString("school", school.ToString().ToLowerInvariant());
+                    w.WriteNumber("circle", school == AgentSchool.Magery ? AgentSpells.Circle(s.ID) : 0);
+                    w.WriteNumber("mana", AgentSpells.Mana(s.ID));
+
+                    if (school == AgentSchool.Chivalry)
+                    {
+                        w.WriteNumber("tithing", AgentSpells.Tithing(s.ID));
+                    }
+
+                    w.WriteString("target", AgentSpells.Kind(s));
+                    w.WriteString("missing", AgentSpells.Missing(agent, p, book, s));
+                    w.WriteEndObject();
+                }
             }
 
             w.WriteEndArray();
@@ -484,7 +533,7 @@ namespace ClassicUO.Agent
                     w.WriteEndObject();
                     written++;
 
-                    if (it.Items != null && it.Graphic != AgentSpells.SPELLBOOK_GRAPHIC)
+                    if (it.Items != null && !AgentSpells.IsBook(it))
                     {
                         Walk(it);
                     }

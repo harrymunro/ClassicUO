@@ -161,7 +161,8 @@ public static class AgentTestKit
                 continue;
             }
 
-            if (arg.InsensitiveEquals("warriormage") || arg.InsensitiveEquals("magetamer"))
+            if (arg.InsensitiveEquals("warriormage") || arg.InsensitiveEquals("magetamer") ||
+                arg.InsensitiveEquals("necro") || arg.InsensitiveEquals("paladin"))
             {
                 hybrid = arg.ToLowerInvariant();
                 continue;
@@ -177,7 +178,7 @@ public static class AgentTestKit
             if (type == null)
             {
                 from.SendMessage(
-                    "Usage: [AgentKit [warrior|mage|archer|tamer|bard|warriormage|magetamer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [bear|wolf|hound|drake] [target]"
+                    "Usage: [AgentKit [warrior|mage|archer|tamer|bard|warriormage|magetamer|necro|paladin] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [bear|wolf|hound|drake] [target]"
                 );
                 return;
             }
@@ -194,6 +195,18 @@ public static class AgentTestKit
         if (hybrid == "magetamer")
         {
             ApplyMageTamerKit(from, pet ?? typeof(GrizzlyBear));
+            return;
+        }
+
+        if (hybrid == "necro")
+        {
+            ApplyNecroKit(from);
+            return;
+        }
+
+        if (hybrid == "paladin")
+        {
+            ApplyPaladinKit(from, weapon);
             return;
         }
 
@@ -1217,6 +1230,58 @@ public static class AgentTestKit
         m.AddToBackpack(new BagOfReagents(100));
         RestoreVitals(m);
         m.SendMessage("Agent warrior-mage kit applied.");
+    }
+
+    // A necromancer (AOS): Necromancy 90 and Spirit Speak 80 (spell damage), Meditation 70,
+    // Healing 70 and Anatomy 60 for bandages (necromancy has no healing spell), a full book of
+    // necromancy and 100 of each necromancer's reagent. Leather, so it can meditate.
+    public static void ApplyNecroKit(Mobile m)
+    {
+        ApplyKit(m, null);
+        var skills = m.Skills;
+        for (var i = 0; i < skills.Length; i++)
+        {
+            skills[i].Base = 0;
+        }
+
+        skills[SkillName.Necromancy].Base = 90;
+        skills[SkillName.SpiritSpeak].Base = 80;
+        skills[SkillName.Meditation].Base = 70;
+        skills[SkillName.Healing].Base = 70;
+        skills[SkillName.Anatomy].Base = 60;
+        skills[SkillName.Wrestling].Base = 70;
+        skills[SkillName.MagicResist].Base = 50;
+        m.RawStr = 70;
+        m.RawDex = 40;
+        m.RawInt = 90;
+
+        // The mage kit's book and reagents give way to the necromancer's.
+        foreach (var item in m.Backpack.Items.ToArray())
+        {
+            if (item is Spellbook or BagOfReagents)
+            {
+                item.Delete();
+            }
+        }
+
+        m.AddToBackpack(new NecromancerSpellbook(0x1FFFF));
+        m.AddToBackpack(new BagOfNecroReagents(100));
+        m.AddToBackpack(new Bandage(100));
+        RestoreVitals(m);
+        m.SendMessage("Agent necromancer kit applied.");
+    }
+
+    // A paladin (AOS): the warrior kit with Chivalry 90, a full book of chivalry and 10,000
+    // tithing points, so the spells never run short in a test.
+    public static void ApplyPaladinKit(Mobile m, Type weaponType)
+    {
+        ApplyKit(m, weaponType);
+        m.Skills[SkillName.Chivalry].Base = 90;
+        m.RawInt = 60; // blessings cost 10 to 20 mana each
+        m.TithingPoints = 10000;
+        m.AddToBackpack(new BookOfChivalry(0x3FF));
+        RestoreVitals(m);
+        m.SendMessage("Agent paladin kit applied.");
     }
 
     // A mage-tamer: the mage kit with Animal Taming and Animal Lore 85, Veterinary 60, bandages,

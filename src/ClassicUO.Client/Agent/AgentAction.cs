@@ -62,14 +62,15 @@ namespace ClassicUO.Agent
                         return Kind == "kill" ? AgentBehavior.Fight : AgentBehavior.Move;
 
                     // Healing spells answer to the same authority as bandages and potions;
-                    // attack spells to fight.
+                    // attack spells, and a paladin's fighting blessings, to fight.
                     case "cast":
                         SpellDefinition spell = AgentSpells.Find(Spell);
 
                         return spell == null ? AgentBehavior.Misc
-                            : spell.ID == AgentSpells.HEAL || spell.ID == AgentSpells.GREATER_HEAL ? AgentBehavior.Heal
-                            : spell.ID == AgentSpells.CURE ? AgentBehavior.Cure
-                            : spell.TargetType == TargetType.Harmful ? AgentBehavior.Fight
+                            : spell.ID == AgentSpells.HEAL || spell.ID == AgentSpells.GREATER_HEAL || spell.ID == AgentSpells.CLOSE_WOUNDS
+                                ? AgentBehavior.Heal
+                            : spell.ID == AgentSpells.CURE || spell.ID == AgentSpells.CLEANSE_BY_FIRE ? AgentBehavior.Cure
+                            : spell.TargetType == TargetType.Harmful || AgentSpells.FightBlessings.Contains(spell.ID) ? AgentBehavior.Fight
                             : AgentBehavior.Misc;
 
                     case "loot":

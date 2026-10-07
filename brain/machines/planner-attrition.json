@@ -1,0 +1,88 @@
+{
+  "name": "cautious open-ground warrior",
+  "why": "Fight small groups one at a time with scarce healing, avoid being swarmed in the open, and disengage while supplies and health allow.",
+  "start": "hunt",
+  "states": {
+    "hunt": {
+      "says": "Fight the closest monster and finish it before taking another; loot valuables when nothing is attacking. Don't seek far-off groups.",
+      "allow": [
+        "fight",
+        "loot",
+        "seek",
+        "rest"
+      ],
+      "target": "closest_first",
+      "loot": "valuables",
+      "transitions": [
+        {
+          "to": "out",
+          "when": "Several monsters are coming at once and together they are too many for the warrior to fight in the open, or supplies are low and more than two are on him.",
+          "requires": [
+            "3+ coming"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "recover",
+          "when": "Health is below about two thirds, or supplies are low and health is not high.",
+          "requires": [
+            "health below 60"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "recover": {
+      "says": "Fight only what is already on the warrior, backing off and bandaging when possible; do not seek new monsters.",
+      "allow": [
+        "fight",
+        "flee",
+        "rest"
+      ],
+      "target": "weakest_first",
+      "loot": "nothing",
+      "max_s": 25.0,
+      "then": "hunt",
+      "transitions": [
+        {
+          "to": "out",
+          "when": "Health is low and two or more monsters are still attacking, or health is falling dangerously fast.",
+          "requires": [
+            "health below 40",
+            "2+ coming"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "hunt",
+          "when": "Health is back above three quarters, or nothing is attacking any more.",
+          "requires": [
+            "health above 70"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "out": {
+      "says": "Run away until nothing hostile is in sight, then rest to heal.",
+      "allow": [
+        "leave",
+        "flee",
+        "rest"
+      ],
+      "loot": "nothing",
+      "max_s": 40.0,
+      "then": "recover",
+      "transitions": [
+        {
+          "to": "recover",
+          "when": "Nothing hostile is close or coming at the warrior any more.",
+          "requires": [
+            "none close"
+          ],
+          "at": 0.6
+        }
+      ]
+    }
+  }
+}

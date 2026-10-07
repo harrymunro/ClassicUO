@@ -273,10 +273,12 @@ namespace ClassicUO.Agent
             _lastHealPotion == 0 || Time.Ticks - _lastHealPotion >= Reflexes.HealPotionCooldownMs
                 ? 0
                 : Reflexes.HealPotionCooldownMs - (Time.Ticks - _lastHealPotion);
-        public bool Fleeing => _fleeUntil > Time.Ticks;
+        // Only while the run lasts: held for a fixed 6 s, a 15-tile run (3 s) left the character
+        // standing for the rest of it, with the brain not deciding and whatever followed hitting it.
+        public bool Fleeing => _fleeUntil > Time.Ticks && _agentWalking;
         public int EngagedRange => _engagedRange;
 
-        public string CastingSpell => _castSpell == 0 ? string.Empty : SpellsMagery.GetSpell(_castSpell).Name;
+        public string CastingSpell => _castSpell == 0 ? string.Empty : AgentSpells.Find(_castSpell.ToString())?.Name ?? string.Empty;
         public string QueuedSpell => _queuedCast == null ? string.Empty : AgentSpells.Find(_queuedCast.Spell)?.Name ?? string.Empty;
         public bool CastReady => _castSpell == 0 && Time.Ticks >= _nextCastAt && !_world.TargetManager.IsTargeting;
         public uint CastReadyInMs =>
@@ -379,9 +381,12 @@ namespace ClassicUO.Agent
             _agentWalking = false;
         }
 
+        // The agent always runs, as players do. The pathfinder on its own only runs walks longer
+        // than 14 tiles, so a flee of 10 tiles, a step back from melee, or a 15-tile leave on a
+        // diagonal (11 tiles each way) walked at half the speed of the monsters chasing it.
         private bool WalkTo(int x, int y, int z, int distance)
         {
-            bool ok = _world.Player.Pathfinder.WalkTo(x, y, z, distance);
+            bool ok = _world.Player.Pathfinder.WalkTo(x, y, z, distance, run: true);
             _agentWalking |= ok;
 
             return ok;
@@ -405,6 +410,7 @@ namespace ClassicUO.Agent
             d.Seq = ++_decisionSeq;
             d.Time = Time.Ticks;
             _decisions.Add(d);
+            _callCounts["fight"] = _callCounts.GetValueOrDefault("fight") + 1;
 
             if (_decisions.Count > 12)
             {
@@ -422,6 +428,56 @@ namespace ClassicUO.Agent
             }
 
             NoteBrain(d.Note);
+        }
+
+        // The latest model call of each kind other than a fight decision, and how many of each
+        // kind there have been, for the live view of calls (AgentCallsGump).
+        private readonly Dictionary<string, AgentCall> _calls = new Dictionary<string, AgentCall>();
+        private readonly Dictionary<string, int> _callCounts = new Dictionary<string, int>();
+        private AgentCallsGump _callsGump;
+
+        public IReadOnlyDictionary<string, AgentCall> LatestCalls => _calls;
+        public IReadOnlyDictionary<string, int> CallCounts => _callCounts;
+        public int CallSeq { get; private set; }
+        public bool CallsOpen => _callsGump != null && !_callsGump.IsDisposed;
+
+        public void RecordCall(AgentCall c)
+        {
+            if (string.IsNullOrEmpty(c.Kind))
+            {
+                return;
+            }
+
+            c.Time = Time.Ticks;
+            _calls[c.Kind] = c;
+            _callCounts[c.Kind] = _callCounts.GetValueOrDefault(c.Kind) + 1;
+            CallSeq++;
+            _lastBrainContact = Time.Ticks;
+        }
+
+        // Opens the live view of calls beside the panel (to its right when the window has room, else
+        // to its left), or closes it.
+        public void ToggleCalls()
+        {
+            if (CallsOpen)
+            {
+                _callsGump.Dispose();
+                _callsGump = null;
+
+                return;
+            }
+
+            int x = 40, y = 40;
+
+            if (_gump != null && !_gump.IsDisposed)
+            {
+                bool right = _gump.X + _gump.Width + 8 + AgentCallsGump.WIDTH <= Client.Game.Window.ClientBounds.Width;
+                x = right ? _gump.X + _gump.Width + 8 : Math.Max(0, _gump.X - AgentCallsGump.WIDTH - 8);
+                y = _gump.Y;
+            }
+
+            _callsGump = new AgentCallsGump(_world, this, x, y);
+            UIManager.Add(_callsGump);
         }
 
         public void SetBrainInfo(string judge, string archetype, string strategyReading)
@@ -782,6 +838,14 @@ namespace ClassicUO.Agent
 
                     if (a.Queue && castStatus == "failed" && castDetail == "not ready to cast")
                     {
+                        // One spell waits at a time. A spell on the caster itself (Protection, a heal)
+                        // isn't pushed out by an attack spell from the next decision: in a swarm round
+                        // Protection queued, was replaced 1.3 s later and never went up (cuo-cvl.4).
+                        if (_queuedCast != null && Time.Ticks - _queuedCastAt < 4000 && SelfSpell(_queuedCast) && !SelfSpell(a))
+                        {
+                            return ("queued", "after " + _queuedCast.Describe(_world));
+                        }
+
                         _queuedCast = a;
                         _queuedCastAt = Time.Ticks;
 
@@ -1009,7 +1073,9 @@ namespace ClassicUO.Agent
             PlayerMobile p = _world.Player;
             SpellDefinition spell = AgentSpells.Find(a.Spell);
 
-            if (spell == null || !AgentSpells.IsMagery(spell.ID))
+            AgentSchool school = spell == null ? AgentSchool.None : AgentSpells.SchoolOf(spell.ID);
+
+            if (school == AgentSchool.None)
             {
                 return ("failed", $"unknown spell '{a.Spell}'");
             }
@@ -1026,11 +1092,12 @@ namespace ClassicUO.Agent
                 return ("failed", "a target cursor is up");
             }
 
-            string missing = AgentSpells.Missing(this, p, AgentSpells.FindSpellbook(p), spell);
+            string missing = AgentSpells.Missing(this, p, AgentSpells.FindBook(p, school), spell);
 
             if (missing.Length != 0)
             {
-                return ("failed", missing == "spellbook" ? "no spellbook" : missing == "mana" ? "not enough mana" : missing == "reagents" ? "no reagents" : missing);
+                return ("failed", missing == "spellbook" ? "no spellbook" : missing == "mana" ? "not enough mana"
+                    : missing == "reagents" ? "no reagents" : missing == "tithing" ? "not enough tithing points" : missing);
             }
 
             uint target = a.Target == uint.MaxValue ? p.Serial : a.Target;
@@ -1072,13 +1139,23 @@ namespace ClassicUO.Agent
             _castUntil = now + delay;
             // Spells without a cursor (Protection is a self toggle) free the slot soon after.
             _castCursorBy = now + delay + 1200;
-            _nextCastAt = now + delay + AgentSpells.RECOVERY_MS;
+            _nextCastAt = now + delay + AgentSpells.RecoveryMs(spell.ID);
             Stats.Casts++;
-            NoteWeaponForRearm();
+
+            // Only magery drops the weapon into the pack (ModernUO: ClearHandsOnCast); chivalry and
+            // necromancy keep it in hand.
+            if (school == AgentSchool.Magery)
+            {
+                NoteWeaponForRearm();
+            }
             GameActions.CastSpell(spell.ID);
 
             return ("done", string.Empty);
         }
+
+        private bool SelfSpell(AgentAction a) =>
+            (a.Target == uint.MaxValue || a.Target == _world.Player.Serial) && AgentSpells.Find(a.Spell) is SpellDefinition s
+            && s.TargetType != TargetType.Harmful;
 
         // Runs right after the reflexes, so a heal the reflexes needed has already taken the slot.
         private void FireQueuedCast(uint now)
@@ -1216,18 +1293,30 @@ namespace ClassicUO.Agent
 
                 return;
             }
-            Item book = AgentSpells.FindSpellbook(p);
+            // Every school's book the character has the skill for: Magery, Necromancy, Chivalry.
+            bool caster = false;
 
-            if (target == null && (book == null || AgentSpells.MagerySkill(p) <= 0))
+            foreach (AgentSchool school in AgentSpells.Schools)
+            {
+                Item book = AgentSpells.FindBook(p, school);
+
+                if (book == null || AgentSpells.SkillValue(p, AgentSpells.SkillOf(school)) <= 0)
+                {
+                    continue;
+                }
+
+                caster = true;
+                target ??= !AgentSpells.ContentKnown(book) && Due(book) ? book : null;
+            }
+
+            if (target == null && !caster)
             {
                 return;
             }
 
-            target ??= book != null && !AgentSpells.ContentKnown(book) && Due(book) ? book : null;
-
             for (LinkedObject i = p.FindItemByLayer(Layer.Backpack)?.Items; i != null && target == null; i = i.Next)
             {
-                if (i is Item it && it.Items == null && !it.Opened && it.ItemData.IsContainer && it.Graphic != AgentSpells.SPELLBOOK_GRAPHIC
+                if (i is Item it && it.Items == null && !it.Opened && it.ItemData.IsContainer && !AgentSpells.IsBook(it)
                     && !AgentSpells.IsRunebook(it) && Due(it))
                 {
                     target = it;
@@ -1749,6 +1838,8 @@ namespace ClassicUO.Agent
 
                 // Runebook buttons: 2 + entry * 6 + action (0 use a charge, 3 cast Recall, 4 cast Gate Travel).
                 int action = how == "gate" ? 4 : how == "charge" ? 0 : 3;
+                // Even a charge is cast as Recall, which drops the weapon into the pack.
+                NoteWeaponForRearm(3500);
                 _bookRecall = (it.Serial, entry, action);
                 _bookAwaited = it.Serial;
                 _bookAwaitedAt = Time.Ticks;
@@ -1917,6 +2008,15 @@ namespace ClassicUO.Agent
                 input.CanCastCure = AgentSpells.Missing(this, p, book, SpellsMagery.GetSpell(AgentSpells.CURE)).Length == 0;
             }
 
+            // A paladin's own: Close Wounds heals, Cleanse by Fire cures.
+            Item chivalry = AgentSpells.FindBook(p, AgentSchool.Chivalry);
+
+            if (chivalry != null && input.CastReady && AgentSpells.SkillValue(p, "Chivalry") > 0)
+            {
+                input.CanCastCloseWounds = AgentSpells.Missing(this, p, chivalry, AgentSpells.Find(AgentSpells.CLOSE_WOUNDS.ToString())).Length == 0;
+                input.CanCastCleanse = AgentSpells.Missing(this, p, chivalry, AgentSpells.Find(AgentSpells.CLEANSE_BY_FIRE.ToString())).Length == 0;
+            }
+
             (ReflexAction action, AgentAuthority auth) = ReflexPolicy.Decide(input, Reflexes);
 
             if (action == ReflexAction.None)
@@ -1933,6 +2033,8 @@ namespace ClassicUO.Agent
                 ReflexAction.DrinkCure => new AgentAction { Verb = "drink", Kind = "cure", Reason = "reflex" },
                 ReflexAction.CastHeal => new AgentAction { Verb = "cast", Spell = AgentSpells.HEAL.ToString(), Target = uint.MaxValue, Reason = "reflex" },
                 ReflexAction.CastGreaterHeal => new AgentAction { Verb = "cast", Spell = AgentSpells.GREATER_HEAL.ToString(), Target = uint.MaxValue, Reason = "reflex" },
+                ReflexAction.CastCloseWounds => new AgentAction { Verb = "cast", Spell = AgentSpells.CLOSE_WOUNDS.ToString(), Target = uint.MaxValue, Reason = "reflex" },
+                ReflexAction.CastCleanse => new AgentAction { Verb = "cast", Spell = AgentSpells.CLEANSE_BY_FIRE.ToString(), Target = uint.MaxValue, Reason = "reflex" },
                 _ => new AgentAction { Verb = "cast", Spell = AgentSpells.CURE.ToString(), Target = uint.MaxValue, Reason = "reflex" }
             };
 
@@ -2369,6 +2471,8 @@ namespace ClassicUO.Agent
             {
                 _gump.Dispose();
                 _gump = null;
+                _callsGump?.Dispose();
+                _callsGump = null;
             }
         }
 
@@ -2731,6 +2835,13 @@ namespace ClassicUO.Agent
 
                 case "next":
                     DoNext();
+
+                    break;
+
+                // The live view of every model call, beside the panel.
+                case "calls":
+                    ToggleCalls();
+                    Print(CallsOpen ? "showing jev's calls" : "jev's calls closed");
 
                     break;
 

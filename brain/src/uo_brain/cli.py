@@ -11,6 +11,7 @@
   uo-brain bench --scenarios core --judges heuristic,jev --rounds 10   (bench report bench/*.json)
   uo-brain world find bank --near-place "Britain graveyard" | world hunt warrior new | world note "..." --area Britain
   uo-brain world outcomes logs/session.jsonl   (what each hunt gave, per area and kit)
+  uo-brain machine list | machine show pull-one | machine design "a mage swarmed in the open" --archetype mage
 """
 
 import argparse
@@ -25,6 +26,7 @@ from . import bench as benchmark
 from . import guides
 from . import judge as judges
 from . import llm, logs, loop, outcomes, policy, state
+from . import machine as machines
 from . import review as reviews
 from . import strategy as strategies
 from . import world as worlds
@@ -94,11 +96,12 @@ def main() -> None:
     bn.add_argument("files", nargs="*", type=Path, help="for report: results JSON files to compare")
     bn.add_argument("--scenarios", default="core",
                     help="comma-separated names, 'core' (judge comparison), 'adherence', 'archetypes', "
-                         "'world' (world facts) or 'all'")
+                         "'world' (world facts), 'packs' or 'all'")
     bn.add_argument("--facts", default="none,all,jev",
                     help="world-fact scenarios: which conditions to play per judge (none, all, jev; default all three)")
     bn.add_argument("--judges", default="heuristic,jev",
-                    help="comma-separated: heuristic, jev, jev+<template>, each optionally /nokite (no stepping back)")
+                    help="comma-separated: heuristic, jev, jev+<template>, each optionally /nokite (no stepping back), "
+                         "/nopack (code doesn't leave from a pack) or #<machine> (follow that plan; uo-brain machine list)")
     bn.add_argument("--rounds", type=int, default=10)
     bn.add_argument("--lane", type=int, default=0, help="test-field lane, so several clients can run at once")
     bn.add_argument("--out", type=Path, help="results JSON (default bench/<time>.json)")
@@ -129,6 +132,13 @@ def main() -> None:
     rpl.add_argument("--limit", type=int, default=200)
 
     add_world_args(sub)
+
+    mc = sub.add_parser("machine", help="plans for fights as state machines: list, show, or have the planner design one")
+    mc.add_argument("action", choices=["list", "show", "design"])
+    mc.add_argument("what", nargs="?", help="show: a name in brain/machines or a file; design: the situation in words")
+    mc.add_argument("--archetype", default="warrior", help="design: how the character plays")
+    mc.add_argument("--out", type=Path, help="design: save it here (default brain/machines/<name>.json)")
+    mc.add_argument("--planner-model", help=f"OpenRouter model (default $PLANNER_MODEL or {llm.PLANNER_MODEL})")
 
     ss = sub.add_parser("session", help="play towards a goal in words: the planner picks each goal, Jev fights")
     ss.add_argument("goal", help='e.g. "hunt the undead at the Britain graveyard, keep supplied with bandages, bank gold"')
@@ -179,6 +189,9 @@ def main() -> None:
     if args.cmd == "bench" and args.what != "run":
         bench_offline(args)
         return
+    if args.cmd == "machine":
+        machine_cmd(args)
+        return
     asyncio.run(dispatch(args))
 
 
@@ -188,7 +201,8 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--model", help="model id (default: ~typesafe/jev-latest on OpenRouter, jev-latest direct)")
     p.add_argument("--mode", choices=["keep", "off", "assist", "auto"], default="keep",
                    help="set the client's agent mode first (default: leave as is)")
-    p.add_argument("--archetype", choices=["auto", "warrior", "mage", "archer", "tamer", "bard"], default="auto",
+    p.add_argument("--archetype", choices=["auto", "warrior", "mage", "archer", "tamer", "bard", "necromancer", "paladin"],
+                   default="auto",
                    help="how to play the character (default: tell from its skills)")
     p.add_argument("--duration", type=float, help="stop after this many seconds")
     p.add_argument("--strategy", type=Path, metavar="FILE", help="load this Markdown strategy into the character first")
@@ -201,6 +215,45 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--planner-model", help="default anthropic/claude-sonnet-5.5 (or PLANNER_MODEL)")
     p.add_argument("--facts", choices=["jev", "all", "none"], default="jev",
                    help="world facts in the fight decisions: the few Jev picks (default), every shortlisted one, or none")
+    p.add_argument("--machine", metavar="NAME|FILE",
+                   help="follow this plan in fights (a state machine; see: uo-brain machine list); the planner may replace it")
+    p.add_argument("--no-machines", action="store_true", help="don't let the planner set plans for the fights")
+
+
+def runner_of(args) -> "machines.Runner | None":
+    if not getattr(args, "machine", None):
+        return None
+    try:
+        return machines.Runner(machines.load(args.machine))
+    except machines.MachineError as e:
+        sys.exit(f"machine: {e}")
+
+
+def machine_cmd(args) -> None:
+    match args.action:
+        case "list":
+            for p in sorted(machines.MACHINES_DIR.glob("*.json")):
+                m = machines.load(str(p))
+                print(f"{p.stem:<16} {len(m.states)} states  {m.why}")
+        case "show":
+            if not args.what:
+                sys.exit("machine show needs a name or a file")
+            try:
+                m = machines.load(args.what)
+            except machines.MachineError as e:
+                sys.exit(f"machine: {e}")
+            print(m.describe())
+        case "design":
+            if not args.what:
+                sys.exit('machine design needs the situation in words, e.g. "a mage swarmed in the open"')
+            try:
+                m, usage = asyncio.run(machines.design(args.what, args.archetype, model=args.planner_model))
+            except (machines.MachineError, llm.LlmError) as e:
+                sys.exit(f"machine: {e}")
+            out = args.out or machines.MACHINES_DIR / f"{'-'.join(m.name.lower().split())[:40]}.json"
+            out.write_text(json.dumps(m.to_json(), indent=2) + "\n")
+            print(m.describe())
+            print(f"\nsaved to {out} (${usage.cost or 0:.4f}, {usage.calls} call{'s' if usage.calls != 1 else ''})")
 
 
 def add_world_args(sub) -> None:
@@ -450,11 +503,12 @@ async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
             lcfg.duration_s = None
             try:
                 await Autopilot(rpc, judge, world, lcfg, pcfg, args.log, archetype, args.planner_model,
-                                facts_mode=args.facts).run(stop)
+                                facts_mode=args.facts, machine=runner_of(args),
+                                machines_allowed=not args.no_machines).run(stop)
             finally:
                 world.close()
             return loop.RunStats()
-        stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop, archetype=archetype)
+        stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop, archetype=archetype, machine=runner_of(args))
     finally:
         await judge.close()
     print(json.dumps(stats.summary(lcfg.price_per_million), indent=2))
@@ -505,9 +559,11 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     session = Session(rpc, world, judge, log=write, archetype=archetype,
                       decisions_log=args.log.with_suffix(".decisions.jsonl") if args.log else None)
     session.facts_mode = args.facts
+    session.machine = runner_of(args)
     from .recorder import Recorder
     session.recorder = Recorder(world, judge)
-    plan = Planner(session, args.goal, model=args.planner_model, log=write, on_goal=show)
+    plan = Planner(session, args.goal, model=args.planner_model, log=write, on_goal=show,
+                   machines_allowed=not args.no_machines)
     stop = asyncio.Event()
     asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop.set)
     await rpc.call("mode", mode="auto")
@@ -549,6 +605,7 @@ async def do_goal(rpc: AgentRpc, args) -> None:
                 res = await session.sell(args.items, args.vendor)
             case "hunt":
                 session.facts_mode = args.facts
+                session.machine = runner_of(args)
                 res = await session.hunt(args.area, args.minutes)
             case _:
                 res = await session.rest(args.seconds)
@@ -572,6 +629,8 @@ def bench_names(spec: str) -> list[str]:
             return list(benchmark.ARCHETYPES)
         case "world":
             return list(benchmark.WORLD)
+        case "packs":
+            return list(benchmark.PACKS)
         case "all":
             return list(benchmark.SCENARIOS)
     names = [n.strip() for n in spec.split(",") if n.strip()]

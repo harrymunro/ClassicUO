@@ -165,7 +165,8 @@ namespace ClassicUO.Agent
 
             return string.Concat
             (
-                _agent.Mode.Name(), _agent.Engage.Name(), _agent.GetAuthority(AgentBehavior.Fight).Name(), "|", Expanded ? "x" : "c", "|",
+                _agent.Mode.Name(), _agent.Engage.Name(), _agent.GetAuthority(AgentBehavior.Fight).Name(), "|", Expanded ? "x" : "c",
+                _agent.CallsOpen ? "o" : "-", "|",
                 AgentBrain.State, _hasKey ? "k" : "-", ThreatLine(), "|",
                 _agent.GoalRevision.ToString(), _agent.GoalStep, "|",
                 _agent.BrainActive ? "b" : "-", _agent.HumanActive ? "h" : "-", "|",
@@ -187,6 +188,12 @@ namespace ClassicUO.Agent
                 : "brain off";
             AddText(brain, PAD + 34, y + 1, _agent.BrainActive ? GREEN : GREY);
             _content.Add(new ClickLabel(Expanded ? "less" : "more", LINK, () => { Expanded = !Expanded; _signature = string.Empty; }) { X = WIDTH - PAD - 28, Y = y });
+            // The live view of every model call, beside the panel (or to its left without room).
+            _content.Add(new ClickLabel("calls", _agent.CallsOpen ? GOLD : LINK, () =>
+            {
+                _agent.ToggleCalls();
+                _signature = string.Empty;
+            }) { X = WIDTH - PAD - 70, Y = y });
             y += 22;
 
             // Play state: three radio buttons, and the key that switches between the two ways to play.
@@ -497,6 +504,15 @@ namespace ClassicUO.Agent
                     : _agent.Mode == AgentMode.Off ? "turn the agent on to start the brain" : "no brain running: start uo-brain run";
 
                 return AddWrapped(idle, PAD, y, INNER, GREY) + 4;
+            }
+
+            // A plan (state machine) from the brain: the steps in order, the current one in gold.
+            if (!string.IsNullOrEmpty(d.PlanName))
+            {
+                y = AddPair("plan", d.PlanName, y);
+                string steps = string.Join("  ›  ", d.PlanSteps.ConvertAll(st => st == d.PlanStep ? $"[{st}]" : st));
+                y = AddWrapped(steps, PAD, y, INNER, GOLD);
+                y = AddWrapped(d.PlanSays + (d.PlanLast.Length != 0 ? $"  (last: {d.PlanLast})" : ""), PAD, y, INNER, GREY) + 4;
             }
 
             foreach ((string name, float p) in d.Intents)

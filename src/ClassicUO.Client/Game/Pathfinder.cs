@@ -927,7 +927,8 @@ namespace ClassicUO.Game
             return true;
         }
 
-        public bool WalkTo(int x, int y, int z, int distance)
+        // run: run the whole way. Otherwise only walks longer than 14 tiles are run.
+        public bool WalkTo(int x, int y, int z, int distance, bool run = false)
         {
             if (_world.Player == null /*|| World.Player.Stamina == 0*/ || _world.Player.IsParalyzed)
             {
@@ -981,6 +982,7 @@ namespace ClassicUO.Game
             PathindingCanBeCancelled = true;
             StopAutoWalk();
             AutoWalking = true;
+            _run = run;
 
             if (FindPath(PATHFINDER_MAX_NODES))
             {

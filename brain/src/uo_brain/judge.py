@@ -146,7 +146,7 @@ class HeuristicJudge:
         if "spell" in questions:
             # Strongest damage spell on offer (the options come strongest first); cheap ones when mana is low.
             options = [k for k, v in questions["spell"]["criteria"].items()
-                       if k != "none" and not v.startswith(("Poison", "Paralyze"))]
+                       if k != "none" and v.split(":", 1)[0] not in ("Poison", "Paralyze")]
             pick = (options[-1] if mana < 35 else options[0]) if options else "none"
             out.choices["spell"] = one_hot(pick, questions["spell"]["criteria"])
         for name in questions:

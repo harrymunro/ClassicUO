@@ -31,9 +31,10 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import calls
 from .judge import Answers, Judge
-from .spells import ATTACK_SPELLS, mana_words
-from .state import archetype_of, health_words
+from .spells import ATTACK_SPELLS, NECRO_ATTACK_SPELLS, mana_words
+from .state import archetype_of, coming_at, health_words, reagents_of
 
 
 @dataclass
@@ -49,6 +50,7 @@ class RoutineConfig:
     # run Jev said "walk elsewhere" (0.65-0.77) for 7 minutes round an emptied graveyard.
     max_patrols: int = 4
     defer_s: float = 30.0           # how long a stop waits for the fight at hand to end
+    leave_wait_s: float = 45.0      # after leaving from danger, the hunt ends once nothing is coming, or after this
     quiet_floor_s: float = 600.0    # with Jev: nothing to fight for this long ends the hunt anyway
     full_bag_pct: int = 98          # a floor: the bag can take no more
     price_per_million: float = 0.042  # Jev's price per million input tokens (loop.LoopConfig)
@@ -113,6 +115,8 @@ class HuntWatch:
         self.pending: tuple[str, float] | None = None  # (why, since): a stop waiting for the fight to end
         self.patrol_due = False
         self.lowest_hp = 100
+        self.left_why: str | None = None  # the fight loop left the area from danger (a pack), and why
+        self.left_at = 0.0
         self.asked = 0
         self.input_tokens = 0
         self.verdicts: dict[str, int] = {}
@@ -120,7 +124,14 @@ class HuntWatch:
     # ------------------------------------------------------------ snapshots
 
     def mage(self, snap: dict[str, Any]) -> bool:
-        return (self.archetype or archetype_of(snap)) in ("mage", "mage-tamer")
+        return self.kind(snap) in ("mage", "mage-tamer", "necromancer")
+
+    def kind(self, snap: dict[str, Any]) -> str:
+        return self.archetype or archetype_of(snap)
+
+    def reagents(self, p: dict[str, Any], snap: dict[str, Any]) -> dict[str, int]:
+        """A necromancer's own reagents, or a mage's."""
+        return reagents_of(p, self.kind(snap))
 
     def observe(self, snap: dict[str, Any]) -> Look:
         now = self.clock()
@@ -142,6 +153,18 @@ class HuntWatch:
         floor = self.floor(snap, quiet_s)
         if floor:
             return Look(stop=floor)
+        # Left from danger: the hunt is over, since going on here walks back into it (in a soak run the
+        # warrior's 40 s of leaving ran out and it took on a reaper with the gargoyles still about).
+        # It ends once nothing is coming at the character any more, so the planner doesn't think
+        # with a pack on its heels.
+        if self.left_why is not None:
+            # Still chased while anything in sight is fighting: spellcasters followed a warrior from 13 tiles
+            # in a soak run, and caught it standing still trying to recall.
+            chased = any(m.get("monster") and not m.get("dead") and (coming_at(m) or m.get("war_mode"))
+                         for m in snap["mobiles"])
+            if not chased and not snap["agent"].get("fleeing") or now - self.left_at >= self.cfg.leave_wait_s:
+                return Look(stop=f"left the area: {self.left_why}")
+            return Look()
         if not self.jev or self.failed >= 2:
             return self.rules(snap, now, quiet_s)
 
@@ -173,6 +196,11 @@ class HuntWatch:
                 self.last_quiet_ask = now
         return look
 
+    def left(self, why: str) -> None:
+        """The fight loop decided to leave the area (policy.Decision.leave_why): end the hunt."""
+        if self.left_why is None:
+            self.left_why, self.left_at = why, self.clock()
+
     def floor(self, snap: dict[str, Any], quiet_s: float) -> str | None:
         """The stops that need no judgment."""
         p = snap["player"]
@@ -182,7 +210,8 @@ class HuntWatch:
         if p.get("weight_max") and p["weight"] * 100 >= self.cfg.full_bag_pct * p["weight_max"]:
             return "the bag is full"
         if self.mage(snap):
-            book = [sp for sp in (snap.get("magic") or {}).get("spells", []) if sp["name"] in ATTACK_SPELLS]
+            book = [sp for sp in (snap.get("magic") or {}).get("spells", [])
+                    if sp["name"] in ATTACK_SPELLS or sp["name"] in NECRO_ATTACK_SPELLS]
             if book and all(sp.get("missing") == "reagents" for sp in book):
                 return "out of reagents for every attack spell"
         elif s.get("bandages", 0) == 0 and s.get("heal_potions", 0) == 0:
@@ -204,7 +233,7 @@ class HuntWatch:
             return Look(stop="bag is heavy")
         if not self.mage(snap) and s.get("bandages", 0) < self.cfg.min_bandages:
             return Look(stop="low on bandages")
-        if self.mage(snap) and min((s.get("reagents") or {"x": 0}).values()) < self.cfg.min_reagents:
+        if self.mage(snap) and min((self.reagents(p, snap) or {"x": 0}).values()) < self.cfg.min_reagents:
             return Look(stop="low on reagents")
         if (a := ammo(p)) and a[1] < self.cfg.min_ammo:
             return Look(stop=f"low on {a[0]}")
@@ -245,6 +274,11 @@ class HuntWatch:
                 self.patrol_due = True
             self.log({"type": "routine", "t": time.time(), "area": self.area, "moment": moment, "state": words,
                       "questions": qs, "answers": ans.to_log(), "verdict": v.kind, "reason": v.reason})
+            calls.emit({"kind": "routine", "title": f"hunt at {self.area} ({moment})", "model": ans.model,
+                        "latency_ms": round(ans.latency_ms, 1),
+                        "questions": calls.view(qs, ans, cuts={"head_back": self.cfg.yes, "move_spot": self.cfg.yes,
+                                                               "stay_here": self.cfg.no}),
+                        "note": f"{v.kind.replace('_', ' ')}: {v.reason}"[:200]})
             return v
         finally:
             self.in_flight = False
@@ -291,7 +325,8 @@ class HuntWatch:
         """The bands that make a question worth asking when they change."""
         p = snap["player"]
         a = ammo(p)
-        return supply_level(p, self.mage(snap)), ammo_level(a[1]) if a else None, bag_words(p).split(" (")[0]
+        return supply_level(p, self.mage(snap), self.reagents(p, snap)), ammo_level(a[1]) if a else None, \
+            bag_words(p).split(" (")[0]
 
     def words(self, snap: dict[str, Any]) -> dict[str, Any]:
         """The hunt so far, in words, for Jev. Code does the arithmetic."""
@@ -307,9 +342,10 @@ class HuntWatch:
         if mage:
             mana = round(100 * p["mana"] / p["mana_max"]) if p.get("mana_max") else 100
             you["mana"] = f"{mana_words(mana)} ({mana}%)"
-            you["reagents"] = reagent_words(s.get("reagents") or {})
-            you["reagents_last"] = reagents_last(s.get("reagents") or {}, s0.get("reagents") or {}, kills)
-            book = [sp for sp in (snap.get("magic") or {}).get("spells", []) if sp["name"] in ATTACK_SPELLS]
+            you["reagents"] = reagent_words(self.reagents(p, snap))
+            you["reagents_last"] = reagents_last(self.reagents(p, snap), self.reagents(p0, snap), kills)
+            book = [sp for sp in (snap.get("magic") or {}).get("spells", [])
+                    if sp["name"] in ATTACK_SPELLS or sp["name"] in NECRO_ATTACK_SPELLS]
             ready = [sp["name"] for sp in book if sp.get("missing") != "reagents"]
             you["attack_spells_with_reagents"] = ", ".join(ready) if ready else "none"
             you["heal_potions_left"] = s.get("heal_potions", 0)
@@ -419,10 +455,10 @@ def ammo_level(n: int) -> str:
     return "plenty" if n > 100 else "some" if n > 50 else "running low" if n > 20 else "nearly gone"
 
 
-def supply_level(p: dict[str, Any], mage: bool) -> str:
+def supply_level(p: dict[str, Any], mage: bool, regs: dict[str, int] | None = None) -> str:
     s = p.get("supplies", {})
     if mage:
-        return reagent_words(s.get("reagents") or {}).split(":")[0]
+        return reagent_words(s.get("reagents") or {} if regs is None else regs).split(":")[0]
     bandages = s.get("bandages", 0)
     return "plenty" if bandages > 50 else "some" if bandages > 25 else "running low" if bandages > 10 else "nearly gone"
 

@@ -38,9 +38,10 @@ a right answer: healing thresholds, pathfinding, looting mechanics, safety rules
 |---|---|
 | **Combat assist** | You drive. It fights beside you, keeps you healed, and does Jev's next move on a key. [Play states](#play-states-and-keys) |
 | **Auto, towards a goal** | "Hunt the undead at the Britain graveyard, bank the gold": a planner model (Claude Sonnet) chooses each step (travel, hunt, bank, buy, sell) and Jev fights. [Goals](#goals-and-the-planner) |
-| **Character types** | Warriors, mages, archers, tamers and bards, and two hybrids, told apart from the skills. [Character types](#character-types) |
+| **Character types** | Warriors, mages, archers, tamers and bards, two hybrids, and on AOS-era shards necromancers and paladins, told apart from the skills. [Character types](#character-types) |
+| **Plans for fights** | The planner can give the fights a shape for the place and the character (pull one at a time, back off to heal, hit a crowd with area spells) as a small state machine, and Jev runs it. [Plans](#plans-for-fights) |
 | **Strategy in your words** | "Never flee, finish the weakest first": Jev weighs it in every decision, and code enforces what it compiles to. [Strategy](#strategy-in-your-own-words) |
-| **The agent panel** | What Jev is thinking, in game: its probabilities, choices and actions for every decision. [Panel](#the-agent-panel) |
+| **The agent panel** | What Jev is thinking, in game: its probabilities, choices and actions for every decision, and a live view of every model call with the options and Jev's pick. [Panel](#the-agent-panel) |
 | **World knowledge** | Places, spawns, creatures, routes and past hunts for each shard, with Jev picking the facts that matter. [World knowledge](#world-knowledge) |
 | **Measured** | A judgment benchmark measures where Jev beats fixed rules, with scenarios built so the obvious rule gets them wrong. [Results](#judgment-benchmark) |
 
@@ -147,13 +148,17 @@ flowchart LR
 3. **One Jev request asks every question that could matter**:
    - `intent`: fight, flee (for a moment), leave (the area: run until nothing is in sight), loot, seek or rest
    - `in_danger`: will the character die soon if it keeps fighting?
-   - `leave_now`, only when there's a reason to (a far stronger creature within 12 tiles, supplies nearly gone with two or more creatures close, or picked world facts with a creature in view): should it leave now? Jev judges this better as its own yes/no than as one of six intents: with an ogre lord adjacent it still gave fight 80%.
+   - `leave_now`, only when there's a reason to (a far stronger creature within 12 tiles, a pack coming at it that together outweighs it, supplies nearly gone with two or more creatures close, or picked world facts with a creature in view): should it leave now? Jev judges this better as its own yes/no than as one of six intents: with an ogre lord adjacent it still gave fight 80%.
    - `target`: which creature to attack
    - `spell` (mages): which attack spell to cast next
    - `corpse`: which corpse to loot first
    - `take_iN`: is this item worth picking up?
+   - `blessing` (paladins): which chivalry blessing to use in this fight
+   - with a [plan](#plans-for-fights), `go_<step>`: should it move on to that step now? Only the current step's moves are asked.
 
-   Code uses the answers that apply and ignores the rest.
+   Code uses the answers that apply and ignores the rest. Something new coming at the
+   character counts as a change, so the next decision is asked at once rather than at the
+   next second's tick.
 4. **The policy is code.** It masks options the facts rule out (no looting with a
    monster adjacent), requires the intent and the danger judgment to agree before
    fleeing, keeps its current course when confidence is low, and applies your
@@ -244,6 +249,17 @@ whenever the agent is on or a brain is connected. It shows:
 When Jev picks a new target, "jev: target" appears above that creature in the world. *less*
 collapses the panel to a few lines; its position and whether it is collapsed are saved per character.
 
+**Jev's calls, live.** The *calls* link in the panel's title row (or `-agent calls`) opens a
+window beside it that shows every model call as it happens, not just the latest intent:
+
+- **The latest fight decision, question by question:** what next, which creature, which spell or blessing, and so on, each option as a bar with Jev's probability, its pick marked *jev* in green and, where code went with something else (a code rule, your strategy's spell, an unsure answer), that marked *code* in gold. A yes/no (in danger?, leave now?, a [plan](#plans-for-fights)'s next step?) is one bar with the cut that decides it in red, and the verdict.
+- **The latest of each other kind of call:** Jev's routine questions inside a hunt with its verdict, its pick of world facts (each fact with its score, the kept ones in green), a strategy read, and the planner's goals and world queries with their reason and cost.
+- **How many calls of each kind** there have been.
+
+<p align="center">
+  <img src="docs/images/jev-calls.png" width="660" alt="The calls window beside the agent panel during a mage's fight: what next with fight at 99% picked by Jev, in danger at 27% under its cut, which creature with Gnurl the orc at 39% picked, and which spell with Magic Arrow at 77% picked.">
+</p>
+
 ### Reflexes
 
 The client runs these without the brain:
@@ -252,6 +268,7 @@ The client runs these without the brain:
 - **Heal potion:** drink one below 40%, with the 10-second cooldown respected.
 - **Cure potion:** drink one when poisoned and hurt.
 - **Healing spells** (characters with no bandages): Heal below 65%, Greater Heal below 50%, and Cure when poisoned if no cure potion is ready.
+- **A paladin's prayers:** Close Wounds below 50%, bandages or not (a bandage takes seconds), and Cleanse by Fire when poisoned with no cure potion ready.
 
 Adjust them with `-agent bandage 80` and `-agent potion 35`. They're also
 available on their own: combat assist with no brain running heals you and keeps a warrior swinging.
@@ -266,6 +283,22 @@ These are in code, whatever the model says:
 - Gold, bandages and potions are always taken; anything else needs a "worth taking" judgment.
 - Other players are never attacked, never named to the model (they appear as "a red player", "a criminal player" or "another player") and never named in the world store.
 - The brain only loots corpses of creatures the client saw die as monsters. Taking from anything else (an animal, a townsperson, another player) can be a crime: in a test, looting a rabbit's corpse in Britain made the character a criminal and the guards killed him.
+
+### Leaving and packs
+
+In auto mode the agent leaves a fight it can't win: it runs until nothing hostile is in
+sight, keeps running from whatever is still there for 40 seconds, and for two minutes after
+that doesn't go looking for creatures, only fights what comes close. In a pack round the
+warrior got away untouched, went after the orc it had left once the 40 seconds were up, and
+walked back into the gargoyles.
+
+- **It runs.** The agent's walks always run, as players do. The client's pathfinder only ran walks longer than 14 tiles, so a 10-tile flee, a step back from melee, and a 15-tile leave on a diagonal (11 tiles each way) walked at half the speed of the monsters chasing it.
+- **No idle gap.** A flee counts as running only while the character is moving: held for a fixed 6 seconds, a 3-second run left it standing for the rest, with nothing deciding and whatever followed hitting it.
+- **Packs.** The state says what is coming at the character together (fighting, within 12 tiles, or already on it), weighed against it: a creature far stronger than it counts 4, stronger 2, a fair fight 1, weak 0.4, each scaled by its health (`coming_at_you`: "2 gargoyles (a fair fight each) and a reaper (a fair fight); together far stronger than you: too many to fight at once"). From 3 on, Jev's `leave_now` is asked; and at that weight with two or more coming, code leaves while they are still coming (3 with no strategy, less for a cautious one, more for an aggressive one; never under a never-flee strategy, never in combat assist). The open-goal soak run died to two gargoyles and a reaper, each "a fair fight", while Jev's leave stayed at 0.39–0.44.
+- **Away from all of them.** Leaving a pack runs away from the creatures in sight taken together, not from one of them.
+- **Told apart by name.** Several kinds share a body graphic, and the strongest used to stand for all: a black bear read as "far stronger" because a named boss bear shares its graphic. Creatures are now matched by name among the kinds with their graphic.
+
+In a session hunt, leaving ends the hunt (see [hunting](#travel-banking-shops-and-hunting)).
 
 ### Other players
 
@@ -282,10 +315,12 @@ person; until a title is known, only red and criminal players are flagged.
 ## Character types
 
 The brain tells how to play a character from its skills and what it has in hand, checking in
-this order, or you name it with `uo-brain run --archetype warrior|mage|archer|tamer|bard`:
+this order, or you name it with `uo-brain run --archetype warrior|mage|archer|tamer|bard|necromancer|paladin`:
 
 | plays as | when |
 |---|---|
+| paladin | a book of chivalry, Chivalry 50 or more, and a melee weapon in hand with a weapon skill of 50 or more |
+| necromancer | a book of necromancy, Necromancy 50 or more and at least as high as Magery and any weapon skill |
 | mage-tamer | a spellbook, and Magery and Animal Taming both 50 or more |
 | warrior-mage | a spellbook, Magery and a weapon skill both 50 or more, and a melee weapon in hand |
 | mage | a spellbook, Magery 50 or more and at least as high as any weapon skill |
@@ -296,11 +331,13 @@ this order, or you name it with `uo-brain run --archetype warrior|mage|archer|ta
 
 ### Mages
 
-- **Range:** it engages from up to 7 tiles away and casts Jev's pick from the attack spells it can cast right now: Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze.
+- **Range:** it engages from up to 7 tiles away and casts Jev's pick from the attack spells it can cast right now: Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze, and the area spells below.
 - **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; code picks the strongest castable spell when Jev isn't sure.
 - **Queued casts:** the brain queues the next spell and the client casts it the moment the current spell and its recovery allow. Healing reflexes go first.
-- **Protection:** with a monster in melee reach it casts Protection first, since every hit otherwise interrupts a spell. That's AOS: on older shards Protection only adds armour, so it's skipped (see [Older rules](#older-rules-pre-aos-shards-such-as-uo-renaissance)). Some servers send no buff icon for it, so it is recast at most every 20 seconds.
+- **Protection:** as soon as melee monsters come at it (in war mode within 10 tiles), it casts Protection first, since every hit otherwise interrupts a spell; cast once they were adjacent, it was broken too. It's asked for again until its buff icon shows, at most three times in 20 seconds, since it is a toggle and a server that sends no icon would see it turned off again. A queued Protection or heal isn't pushed out of the client's one-spell queue by an attack spell from the next decision. That's AOS: on older shards Protection only adds armour, so it's skipped (see [Older rules](#older-rules-pre-aos-shards-such-as-uo-renaissance)).
+- **Crowds:** with three or more monsters within 2 tiles of one of them, and nobody else (a player, a pet, a townsperson) within a tile of the blast, Chain Lightning and Meteor Swarm are offered too, aimed at the creature that has the most others around it. Under AOS rules their damage is shared once more than two are hit, but twice over, so three creatures each take about two thirds of a single hit for 40 mana. Code casts one when Jev isn't sure, doesn't step back while it can, and with three or more on it goes for the creature with least health left: every kill is one fewer hitting it.
 - **Kiting:** with two or more monsters in melee reach it steps back 5 tiles between spells, keeping its target; the next spell waits for the step, since casting roots the mage. It steps back once per attack spell cast: stepping back again before a spell went off kept one test mage from ever casting.
+- **Cornered:** when two runs in a row fail ("no path away"), it stops trying to leave for 15 seconds and fights: in swarm rounds a mage kept "leaving" for 40 s while six monsters hit it.
 - **Meditation:** it meditates while resting with mana below 80%.
 - **Seeing inside:** the server only says what's in a spellbook or a bag once it's opened, so the agent opens the spellbook and any unopened bags in the backpack once, and closes them again.
 - **Snapshot:** mana, reagent counts, every spell in the book with its cost and why it can't be cast ("mana", "reagents"), and the cast timing.
@@ -332,11 +369,20 @@ A bard fights with songs.
 - **Pacing:** one song every 6 seconds, and a creature a song has just hit is left alone for 20.
 - **No instrument, no fight:** the bard leaves instead.
 
+### Necromancers and paladins (AOS-era shards)
+
+Necromancy and Chivalry only exist on shards with the Age of Shadows rules, such as the local
+ModernUO server; UO Renaissance has neither.
+
+- **Necromancer:** plays as a mage does, from up to 7 tiles, with its own attack spells: Poison Strike (and some damage to whatever is next to the target), Strangle (damage over time) and Pain Spike (quick and cheap). With three or more monsters within 3 tiles and nobody else within 5, Wither (everything around the necromancer) is offered too. It counts its own reagents (bat wing, grave dust, daemon blood, nox crystal, pig iron), and with no healing spell it bandages and drinks potions. It meditates while resting.
+- **Paladin:** fights as a warrior, and blesses its fighting: Jev picks the blessing for the fight at hand, from those it can cast and that aren't already in effect. When Jev isn't sure: Holy Light with three or more within 3 tiles (and nobody else near), Divine Fury against several or a stronger creature, Enemy of One against a stronger one, otherwise Consecrate Weapon, renewed for each new creature or after 20 seconds (it lasts 3 to 11 and shows no icon). Divine Fury and Enemy of One wait for a quarter of the mana, which also pays for Close Wounds. One blessing every 2 seconds at most.
+- **What the client reads:** each book is opened once, as a spellbook is; the snapshot lists every spell of each book with its school, mana and tithing cost and what's missing ("mana", "reagents", "tithing"), the character's tithing points, and a necromancer's reagents apart from a mage's.
+- **Hands:** chivalry and necromancy keep the weapon in hand (only magery drops it), so a paladin's weapon isn't re-armed after a blessing.
+
 ### Hybrids
 
 - **Mage-tamer:** sets the pet on the creature, casts at it from range as a mage does, and heals the pet with Greater Heal from up to 10 tiles away. It asks both the spell and the pull-back questions.
 - **Warrior-mage:** opens with one spell on a creature that is still 2 to 7 tiles off, then fights in melee. ModernUO, like other RunUO-family servers, drops the weapon into the pack when a spell starts, so after each cast the client lifts it and puts it back on, as an assistant's arm macro does.
-- **Not done:** Necromancy and Chivalry, which only AOS-era shards have.
 
 ## Strategy, in your own words
 
@@ -408,13 +454,15 @@ In auto mode the agent can work towards a goal you give it in words, for example
 the undead at the Britain graveyard, keep yourself supplied with bandages, bank your
 gold". Type it into the panel's goal box, pick a goal template, or use `-agent goal`.
 
-- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `outcomes`, `region_at`). Jev re-ranks the list answers against the planner's question ([below](#which-facts-reach-the-decisions)); the session summary counts those calls and their cost.
+- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `set_machine`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `outcomes`, `region_at`). Jev re-ranks the list answers against the planner's question ([below](#which-facts-reach-the-decisions)); the session summary counts those calls and their cost.
 - **No scripted loop:** the planner puts travel, hunting, banking and restocking together itself. Code carries out each goal ([below](#travel-banking-shops-and-hunting)); Jev keeps the fighting.
 - **Routine calls are Jev's:** inside a hunt, whether to head back, stay or walk elsewhere in the spawn are quick Jev questions, not fixed thresholds and not planner calls ([Hunting](#travel-banking-shops-and-hunting)). The planner is called when a goal ends, including when Jev is unsure twice running, so open-ended choices (where next, what to buy) stay with it.
 - **Cheap to call:** each step rebuilds a short prompt (a cached system prompt, the goal, the last 12 steps, the character now) instead of growing one long conversation. A call costs about $0.014.
 - **The panel** shows the step and why ("hunting at Britain Graveyard for up to 15 min: supplied with 80 bandages; time to hunt"). *pause* keeps the goal but stops work on it.
 - **Handing over:** switching to combat assist (Alt+A) stops the agent walking at once and pauses the planner, so it stops costing tokens. Switching back to auto tells the planner you drove for a while, and it resumes from wherever the character is, with whatever it carries.
-- **Danger seen on the way:** every goal's result names the stronger creatures seen during it, and they are kept in the world store as "danger" notes that the planner's `hunting_spots` shows for the area.
+- **Danger seen on the way:** every goal's result names the stronger creatures seen during it, and they are kept in the world store as "danger" notes that the planner's `hunting_spots` shows for the area. An area with danger noted within the hour goes to the back of `hunting_spots` (`recent_danger`: "12 min ago: ..."), and the planner is told not to hunt where a hunt ended in a leave for at least 30 minutes.
+- **Never standing still:** while the planner thinks, Jev fights what attacks, as it does during travel and errands; a hunt that ended in a leave hands over with the creatures possibly still about.
+- **Plans for fights:** the planner can set one with `set_machine` ([Plans for fights](#plans-for-fights)); `--no-machines` hides the tool.
 - **Finishing:** when the planner calls `finish`, or the character dies, the goal is paused with the reason.
 
 Goal templates (`-agent goal templates`, or the *goals* row in the panel):
@@ -456,6 +504,7 @@ goal that code carries out, using the world store for places:
   - **When:** after a kill, when supplies or the bag cross a level ("running low", "getting heavy"), every 30 s while it's quiet, and otherwise once a minute; never more often than every 10 s, one at a time, beside the fight loop rather than in its way.
   - **What the answers do:** at 0.65 or more on "head back", or 0.35 or less on "worth it", the hunt ends with Jev's number and the facts in the reason ("Jev: time to head back (0.79): 9 bandages and 0 heal potions left, about 6.0 bandages a kill so far: enough for about 1 more kill; bag light (30% of what the character can carry)"), after the fight at hand (up to 30 s). A confident "walk elsewhere" sends it to another spot of the spawn, but four such walks in a row that find nothing hand the hunt to the planner: in a soak run Jev kept saying "walk elsewhere" (0.65–0.77) round an emptied graveyard for 7 minutes. Unsure (between 0.35 and 0.65) twice running ends the hunt too, and the planner decides with Jev's numbers in front of it.
   - **Floors in code**, no question asked: dead, no bandages and no heal potions, no reagents for any attack spell, no arrows or bolts for the bow in hand, a tamer's pet gone, a full bag (98%), 10 minutes with nothing to fight, a red or criminal player close.
+  - **Left from danger:** when the fight loop leaves (a pack, a far stronger creature), the hunt ends once nothing is coming at the character any more (or after 45 s), so it doesn't walk back into what it left. The reason names what drove it off, goes into the world store as a "danger" note for the area, and when a rune or runebook entry goes to a guarded town (a bank first), it recalls there.
   - **Without Jev** (the rule judge, or two failed questions in a row) the old fixed rules apply: under 10 bandages, under 5 of a reagent, under 20 arrows, 85% weight, 4 quiet minutes, and a walk round the spawn every 25 s when quiet.
   - **Logged:** each question goes to the session log as a `routine` record (moment, the state in words, the questions, Jev's answers, the verdict and why); the `hunted` record and the session summary count them and their cost (`routine_cost_per_hunt_hour`).
 
@@ -470,6 +519,35 @@ uv run uo-brain do hunt "Britain Graveyard" --minutes 10 --log logs/hunt.jsonl
 
 How these went on the local server: [Travel and errands](#travel-and-errands) and
 [Routine hunt calls](#routine-hunt-calls).
+
+## Plans for fights
+
+By default every fight has the same shape: six intents, the same questions every decision,
+and code's rules on top. A plan gives the fights a shape for the place and the character
+instead, as a small state machine (`machine.py`). The planner model designs it, or it comes
+from a file, and Jev runs it:
+
+- **Steps** (states), each with what the character does there in plain words, which intents it may choose (`fight`, `flee`, `leave`, `loot`, `seek`, `rest`), and optionally who to target first, how much to loot, whether to step back from melee and which spell to keep casting. A step can have a time limit and where to go after it.
+- **Moves** (transitions) between steps, each a yes/no question with the planner's own criteria ("health is falling faster than the bandages bring it back"), answered by Jev in the same request as the fight questions. Only the current step's moves are asked, so a plan costs a few yes/no answers a decision and no extra round trip. A move can require conditions code checks first (`3+ close`, `2+ coming`, `pack`, `health below 60`, `mana above 50`, `none in sight`, `supplies low`, `corpse near`, `area spell ready`, ...), so it's only asked when it can matter, and needs Jev's yes at 0.6 (or its own `at`).
+- **The plan reaches every choice:** each question's instructions carry the plan and the current step, so Jev's intent, target and spell follow it; the factual danger question doesn't see it, as it doesn't see the strategy.
+- **Floors no plan can remove:** the client's healing reflexes, never attacking players, leaving from red or criminal players, the emergency flee near death, leaving from a pack, and fighting back when hit with no way out allowed.
+- **Checked:** at most 8 steps and 4 moves a step; unknown intents, settings, steps or conditions are refused with what is wrong, so the planner can fix it.
+- **The panel** shows the plan's steps with the current one marked, what it means, and the last move ("open -> blast (0.71)").
+- **In sessions** the planner can set or clear one with `set_machine` between goals; it applies to hunts and stays until replaced. A hunt's result reports the time spent in each step, the evidence the planner is told to change it on.
+- **Logged:** each decision records the step and any move; a run's summary has the time in each step.
+
+```bash
+cd brain
+uv run uo-brain machine list                     # brain/machines: pull-one, mage-swarm, and the planner's own
+uv run uo-brain machine show pull-one
+uv run uo-brain machine design "A mage hunting alone in open ground, rushed by groups of melee monsters" --archetype mage
+uv run uo-brain run --machine pull-one           # also session, do hunt; the planner may replace it
+uv run uo-brain bench --scenarios swarm --judges "jev,jev#mage-swarm"
+```
+
+`machine design` has the planner model write one for a situation in words (about $0.02, the
+two shipped plans as examples) and saves it to `brain/machines/`. How plans did against the
+fixed policy: [results](#plans-for-fights-1).
 
 ## World knowledge
 
@@ -959,6 +1037,7 @@ yet tried on UO Renaissance itself, which needs a real account.
 - **`-agent off|combat|auto`:** set the play state (`assist` also means combat assist).
 - **`-agent switch`:** switch between combat assist and auto (Alt+A).
 - **`-agent next`:** do Jev's next move (Alt+D).
+- **`-agent calls`:** open or close the live view of Jev's calls.
 - **`-agent engage follow|defend|nearby`:** what combat assist takes on by itself.
 - **`-agent status`:** show the play state, authorities and thresholds.
 - **`-agent accept`:** accept the pending suggestion.
@@ -973,11 +1052,12 @@ yet tried on UO Renaissance itself, which needs a real account.
 
 Run from `brain/` as `uv run uo-brain …`; `--port` (before the command) picks the client's agent port, 5577 by default.
 
-- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage|archer|tamer|bard`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`, `--shard`, `--planner-model`, `--facts jev|all|none` (which world facts reach the fights). `session` and `do hunt` take the same options.
+- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage|archer|tamer|bard|necromancer|paladin`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`, `--shard`, `--planner-model`, `--facts jev|all|none` (which world facts reach the fights), `--machine NAME|FILE` (follow a [plan](#plans-for-fights) in fights), `--no-machines` (the planner can't set plans). `session` and `do hunt` take the same options.
+- **`machine list|show NAME|design "SITUATION" [--archetype A] [--out FILE] [--planner-model M]`:** plans for fights ([above](#plans-for-fights)); doesn't connect to the game.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`, `--rounds`, `--round-seconds`, `--monsters`, `--kind`, and the `run` options.
 - **`do travel|bank|buy|sell|hunt|rest …`:** one session goal ([above](#travel-banking-shops-and-hunting)); uses the world store.
 - **`session "GOAL" [--hours]`:** the planner towards a goal, from the command line.
-- **`bench [list|report FILES]`:** the judgment benchmark ([Results](#judgment-benchmark)). Options: `--scenarios core|adherence|archetypes|world|all|NAME,…`, `--judges heuristic,jev,jev+<template>` (each optionally `/nokite`, for no stepping back), `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
+- **`bench [list|report FILES]`:** the judgment benchmark ([Results](#judgment-benchmark)). Options: `--scenarios core|adherence|archetypes|world|packs|all|NAME,…`, `--judges heuristic,jev,jev+<template>` (each optionally `/nokite`, for no stepping back, `/nopack`, for code not leaving from packs, or `#<machine>`, to follow that plan), `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
 - **`strategy [show|set|add|clear|load|explain]`, `strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** show or change the strategy, see how Jev read it, and list, pull in or take out templates.
 - **`soak-report LOG [--disruptions FILE] [--json]`:** a report on an unattended `session` run from its log: the goals the planner chose and why, hunts, kills and deaths, where the time went, what was bought and banked, and what Jev and the planner cost an hour. With `--disruptions` (JSONL of `{t, what}`), the goals that followed each disruption.
 - **`review LOG [--accept N…] [--again] [--digest] [--planner-model M]`:** the planner model proposes strategy lines from a log, with the evidence ([above](#after-action-review)); `--accept` adds saved ones to the character's strategy, the only part that connects to the game.
@@ -1002,8 +1082,9 @@ be open at once (the brain and one-off CLI calls).
 | `templates` | `kind: "goal"` for goal templates | list strategy or goal templates |
 | `goal` | `text \| clear \| pause \| template` | set or change the auto-mode goal |
 | `goal_status` | `step, why` | the planner's current step, for the panel |
-| `decision` | `{…}` | what the brain decided, for the panel; `next` is the move for the next-move key |
+| `decision` | `{…}` | what the brain decided, for the panel; `next` is the move for the next-move key, `machine` the plan and its current step |
 | `brain_info` | `judge, archetype, strategy_reading` | what the brain is running, for the panel |
+| `ai_call` | `kind, title, model, latency_ms, cost, questions, note` | a model call other than a fight decision (routine, facts, strategy, planner), for the live view of calls; fight decisions carry their `questions` in `decision` |
 | `note` | `text` | a line from the brain, shown in the panel for 10 s |
 | `command` | `text` | run a client command as if typed, e.g. `agent status` |
 | `nav` | `radius, goal_x, goal_y, reach` | travel debugging: the planner's map, with the path it would walk |
@@ -1019,7 +1100,9 @@ whether each corpse is a monster's, `player.ranged` (kind, ammunition and range 
 crossbow in hand), arrows, bolts and whether an instrument is in the pack under
 `player.supplies`, `pets` (the character's pets in sight, with health), `agent.pet_order` and
 `pet_target`, `travel_items` (marked runes and runebook entries) and `era` (`aos` or
-`pre-aos`).
+`pre-aos`). `magic` covers every book carried (magery, necromancy, chivalry): `schools`, each
+spell with its `school`, mana, tithing cost and what is missing, and `tithing` points; a
+necromancer's reagents are under `player.supplies.pagan_reagents`.
 
 #### Act verbs
 
@@ -1047,6 +1130,8 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 - **`[AgentKit tamer [bear|wolf|hound|drake]`:** Animal Taming and Animal Lore 90, Veterinary 90, Healing and Anatomy 70, no weapon, and a tamed pet following (a grizzly bear unless another is named). Each kit replaces the last kit's pet.
 - **`[AgentKit bard`:** Musicianship, Provocation, Peacemaking and Discordance 90, Healing and Anatomy 60, a lute and no weapon.
 - **`[AgentKit warriormage`, `[AgentKit magetamer`:** the warrior kit plus Magery 80, a spellbook and reagents; the mage kit plus Animal Taming and Lore 85, Veterinary 60, bandages and a pet.
+- **`[AgentKit necro`:** Necromancy 90, Spirit Speak 80, Meditation 70, Healing 70, Anatomy 60, Wrestling 70; a full book of necromancy, 100 of each necromancer's reagent, 100 bandages, leather and potions.
+- **`[AgentKit paladin`:** the warrior kit plus Chivalry 90, intelligence 60, a full book of chivalry and 10,000 tithing points.
 - **`[AgentArena [count] [kind]`:** spawns monsters in a ring 6–10 tiles out (orc, ratman, headless one and mongbat by default).
 - **`[AgentReset`:** resurrects and heals you, cancels pending spawns, and removes the arena and the corpses around you.
 - **`[AgentSpawn <kind> [count] [distance] [direction] [delay]`:** spawns creatures of a kind (`orc`, `ratman`, or any ModernUO type such as `OgreLord` or `OrcishMage`) at a distance and compass direction, optionally after a delay. They belong to your arena.
@@ -1076,13 +1161,14 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 | `AgentBard` | songs and their target cursors |
 | `AgentRearm` | a warrior-mage's weapon back after a cast |
 | `ReflexPolicy` | the reflex rules, as pure functions |
-| `AgentSpells` | magery costs, reagents, spellbook |
+| `AgentSpells` | magery, necromancy and chivalry: costs, reagents, tithing, cast timings, books |
 | `AgentMessages` | server messages by cliloc number, English as fallback |
 | `AgentSnapshot` | writes the state JSON |
 | `AgentJournal` | keeps the journal lines in sequence for the brain |
 | `AgentLogin` | drives the login screens |
 | `AgentGump` | the panel |
 | `AgentDecision` | one decision as the brain reports it, for the panel |
+| `AgentCalls`, `AgentCallsGump` | every model call with its options and Jev's pick, and the live view of them |
 | `AgentAction`, `AgentTypes` | one requested action; behaviours, authorities and play states |
 | `AgentTemplates`, `Templates/*.md`, `Goals/*.md` | strategy and goal templates |
 
@@ -1107,6 +1193,8 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 | `session.py` | travel, bank, buy, sell, hunt |
 | `routine.py` | Jev's routine calls inside a hunt: head back, stay, walk elsewhere |
 | `planner.py` | the slow planner |
+| `calls.py` | every model call, with its options and Jev's pick, for the client's live view |
+| `machine.py` | plans for fights as state machines: checking, running, and the planner designing them |
 | `world.py` | world store and the planner's query tools |
 | `facts.py` | Jev picks the world facts for fights and re-ranks the planner's queries |
 | `recorder.py` | the world store from what the agent sees |
@@ -1123,6 +1211,7 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 | path | what's there |
 |---|---|
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
+| `brain/machines/` | plans for fights: two written by hand, and the planner's |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
 | `docs/` | upstream ClassicUO's README, and the images for this one |

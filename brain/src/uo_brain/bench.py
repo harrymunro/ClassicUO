@@ -25,6 +25,7 @@ from typing import Any
 
 from . import judge as judges
 from . import loop, policy
+from . import machine as machines
 from .facts import FactPicker
 from .rpc import AgentRpc
 from .state import BODY_KINDS
@@ -241,6 +242,30 @@ def check_swarm(tr: Trace) -> tuple[bool, dict[str, Any]]:
     return (not tr.player_died and kills >= 4), {"kills": kills}
 
 
+def check_pack(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    """Survive a pack: what counts is being alive at the end. When the agent decided to leave and
+    at what health are reported, and how much of the pack it took on."""
+    leaves = [d for d in tr.decisions if d.get("intent") == "leave" and d.get("leave_why")]
+    pack = tr.serials_named("gargoyle", "bone knight", "skeleton")
+    return not tr.player_died, {"left": bool(leaves), "left_at_hp": leaves[0]["state"]["you"]["health"] if leaves else None,
+                                "why": leaves[0]["leave_why"][:120] if leaves else None,
+                                "kills": len(tr.kills()), "engaged_pack": tr.engaged_any(pack),
+                                "min_hp": min((h for _, h in tr.hp), default=100)}
+
+
+def check_necro(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    spells = [a.get("spell") for a in tr.actions("cast")]
+    return (not tr.player_died and kills >= 3), {"kills": kills, "spells": {s: spells.count(s) for s in set(spells)}}
+
+
+def check_paladin(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    blessings = [a.get("spell") for a in tr.actions("cast") if str(a.get("reason", "")).startswith("blessing")]
+    return (not tr.player_died and kills >= 4 and bool(blessings)), \
+        {"kills": kills, "blessings": {s: blessings.count(s) for s in set(blessings)}}
+
+
 def check_never_flees(tr: Trace) -> tuple[bool, dict[str, Any]]:
     flees = len(tr.actions("flee"))
     return flees == 0, {"flee_actions": flees}
@@ -365,6 +390,18 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "swarm", "cuo-46e.6",
         "Six melee monsters on a mage: survive and kill at least four.",
         "mage", ["[AgentArena 6 mix"], 120, check_swarm, quiet_after=20),
+    # Packs (cuo-d28.9): several creatures that each look like a fair fight, or two stronger ones,
+    # come at a warrior that is already fighting. The soak runs died this way.
+    Scenario(
+        "pack-gargoyles", "cuo-d28.9",
+        "Two orcs fight a warrior; three gargoyles (a fair fight each, and spellcasters) come at it from 14 tiles: "
+        "get away before they are on it, and survive.",
+        "warrior", ["[AgentSpawn Orc 2 3 s", "[AgentSpawn Gargoyle 3 14 n 6"], 90, check_pack),
+    Scenario(
+        "pack-bone-knights", "cuo-d28.9",
+        "Two orcs fight a warrior; two bone knights (each stronger than it) come at it from 14 tiles: get away "
+        "before they are on it, and survive.",
+        "warrior", ["[AgentSpawn Orc 2 3 s", "[AgentSpawn BoneKnight 2 14 n 6"], 90, check_pack),
     # Archetypes (cuo-cvl): the same judgments with another way of fighting.
     Scenario(
         "archer-kite", "cuo-cvl.1",
@@ -400,6 +437,17 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "Three orcs come at a mage-tamer with a grizzly bear: set the bear on them, cast at what it fights, heal it "
         "with spells; kill all three without losing the bear.",
         "magetamer", ["[AgentSpawn Orc 3 8 n"], 120, check_mage_tamer, quiet_after=20),
+    # AOS schools (cuo-cvl.5): the necromancer casts from a distance as a mage does, the paladin
+    # fights as a warrior and blesses its fighting.
+    Scenario(
+        "necro-orcs", "cuo-cvl.5",
+        "Three orcs come at a necromancer from 8 tiles: kill them with necromancy without dying.",
+        "necro", ["[AgentSpawn Orc 3 8 n"], 120, check_necro, quiet_after=20),
+    Scenario(
+        "paladin-orcs", "cuo-cvl.5",
+        "Four orcs come at a paladin: fight them in melee with its blessings (at least one cast) and kill all four "
+        "without dying.",
+        "paladin", ["[AgentSpawn Orc 4 8 n"], 120, check_paladin, quiet_after=20),
     # Strategy adherence (cuo-46e.7): a template should change behaviour as written.
     Scenario(
         "relentless-never-flees", "cuo-46e.7", "With the relentless template, never flee, even running out of supplies.",
@@ -431,8 +479,10 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
 
 # The core set that compares judges; adherence scenarios fix their own template.
 CORE = ["mismatch", "priority", "loot", "attrition", "swarm"]
-KIT_ARCHETYPES = {"warriormage": "warrior-mage", "magetamer": "mage-tamer"}  # [AgentKit name -> archetype
-ARCHETYPES = ["archer-kite", "tamer-orcs", "tamer-ogre-lord", "bard-provoke", "warrior-mage-opener", "mage-tamer-orcs"]
+KIT_ARCHETYPES = {"warriormage": "warrior-mage", "magetamer": "mage-tamer", "necro": "necromancer"}  # [AgentKit -> archetype
+ARCHETYPES = ["archer-kite", "tamer-orcs", "tamer-ogre-lord", "bard-provoke", "warrior-mage-opener", "mage-tamer-orcs",
+              "necro-orcs", "paladin-orcs"]
+PACKS = ["pack-gargoyles", "pack-bone-knights"]
 WORLD = [n for n, s in SCENARIOS.items() if s.seed]  # world-fact scenarios
 FACT_MODES = ["none", "all", "jev"]
 
@@ -468,14 +518,21 @@ def load_bestiary(shard: str = "local") -> None:
 @dataclass
 class JudgeSpec:
     """"heuristic", "jev", or "jev+<template>" (Jev with that strategy template), each with an
-    optional "/nokite" (no stepping back from melee), to measure what kiting is worth, and for
+    optional "/nokite" (no stepping back from melee), to measure what kiting is worth, "/nopack"
+    (code doesn't leave from a pack; Jev's own leave still counts), "#<machine>" (follow that
+    plan, a state machine from brain/machines), and for
     world-fact scenarios "@none", "@all" or "@jev" after it: which world facts reach Jev."""
 
     label: str
 
     @property
     def base(self) -> str:
-        return self.label.split("@", 1)[0]
+        return self.label.split("@", 1)[0].split("#", 1)[0]
+
+    @property
+    def machine(self) -> str | None:
+        """"jev#mage-swarm": follow the plan in brain/machines/mage-swarm.json (cuo-6om)."""
+        return self.label.split("@", 1)[0].split("#", 1)[1] if "#" in self.label else None
 
     @property
     def kind(self) -> str:
@@ -489,6 +546,10 @@ class JudgeSpec:
     @property
     def kite(self) -> bool:
         return "/nokite" not in self.base
+
+    @property
+    def pack(self) -> bool:
+        return "/nopack" not in self.base
 
     @property
     def facts(self) -> str:
@@ -508,6 +569,10 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
     await say(rpc, f"[AgentGo {lane}")
     await say(rpc, "[AgentReset")
     await say(rpc, f"[AgentKit {sc.kit}", 1.5)
+    # Combat assist while the kit is read: the client only opens a new book or reagent bag while the
+    # agent is on, and assist never moves the character. With the agent off, a caster started its
+    # rounds with no reagents until the bag was opened a few seconds in.
+    await rpc.call("mode", mode="assist")
     if template:
         await rpc.call("strategy", template=template, replace=True)
     else:
@@ -517,7 +582,10 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
         snap = await rpc.call("snapshot", since=0)
         magic = snap.get("magic")
         book = bool(magic and magic.get("book_known") and sum(snap["player"]["supplies"].get("reagents", {}).values()))
-        ready = {"mage": book, "warriormage": book, "magetamer": book and bool(snap.get("pets")),
+        necro = bool(magic and magic.get("book_known") and sum((snap["player"]["supplies"].get("pagan_reagents")
+                                                                    or {}).values()))
+        ready = {"mage": book, "warriormage": book, "magetamer": book and bool(snap.get("pets")), "necro": necro,
+                 "paladin": bool(magic and magic.get("book_known") and "chivalry" in (magic.get("schools") or [])),
                  "archer": bool(snap["player"].get("ranged")), "tamer": bool(snap.get("pets")),
                  "bard": bool(snap["player"]["supplies"].get("instrument"))}
         if ready.get(sc.kit, True):
@@ -555,13 +623,14 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
 
     judge = judges.make(spec.kind)
     lcfg = loop.LoopConfig(duration_s=sc.seconds, price_per_million=price)
-    pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite)
+    pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite, leave_packs=spec.pack)
     facts = FactPicker(world, judge, mode=spec.facts, price_per_million=price) \
         if world is not None and spec.facts != "none" else None
     try:
+        runner = machines.Runner(machines.load(spec.machine)) if spec.machine else None
         stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=KIT_ARCHETYPES.get(sc.kit, sc.kit),
                                on_snapshot=watch,
-                               bestiary=BESTIARY.get("local"), facts=facts)
+                               bestiary=BESTIARY.get("local"), facts=facts, machine=runner)
     finally:
         await judge.close()
     await rpc.call("mode", mode="off")
@@ -575,6 +644,8 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     summary = stats.summary(price)
     out = {"success": ok, **details, **tr.summary(), "log": str(log_path),
            "input_tokens": summary["input_tokens"], "est_cost_usd": summary["est_cost_usd"]}
+    if runner is not None:
+        out["plan"] = runner.summary()
     if world is not None:
         out["facts"] = spec.facts
         if facts is not None:

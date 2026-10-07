@@ -28,7 +28,7 @@ import json
 import re
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -406,8 +406,10 @@ class World:
             entry = {"type": r["type"], "name": r["name"], "hits": hits,
                      "damage": f"{r['damage_min']}-{r['damage_max']}" if r["damage_min"] else None,
                      "difficulty": r["difficulty"], "caster": "/Magic/" in (r["source"] or "")}
+            kinds = (out[r["body"]]["kinds"] if r["body"] in out else []) + [entry]
             if r["body"] not in out or hits > out[r["body"]]["hits"]:
-                out[r["body"]] = entry
+                out[r["body"]] = dict(entry)
+            out[r["body"]]["kinds"] = kinds  # every kind with this body, to tell them apart by name
         return out
 
     def add_spawn_seen(self, area: str, creature: str, x: int, y: int, count: int, map: str = DEFAULT_MAP) -> int:
@@ -668,9 +670,24 @@ class World:
             # Stronger creatures seen there in play (Session.note_dangers): not in the spawn data.
             a["dangers_seen"] = [n["text"] for n in self.notes(area=a["area"], limit=10)
                                  if "danger" in (n.get("tags") or [])][:3]
+            # Seen within the hour: likely still there, so the spot goes to the back (cuo-d28.9).
+            if recent := self.recent_danger(a["area"]):
+                a["recent_danger"] = recent
+                rank *= 0.25
             out.append((rank, a))
         out.sort(key=lambda t: -t[0])
         return [_compact(a) for _, a in out[:limit]]
+
+    def recent_danger(self, area: str, minutes: float = 60) -> str | None:
+        """The latest danger seen in an area within the last `minutes`, with how long ago."""
+        since = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat(timespec="seconds")
+        r = self.db.execute("SELECT text, last_seen FROM notes WHERE stale = 0 AND source = 'seen' AND tags LIKE "
+                            "'%\"danger\"%' AND area = ? COLLATE NOCASE AND last_seen >= ? ORDER BY last_seen DESC "
+                            "LIMIT 1", (area, since)).fetchone()
+        if not r:
+            return None
+        ago = (datetime.now(timezone.utc) - datetime.fromisoformat(r["last_seen"])).total_seconds() / 60
+        return f"{round(ago)} min ago: {r['text']}"
 
     def _outcomes(self, area: str, kit: str) -> list[dict[str, Any]]:
         """Averages per loop, without the per-creature totals (those are in outcomes())."""

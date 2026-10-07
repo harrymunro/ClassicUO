@@ -10,7 +10,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import policy, questions, state
+from . import calls, policy, questions, state
+from .machine import Runner
 from . import strategy as strategies
 from .facts import FactPicker
 from .judge import Judge
@@ -72,12 +73,17 @@ class RunStats:
 async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyConfig,
               log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None,
               on_snapshot: Callable[[dict[str, Any]], None] | None = None,
-              bestiary: dict[int, dict[str, Any]] | None = None, facts: FactPicker | None = None) -> RunStats:
+              bestiary: dict[int, dict[str, Any]] | None = None, facts: FactPicker | None = None,
+              on_decision: Callable[[state.Situation, policy.Decision], None] | None = None,
+              machine: Runner | None = None) -> RunStats:
     """archetype: "warrior", "mage", "archer" or "tamer", or None to tell from the character's skills and weapon.
-    on_snapshot sees every in-game snapshot (the benchmark records a trace with it).
+    on_snapshot sees every in-game snapshot (the benchmark records a trace with it); on_decision
+    every decision with its situation (a hunt ends after leaving from a pack). machine: a plan's
+    state machine to follow (machine.py), carried over from one loop to the next by the caller.
     facts picks the world facts that reach the decisions (facts.py); None for none."""
     stats = RunStats()
     mem = policy.Memory()
+    calls.sink = lambda rec: rpc.call("ai_call", **rec)
     events: deque[str] = deque(maxlen=20)
     since = 0
     last_sig = None
@@ -165,7 +171,7 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
                 or snap["agent"].get("mode") == "off"
             sig = sit.signature()
             if not busy and (now >= next_decide or sig != last_sig):
-                for action, res in await decide_once(rpc, judge, sit, mem, active, stats, log):
+                for action, res in await decide_once(rpc, judge, sit, mem, active, stats, log, on_decision, machine):
                     if action["verb"] == "attack" and res["status"] == "suggested":
                         suggested = (action["target"], time.monotonic())
                 last_sig = sig
@@ -178,18 +184,28 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
             facts.close()
             facts.log = lambda rec: None
         if log:
-            log.write(json.dumps({"type": "summary", "t": time.time(), **stats.summary(cfg.price_per_million)}) + "\n")
+            log.write(json.dumps({"type": "summary", "t": time.time(), **stats.summary(cfg.price_per_million),
+                                  **({"machine": machine.summary()} if machine else {})}) + "\n")
             log.close()
     return stats
 
 
 # Strategy text -> how it was last read, in words: the autopilot tells the panel before any fight.
 READINGS: dict[str, str] = {}
+# (judge, strategy text) -> its settings, so the fight loops a session starts for each goal (and
+# while the planner thinks) don't ask Jev to read the same text again.
+COMPILED: dict[tuple[str, str], strategies.Knobs] = {}
 
 
 async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.PolicyConfig, stats: RunStats,
                         log) -> tuple[policy.PolicyConfig, str]:
     """The strategy as settings, and how it was read in words ("" when there is none)."""
+    if (judge.name, text) in COMPILED:
+        knobs = COMPILED[(judge.name, text)]
+        if log:
+            log.write(json.dumps({"type": "strategy", "t": time.time(), "text": text, "knobs": knobs.__dict__,
+                                  "answers": None, "cached": True}) + "\n")
+        return strategies.apply(base, knobs), READINGS.get(text, "")
     try:
         knobs, answers = await strategies.compile_strategy(judge, text)
     except Exception as e:
@@ -198,6 +214,11 @@ async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.Pol
         return base, "not read (judge error)"
     reading = knobs.describe() if answers else ""
     READINGS[text] = reading
+    COMPILED[(judge.name, text)] = knobs
+    if answers:
+        calls.emit({"kind": "strategy", "title": "reading the strategy", "model": answers.model,
+                    "latency_ms": round(answers.latency_ms, 1), "questions": calls.view(strategies.QUESTIONS, answers),
+                    "note": reading})
     if answers:
         stats.input_tokens += answers.input_tokens
         await rpc.call("note", text=f"strategy: {reading}")
@@ -208,9 +229,16 @@ async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.Pol
 
 
 async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: policy.Memory,
-                      pcfg: policy.PolicyConfig, stats: RunStats, log) -> list[tuple[dict, dict]]:
-    """Ask, decide, act. Returns (action, result) pairs."""
+                      pcfg: policy.PolicyConfig, stats: RunStats, log,
+                      on_decision: Callable[[state.Situation, policy.Decision], None] | None = None,
+                      machine: Runner | None = None) -> list[tuple[dict, dict]]:
+    """Ask, decide, act. Returns (action, result) pairs. With a machine, its current state's
+    transitions go in the same request, and its state limits what the policy may choose."""
+    if machine:
+        sit.plan = machine.plan_words()
     qs = questions.build(sit)
+    if machine:
+        qs.update(machine.questions(sit, questions.character(sit), questions.role(sit)))
     try:
         answers = await judge.ask(sit.state, qs)
     except Exception as e:  # network, rate limit, credits: keep the loop alive
@@ -220,7 +248,10 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
             log.write(json.dumps({"type": "error", "t": time.time(), "error": str(e)[:500]}) + "\n")
         return []
 
-    dec = policy.decide(sit, answers, mem, pcfg)
+    moved = machine.advance(answers.nouls) if machine else None
+    dec = policy.decide(sit, answers, mem, machine.config(pcfg) if machine else pcfg)
+    if on_decision:
+        on_decision(sit, dec)
     stats.decisions += 1
     stats.gated += dec.gated
     stats.latencies.append(answers.latency_ms)
@@ -237,9 +268,26 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
         stats.statuses[res["status"]] = stats.statuses.get(res["status"], 0) + 1
         if action["verb"] == "loot" and res["status"] == "done":
             mem.loot_started[action["target"]] = time.monotonic()
+        if action["verb"] == "flee":
+            mem.flee_failed = 0 if res["status"] == "done" else mem.flee_failed + 1
 
     # What was decided and why, for the in-game panel.
-    await rpc.call("decision", **decision_payload(judge, sit, qs, answers, dec, results))
+    payload = decision_payload(judge, sit, qs, answers, dec, results)
+    # Every question of the call, with Jev's options and pick, and what code used, for the live view.
+    cfg = machine.config(pcfg) if machine else pcfg
+    cuts = {"in_danger": cfg.flee_danger, "leave_now": policy.leave_cut(cfg), "pull_back": cfg.pull_back,
+            **{k: cfg.take_item for k in qs if k.startswith("take_")}}
+    if machine:
+        cuts.update({f"go_{t.to}": t.at for t in machine.machine.states[machine.state].transitions})
+    used = {"intent": dec.intent}
+    if dec.target is not None:
+        used["target"] = dec.target.id
+    if dec.spell is not None:
+        used["spell"] = dec.spell.id
+    payload["questions"] = calls.view(qs, answers, cuts=cuts, used=used)
+    if machine:
+        payload["machine"] = machine.panel()
+    await rpc.call("decision", **payload)
 
     if log:
         log.write(json.dumps({
@@ -258,6 +306,8 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
             "note": dec.note,
             "target": dec.target.serial if dec.target else None,
             "spell": dec.spell.name if dec.spell else None,
+            **({"leave_why": dec.leave_why} if dec.leave_why else {}),
+            **({"machine": {"state": machine.state, "moved": moved}} if machine else {}),
         }) + "\n")
         log.flush()
     return list(zip(dec.actions, results))
