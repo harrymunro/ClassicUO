@@ -480,6 +480,9 @@ namespace ClassicUO.Agent
             var bought = new List<string>();
             List<(uint Serial, ushort Graphic, string Name, int Amount, uint Price)> offers = gump.Offers();
 
+            // Why nothing could be bought, so the planner can act on it: sold out, too dear, not sold here.
+            bool listed = false, soldOut = false, tooDear = false;
+
             if (Kind == "buy")
             {
                 long gold = _world.Player.Gold;
@@ -488,12 +491,22 @@ namespace ClassicUO.Agent
                 {
                     foreach (var o in offers)
                     {
-                        if (o.Amount <= 0 || o.Price == 0 || !Matches(o.Name, o.Graphic, word))
+                        if (o.Price == 0 || !Matches(o.Name, o.Graphic, word))
                         {
                             continue;
                         }
 
+                        listed = true;
+
+                        if (o.Amount <= 0)
+                        {
+                            soldOut = true;
+
+                            continue;
+                        }
+
                         int n = (int) Math.Min(Math.Min(amount, o.Amount), gold / o.Price);
+                        tooDear |= n <= 0;
 
                         if (n > 0)
                         {
@@ -527,7 +540,10 @@ namespace ClassicUO.Agent
             if (picks.Count == 0)
             {
                 gump.Dispose();
-                Finish("failed", Kind == "buy" ? "none of that on sale, or not enough gold" : "nothing to sell that the vendor wants");
+                Finish("failed", Kind != "buy" ? "nothing to sell that the vendor wants"
+                    : tooDear ? $"not enough gold (carrying {_world.Player.Gold})"
+                    : soldOut ? "sold out here"
+                    : listed ? "none of that on sale" : "this vendor doesn't sell that");
 
                 return;
             }

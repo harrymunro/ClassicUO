@@ -50,7 +50,8 @@ Rules:
   the bag gets heavy, the character is in danger, or nothing has shown up for a while. Its
   result says why it ended; plan the next goal from that.
 - If a goal fails, read why and try something different (another vendor, another area,
-  waiting for a respawn) rather than repeating the same thing.
+  waiting for a respawn) rather than repeating the same thing. A vendor that is sold out
+  restocks in about an hour: buy elsewhere, or go on with what you have if it is enough.
 - If the character is dead, or the player's goal is done or impossible, call finish.
 """
 

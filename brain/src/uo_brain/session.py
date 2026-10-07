@@ -307,12 +307,16 @@ class Session:
         tried: set[int] = set()
         done_places: set[str] = set()
         spent, notes, place = 0, [], None
+        last_place = None
         while await self.held(item) - start < count and len(tried) < 8 and len(done_places) < 3:
             place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places, sells=item)
+            last_place = place or last_place
             if failed:
                 if place is None or "in sight" not in failed.summary:
                     if not tried:
                         return failed
+                    if place is None:
+                        notes.append(f"the world store knows no other {vendor_kind or 'vendor'} selling {item} nearby")
                     break
                 done_places.add(place["name"])  # nobody left to buy from here: next shop
                 continue
@@ -332,6 +336,7 @@ class Session:
         if got and place:
             self.world.add_place(place["kind"], place["name"], place["x"], place["y"], z=place.get("z"),
                                  sells=place.get("sells"), source="seen")
+        place = place or last_place
         where = place["name"] if place else "no vendor"
         carried = (await self.snap())["player"].get("gold", 0)
         if not ok and carried < 50:
