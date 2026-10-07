@@ -303,6 +303,7 @@ class Session:
         A vendor only stocks so many (a healer has 20 bandages), so it goes round the vendors in
         sight, each once, then on to the next shop, until it has enough."""
         start = await self.held(item)
+        gold0 = (await self.snap())["player"].get("gold", 0)
         tried: set[int] = set()
         done_places: set[str] = set()
         spent, notes, place = 0, [], None
@@ -321,6 +322,10 @@ class Session:
             spent += -(e.get("gold_change") or 0)
             notes.append(e.get("detail") or e.get("state", "?"))
         got = await self.held(item) - start
+        # The gold carried before and after: the client's count at the moment an errand ends can
+        # come before the server's gold update (a soak run logged 20 bandages "for 0 gold").
+        await asyncio.sleep(1.0)
+        spent = max(spent, gold0 - (await self.snap())["player"].get("gold", gold0))
         ok = got >= count
         self.log("buy", place=place["name"] if place else None, item=item, count=count, got=got, ok=ok,
                  detail=notes, gold=-spent)
