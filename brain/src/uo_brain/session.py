@@ -333,6 +333,9 @@ class Session:
             self.world.add_place(place["kind"], place["name"], place["x"], place["y"], z=place.get("z"),
                                  sells=place.get("sells"), source="seen")
         where = place["name"] if place else "no vendor"
+        carried = (await self.snap())["player"].get("gold", 0)
+        if not ok and carried < 50:
+            notes.append(f"carrying only {carried} gold: withdraw some at a bank first")
         return Result(ok, f"{where}: bought {got} of {count} {item} for {spent} gold"
                           + ("" if ok else f" ({'; '.join(notes)})"), {"bought": got, "gold_spent": spent})
 

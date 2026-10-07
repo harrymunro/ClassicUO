@@ -36,7 +36,8 @@ restock, and go again. Before hunting, make sure there are enough supplies: a wa
 at least 50 bandages, a mage at least 30 of each reagent, an archer at least 50 bandages and
 150 arrows or bolts for the bow in hand (a bowyer or a provisioner sells them), a tamer at least
 80 bandages, for itself and its pet. A tamer whose pet has died can't hunt: finish the goal and say so. Selling loot is optional; banking
-it is enough.
+it is enough. Vendors take gold from the backpack, not the bank: buy before banking, or keep
+some back when banking (withdraw 'gold:200').
 
 Rules:
 - Answer with one tool call. Give `why` in a short sentence; the player sees it.
@@ -72,7 +73,7 @@ def goal_tools() -> list[dict[str, Any]]:
             "minutes": {"type": "number", "description": "How long at most, 3 to 20."}}, ["area", "minutes"]),
         fn("bank", "At the nearest bank (walking there first): deposit gold and/or loot, withdraw supplies.",
            {"deposit": {**s, "description": "Comma list from gold, loot, all; '' for none."},
-            "withdraw": {**s, "description": "Comma list of item:count, e.g. 'bandage:100'; '' for none."}}, []),
+            "withdraw": {**s, "description": "Comma list of item:count, e.g. 'bandage:100' or 'gold:200'; '' for none."}}, []),
         fn("buy", "Buy an item from the nearest vendor that sells it (walking there first).",
            {"item": {**s, "description": "e.g. bandage, black pearl, heal potion."},
             "count": {"type": "integer"},
