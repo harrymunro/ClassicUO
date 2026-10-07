@@ -78,3 +78,4 @@ Green Acres stays empty, so the arena tests are unaffected.
 - **`[AgentLoot [distance] [direction]`:** an orc's corpse with three valuables and five pieces of junk.
 - **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall of blockers, for stuck tests.
 - **`[AgentRestock [amount]`:** stocks nearby vendors.
+- **`[AgentRunes`:** a runebook and two runes marked to the test field and Britain.

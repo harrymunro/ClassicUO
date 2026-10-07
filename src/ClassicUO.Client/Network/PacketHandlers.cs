@@ -6540,6 +6540,12 @@ namespace ClassicUO.Network
             string[] lines
         )
         {
+            // A gump the agent asked for and answers itself (a runebook it reads or recalls from).
+            if (world.Agent.OnServerGump(sender, gumpID, layout, lines))
+            {
+                return null;
+            }
+
             List<string> cmdlist = _parser.GetTokens(layout);
             int cmdlen = cmdlist.Count;
 

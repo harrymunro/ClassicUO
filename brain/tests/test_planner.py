@@ -151,3 +151,15 @@ def test_the_planner_only_works_in_auto_mode_with_an_unpaused_goal():
     assert not wants_planner(snap("assist", "hunt the graveyard"))  # the player is driving
     assert not wants_planner(snap("auto", "hunt the graveyard", paused=True))
     assert not wants_planner(snap("auto", ""))
+
+
+def test_the_rune_for_a_place_matches_names_and_runebook_entries(tmp_path):
+    from uo_brain.session import Session
+    w = world(tmp_path)
+    s = Session(None, w)
+    snap = {"travel_items": {
+        "runes": [{"serial": 7, "name": "Recall Rune: Weight: 1 Stone A Recall Rune For Green Acres Test Field (Felucca)"}],
+        "runebooks": [{"serial": 9, "entries": ["Green Acres test field", "West Britain bank", "Britain graveyard"]}]}}
+    assert s.rune_for("West Britain bank", 1425, 1690, snap) == (9, 1, "west britain bank")
+    assert s.rune_for("Green Acres test field", 5445, 1153, snap)[0] in (7, 9)
+    assert s.rune_for("Moonglow", 4436, 1083, snap) is None

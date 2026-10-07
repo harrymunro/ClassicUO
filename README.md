@@ -371,6 +371,7 @@ goal that code carries out, using the world store for places:
   - **Stuck:** no progress for 8 seconds counts as stuck. The walker tries a door, then blocks that stretch and plans again (up to 5 times), in a wider box when the way round leaves the first one. Impassable items seen on the way (barricades, blockers) stay blocked for the rest of the trip.
   - **On the way** the brain fights only what comes close or attacks, and doesn't seek or loot.
   - Each walk goes into the world store as a route, with the spots where it got stuck.
+- **Recall and Gate Travel:** on trips over 40 tiles, travel first looks for a marked rune or a runebook entry that goes there (by name, or by a name the world store places within 20 tiles), recalls (a mage casts Recall; anyone else uses a runebook charge), then walks the rest. A failed cast is tried once more, then it walks. The client reads each runebook once through its gump, without showing it, and answers the gump's entry button to recall or open a gate; a moongate's "dost thou wish to step in" warning is answered too. Gate Travel is there for the planner and the CLI (`act recall … kind=gate`, then use the gate).
 - **Banking** (`bank`): says "bank" near a banker and moves items one at a time, checking each arrives (the server refuses moves that come too fast). Deposit `gold`, `loot` (anything that isn't kit or supplies) or named items (`bandage:150`); withdraw named items.
 - **Buying** (`buy`): walks up to the vendor (ModernUO answers "vendor buy" only next to it), reads its list and buys what's wanted and affordable. A vendor only stocks so many (Britain's healer has 20 bandages at a time), so it goes round the vendors in sight, then the next shop.
 - **Selling** (`sell`): the same, from the vendor's sell list: `loot`, or named items.
@@ -395,6 +396,8 @@ On the local server, 2026-10-06, single runs with a warrior:
 | deposit gold, loot and 150 bandages, then withdraw 100 | done, the pack went from 200 bandages to 50 to 150 |
 | buy 50 bandages, starting at the bank | bought 50 from the Britain healer for 250 gold |
 | sell loot to a weaponsmith, gems to a jeweller | +54 and +426 gold; the junk stayed |
+| a mage at the graveyard travels to the West Britain bank with a runebook in the pack | recalled, 11.5 s (63 s walking) |
+| Gate Travel from the runebook at the bank, then through the gate | at the graveyard; the town-exit warning answered |
 
 ## Quick start
 
@@ -456,6 +459,7 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO and work
 - **`[AgentLoot [distance] [direction]`:** lays an orc's corpse holding three valuables (diamonds, a gold ring, a magic longsword) and five pieces of junk (bones, a head, a shirt, kindling, raw ribs).
 - **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall along a line, for stuck tests.
 - **`[AgentRestock [amount]`:** stocks the vendors within 12 tiles with at least that many of everything.
+- **`[AgentRunes`:** a runebook full of charges marked to the test field, the West Britain bank, the Britain graveyard and the Britain healer, and loose runes to the first two. (Green Acres itself can't be recalled out of.)
 
 Accounts are created on first login. `admin`/`admin` is the owner.
 
@@ -486,8 +490,8 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`.
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
-- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around), `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `goal {text|clear|pause|template}`, `goal_status {step, why}` (from the planner, for the panel), `templates {kind: "goal"}`, `command`, `capture {path}`.
-- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, `hint {text}` (text above your head, client-side only, never refused), `travel {x, y, distance}`, `bank {deposit, withdraw}`, `buy {target, items}` and `sell {target, items}` (`items` like `"bandage:50"` or `"loot"`).
+- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around); the snapshot's `travel_items` lists marked runes and runebook entries, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `goal {text|clear|pause|template}`, `goal_status {step, why}` (from the planner, for the panel), `templates {kind: "goal"}`, `command`, `capture {path}`.
+- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, `hint {text}` (text above your head, client-side only, never refused), `travel {x, y, distance}`, `recall {target: rune or runebook, distance: entry, kind: spell|charge|gate}`, `bank {deposit, withdraw}`, `buy {target, items}` and `sell {target, items}` (`items` like `"bandage:50"` or `"loot"`).
 - **Cast authority:** healing spells count as `heal`, Cure as `cure`, attack spells as `fight`, anything else as `misc`.
 - **Authority:** an act request is subject to authority unless it has `"source": "manual"`. In combat assist, an attack or harmful cast at a creature the engage setting doesn't allow is refused ("not your target").
 

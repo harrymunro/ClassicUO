@@ -34,7 +34,11 @@ namespace ClassicUO.Agent
             (Reagents.SpidersSilk, "spiders_silk", 0x0F8D)
         };
 
-        public const int HEAL = 4, CURE = 11, GREATER_HEAL = 29;
+        public const int HEAL = 4, CURE = 11, GREATER_HEAL = 29, RECALL = 32, GATE_TRAVEL = 52;
+        public const ushort RUNEBOOK_GRAPHIC = 0x22C5;
+
+        // Marked and unmarked recall runes.
+        public static bool IsRune(Item it) => it.Graphic >= 0x1F14 && it.Graphic <= 0x1F17;
 
         public static int Circle(int id) => (id - 1) / 8 + 1;
 

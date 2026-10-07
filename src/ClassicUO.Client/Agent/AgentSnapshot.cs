@@ -48,6 +48,7 @@ namespace ClassicUO.Agent
             WriteMagic(w, p, agent);
             WriteDeaths(w, agent);
             WriteSigns(w, world, radius);
+            WriteRunes(w, world, p, agent);
 
             if (pack)
             {
@@ -295,6 +296,61 @@ namespace ClassicUO.Agent
 
             w.WriteEndArray();
 
+            w.WriteEndObject();
+        }
+
+        // Marked runes and runebooks in the pack, by the name of where they go.
+        private static void WriteRunes(Utf8JsonWriter w, World world, PlayerMobile p, AgentController agent)
+        {
+            w.WriteStartObject("travel_items");
+            w.WriteStartArray("runes");
+            Item pack = p.FindItemByLayer(Layer.Backpack);
+
+            for (LinkedObject o = pack?.Items; o != null; o = o.Next)
+            {
+                if (o is Item it && AgentSpells.IsRune(it))
+                {
+                    // The destination is in the rune's properties ("Britain bank (Felucca)"), or
+                    // in its name on shards that rename runes instead.
+                    string name = NameOf(world, it);
+
+                    if (world.OPL.TryGetNameAndData(it.Serial, out _, out string data) && !string.IsNullOrWhiteSpace(data))
+                    {
+                        name = $"{name}: {data.Replace('\n', ' ').Trim()}";
+                    }
+
+                    if (!name.Contains("unmarked", StringComparison.OrdinalIgnoreCase))
+                    {
+                        w.WriteStartObject();
+                        w.WriteNumber("serial", it.Serial);
+                        w.WriteString("name", name);
+                        w.WriteEndObject();
+                    }
+                }
+            }
+
+            w.WriteEndArray();
+            w.WriteStartArray("runebooks");
+
+            foreach ((uint serial, List<string> entries) in agent.Runebooks)
+            {
+                if (world.Items.Get(serial) is Item book && book.RootContainer == p.Serial)
+                {
+                    w.WriteStartObject();
+                    w.WriteNumber("serial", serial);
+                    w.WriteStartArray("entries");
+
+                    foreach (string e in entries)
+                    {
+                        w.WriteStringValue(e);
+                    }
+
+                    w.WriteEndArray();
+                    w.WriteEndObject();
+                }
+            }
+
+            w.WriteEndArray();
             w.WriteEndObject();
         }
 

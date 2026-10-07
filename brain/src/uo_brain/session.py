@@ -24,7 +24,7 @@ from typing import Any
 from . import loop, policy
 from .judge import Judge
 from .rpc import AgentRpc
-from .world import World, tiles
+from .world import World, name_score, tiles
 
 # A vendor place's kind -> words its title carries in game ("Lucy the healer").
 VENDOR_TITLES: dict[str, tuple[str, ...]] = {
@@ -105,8 +105,9 @@ class Session:
     # ------------------------------------------------------------ travel
 
     async def travel_to(self, place: str | None = None, x: int | None = None, y: int | None = None,
-                        distance: int = 2, timeout_s: float = 600) -> Result:
-        """Walk to a named place or a tile, fighting what attacks on the way."""
+                        distance: int = 2, timeout_s: float = 600, recall: bool = True) -> Result:
+        """Get to a named place or a tile: by Recall when a rune or runebook goes there,
+        walking the rest (or all of it), fighting what attacks on the way."""
         target = self.resolve(place, x, y)
         if target is None:
             return Result(False, f"no place called {place!r} in the world store")
@@ -115,6 +116,12 @@ class Session:
         start = self.where(snap)
         if tiles(*start, tx, ty) <= distance:
             return Result(True, f"already at {name}", {"x": tx, "y": ty})
+        recalled = await self.recall_to(name, tx, ty, snap) if recall and tiles(*start, tx, ty) > 40 else None
+        if recalled is not None:
+            snap = await self.snap()
+            start = self.where(snap)
+            if tiles(*start, tx, ty) <= distance:
+                return Result(True, f"recalled to {name} ({recalled})", {"x": start[0], "y": start[1], "by": "recall"})
         here = self.world.region_at(*start)
         from_name = here["name"] if here else f"{start[0]},{start[1]}"
 
@@ -154,6 +161,50 @@ class Session:
             return Result(True, f"arrived at {name} in {seconds} s", {"seconds": seconds, "replans": travel.get("replans", 0)})
         return Result(False, f"did not reach {name}: {state}, {travel.get('left', '?')} tiles short",
                       {"seconds": seconds, "stuck_at": stuck, "position": list(self.where(snap))})
+
+    def rune_for(self, name: str, tx: int, ty: int, snap: dict[str, Any]) -> tuple[int, int, str] | None:
+        """(serial, runebook entry or -1, label) of the rune or runebook entry that goes to a
+        place: by its name, or by a name the world store puts within 20 tiles of it."""
+        items = snap.get("travel_items") or {}
+        options = [(r["serial"], -1, r["name"]) for r in items.get("runes", [])]
+        for book in items.get("runebooks", []):
+            options += [(book["serial"], i, e) for i, e in enumerate(book.get("entries", []))]
+        best, best_score = None, 0.0
+        for serial, entry, label in options:
+            text = label.split(":", 1)[-1]  # "Recall Rune: ... for West Britain Bank (Felucca)"
+            text = text.lower().split(" for ", 1)[-1].replace("(felucca)", "").strip()
+            score = name_score(name, text)
+            if score < 0.6:
+                hit = self.world.place(text, limit=1)
+                score = 0.7 if hit and tiles(hit[0]["x"], hit[0]["y"], tx, ty) <= 20 else 0.0
+            if score > best_score:
+                best, best_score = (serial, entry, text), score
+        return best
+
+    async def recall_to(self, name: str, tx: int, ty: int, snap: dict[str, Any]) -> str | None:
+        """Recall towards a place; what it used, or None when it couldn't (no rune, no mana or
+        reagents, a fizzle, a place you can't recall from)."""
+        rune = self.rune_for(name, tx, ty, snap)
+        if rune is None:
+            return None
+        serial, entry, label = rune
+        spells = {sp["name"]: sp for sp in (snap.get("magic") or {}).get("spells", [])}
+        castable = "Recall" in spells and not spells["Recall"].get("missing")
+        if not castable and entry < 0:
+            return None  # a loose rune needs the spell; a runebook can use a charge
+        start = self.where(snap)
+        for attempt in range(2):  # Recall can fizzle
+            res = await self.act("recall", target=serial, distance=max(entry, 0), kind="spell" if castable else "charge")
+            if res.get("status") not in ("done", "queued"):
+                return None
+            for _ in range(16):
+                await asyncio.sleep(0.5)
+                now = await self.snap()
+                if tiles(*self.where(now), *start) > 20:
+                    self.log("recalled", to=name, via=label, at=list(self.where(now)))
+                    return f"via {label}"
+            self.log("recall_failed", to=name, via=label, attempt=attempt + 1)
+        return None
 
     # ------------------------------------------------------------ errands
 

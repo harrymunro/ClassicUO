@@ -71,6 +71,7 @@ public static class AgentTestKit
         CommandSystem.Register("AgentLoot", _accessLevel, AgentLoot_OnCommand);
         CommandSystem.Register("AgentWall", _accessLevel, AgentWall_OnCommand);
         CommandSystem.Register("AgentRestock", _accessLevel, AgentRestock_OnCommand);
+        CommandSystem.Register("AgentRunes", _accessLevel, AgentRunes_OnCommand);
     }
 
     // Runs before AccountPrompt.Initialize (default priority 50) so a headless first boot finds an
@@ -516,6 +517,39 @@ public static class AgentTestKit
         }
 
         from.SendMessage($"Wall: {steps + 1} tiles from ({x1}, {y1}) to ({x2}, {y2}).");
+    }
+
+    [Usage("AgentRunes")]
+    [Description(
+        "Gives you a runebook full of charges marked to the test field, the West Britain bank, the Britain graveyard and the Britain healer, and two loose runes marked to the bank and the test field."
+    )]
+    public static void AgentRunes_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        (string Name, Point3D Location)[] spots =
+        [
+            ("Green Acres test field", TestLocation),
+            ("West Britain bank", new Point3D(1425, 1690, 0)),
+            ("Britain graveyard", new Point3D(1386, 1494, 10)),
+            ("Britain healer", new Point3D(1471, 1609, 20))
+        ];
+
+        var book = new Runebook(10);
+        book.CurCharges = book.MaxCharges;
+
+        foreach (var (name, location) in spots)
+        {
+            book.Entries.Add(new RunebookEntry(book, location, Map.Felucca, name));
+        }
+
+        from.AddToBackpack(book);
+
+        foreach (var (name, location) in spots[..2])
+        {
+            from.AddToBackpack(new RecallRune { Marked = true, Target = location, TargetMap = Map.Felucca, Description = name });
+        }
+
+        from.SendMessage($"Runes: a runebook with {spots.Length} entries and 2 loose runes.");
     }
 
     [Usage("AgentRestock [amount]")]

@@ -808,6 +808,9 @@ namespace ClassicUO.Agent
                 case "kite":
                     return Kite(Math.Clamp(a.Tiles, 2, 8));
 
+                case "recall":
+                    return Recall(a.Target, a.Distance, a.Kind);
+
                 case "bank":
                     return Errands.StartBank(a.Deposit, a.Withdraw);
 
@@ -834,6 +837,12 @@ namespace ClassicUO.Agent
                     return ("done", string.Empty);
 
                 case "use":
+                    // A moongate out of town asks "Dost thou wish to step into the moongate?": say yes.
+                    if (_world.Items.Get(a.Target) is Item gate && (gate.ItemData.Name ?? string.Empty).Contains("moongate", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _gateConfirmUntil = Time.Ticks + 8000;
+                    }
+
                     GameActions.DoubleClick(_world, a.Target);
 
                     return ("done", string.Empty);
@@ -989,7 +998,9 @@ namespace ClassicUO.Agent
 
             uint delay = AgentSpells.CastDelayMs(spell.ID);
             _castSpell = spell.ID;
-            _castTarget = spell.TargetType == TargetType.Neutral ? 0 : target;
+            // Travel spells target an item (a rune); their table entry says neutral.
+            bool itemTarget = target != 0 && target != uint.MaxValue && _world.Items.Get(target) != null;
+            _castTarget = spell.TargetType == TargetType.Neutral && !itemTarget ? 0 : target;
             _castSurvival = survival;
             _castStarted = now;
             _castUntil = now + delay;
@@ -1109,6 +1120,13 @@ namespace ClassicUO.Agent
             _nextPeek = now + 1000;
             PlayerMobile p = _world.Player;
 
+            // A runebook that didn't answer (the server throttles use requests): try again later.
+            if (_bookAwaited != 0 && now - _bookAwaitedAt > 4000)
+            {
+                _bookAwaited = 0;
+                _bookRecall = default;
+            }
+
             if (HumanActive || Mode == AgentMode.Off)
             {
                 return;
@@ -1119,6 +1137,18 @@ namespace ClassicUO.Agent
             // Every character: supplies, loot and banking all need the backpack's contents.
             Item pack = p.FindItemByLayer(Layer.Backpack);
             Item target = pack != null && pack.Items == null && !pack.Opened && Due(pack) ? pack : null;
+
+            // Runebooks are read through their gump, which OnServerGump answers unseen.
+            if (target == null && _bookAwaited == 0 && UnreadRunebook(now) is Item rb)
+            {
+                _peekAgainAt[rb.Serial] = now + 6_000;
+                _bookAwaited = rb.Serial;
+                _bookAwaitedAt = now;
+                Log.Trace($"[agent] reading runebook 0x{rb.Serial:X8}");
+                GameActions.DoubleClick(_world, rb.Serial);
+
+                return;
+            }
             Item book = AgentSpells.FindSpellbook(p);
 
             if (target == null && (book == null || AgentSpells.MagerySkill(p) <= 0))
@@ -1621,6 +1651,126 @@ namespace ClassicUO.Agent
         }
 
         public bool Kiting => _kiteUntil > Time.Ticks && _agentWalking;
+
+        // ---------------------------------------------------------------- runes and runebooks
+
+        // A runebook's entries are only shown in its gump, so each book is opened once and read
+        // (AgentRunebook.Read); recalling from one answers the same gump with the entry's button.
+        private readonly Dictionary<uint, List<string>> _runebooks = new Dictionary<uint, List<string>>();
+        private uint _bookAwaited, _bookAwaitedAt;
+        private (uint Book, int Entry, int Action) _bookRecall;
+
+        public IReadOnlyDictionary<uint, List<string>> Runebooks => _runebooks;
+
+        // recall {target: rune or runebook, distance: entry index (runebooks), kind: "spell" | "charge" | "gate"}
+        private (string, string) Recall(uint target, int entry, string how)
+        {
+            Item it = _world.Items.Get(target);
+
+            if (it == null)
+            {
+                return ("failed", "no such rune or runebook");
+            }
+
+            if (it.Graphic == AgentSpells.RUNEBOOK_GRAPHIC)
+            {
+                if (!_runebooks.TryGetValue(it.Serial, out List<string> entries) || entry < 0 || entry >= entries.Count)
+                {
+                    return ("failed", "no such runebook entry");
+                }
+
+                // Runebook buttons: 2 + entry * 6 + action (0 use a charge, 3 cast Recall, 4 cast Gate Travel).
+                int action = how == "gate" ? 4 : how == "charge" ? 0 : 3;
+                _bookRecall = (it.Serial, entry, action);
+                _bookAwaited = it.Serial;
+                _bookAwaitedAt = Time.Ticks;
+                GameActions.DoubleClick(_world, it.Serial);
+
+                return ("done", entries[entry]);
+            }
+
+            if (!AgentSpells.IsRune(it))
+            {
+                return ("failed", "not a rune or a runebook");
+            }
+
+            // Queued like attack spells: a healing reflex may have the caster busy.
+            var cast = new AgentAction
+            {
+                Verb = "cast", Spell = (how == "gate" ? AgentSpells.GATE_TRAVEL : AgentSpells.RECALL).ToString(),
+                Target = it.Serial, Manual = true, Queue = true, Reason = "travel"
+            };
+
+            return Execute(cast);
+        }
+
+        // Every server gump passes through here first (PacketHandlers.CreateGump). Returns true
+        // when the agent answered it, so it is never shown.
+        private uint _gateConfirmUntil;
+
+        public bool OnServerGump(uint sender, uint gumpId, string layout, string[] lines)
+        {
+            // The moongate warning (cliloc 1062049, or 1062050 for Felucca): OKAY is button 1.
+            if (_gateConfirmUntil > Time.Ticks && layout != null && (layout.Contains("1062049") || layout.Contains("1062050")))
+            {
+                _gateConfirmUntil = 0;
+                ReplyGump(sender, gumpId, 1);
+                Journal.AddAgentEvent("stepping into the moongate");
+
+                return true;
+            }
+
+            if (_bookAwaited == 0 || Time.Ticks - _bookAwaitedAt > 5000)
+            {
+                _bookAwaited = 0;
+
+                return false;
+            }
+
+            if (!AgentRunebook.IsRunebook(layout))
+            {
+                Log.Trace($"[agent] expected a runebook gump, got: {(layout.Length > 400 ? layout.Substring(0, 400) : layout)}");
+
+                return false;
+            }
+
+            uint book = _bookAwaited;
+            _bookAwaited = 0;
+            _runebooks[book] = AgentRunebook.Read(layout, lines);
+            Log.Trace($"[agent] runebook 0x{book:X8}: {string.Join(", ", _runebooks[book])}");
+
+            if (_bookRecall.Book == book)
+            {
+                ReplyGump(sender, gumpId, 2 + _bookRecall.Entry * 6 + _bookRecall.Action);
+                Journal.AddAgentEvent($"recalling to {_runebooks[book][_bookRecall.Entry]}");
+                _bookRecall = default;
+            }
+            else
+            {
+                ReplyGump(sender, gumpId, 0); // just reading it: close
+            }
+
+            return true;
+        }
+
+        // The response writer needs lists, even empty ones.
+        private static void ReplyGump(uint sender, uint gumpId, int button) =>
+            GameActions.ReplyGump(sender, gumpId, button, Array.Empty<uint>(), Array.Empty<Tuple<ushort, string>>());
+
+        // Called from UpdatePeek: the next runebook in the pack whose entries aren't known yet.
+        private Item UnreadRunebook(uint now)
+        {
+            for (LinkedObject i = _world.Player.FindItemByLayer(Layer.Backpack)?.Items; i != null; i = i.Next)
+            {
+                if (i is Item it && it.Graphic == AgentSpells.RUNEBOOK_GRAPHIC && !_runebooks.ContainsKey(it.Serial)
+                    && (!_peekAgainAt.TryGetValue(it.Serial, out uint at) || now >= at))
+                {
+                    return it;
+                }
+            }
+
+            return null;
+        }
 
         private (string, string) Move(string dir, int tiles)
         {
