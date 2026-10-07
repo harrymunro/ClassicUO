@@ -745,15 +745,22 @@ decide anything, one of them a tempting "a wisp's corpse often holds gems". Each
 plays it three ways: `@none` (no world facts), `@all` (every shortlisted fact in the state)
 and `@jev` (the few Jev picks). The rule judge, which can't read facts, plays it once.
 
-Results on the local server, 2026-10-07, 10 rounds per judge (`uo-brain bench report brain/bench/2026-10-07-*.json`):
+Results on the local server, 2026-10-07, 10 rounds per judge (`uo-brain bench report brain/bench/2026-10-07-*.json`).
+The first run (`2026-10-07-core.json`) is the baseline; changes it led to were rerun the same day (`core-v2a`, `core-v2b`, `swarm-v3`):
 
-| scenario | rules | Jev | Jev + survivor template | notes |
+| scenario | rules | Jev | Jev + survivor template | after the changes below |
 |---|---|---|---|---|
-| `mismatch` | 0/10, 10 deaths | 7/10, 3 deaths | 10/10, 0 deaths | |
-| `priority` | 0/10 | 9/10 | 0/10 | the survivor template says "fight whatever is closest", so it does |
+| `mismatch` | 0/10, 10 deaths | 7/10, 3 deaths | 10/10, 0 deaths | Jev 10/10, survivor 10/10, no deaths |
+| `priority` | 0/10 | 0/10 (old setup) | 0/10 | Jev 10/10 with zombies as the fodder |
 | `loot` | 0/10 | 10/10 | 10/10 | |
+| `attrition` | 5/10, 5 deaths | 4/10, 6 deaths | 7/10, 3 deaths | Jev 5/10, survivor 6/10 |
+| `swarm` | 0/10 | 0/10 | 0/10 | rules 0/10 (9 deaths), Jev 0/10 (7 deaths) |
 
-- **`priority` was retuned after its first run:** three orcs and the mage's spells killed the test warrior in about 60% of rounds whatever it targeted (every judge 0/10), so it measured luck. Jev also put 100% on the adjacent orc it was fighting, because the target guidance told it to prefer the current and the closest creature. With zombies as the fodder and guidance that a spellcaster comes first, Jev opens on the orcish mage.
+What changed, and why:
+- **`priority` was retuned:** three orcs and the mage's spells killed the test warrior in about 60% of rounds whatever it targeted, so it measured luck. Jev also put 100% on the adjacent orc it was fighting, because the target guidance said to prefer the current and the closest creature. With zombies as the fodder and guidance that a spellcaster that is fighting comes first, Jev opens on the orcish mage. The survivor template says "fight whatever is closest", so it does, and fails this scenario by design.
+- **Leaving:** on logged attrition decisions that went on to die, Jev put 0.24–0.30 on "leave now" when asked about "supplies nearly gone with several creatures still attacking". Asked whether there was enough healing left to outlast them, it put 0.40–0.60, against 0.2 where staying won, and the ogre-lord cases didn't change (the same 20 logged decisions re-asked offline). The cut on that answer was the strategy's danger threshold (0.625 with no strategy) and is now 0.2 below it. That is what took `mismatch` to 10/10.
+- **Moved into code:** a mage or archer with four or more creatures adjacent leaves once Jev's danger judgment reaches 0.5, and so does any character with two or more stronger creatures close. In both cases Jev rated each creature an easy kill and kept its intent on fighting. An added "outnumbered" clause only moved its leave answer from 0.27 to 0.30.
+- **Still open:** `attrition` and `swarm` are mostly lost by every judge with these kits. Eight monsters on six bandages, or six on a mage, kill the character whether it fights or runs: monsters run as fast as a character, and every hit interrupts a mage's spells. Jev doesn't beat the rules on these two.
 - **Adherence**, Jev with the template: `relentless` 10/10 (never fled; 2 deaths), `survivor` 8/10, `no-loot` 10/10, `nuker` 9/10, `champion` 10/10 (3 deaths).
 
 Archetypes, the same day:
@@ -812,7 +819,7 @@ Not yet tried on UO Renaissance itself, which needs a real account.
 
 Known limits:
 - Results above are single small runs.
-- Mages use Magery only, with single-target attack spells. A mage kites by stepping back from melee, but most monsters run as fast as a character, so a swarm of five or more is still hard for it.
+- Mages use Magery only, with single-target attack spells. A mage kites by stepping back from melee, but most monsters run as fast as a character: against six at once it lost every benchmark round (`swarm`, 0/10), and leaving when four are adjacent only cut the deaths from 8 to 7.
 - Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does, under both rule sets), and from the English text otherwise. They have not yet been checked against what UO Renaissance itself sends.
 - On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
