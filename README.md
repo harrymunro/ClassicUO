@@ -230,6 +230,77 @@ These are in code, whatever the model says:
 - **`uo-brain replay`** re-asks a log's questions to another judge offline, e.g. Jev against the rule baseline, and reports how often they agree.
 - **Assist agreement:** with fight set to suggest, the brain records whether you attacked the creature it suggested.
 
+### World knowledge
+
+The brain keeps what it knows about each shard in a SQLite file,
+`brain/worlds/<shard>/world.sqlite` (`local` is the ModernUO test server). The planner
+looks facts up with tools when it needs them, instead of having them pasted into every
+prompt. The store holds:
+
+- **Places:** banks, healers, vendors and what they sell, moongates, teleporters, dungeon entrances and levels, shrines and landmarks.
+- **Regions:** towns, dungeons and other named areas, with their bounds and whether guards protect them.
+- **Spawns:** which creatures spawn where, how many at once and how quickly they come back.
+- **Creatures:** hits, damage, fame and karma, and a difficulty word (trivial, weak, moderate, strong, deadly) used to rate hunting spots.
+- **Routes:** paths that worked, paths that got stuck and where, and teleporter links.
+- **Outcomes:** results of playing somewhere, such as kills per hour for a warrior.
+- **Notes:** free-text facts, searched by keyword.
+
+The planner's queries are `place` (a loose name to coordinates: "britain bank", "Britain
+graveyard"), `find_place` (the nearest bank or healer, or a vendor that sells bandages),
+`hunting_spots` (for an archetype and level, towns left out), `what_spawns`, `route`,
+`notes` and `region_at`. `world.tool_schemas()` gives them as tool definitions for a model
+and `World.call_tool` runs them. Distances are in tiles, counted as max(|dx|, |dy|).
+
+Every row records its source (`modernuo:<file>`, `seen`, `note`, `guide:<url>` or
+`model:unverified`) and when it was last seen. When something seen in game contradicts a
+stored fact, the old row is marked stale instead of deleted, and queries skip it. Other
+players' names and speech never go in: a PK sighting is stored as "a red player was seen
+here", not who it was.
+
+**The local store** is built from the ModernUO checkout and is gitignored, so rebuild it
+with `uo-brain world import-modernuo` (`--modernuo-dir` if it isn't in `~/Workspace/ModernUO`).
+It reads what a Felucca server with the configured expansion loads: `Locations/felucca.json`,
+`regions.json`, the spawn files in `Spawns/shared/felucca` and `Spawns/post-uoml/felucca`,
+`teleporters.json` and the public moongates. Vendor spawns become places with what they
+sell (a table written from ModernUO's `SB*Info` classes), and creature stats are parsed
+from the C# in `Projects/UOContent/Mobiles`. Re-running it replaces the `modernuo:` rows
+and keeps everything else. On 2026-10-06 it gave 1,152 places, 91 regions, 8,742 spawn
+rows (one per creature type per spawner), 403 creatures and 230 teleporter routes. For
+example, the Britain graveyard spawner at (1369, 1475) keeps up to 9 spectres, wraiths,
+skeletons and zombies alive and respawns them in 5 to 10 minutes, and the bank nearest the
+graveyard is the West Britain bank at (1425, 1690).
+
+**Guides and the model's own knowledge.** `uo-brain world import-guide URL|FILE [--area A]`
+has the planner model read a page (as plain text, up to 60,000 characters) and store one
+note per fact, each linked to the page as `guide:<url>`. Importing the same page again
+replaces its notes. `uo-brain world fill-gaps AREA` stores what the model knows about an
+area from its training as `model:unverified`, tagged `unverified`, until the game confirms
+it. The model is Claude Sonnet 5.5 through OpenRouter (`anthropic/claude-sonnet-5.5`;
+change it with `--planner-model` or `PLANNER_MODEL`), using the same `OPENROUTER_API_KEY`
+as Jev from `brain/.env`. `llm.py` is the small OpenRouter client behind it, which the
+planner will use as well: tool calling, Anthropic prompt caching on the system prompt, and
+the cost of every call. Sonnet 5.5 refuses a forced tool choice, so the client asks again
+with `auto` and the prompt names the tool to call.
+
+Single smoke run on 2026-10-06: `uo-brain world import-guide https://www.uoguide.com/Britain --area Britain`
+read 4,657 characters and stored 28 notes (banks, healer, shops, inns, guild halls, bridges
+and gates) for $0.033: 3,497 prompt and 2,557 completion tokens, 14 s. UOGuide gives
+positions in sextant degrees, and the notes keep them as written rather than converting
+them to tile coordinates.
+
+Nothing yet records what the agent sees in game, so on a public shard the store holds only
+your notes and imported guides for now.
+
+```bash
+cd brain
+uv run uo-brain world import-modernuo
+uv run uo-brain world find bank --near-place "Britain graveyard"
+uv run uo-brain world hunt warrior new --near "West Britain bank"
+uv run uo-brain world spawns "Britain Graveyard"
+uv run uo-brain world note "Wraiths here are too much for a new mage." --area "Britain Graveyard"
+uv run uo-brain world import-guide https://www.uoguide.com/Britain --area Britain
+```
+
 ## Quick start
 
 ```bash
@@ -298,6 +369,7 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
+- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`.
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
 - **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack), `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
@@ -407,7 +479,8 @@ shards that allow it.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, strategy, templates)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`bench.py` (judgment benchmark)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py` |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
 | `tests/ClassicUO.UnitTests/Agent/`, `brain/tests/` | `dotnet test --filter "FullyQualifiedName~Agent"`, `cd brain && uv run pytest` |
