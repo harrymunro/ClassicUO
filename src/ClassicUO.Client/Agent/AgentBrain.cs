@@ -279,6 +279,31 @@ namespace ClassicUO.Agent
             }
         }
 
+        // brain/.env with the key replaced and every other line kept, readable only by the user.
+        public static void WriteKey(string env, string key)
+        {
+            var lines = new System.Collections.Generic.List<string>();
+
+            if (File.Exists(env))
+            {
+                foreach (string line in File.ReadAllLines(env))
+                {
+                    if (!line.StartsWith("OPENROUTER_API_KEY=", StringComparison.Ordinal))
+                    {
+                        lines.Add(line);
+                    }
+                }
+            }
+
+            lines.Add("OPENROUTER_API_KEY=" + key);
+            File.WriteAllLines(env, lines);
+
+            if (!OperatingSystem.IsWindows())
+            {
+                File.SetUnixFileMode(env, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            }
+        }
+
         // Saves the key to brain/.env (mode 600), replacing any earlier one, and restarts the
         // brain so it reads it. Returns what to tell the player; the key itself is never shown.
         public static string SaveKey(string key)
@@ -299,26 +324,7 @@ namespace ClassicUO.Agent
 
             try
             {
-                var lines = new System.Collections.Generic.List<string>();
-
-                if (File.Exists(env))
-                {
-                    foreach (string line in File.ReadAllLines(env))
-                    {
-                        if (!line.StartsWith("OPENROUTER_API_KEY=", StringComparison.Ordinal))
-                        {
-                            lines.Add(line);
-                        }
-                    }
-                }
-
-                lines.Add("OPENROUTER_API_KEY=" + key);
-                File.WriteAllLines(env, lines);
-
-                if (!OperatingSystem.IsWindows())
-                {
-                    File.SetUnixFileMode(env, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                }
+                WriteKey(env, key);
             }
             catch (Exception ex)
             {

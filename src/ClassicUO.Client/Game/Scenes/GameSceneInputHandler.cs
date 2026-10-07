@@ -1267,8 +1267,15 @@ namespace ClassicUO.Game.Scenes
 
             if (CanExecuteMacro())
             {
+                // SDL3 reports the key with modifiers applied, and on a Mac Option composes a
+                // character ("a" becomes "å"), so Alt+letter macros never matched there. Macros
+                // are bound to the key itself.
+                SDL.SDL_Keycode macroKey = Keyboard.Alt
+                    ? (SDL.SDL_Keycode) SDL.SDL_GetKeyFromScancode(e.scancode, SDL.SDL_Keymod.SDL_KMOD_NONE, false)
+                    : keycode;
+
                 Macro macro = _world.Macros.FindMacro(
-                    keycode,
+                    macroKey,
                     Keyboard.Alt,
                     Keyboard.Ctrl,
                     Keyboard.Shift
@@ -1276,6 +1283,11 @@ namespace ClassicUO.Game.Scenes
 
                 if (macro != null && keycode != SDL.SDL_Keycode.SDLK_UNKNOWN)
                 {
+                    if (Keyboard.Alt || Keyboard.Ctrl)
+                    {
+                        Client.Game.IgnoreNextTextInput();
+                    }
+
                     if (macro.Items is MacroObject mac)
                     {
                         if (mac.Code == MacroType.LookAtMouse)
@@ -1396,7 +1408,7 @@ namespace ClassicUO.Game.Scenes
             if (_flags[4] || Client.Game.Scene.Camera.PeekingToMouse)
             {
                 Macro macro = _world.Macros.FindMacro(
-                    keycode,
+                    Keyboard.Alt ? (SDL.SDL_Keycode) SDL.SDL_GetKeyFromScancode(e.scancode, SDL.SDL_Keymod.SDL_KMOD_NONE, false) : keycode,
                     Keyboard.Alt,
                     Keyboard.Ctrl,
                     Keyboard.Shift

@@ -66,7 +66,8 @@ namespace ClassicUO.Agent
             CanCloseWithRightClick = false;
             AcceptMouseInput = true;
             AcceptKeyboardInput = false;
-            LayerOrder = UILayer.Over;
+            // The default layer, not "over": an always-on-top panel covered the quit dialog's buttons.
+            LayerOrder = UILayer.Default;
             WantUpdateSize = false;
 
             // First time: beside the game view when the window has room, else over its corner.
@@ -438,7 +439,7 @@ namespace ClassicUO.Agent
             return $"watch out: {who}, {distance} tile{(distance == 1 ? "" : "s")} away{more}";
         }
 
-        // "Alt+A switches · Alt+N next move", from the player's macros.
+        // "Alt+A switches · Alt+D next move", from the player's macros.
         private string KeyHelp()
         {
             string switchKey = MacroKey(MacroType.AgentSwitch), nextKey = MacroKey(MacroType.AgentNext);

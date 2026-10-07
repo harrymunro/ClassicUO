@@ -31,6 +31,10 @@ namespace ClassicUO
         private SDL_EventFilter _filter;
 
         private bool _ignoreNextTextInput;
+
+        // A key press that ran a macro shouldn't also type its character into the chat line
+        // (Option+A on a Mac types "å").
+        public void IgnoreNextTextInput() => _ignoreNextTextInput = true;
         private readonly float[] _intervalFixedUpdate = new float[2];
         private double _totalElapsed, _currentFpsTime;
         private uint _totalFrames;

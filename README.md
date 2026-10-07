@@ -85,7 +85,7 @@ There are two ways to play, and one key between them:
 - **Off:** nothing runs.
 
 **Alt+A** switches between combat assist and auto (from off it starts combat assist), and
-**Alt+N** does Jev's next move. Both are ordinary macros (*Agent: switch* and *Agent: next
+**Alt+D** does Jev's next move. Both are ordinary macros (*Agent: switch* and *Agent: next
 move*) added once per character; rebind or delete them in Options → Macros. A key you
 already use is left alone, and the macro is added without a key.
 
@@ -114,9 +114,9 @@ targeted. A setting chooses what else it takes on by itself (`-agent engage`, or
 - **A warrior** keeps swinging and bandages between hits; this works with no brain running.
 - **A mage** casts the next spell from your strategy, or Jev's pick, at your target, and says above your head when the target is out of spell range.
 - **It never walks or flees for you:** when Jev judges the fight is going badly, it says so ("this fight is going badly, get out") and leaves the moving to you.
-- **On your key:** set *fights* to *on your key* (`-agent set fight suggest`) and Jev only picks the move; Alt+N does it.
+- **On your key:** set *fights* to *on your key* (`-agent set fight suggest`) and Jev only picks the move; Alt+D does it.
 
-**The next-move key** (Alt+N, `-agent next`) does Jev's pending suggestion if there is one,
+**The next-move key** (Alt+D, `-agent next`) does Jev's pending suggestion if there is one,
 otherwise the combat move from its latest decision (a cast, a target switch), otherwise a
 bandage if you're hurt. You decide when, Jev decides what.
 
@@ -464,7 +464,7 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 **In game**
 - **`-agent off|combat|auto`:** set the play state (`assist` also means combat assist).
 - **`-agent switch`:** switch between combat assist and auto (Alt+A).
-- **`-agent next`:** do Jev's next move (Alt+N).
+- **`-agent next`:** do Jev's next move (Alt+D).
 - **`-agent engage follow|defend|nearby`:** what combat assist takes on by itself.
 - **`-agent status`:** show the play state, authorities and thresholds.
 - **`-agent accept`:** accept the pending suggestion.
@@ -547,6 +547,25 @@ events posted through the macOS HID event tap, the same path as a physical devic
 The real-input test found two gaps, both fixed:
 - **War mode:** the agent fought without war mode on, so a player's double-click on another monster opened its paperdoll instead of attacking. It now turns war mode on when it engages.
 - **Peek throttling:** the server throttles use requests, so a peek right after re-equipping could fail silently. It now retries after 2 s.
+
+**Combat assist and the keys, with real input** (2026-10-06, single runs, the same tool):
+
+| check | result |
+|---|---|
+| Alt+A switches combat assist and auto, and back | pass, after a fix (below) |
+| Two orcs attack: the warrior fights them without the character moving | pass |
+| The player double-clicks the other orc: the agent switches to it | pass |
+| The player walks 7 tiles with the right mouse button mid-fight: the fight goes on, no fight action deferred | pass |
+| In auto, walking hands control back, and the agent takes over again within 6 s | pass |
+| Fights set to "on your key": Alt+D does the pending suggestion (attack) | pass, after a fix (below) |
+| A mage with a monster 11 tiles away: "out of spell range" above its head, nothing cast | pass |
+| The same monster 6 tiles away: the mage casts at it until it dies (17 s), without moving | pass |
+| The panel dragged, logged out from the paperdoll, logged back in: it reopens where it was | pass, after a fix (below) |
+
+That test found three gaps, all fixed:
+- **Alt+letter macros on a Mac:** SDL3 reports the key with modifiers applied, and Option composes a character ("a" becomes "å"), so no Alt+letter macro could match, ClassicUO's default Alt+P paperdoll included. Macros are now matched by the key itself, and a key that ran a macro no longer types its character into the chat line.
+- **Option+N is a dead key** on a Mac (it starts an accented letter), so the next-move key is Alt+D, not Alt+N.
+- **The panel covered the quit dialog:** it was drawn on top of everything, including modal dialogs, so their buttons couldn't be clicked. It now sits with the other gumps.
 
 These are single runs, so treat them as a smoke test rather than a benchmark.
 

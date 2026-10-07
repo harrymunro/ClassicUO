@@ -2180,19 +2180,33 @@ namespace ClassicUO.Agent
             }
         }
 
-        // Once per character: Alt+A switches between combat assist and auto, Alt+N does Jev's
+        // Once per character: Alt+A switches between combat assist and auto, Alt+D does Jev's
         // next move. Keys the player already uses are left alone; the macros can be rebound or
-        // deleted in Options → Macros and are not added again.
+        // deleted in Options → Macros and are not added again. (Not Alt+N: on a Mac, Option+N
+        // is a dead key that starts an accented letter, so the game never sees it.)
         private void AddDefaultMacros(Profile profile)
         {
-            if (profile.AgentMacrosAdded || _world.Macros == null)
+            if (_world.Macros == null)
             {
+                return;
+            }
+
+            if (profile.AgentMacrosAdded)
+            {
+                Macro old = _world.Macros.FindMacro("Agent: next move");
+
+                if (old != null && old.Key == (SDL3.SDL.SDL_Keycode) 'n' && old.Alt && _world.Macros.FindMacro((SDL3.SDL.SDL_Keycode) 'd', true, false, false) == null)
+                {
+                    old.Key = (SDL3.SDL.SDL_Keycode) 'd';
+                    _world.Macros.Save();
+                }
+
                 return;
             }
 
             profile.AgentMacrosAdded = true;
 
-            foreach ((string name, char key, MacroType type) in new[] { ("Agent: switch", 'a', MacroType.AgentSwitch), ("Agent: next move", 'n', MacroType.AgentNext) })
+            foreach ((string name, char key, MacroType type) in new[] { ("Agent: switch", 'a', MacroType.AgentSwitch), ("Agent: next move", 'd', MacroType.AgentNext) })
             {
                 bool free = _world.Macros.FindMacro((SDL3.SDL.SDL_Keycode) key, true, false, false) == null;
                 var macro = new Macro(name, free ? (SDL3.SDL.SDL_Keycode) key : 0, free, false, false);
