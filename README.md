@@ -1,34 +1,52 @@
-# ClassicUO with a Jev agent
+<h1 align="center">ClassicUO with a Jev agent</h1>
 
-This fork adds an AI agent to ClassicUO that can play alongside you or play on its
-own. Decisions come from [Jev](https://docs.typesafe.ai), TypeSafe's "System One"
-model, which answers typed questions (pick one of these options, yes or no, rate
-this) with probabilities in about 100 ms. Ordinary code does everything that has a
-right answer: healing thresholds, pathfinding, looting mechanics, safety rules.
+<p align="center">
+  <b>An AI agent inside the Ultima Online client.</b><br>
+  It fights beside you, or plays on its own towards a goal you give it in words.
+</p>
 
-**Status:** works end to end against a local ModernUO server with Jev deciding through
-OpenRouter, for warriors, mages, archers, tamers, bards and two hybrids. It plays as combat
-assist next to you, or in auto mode towards a goal you give it, with a planner model (Claude
-Sonnet) choosing each step: travel, hunt, bank, buy, sell. An in-game panel shows what Jev is
-thinking. A judgment benchmark measures where Jev beats fixed rules
-([results](#judgment-benchmark)). Not yet tried on a public shard.
+<p align="center">
+  <img alt="macOS on Apple Silicon" src="https://img.shields.io/badge/macOS-Apple%20Silicon-111111?logo=apple&logoColor=white">
+  <img alt=".NET 10, NativeAOT" src="https://img.shields.io/badge/.NET%2010-NativeAOT-512BD4?logo=dotnet&logoColor=white">
+  <img alt="Python 3.13 or later" src="https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white">
+  <img alt="Tested on ModernUO" src="https://img.shields.io/badge/tested%20on-ModernUO-8B5A2B">
+  <a href="LICENSE.md"><img alt="BSD 2-Clause licence" src="https://img.shields.io/badge/licence-BSD%202--Clause-2F6FB0"></a>
+</p>
 
-The original ClassicUO README follows [further down](#classicuo).
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#playing-with-the-agent">Playing</a> ·
+  <a href="#goals-and-the-planner">Goals</a> ·
+  <a href="#results">Results</a> ·
+  <a href="#reference">Reference</a>
+</p>
 
-**Contents**
-- [Quick start](#quick-start)
-- [How it works](#how-it-works)
-- [Playing with the agent](#playing-with-the-agent): play states and keys, the panel, reflexes, safety rules, other players
-- [Character types](#character-types): mages, archers, tamers, bards, hybrids
-- [Strategy, in your own words](#strategy-in-your-own-words), and templates
-- [Goals and the planner](#goals-and-the-planner): travel, banking, shops, hunting
-- [World knowledge](#world-knowledge)
-- [Seeing what it does](#seeing-what-it-does): logs, replay, after-action review
-- [Results](#results)
-- [Playing on public shards](#playing-on-public-shards)
-- [Known limits](#known-limits)
-- [Reference](#reference): in-game commands, `uo-brain`, client RPC, test server commands
-- [Where things are](#where-things-are)
+<p align="center">
+  <img src="docs/images/jev-mage-fight.png" width="900" alt="A test mage fighting in the arena. Above a headless one the client shows jev: target. The agent panel on the right shows the play state set to auto, the agent casting Explosion, and Jev's judgment: fight 99%, danger 5%, target a headless one at 100%, spell Explosion at 34%, answered in 250 ms.">
+  <br>
+  <sub>A test mage in the arena on auto. Jev picked the headless one ("jev: target") and Explosion; the panel shows its judgment, answered in 250 ms.</sub>
+</p>
+
+This fork of [ClassicUO](https://github.com/ClassicUO/ClassicUO) adds an AI agent that can
+play alongside you or play on its own. Decisions come from [Jev](https://docs.typesafe.ai),
+TypeSafe's "System One" model, which answers typed questions (pick one of these options, yes
+or no, rate this) with probabilities in about 100 ms. Ordinary code does everything that has
+a right answer: healing thresholds, pathfinding, looting mechanics, safety rules.
+
+| Feature | What it does |
+|---|---|
+| **Combat assist** | You drive. It fights beside you, keeps you healed, and does Jev's next move on a key. [Play states](#play-states-and-keys) |
+| **Auto, towards a goal** | "Hunt the undead at the Britain graveyard, bank the gold": a planner model (Claude Sonnet) chooses each step (travel, hunt, bank, buy, sell) and Jev fights. [Goals](#goals-and-the-planner) |
+| **Character types** | Warriors, mages, archers, tamers and bards, and two hybrids, told apart from the skills. [Character types](#character-types) |
+| **Strategy in your words** | "Never flee, finish the weakest first": Jev weighs it in every decision, and code enforces what it compiles to. [Strategy](#strategy-in-your-own-words) |
+| **The agent panel** | What Jev is thinking, in game: its probabilities, choices and actions for every decision. [Panel](#the-agent-panel) |
+| **World knowledge** | Places, spawns, creatures, routes and past hunts for each shard, with Jev picking the facts that matter. [World knowledge](#world-knowledge) |
+| **Measured** | A judgment benchmark measures where Jev beats fixed rules, with scenarios built so the obvious rule gets them wrong. [Results](#judgment-benchmark) |
+
+> [!NOTE]
+> **Status:** works end to end against a local ModernUO server with Jev deciding through
+> OpenRouter, for all of the character types. Not yet tried on a public shard.
 
 ## Quick start
 
@@ -56,19 +74,22 @@ cd brain && uv sync && cd ..
 (cd bin/osx-arm64 && ./cuo -agent_port 5577 &)
 ```
 
-The first launch writes `bin/osx-arm64/settings.json` and stops, because it has no client
-version yet. Set these, then launch again:
-
-```json
-"ultimaonlinedirectory": "/Users/<you>/Workspace/UOClassic",
-"clientversion": "7.0.117.1",
-"plugins": []
-```
+> [!IMPORTANT]
+> The first launch writes `bin/osx-arm64/settings.json` and stops, because it has no client
+> version yet. Set these, then launch again:
+>
+> ```json
+> "ultimaonlinedirectory": "/Users/<you>/Workspace/UOClassic",
+> "clientversion": "7.0.117.1",
+> "plugins": []
+> ```
 
 Accounts on the test server are created on first login (`admin`/`admin` is the owner). In
 game, **Alt+A** or the panel turns the agent on, and that starts the brain for you.
 
-**Driving it from a terminal** instead, e.g. for the arena:
+### Driving it from a terminal
+
+Instead of the panel, e.g. for the arena:
 
 ```bash
 cd brain
@@ -84,7 +105,9 @@ uv run uo-brain scenario --kit mage --monsters 4 --log logs/mage.jsonl
 With no model key, `--judge heuristic` runs the same loop on fixed rules (the baseline). The
 `[Agent…` commands come from the test server ([list](#test-server-commands)).
 
-**The client starts the brain.** When the agent is turned on and nothing is connected to
+### The client starts the brain
+
+When the agent is turned on and nothing is connected to
 its port, the client runs `uv run uo-brain run` in the repository's `brain/` folder,
 restarts it if it exits (waiting longer each time), and stops it when the agent is turned
 off or the client closes. Its output goes to `brain/logs/client-brain.log`, its decisions
@@ -93,23 +116,21 @@ settings.json, `agent_start_brain: false` turns this off (or `-agent_start_brain
 and `agent_brain_dir` points at a brain folder elsewhere. The *paste key* link saves the
 clipboard to `brain/.env` (mode 600) and restarts the brain; the key is never shown.
 
-`scripts/build-naot.sh` builds upstream's release layout instead (osx-x64, the client as a
+**Razor and other plugins:** `scripts/build-naot.sh` builds upstream's release layout instead (osx-x64, the client as a
 library loaded by the net472 `ClassicUO.Bootstrap` host). That is only needed for managed
 assistant plugins such as Razor.
 
 ## How it works
 
-```
- ClassicUO client (C#)                      uo-brain (Python)                 Jev (OpenRouter
- src/ClassicUO.Client/Agent                 brain/                            or TypeSafe)
- ─────────────────────────                  ──────────────────                ─────────────
- every frame:                               every 250 ms: snapshot
-   reflexes: bandage, heal/cure potions       │
-   carry out actions: pursue a target,        │ when something changed, or every 1-3 s:
-   loot a corpse, flee                        ├─ state in words ("badly wounded, adjacent")
-   authority check per behaviour   ◄─ RPC ──  ├─ one request, all questions ────────────►  answers +
-   pause while the player moves/clicks        ├─ policy: mask, confidence gate, strategy ◄─  probabilities
-   agent panel, -agent command, macros        └─ act, report the decision to the panel, log
+```mermaid
+flowchart LR
+    client["<b>ClassicUO client</b> · C#<br/>src/ClassicUO.Client/Agent<br/><br/>reflexes every frame:<br/>bandage, heal, cure<br/>acts: pursue, loot, flee<br/>authority per behaviour<br/>pauses while the player<br/>moves or clicks<br/>agent panel, macros and<br/>-agent commands"]
+    brain["<b>uo-brain</b> · Python<br/>brain/<br/><br/>state in words<br/>(badly wounded, adjacent)<br/>policy: mask, confidence<br/>gate, strategy<br/>reports to the panel, logs"]
+    jev(["<b>Jev</b><br/>OpenRouter or TypeSafe"])
+    client -- "snapshot every 250 ms" --> brain
+    brain -- "actions, over RPC" --> client
+    brain -- "one request, all questions:<br/>when something changed,<br/>or every 1–3 s" --> jev
+    jev -- "answers +<br/>probabilities" --> brain
 ```
 
 1. **The client snapshot** gives the player, the creatures and corpses within 18
@@ -584,10 +605,11 @@ what it would read. What a first review proposed: [results](#after-action-review
 
 ## Results
 
-Most ran on the local ModernUO server; the routine-call test, the guide import and the
-review ran without the game. Apart from the judgment benchmark, which gives success rates
-over 5 or 10 rounds, these are single runs: treat them as a smoke test rather than a
-benchmark.
+> [!NOTE]
+> Most ran on the local ModernUO server; the routine-call test, the guide import and the
+> review ran without the game. Apart from the judgment benchmark, which gives success rates
+> over 5 or 10 rounds, these are single runs: treat them as a smoke test rather than a
+> benchmark.
 
 ### Arena
 
@@ -732,7 +754,10 @@ Results, 2026-10-07, 10 rounds each (`--scenarios world --judges jev`; `world-v4
 The client was driven with OS-level mouse and keyboard events posted through the macOS HID
 event tap, the same path as a physical device.
 
-**Hand-back**, 2026-10-06:
+**Hand-back**, 2026-10-06: 7 checks, all passed, one after a fix.
+
+<details>
+<summary>The checks</summary>
 
 | check | result |
 |---|---|
@@ -744,11 +769,16 @@ event tap, the same path as a physical device.
 | Clicking the panel (mode, templates, typing a strategy line) doesn't pause the agent | pass |
 | Right-clicking a gump closed it without pausing the agent | pass |
 
+</details>
+
 It found two gaps, both fixed:
 - **War mode:** the agent fought without war mode on, so a player's double-click on another monster opened its paperdoll instead of attacking. It now turns war mode on when it engages.
 - **Peek throttling:** the server throttles use requests, so a peek right after re-equipping could fail silently. It now retries after 2 s.
 
-**Combat assist and the keys**, 2026-10-06, single runs, the same tool:
+**Combat assist and the keys**, 2026-10-06, single runs, the same tool: 9 checks, all passed, three after a fix.
+
+<details>
+<summary>The checks</summary>
 
 | check | result |
 |---|---|
@@ -762,12 +792,12 @@ It found two gaps, both fixed:
 | The same monster 6 tiles away: the mage casts at it until it dies (17 s), without moving | pass |
 | The panel dragged, logged out from the paperdoll, logged back in: it reopens where it was | pass, after a fix (below) |
 
+</details>
+
 It found three gaps, all fixed:
 - **Alt+letter macros on a Mac:** SDL3 reports the key with modifiers applied, and Option composes a character ("a" becomes "å"), so no Alt+letter macro could match, ClassicUO's default Alt+P paperdoll included. Macros are now matched by the key itself, and a key that ran a macro no longer types its character into the chat line.
 - **Option+N is a dead key** on a Mac (it starts an accented letter), so the next-move key is Alt+D, not Alt+N.
 - **The panel covered the quit dialog:** it was drawn on top of everything, including modal dialogs, so their buttons couldn't be clicked. It now sits with the other gumps.
-
-These are single runs, so treat them as a smoke test rather than a benchmark.
 
 ### Unattended runs
 
@@ -886,10 +916,12 @@ Rehearsal on the local server switched to Renaissance rules
 
 ## Playing on public shards
 
+> [!WARNING]
+> Unattended play (auto mode) is against the rules on most shards, and some object to
+> modified clients. Check each shard's rules, and keep auto mode to the local server or
+> shards that allow it.
+
 Combat assist is the same kind of tool as Razor or UOSteam, which many shards allow.
-Unattended play (auto mode) is against the rules on most shards, and some object to
-modified clients. Check each shard's rules, and keep auto mode to the local server or
-shards that allow it.
 
 ### Older rules (pre-AOS shards such as UO Renaissance)
 
@@ -1027,95 +1059,87 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 
 ## Where things are
 
-| | |
+<details>
+<summary><b>The client</b>: <code>src/ClassicUO.Client/Agent/</code></summary>
+
+| file | what it does |
 |---|---|
-| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC dispatch, login, screenshots)<br>`AgentServer` (the loopback JSON-lines socket)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentBrain` (starts and restarts the brain process)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`AgentRunebook` (reading runebook gumps)<br>`AgentWeapons` (bows and crossbows)<br>`AgentPets` (finding pets, pet orders)<br>`AgentBard` (songs and their target cursors)<br>`AgentRearm` (a warrior-mage's weapon back after a cast)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentMessages` (server messages by cliloc number, English as fallback)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentAction`, `AgentTypes`<br>`AgentTemplates` + `Templates/*.md` (strategy templates), `Goals/*.md` (goal templates) |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py` (the fight loop)<br>`autopilot.py` (what `run` does: the fight loop, or the planner when auto mode has a goal)<br>`cli.py`<br>`rpc.py` (the client's RPC)<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`routine.py` (Jev's routine calls inside a hunt: head back, stay, walk elsewhere)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`facts.py` (Jev picks the world facts for fights and re-ranks the planner's queries)<br>`recorder.py` (the world store from what the agent sees)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`soak.py` (reports on unattended runs)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `AgentHost` | RPC dispatch, login, screenshots |
+| `AgentServer` | the loopback JSON-lines socket |
+| `AgentController` | modes, reflexes, actions, casting, human pause, travel, strategy, templates |
+| `AgentBrain` | starts and restarts the brain process |
+| `AgentNav` | long-walk planning over the map files |
+| `AgentErrands` | bank, buy, sell |
+| `AgentRunebook` | reading runebook gumps |
+| `AgentWeapons` | bows and crossbows |
+| `AgentPets` | finding pets, pet orders |
+| `AgentBard` | songs and their target cursors |
+| `AgentRearm` | a warrior-mage's weapon back after a cast |
+| `ReflexPolicy` | the reflex rules, as pure functions |
+| `AgentSpells` | magery costs, reagents, spellbook |
+| `AgentMessages` | server messages by cliloc number, English as fallback |
+| `AgentSnapshot` | writes the state JSON |
+| `AgentJournal` | keeps the journal lines in sequence for the brain |
+| `AgentLogin` | drives the login screens |
+| `AgentGump` | the panel |
+| `AgentDecision` | one decision as the brain reports it, for the panel |
+| `AgentAction`, `AgentTypes` | one requested action; behaviours, authorities and play states |
+| `AgentTemplates`, `Templates/*.md`, `Goals/*.md` | strategy and goal templates |
+
+</details>
+
+<details>
+<summary><b>The brain</b>: <code>brain/src/uo_brain/</code></summary>
+
+| file | what it does |
+|---|---|
+| `state.py` | snapshot to words |
+| `questions.py` | the Jev request |
+| `policy.py` | decisions to actions |
+| `spells.py` | attack spells |
+| `strategy.py` | your strategy to settings |
+| `judge.py` | Jev or rules |
+| `loop.py` | the fight loop |
+| `autopilot.py` | what `run` does: the fight loop, or the planner when auto mode has a goal |
+| `cli.py` | `uo-brain` |
+| `rpc.py` | the client's RPC |
+| `bench.py` | judgment benchmark |
+| `session.py` | travel, bank, buy, sell, hunt |
+| `routine.py` | Jev's routine calls inside a hunt: head back, stay, walk elsewhere |
+| `planner.py` | the slow planner |
+| `world.py` | world store and the planner's query tools |
+| `facts.py` | Jev picks the world facts for fights and re-ranks the planner's queries |
+| `recorder.py` | the world store from what the agent sees |
+| `world_import.py` | fills the local store from ModernUO |
+| `guides.py` | guide pages and model knowledge to notes |
+| `outcomes.py` | session logs to outcomes per area and kit |
+| `soak.py` | reports on unattended runs |
+| `logs.py` | reads the brain's logs back |
+| `review.py` | after-action review: strategy lines from a log |
+| `llm.py` | OpenRouter chat client for the planner model |
+
+</details>
+
+| path | what's there |
+|---|---|
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
+| `docs/` | upstream ClassicUO's README, and the images for this one |
 | `tests/ClassicUO.UnitTests/Agent/`, `brain/tests/` | `dotnet test tests/ClassicUO.UnitTests --filter "FullyQualifiedName~Agent"`, `cd brain && uv run pytest` |
 
----
+## Credits and licence
 
-# ClassicUO
+- **ClassicUO.** This is a fork of [ClassicUO](https://github.com/ClassicUO/ClassicUO), the open
+  source Ultima Online Classic Client by andreakarasho and its contributors, built on
+  [FNA](https://github.com/FNA-XNA/FNA). Its own README, with its downloads, support links and
+  the projects it drew on, is kept in [docs/classicuo.md](docs/classicuo.md). If the client is
+  useful to you, support it on [Patreon](http://www.patreon.com/classicuo).
+- **Models.** [Jev](https://docs.typesafe.ai) is TypeSafe's; the planner is Claude Sonnet,
+  reached through [OpenRouter](https://openrouter.ai).
+- **Licence.** BSD 2-Clause, as upstream ([LICENSE.md](LICENSE.md)).
+- **Game files.** No copyrighted game assets are distributed. You need the official client
+  files, which `tools/uo-download` fetches from EA's patch servers. Using a custom client to
+  connect to official UO servers is forbidden.
 
-<p align="center">
-    <img src="https://i.imgur.com/CgpwyIQ.png" width="190" height="200" >
-</p>
-
-An open source implementation of the Ultima Online Classic Client.
-
-Individuals/hobbyists: support continued maintenance and development via the monthly Patreon:
-<br>&nbsp;&nbsp;[![Patreon](https://raw.githubusercontent.com/wiki/ocornut/imgui/web/patreon_02.png)](http://www.patreon.com/classicuo)
-
-Individuals/hobbyists: support continued maintenance and development via PayPal:
-<br>&nbsp;&nbsp;[![PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9ZWJBY6MS99D8)
-
-<a href="https://discord.gg/VdyCpjQ">
-<img src="https://img.shields.io/discord/458277173208547350.svg?logo=discord"
-alt="chat on Discord"></a>
-
-[![GitHub Actions Status](https://github.com/ClassicUO/ClassicUO/workflows/Build-Test/badge.svg)](https://github.com/ClassicUO/ClassicUO/actions)
-[![GitHub Actions Status](https://github.com/ClassicUO/ClassicUO/workflows/Deploy/badge.svg)](https://github.com/ClassicUO/ClassicUO/actions)
-
-# Introduction
-ClassicUO is an open source implementation of the Ultima Online Classic Client. This client is intended to emulate all standard client versions and is primarily tested against Ultima Online free shards.
-
-The client is currently under heavy development but is functional. The code is based on the [FNA-XNA](https://fna-xna.github.io/) framework. C# is chosen because there is a large community of developers working on Ultima Online server emulators in C#, because FNA-XNA exists and seems reasonably suitable for creating this type of game.
-
-![screenshot_2020-07-06_12-29-02](https://user-images.githubusercontent.com/20810422/208747312-04f6782f-3dc8-4951-b0a0-73d2305bbfca.png)
-
-
-ClassicUO is natively cross platform and supports:
-* Browser [Chrome]
-* Windows [DirectX 11, OpenGL, Vulkan]
-* Linux   [OpenGL, Vulkan]
-* macOS   [Metal, OpenGL, MoltenVK]
-
-# Download & Play!
-| Platform | Link |
-| --- | --- |
-| Browser | [Play!](https://play.classicuo.org) |
-| Windows x64 | [Download](https://www.classicuo.eu/launcher/win-x64/ClassicUOLauncher-win-x64-release.zip) |
-| Linux x64 | [Download](https://www.classicuo.eu/launcher/linux-x64/ClassicUOLauncher-linux-x64-release.zip) |
-| macOS x64 | [Download](https://www.classicuo.eu/launcher/osx/ClassicUOLauncher-osx-x64-release.zip) |
-
-Or visit the [ClassicUO Website](https://www.classicuo.eu/)
-
-# How to generate a release build
-```
-git clone --recursive https://github.com/ClassicUO/ClassicUO.git
-cd ClassicUO/scripts
-bash build-naot.sh
-```
-Binaries available in `bin/dist` folder
-> [!WARNING] 
-> To execute .sh scripts on Windows, use Git Bash which can be installed with Git itself: https://git-scm.com/download/win
-
-# Contribute
-Everyone is welcome to contribute! The GitHub issues and project tracker are kept up to date with tasks that need work.
-
-# Legal
-The code itself has been written using the following projects as a reference:
-
-* [OrionUO](https://github.com/hotride/orionuo)
-* [Razor](https://github.com/msturgill/razor)
-* [UltimaXNA](https://github.com/ZaneDubya/UltimaXNA)
-* [ServUO](https://github.com/servuo/servuo)
-
-Backend:
-* [FNA](https://github.com/FNA-XNA/FNA)
-
-This work is released under the BSD 4 license. This project does not distribute any copyrighted game assets. In order to run this client you'll need to legally obtain a copy of the Ultima Online Classic Client.
-Using a custom client to connect to official UO servers is strictly forbidden. We do not assume any responsibility of the usage of this client.
-
-Ultima Online(R) © 2024 Electronic Arts Inc. All Rights Reserved.
-
-# Code Signing Policy
-Free code signing provided by [SignPath.io](https://signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
-
-This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
-
-People with direct push access:
-* [andreakarasho](https://github.com/andreakarasho)
+Ultima Online® © Electronic Arts Inc. All rights reserved.
