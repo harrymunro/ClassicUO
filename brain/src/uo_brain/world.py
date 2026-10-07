@@ -309,7 +309,12 @@ class World:
 
     # ---- writing ---------------------------------------------------------------------
 
-    def _insert(self, table: str, row: dict[str, Any]) -> int:
+    def refresh(self) -> None:
+        """Forget cached regions after rows were written directly (an import)."""
+        self._regions = None
+
+    def insert(self, table: str, row: dict[str, Any]) -> int:
+        """One raw row, for importers. The caller commits."""
         row = {"last_seen": now(), **row}
         cols = ", ".join(row)
         marks = ", ".join("?" for _ in row)
@@ -324,7 +329,7 @@ class World:
         n = 0
         stamp = now()
         for row in rows:
-            self._insert(table, {"last_seen": stamp, **row, "source": source})
+            self.insert(table, {"last_seen": stamp, **row, "source": source})
             n += 1
         self.db.commit()
         self._regions = None
@@ -350,7 +355,7 @@ class World:
         if not text:
             raise WorldError("a note needs some text")
         tag_list = sorted({t.strip().lower() for t in tags if t and t.strip()})
-        rid = self._insert("notes", {"area": area or None, "text": text,
+        rid = self.insert("notes", {"area": area or None, "text": text,
                                      "tags": json.dumps(tag_list) if tag_list else None, "source": source})
         self.db.commit()
         return rid
@@ -374,7 +379,7 @@ class World:
             self.db.execute(f"UPDATE places SET {sets} WHERE id = ?", [*fields.values(), same["id"]])
             rid = same["id"]
         else:
-            rid = self._insert("places", {"kind": kind, "name": name, "map": map, "source": source, **fields})
+            rid = self.insert("places", {"kind": kind, "name": name, "map": map, "source": source, **fields})
         if source == "seen":
             self.db.execute("UPDATE places SET stale = 1 WHERE map = ? AND kind = ? AND name = ? COLLATE NOCASE "
                             "AND source != 'seen' AND MAX(ABS(x - ?), ABS(y - ?)) > 3", (map, kind, name, x, y))
@@ -385,7 +390,7 @@ class World:
                   kind: str = "walk", outcome: str = "ok", stuck_at: list[int] | None = None,
                   duration_s: float | None = None, note: str | None = None, source: str = "seen") -> int:
         """A path that was tried: waypoints [[x, y, z], ...]; outcome "ok" or "stuck"."""
-        rid = self._insert("routes", {"from_name": from_name, "to_name": to_name, "map": map,
+        rid = self.insert("routes", {"from_name": from_name, "to_name": to_name, "map": map,
                                       "waypoints": json.dumps(waypoints), "kind": kind, "outcome": outcome,
                                       "stuck_at": json.dumps(stuck_at) if stuck_at else None,
                                       "duration_s": duration_s, "note": note, "source": source})
@@ -395,7 +400,7 @@ class World:
     def add_outcome(self, area: str, kit: str | None, metric: str, value: float, session: str | None = None,
                     note: str | None = None, source: str = "seen") -> int:
         """A measured result of playing somewhere, e.g. kills_per_hour for a warrior."""
-        rid = self._insert("outcomes", {"area": area, "kit": kit, "metric": metric, "value": value,
+        rid = self.insert("outcomes", {"area": area, "kit": kit, "metric": metric, "value": value,
                                         "session": session, "note": note, "source": source})
         self.db.commit()
         return rid

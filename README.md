@@ -228,10 +228,24 @@ Every row records its source (`modernuo:<file>`, `seen`, `note`, `guide:<url>` o
 `model:unverified`) and when it was last seen. When something seen in game contradicts a
 stored fact, the old row is marked stale instead of deleted, and queries skip it. Other
 players' names and speech never go in: a PK sighting is stored as "a red player was seen
-here", not who it was. `brain/worlds/` is gitignored.
+here", not who it was.
+
+**The local store** is built from the ModernUO checkout and is gitignored, so rebuild it
+with `uo-brain world import-modernuo` (`--modernuo-dir` if it isn't in `~/Workspace/ModernUO`).
+It reads what a Felucca server with the configured expansion loads: `Locations/felucca.json`,
+`regions.json`, the spawn files in `Spawns/shared/felucca` and `Spawns/post-uoml/felucca`,
+`teleporters.json` and the public moongates. Vendor spawns become places with what they
+sell (a table written from ModernUO's `SB*Info` classes), and creature stats are parsed
+from the C# in `Projects/UOContent/Mobiles`. Re-running it replaces the `modernuo:` rows
+and keeps everything else. On 2026-10-06 it gave 1,152 places, 91 regions, 8,742 spawn
+rows (one per creature type per spawner), 403 creatures and 230 teleporter routes. For
+example, the Britain graveyard spawner at (1369, 1475) keeps up to 9 of Spectre, Wraith,
+Skeleton and Zombie and respawns in 5 to 10 minutes, and the bank nearest the graveyard
+is the West Britain bank at (1425, 1690).
 
 ```bash
 cd brain
+uv run uo-brain world import-modernuo
 uv run uo-brain world find bank --near-place "Britain graveyard"
 uv run uo-brain world hunt warrior new --near "West Britain bank"
 uv run uo-brain world spawns "Britain Graveyard"
@@ -299,7 +313,7 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
-- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`.
+- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`.
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
 - **Methods:** `ping`, `status`, `login`, `snapshot {since, radius}`, `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
@@ -381,7 +395,7 @@ shards that allow it.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, strategy, templates)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`world.py` (world store and the planner's query tools) |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |

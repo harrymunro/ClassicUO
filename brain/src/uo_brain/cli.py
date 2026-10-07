@@ -22,6 +22,7 @@ from . import judge as judges
 from . import loop, policy, state
 from . import strategy as strategies
 from . import world as worlds
+from . import world_import
 from .rpc import AgentRpc
 
 WARRIOR_SKILLS = {"Swordsmanship": 30, "Tactics": 30, "Healing": 30, "Anatomy": 30}
@@ -164,6 +165,11 @@ def add_world_args(sub) -> None:
 
     ws.add_parser("stats", help="row counts by table and source")
 
+    im = ws.add_parser("import-modernuo", help="fill the store from a ModernUO server's data (replaces modernuo rows)")
+    im.add_argument("--modernuo-dir", type=Path, default=world_import.DEFAULT_MODERNUO,
+                    help="ModernUO checkout (default ~/Workspace/ModernUO)")
+    im.add_argument("--maps", default="Felucca", help="comma-separated facets to import (default Felucca)")
+
     for p in (f, sp, h, pl, rt, nt):
         p.add_argument("--limit", type=int, default=5)
 
@@ -187,9 +193,11 @@ def world_cmd(args) -> None:
                     out = w.route(args.start, args.end, map=args.map, limit=args.limit)
                 case "notes":
                     out = w.notes(args.area, " ".join(args.keywords) or None, limit=args.limit)
+                case "import-modernuo":
+                    out = world_import.import_modernuo(w, args.modernuo_dir, [m.strip() for m in args.maps.split(",")])
                 case _:
                     out = w.stats()
-    except worlds.WorldError as e:
+    except (worlds.WorldError, FileNotFoundError) as e:
         sys.exit(f"world: {e}")
     print(json.dumps(out, indent=2))
 
