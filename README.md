@@ -720,7 +720,7 @@ Results are written to `brain/bench/<time>.json` after every round; compare runs
 | scenario | setup | right |
 |---|---|---|
 | `mismatch` | four weak monsters, then an ogre lord walks up | survive without engaging the ogre lord |
-| `priority` | three orcs close, an orcish mage casting from 9 tiles | kill the mage first |
+| `priority` | three zombies close, an orcish mage casting from 9 tiles | kill the mage first |
 | `loot` | a corpse with valuables and junk, an orc arriving | take the valuables, skip the junk, stop looting when the orc arrives |
 | `attrition` | eight monsters on six bandages and one heal potion | get out alive |
 | `swarm` | six melee monsters on a mage | survive and kill at least four |
@@ -740,9 +740,27 @@ decide anything, one of them a tempting "a wisp's corpse often holds gems". Each
 plays it three ways: `@none` (no world facts), `@all` (every shortlisted fact in the state)
 and `@jev` (the few Jev picks). The rule judge, which can't read facts, plays it once.
 
+Results on the local server, 2026-10-07, 10 rounds per judge (`uo-brain bench report brain/bench/2026-10-07-*.json`):
+
+| scenario | rules | Jev | Jev + survivor template | notes |
+|---|---|---|---|---|
+| `mismatch` | 0/10, 10 deaths | 7/10, 3 deaths | 10/10, 0 deaths | |
+| `priority` | 0/10 | 9/10 | 0/10 | the survivor template says "fight whatever is closest", so it does |
+| `loot` | 0/10 | 10/10 | 10/10 | |
+
+- **`priority` was retuned after its first run:** three orcs and the mage's spells killed the test warrior in about 60% of rounds whatever it targeted (every judge 0/10), so it measured luck. Jev also put 100% on the adjacent orc it was fighting, because the target guidance told it to prefer the current and the closest creature. With zombies as the fodder and guidance that a spellcaster comes first, Jev opens on the orcish mage.
+- **Adherence**, Jev with the template: `relentless` 10/10 (never fled; 2 deaths), `survivor` 8/10, `no-loot` 10/10, `nuker` 9/10, `champion` 10/10 (3 deaths).
+
+Archetypes, the same day:
+
+| scenario | result |
+|---|---|
+| `archer-kite`: four orcs on an archer, Jev with and without stepping back (`jev/nokite`) | 9/10 both. With kiting the lowest health had a median of 37.5% (20% without), 1 round in 10 went under 20% (5 in 10 without), and rounds were 15 s shorter |
+
 ```bash
 uv run uo-brain bench list
 uv run uo-brain bench --scenarios core --judges heuristic,jev,jev+survivor --rounds 10 --lane 1
+uv run uo-brain bench --scenarios archer-kite --judges jev,jev/nokite --rounds 10 --lane 2
 uv run uo-brain bench --scenarios adherence --rounds 10
 uv run uo-brain bench --scenarios world --judges heuristic,jev --rounds 10 --lane 2
 ```
