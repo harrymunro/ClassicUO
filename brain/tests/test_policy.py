@@ -316,3 +316,10 @@ def test_jev_leaving_decides_below_the_danger_threshold(snapshot):
     assert policy.decide(sit, answers("fight", leave_now=0.45), policy.Memory(), default).intent == "leave"
     assert policy.decide(sit, answers("fight", leave_now=0.3), policy.Memory(), default).intent == "fight"
     assert policy.leave_cut(policy.PolicyConfig(flee_danger=0.33)) == 0.4
+
+
+def test_idle_creatures_are_described_as_not_fighting():
+    idle = {"name": "a wisp", "health": "unhurt", "distance": "nearby", "aggressive": False, "casts_spells": "yes",
+            "your_current_target": False}
+    assert questions.describe_hostile(idle).endswith("a spellcaster, not fighting")
+    assert "not fighting" not in questions.describe_hostile(dict(idle, aggressive=True))

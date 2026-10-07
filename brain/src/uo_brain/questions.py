@@ -188,11 +188,14 @@ MAGE_TAMER = ("It is also a mage: it casts attack spells at the creature its pet
 WARRIOR_MAGE = ("It is also a mage: it can open a fight with an attack spell while a creature is still coming, "
                 "then fights in melee.")
 
+# "Casters first" alone sent a warrior at an idle wisp the world store said to leave alone
+# (wisp scenario, 2026-10-07): only a caster that is fighting comes first, and idle creatures
+# are said to be "not fighting".
 TARGET_GUIDANCE = (
-    "Unless the player's strategy says otherwise: a creature that casts spells hurts from any distance and can "
-    "paralyse, so go for it first, even past closer ones, unless the creature being fought is nearly dead. Otherwise "
-    "prefer the creature already being fought unless another is much more dangerous or much closer, and close, "
-    "weakened creatures over distant ones."
+    "Unless the player's strategy says otherwise: a spellcaster that is fighting hurts from any distance and can "
+    "paralyse, so go for it first, even past closer ones, unless the creature being fought is nearly dead. Prefer "
+    "creatures that are fighting over ones that are not. Otherwise prefer the creature already being fought unless "
+    "another is much more dangerous or much closer, and close, weakened creatures over distant ones."
 )
 TAMER_TARGETS = "For a tamer this is the creature to set its pet on; anything attacking the tamer itself comes first. "
 
@@ -444,6 +447,8 @@ def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
         parts.append(info["strength"])
     if info.get("casts_spells"):
         parts.append("a spellcaster")
+    if info.get("aggressive") is False and not info.get("your_current_target"):
+        parts.append("not fighting")
     if info.get("direction"):
         parts.append(f"to the {info['direction']}")
     if "in_spell_range" in info:
