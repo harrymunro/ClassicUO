@@ -263,3 +263,14 @@ def test_an_archers_arrows_are_a_supply():
     assert "arrows or bolts" in questions(w, "archer")["head_back"]["criteria"]["true"]
     rules, _ = watch(HeuristicJudge())
     assert rules.observe(archer(15)).stop == "low on arrows"
+
+
+def test_walking_round_an_empty_spawn_hands_over_after_four_tries():
+    jev = FakeJev(move_spot=0.75, stay_here=0.5)
+    hw, clock = watch(jev)
+    hw.observe(snap(hostiles=False))
+    kinds = [asyncio.run(hw.ask(snap(hostiles=False), "quiet")).kind for _ in range(5)]
+    assert kinds == ["patrol"] * 4 + ["handover"]
+    # A fight in between starts the count again.
+    asyncio.run(hw.ask(snap(), "kill"))
+    assert asyncio.run(hw.ask(snap(hostiles=False), "quiet")).kind == "patrol" and hw.patrols == 1

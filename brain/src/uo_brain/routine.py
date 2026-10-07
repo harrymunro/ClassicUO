@@ -45,6 +45,9 @@ class RoutineConfig:
     quiet_after_s: float = 20.0     # no creature in sight this long counts as quiet
     quiet_every_s: float = 30.0     # how often to ask while quiet
     unsure_handover: int = 2        # unsure answers in a row before the planner decides
+    # Walks round the spawn in a row that found nothing before the planner decides: in a soak
+    # run Jev said "walk elsewhere" (0.65-0.77) for 7 minutes round an emptied graveyard.
+    max_patrols: int = 4
     defer_s: float = 30.0           # how long a stop waits for the fight at hand to end
     quiet_floor_s: float = 600.0    # with Jev: nothing to fight for this long ends the hunt anyway
     full_bag_pct: int = 98          # a floor: the bag can take no more
@@ -105,6 +108,7 @@ class HuntWatch:
         self.moment: str | None = None  # a moment that came during the gap, asked after it
         self.in_flight = False
         self.unsure = 0
+        self.patrols = 0                 # walks round the spawn since the last fight
         self.failed = 0                  # failed questions in a row
         self.pending: tuple[str, float] | None = None  # (why, since): a stop waiting for the fight to end
         self.patrol_due = False
@@ -219,6 +223,8 @@ class HuntWatch:
         try:
             words = self.words(snap)
             quiet = moment == "quiet"
+            if not quiet:
+                self.patrols = 0
             qs = questions(words, who=words["you"]["character"], strategy=(snap["agent"].get("strategy") or "").strip(),
                            quiet=quiet)
             try:
@@ -257,6 +263,13 @@ class HuntWatch:
         doubt = lambda v: v is not None and cfg.no < v < cfg.yes  # noqa: E731
         if move is not None and move >= cfg.yes and not doubt(back):
             self.unsure = 0
+            self.patrols += 1
+            if self.patrols > cfg.max_patrols:
+                self.patrols = 0
+                return Verdict("handover", f"handed back to the planner: walked round the spawn {cfg.max_patrols} "
+                                           f"times and found nothing (stay here {stay:.2f}): {spot_words(words)}"
+                               if stay is not None else f"handed back to the planner: walked round the spawn "
+                               f"{cfg.max_patrols} times and found nothing: {spot_words(words)}")
             return Verdict("patrol", f"move {move:.2f}")
         unsure = [f"{k} {v:.2f}" for k, v in (("head back", back), ("stay here", stay)) if doubt(v)]
         if unsure:
