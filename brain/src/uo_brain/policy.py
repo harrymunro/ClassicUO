@@ -42,6 +42,8 @@ class Memory:
     hinted: dict[str, float] = field(default_factory=dict)  # combat assist: when each hint was last shown
     leaving_until: float = 0.0  # leaving the area: keep running from whatever is in sight until then
     last_kite: float = 0.0      # a mage's last step back from melee
+    last_protection: float = -1e9  # when Protection was last cast: buff icons may not show it
+    kite_casts: int = -1        # attack spells cast by then: the next step back waits for one more
 
     def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
         if now - self.hinted.get(key, -1e9) < every:
@@ -157,6 +159,11 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
     if cfg.allow_flee and cfg.flee_danger <= 0.45 and sit.hp_pct < 45 and len(close) >= 2 \
             and sit.authority("move") == "auto" and intent != "leave":
         intent, conf = "leave", 1.0
+    # Jev's yes/no on leaving, asked when there is a reason to: it decides, not the intent vote.
+    # A cautious strategy leaves on weaker signals; relentless ones never (allow_flee off).
+    if ans.nouls.get("leave_now", 0.0) >= max(0.5, cfg.flee_danger) and cfg.allow_flee \
+            and sit.authority("move") == "auto" and not sit.assisting:
+        intent, conf = "leave", ans.nouls["leave_now"]
     # Leaving needs a reason the facts back up, as fleeing needs the danger judgment.
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2):
         intent = "fight" if close else "rest"
@@ -202,13 +209,20 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
                 actions.append({"verb": "attack", "target": target.serial, "range": cfg.spell_range, **meta})
             # Two or more creatures in melee reach: step back between spells (kiting), since
             # every hit interrupts a spell. Not while a spell is being cast: casting roots the mage.
+            # One step back per spell: kiting again before a spell has gone off only stops the
+            # mage from ever casting.
             adjacent = [h for h in sit.hostiles if h.distance <= 1]
+            stats = sit.agent.get("stats", {})
+            attack_casts = stats.get("casts", 0) - stats.get("spell_heals", 0)
             if cfg.kite and len(adjacent) >= 2 and not (sit.raw.get("magic") or {}).get("casting") \
-                    and sit.authority("move") == "auto" and now - mem.last_kite > 2.5:
-                mem.last_kite = now
+                    and sit.authority("move") == "auto" and now - mem.last_kite > 3 and attack_casts > mem.kite_casts:
+                mem.last_kite, mem.kite_casts = now, attack_casts
                 actions.append({"verb": "kite", "tiles": 5, **meta, "reason": "kite"})
             # With creatures in melee reach every hit interrupts a spell, unless Protection is up.
-            if close and PROTECTION not in sit.player.get("buffs", []) and sit.can_cast(PROTECTION):
+            # That is AOS: before it Protection only adds armour, and servers send no buff icons.
+            if close and sit.raw.get("era", "aos") == "aos" and PROTECTION not in sit.player.get("buffs", []) \
+                    and sit.can_cast(PROTECTION) and now - mem.last_protection > 20:
+                mem.last_protection = now
                 actions.append({"verb": "cast", "spell": PROTECTION, "target": "self", "queue": True,
                                 **meta, "reason": "protection"})
                 dec.note = f"fight {target.name}, Protection first ({conf:.2f})"

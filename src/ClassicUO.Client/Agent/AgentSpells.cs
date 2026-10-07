@@ -37,6 +37,9 @@ namespace ClassicUO.Agent
         public const int HEAL = 4, CURE = 11, GREATER_HEAL = 29, RECALL = 32, GATE_TRAVEL = 52;
         public const ushort RUNEBOOK_GRAPHIC = 0x22C5;
 
+        // Before AOS a runebook has the spellbook's graphic, told apart by its hue.
+        public static bool IsRunebook(Item it) => it.Graphic == RUNEBOOK_GRAPHIC || it.Graphic == SPELLBOOK_GRAPHIC && it.Hue == 0x461;
+
         // Marked and unmarked recall runes.
         public static bool IsRune(Item it) => it.Graphic >= 0x1F14 && it.Graphic <= 0x1F17;
 
@@ -108,7 +111,7 @@ namespace ClassicUO.Agent
         {
             Item hand = p.FindItemByLayer(Layer.OneHanded);
 
-            if (hand != null && hand.Graphic == SPELLBOOK_GRAPHIC)
+            if (hand != null && hand.Graphic == SPELLBOOK_GRAPHIC && !IsRunebook(hand))
             {
                 return hand;
             }
@@ -124,7 +127,7 @@ namespace ClassicUO.Agent
             {
                 var it = (Item) i;
 
-                if (it.Graphic == SPELLBOOK_GRAPHIC)
+                if (it.Graphic == SPELLBOOK_GRAPHIC && !IsRunebook(it))
                 {
                     return it;
                 }

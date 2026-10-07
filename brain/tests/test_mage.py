@@ -217,3 +217,26 @@ def test_protection_first_when_a_creature_is_in_melee_reach(mage):
     mage["player"]["buffs"] = ["Protection"]
     dec = policy.decide(sit_of(mage), answers(spell="s1"), policy.Memory(), CFG)
     assert [(a["verb"], a["spell"]) for a in dec.actions] == [("cast", "Energy Bolt")]
+
+
+def test_protection_only_where_it_stops_interruptions(mage):
+    from uo_brain import policy, state
+    from test_policy import answers
+    mage["mobiles"][0].update({"distance": 1, "dx": 1, "dy": 0})
+    cfg = policy.PolicyConfig(kite=False)
+    aos = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), policy.Memory(), cfg, now=50.0)
+    assert any(a.get("spell") == "Protection" for a in aos.actions)
+    mage["era"] = "pre-aos"
+    pre = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), policy.Memory(), cfg, now=50.0)
+    assert not any(a.get("spell") == "Protection" for a in pre.actions)
+
+
+def test_protection_is_not_recast_while_its_icon_is_missing(mage):
+    from uo_brain import policy, state
+    from test_policy import answers
+    mage["mobiles"][0].update({"distance": 1, "dx": 1, "dy": 0})
+    cfg, mem = policy.PolicyConfig(kite=False), policy.Memory()
+    first = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), mem, cfg, now=50.0)
+    again = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), mem, cfg, now=55.0)
+    assert any(a.get("spell") == "Protection" for a in first.actions)
+    assert not any(a.get("spell") == "Protection" for a in again.actions)

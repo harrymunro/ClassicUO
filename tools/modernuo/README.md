@@ -32,6 +32,12 @@ start; stop the server, edit, start again):
 `Distribution/Configuration/expansion.json` uses Endless Journey (id 11), the newest,
 with all maps. The server reads the client version (7.0.117.1) from `client.exe`.
 
+To rehearse for a pre-AOS shard such as UO Renaissance, copy `expansion.renaissance.json`
+over `expansion.json` (keep the original) and restart. It sets Renaissance (id 2): T2A and
+UOR on, AOS off, so there are no item properties and no buff icons, and ModernUO's
+pre-AOS combat, spell and runebook rules apply. Use a second copy of `Distribution` on
+another port for this, so the main test server stays on the newest rules.
+
 ## Populating Felucca
 
 A fresh ModernUO world is empty apart from the map's own buildings: no doors, signs,

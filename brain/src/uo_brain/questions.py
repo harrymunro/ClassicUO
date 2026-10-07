@@ -137,6 +137,23 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         },
     }
 
+    # Leaving is a judgment Jev makes poorly as one of six intents (with an ogre lord adjacent
+    # it still put fight at 80%), so when there is a reason to consider it, it is asked
+    # on its own, as a yes/no.
+    if leave_reason(sit):
+        qs["leave_now"] = {
+            "type": "noul",
+            "instructions": instructions(
+                sit, f"Should the {who} leave this place now, running until nothing hostile is in sight?",
+                reason=leave_reason(sit)),
+            "criteria": {
+                "true": f"Staying means dying: a creature far stronger than the {who} is close or coming for it, or "
+                        "supplies are nearly gone with several creatures still attacking.",
+                "false": f"The {who} can win here: the strong creature is still far off and not coming, or only weak or "
+                         "nearly dead creatures are left.",
+            },
+        }
+
     if sit.targets:
         criteria = {h.id: describe_hostile(h.info, who) for h in sit.targets}
         criteria["none"] = "None of these creatures should be attacked."
@@ -201,6 +218,17 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             },
         }
     return qs
+
+
+def leave_reason(sit: Situation) -> str:
+    """Why leaving might be right, in words, or "" when there is no reason to ask."""
+    strong = [h for h in sit.hostiles if str(h.info.get("strength", "")).startswith("far stronger") and h.distance <= 12]
+    if strong:
+        return f"{strong[0].name} is {strong[0].info['distance']}, and far stronger than the character."
+    close = [h for h in sit.hostiles if h.distance <= CLOSE_TILES]
+    if str(sit.state["you"].get("supplies", "")).startswith("nearly gone") and len(close) >= 2:
+        return f"Supplies are {sit.state['you']['supplies']}, with {len(close)} creatures close."
+    return ""
 
 
 def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:

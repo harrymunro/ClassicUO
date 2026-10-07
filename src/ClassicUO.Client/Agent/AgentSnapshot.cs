@@ -33,6 +33,10 @@ namespace ClassicUO.Agent
             w.WriteNumber("time_ms", Time.Ticks);
             w.WriteBoolean("in_game", world.InGame && world.Player != null);
 
+            // Which rules the server plays by: item properties (tooltips) came with AOS, and so
+            // did buff icons and Protection that stops spells being interrupted.
+            w.WriteString("era", world.ClientFeatures.TooltipsEnabled ? "aos" : "pre-aos");
+
             if (!world.InGame || world.Player == null)
             {
                 w.WriteEndObject();
@@ -239,7 +243,7 @@ namespace ClassicUO.Agent
                     var it = (Item) o;
                     w.WriteStartObject();
                     w.WriteNumber("serial", it.Serial);
-                    w.WriteString("name", NameOf(world, it));
+                    w.WriteString("name", world.Agent.LearntLabel(it.Serial) ?? NameOf(world, it));
                     w.WriteNumber("amount", Math.Max((int) it.Amount, 1));
                     w.WriteNumber("graphic", it.Graphic);
 
@@ -317,6 +321,10 @@ namespace ClassicUO.Agent
                     if (world.OPL.TryGetNameAndData(it.Serial, out _, out string data) && !string.IsNullOrWhiteSpace(data))
                     {
                         name = $"{name}: {data.Replace('\n', ' ').Trim()}";
+                    }
+                    else if (agent.LearntLabel(it.Serial) is string learnt)
+                    {
+                        name = $"{name}: {learnt}";
                     }
 
                     if (!name.Contains("unmarked", StringComparison.OrdinalIgnoreCase))
@@ -587,7 +595,10 @@ namespace ClassicUO.Agent
                 return name.Trim();
             }
 
-            return (!string.IsNullOrEmpty(it.Name) ? it.Name : it.ItemData.Name ?? string.Empty).Trim();
+            // Tile data names carry plural markers ("Bone%s%").
+            string raw = !string.IsNullOrEmpty(it.Name) ? it.Name : it.ItemData.Name ?? string.Empty;
+
+            return Utility.StringHelper.GetPluralAdjustedString(raw, it.Amount > 1).Trim();
         }
 
         // UO's y axis grows southwards.

@@ -290,3 +290,17 @@ def test_champion_goes_for_the_creature_with_most_to_it(snapshot):
     sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
     cfg = policy.PolicyConfig(target_priority="strongest_first", min_target_confidence=2.0)
     assert policy.pick_target(sit, answers("fight"), cfg)[0].serial == 0x101
+
+
+def test_leaving_is_asked_on_its_own_when_there_is_a_reason(snapshot):
+    calm = questions.build(state.build(snapshot, set(), []))
+    assert "leave_now" not in calm
+    sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
+    qs = questions.build(sit)
+    assert "far stronger" in qs["leave_now"]["instructions"]["reason"]
+    # Jev's yes outweighs its intent vote for fighting.
+    dec = policy.decide(sit, answers("fight", leave_now=0.8), policy.Memory(), CFG)
+    assert dec.intent == "leave"
+    # A relentless strategy never leaves.
+    never = policy.PolicyConfig(allow_flee=False)
+    assert policy.decide(sit, answers("fight", leave_now=0.95), policy.Memory(), never).intent == "fight"

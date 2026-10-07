@@ -37,6 +37,7 @@ The original ClassicUO README follows [further down](#classicuo).
 3. **One Jev request asks every question that could matter**:
    - `intent`: fight, flee (for a moment), leave (the area: run until nothing is in sight), loot, seek or rest
    - `in_danger`: will the character die soon if it keeps fighting?
+   - `leave_now`, only when there's a reason to (a far stronger creature within 12 tiles, or supplies nearly gone with two or more creatures close): should it leave now? Jev judges this better as its own yes/no than as one of six intents: with an ogre lord adjacent it still gave fight 80%.
    - `target`: which creature to attack
    - `spell` (mages): which attack spell to cast next
    - `corpse`: which corpse to loot first
@@ -139,8 +140,8 @@ high as any weapon skill, or with `uo-brain run --archetype mage`.
 - **Range:** it engages from up to 7 tiles away and casts Jev's pick from the attack spells it can cast right now: Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze.
 - **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; code picks the strongest castable spell when Jev isn't sure.
 - **Queued casts:** the brain queues the next spell and the client casts it the moment the current spell and its recovery allow. Healing reflexes go first.
-- **Protection:** with a monster in melee reach it casts Protection first, since every hit otherwise interrupts a spell.
-- **Kiting:** with two or more monsters in melee reach it steps back 5 tiles between spells, keeping its target; the next spell waits for the step, since casting roots the mage.
+- **Protection:** with a monster in melee reach it casts Protection first, since every hit otherwise interrupts a spell. That's AOS: on older shards Protection only adds armour, so it's skipped (see [Older rules](#older-rules-pre-aos-shards-such-as-uo-renaissance)). Some servers send no buff icon for it, so it is recast at most every 20 seconds.
+- **Kiting:** with two or more monsters in melee reach it steps back 5 tiles between spells, keeping its target; the next spell waits for the step, since casting roots the mage. It steps back once per attack spell cast: stepping back again before a spell went off kept one test mage from ever casting.
 - **Meditation:** it meditates while resting with mana below 80%.
 - **Seeing inside:** the server only says what's in a spellbook or a bag once it's opened, so the agent opens the spellbook and any unopened bags in the backpack once, and closes them again.
 - **Snapshot:** mana, reagent counts, every spell in the book with its cost and why it can't be cast ("mana", "reagents"), and the cast timing.
@@ -611,6 +612,28 @@ Unattended play (auto mode) is against the rules on most shards, and some object
 modified clients. Check each shard's rules, and keep auto mode to the local server or
 shards that allow it.
 
+### Older rules (pre-AOS shards such as UO Renaissance)
+
+Shards that play the rules from before Age of Shadows send less: no item properties and no
+buff icons. The client tells which kind it is on from the server's features (item
+properties on means AOS) and reports it as `era` in the snapshot ("aos" or "pre-aos").
+
+- **Names:** without item properties, the client single-clicks things once each (about one a second, as the server allows) and uses the name the server shows over them: items in open corpses within 2 tiles, runes in the pack, and people nearby. Until then it uses the tile name ("Bones", "diamonds"), so loot judgments get "a supremely accurate longsword of vanquishing" a few seconds after the corpse opens.
+- **Protection:** under the older rules it only adds armour and doesn't stop hits interrupting spells, so the mage doesn't cast it. Under AOS rules it casts it at most every 20 seconds.
+- **Runebooks** look like a spellbook with hue 0x461 on older servers, rather than the AOS runebook graphic; both are recognised.
+
+Rehearsal on the local server switched to Renaissance rules
+(`tools/modernuo/expansion.renaissance.json`), 2026-10-07:
+
+| test | result |
+|---|---|
+| warrior, `uo-brain scenario` | 12 of 12 kills, no deaths; all 51 bandage messages read by cliloc number |
+| mage, 2 rounds | 8 of 8 kills, no deaths (before the Protection fix: 120 casts of Protection, no kills) |
+| item and rune names | resolved by single click within a few seconds of the corpse opening |
+| mage at the Britain graveyard travels to the West Britain bank | recalled by runebook |
+
+Not yet tried on UO Renaissance itself, which needs a real account.
+
 ## Where things are
 
 | | |
@@ -625,7 +648,8 @@ shards that allow it.
 Known limits:
 - Results above are single small runs.
 - Mages use Magery only, with single-target attack spells. A mage kites by stepping back from melee, but most monsters run as fast as a character, so a swarm of five or more is still hard for it.
-- Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does), and from the English text otherwise. They have not yet been checked against what UO Renaissance sends.
+- Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does, under both rule sets), and from the English text otherwise. They have not yet been checked against what UO Renaissance itself sends.
+- On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
 
 ---

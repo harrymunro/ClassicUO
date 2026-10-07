@@ -122,6 +122,10 @@ namespace ClassicUO.Agent
             return _labels.TryGetValue(m.Serial, out string learnt) ? learnt : null;
         }
 
+        // An item's full name where there are no item properties: what a single click said
+        // ("a vanquishing longsword", "a recall rune for Britain bank").
+        public string LearntLabel(uint serial) => _labels.TryGetValue(serial, out string learnt) ? learnt : null;
+
         // The overhead name a single click brings back (AgentJournal routes Label messages here).
         public void OnLabel(uint serial, string text)
         {
@@ -141,17 +145,57 @@ namespace ClassicUO.Agent
             }
 
             _nextNameClick = now + 1500;
+            uint next = 0;
 
-            foreach (Mobile m in _world.Mobiles.Values)
+            // Items first: loot in open corpses at hand, then runes in the pack.
+            foreach (Item corpse in _world.Items.Values)
             {
-                if (m != _world.Player && m.IsHuman && !m.IsDead && m.Distance <= 12 && _clicked.Add(m.Serial))
+                if (next != 0)
                 {
-                    _clickedOne = m.Serial;
-                    _clickedAt = now;
-                    GameActions.SingleClick(_world, m.Serial);
-
-                    return;
+                    break;
                 }
+
+                if (!corpse.IsCorpse || !corpse.OnGround || corpse.Distance > 2 || corpse.Items == null)
+                {
+                    continue;
+                }
+
+                for (LinkedObject o = corpse.Items; o != null && next == 0; o = o.Next)
+                {
+                    if (o is Item it && !IsAlwaysLoot(it) && !_clicked.Contains(it.Serial))
+                    {
+                        next = it.Serial;
+                    }
+                }
+            }
+
+            for (LinkedObject o = _world.Player.FindItemByLayer(Layer.Backpack)?.Items; o != null && next == 0; o = o.Next)
+            {
+                if (o is Item it && AgentSpells.IsRune(it) && !_clicked.Contains(it.Serial))
+                {
+                    next = it.Serial;
+                }
+            }
+
+            if (next == 0)
+            {
+                foreach (Mobile m in _world.Mobiles.Values)
+                {
+                    if (m != _world.Player && m.IsHuman && !m.IsDead && m.Distance <= 12 && !_clicked.Contains(m.Serial))
+                    {
+                        next = m.Serial;
+
+                        break;
+                    }
+                }
+            }
+
+            if (next != 0)
+            {
+                _clicked.Add(next);
+                _clickedOne = next;
+                _clickedAt = now;
+                GameActions.SingleClick(_world, next);
             }
         }
         public IReadOnlyList<(uint Serial, string Kind, int Distance)> Threats => _threats;
@@ -1160,7 +1204,8 @@ namespace ClassicUO.Agent
 
             for (LinkedObject i = p.FindItemByLayer(Layer.Backpack)?.Items; i != null && target == null; i = i.Next)
             {
-                if (i is Item it && it.Items == null && !it.Opened && it.ItemData.IsContainer && it.Graphic != AgentSpells.SPELLBOOK_GRAPHIC && Due(it))
+                if (i is Item it && it.Items == null && !it.Opened && it.ItemData.IsContainer && it.Graphic != AgentSpells.SPELLBOOK_GRAPHIC
+                    && !AgentSpells.IsRunebook(it) && Due(it))
                 {
                     target = it;
                 }
@@ -1672,7 +1717,7 @@ namespace ClassicUO.Agent
                 return ("failed", "no such rune or runebook");
             }
 
-            if (it.Graphic == AgentSpells.RUNEBOOK_GRAPHIC)
+            if (AgentSpells.IsRunebook(it))
             {
                 if (!_runebooks.TryGetValue(it.Serial, out List<string> entries) || entry < 0 || entry >= entries.Count)
                 {
@@ -1762,7 +1807,7 @@ namespace ClassicUO.Agent
         {
             for (LinkedObject i = _world.Player.FindItemByLayer(Layer.Backpack)?.Items; i != null; i = i.Next)
             {
-                if (i is Item it && it.Graphic == AgentSpells.RUNEBOOK_GRAPHIC && !_runebooks.ContainsKey(it.Serial)
+                if (i is Item it && AgentSpells.IsRunebook(it) && !_runebooks.ContainsKey(it.Serial)
                     && (!_peekAgainAt.TryGetValue(it.Serial, out uint at) || now >= at))
                 {
                     return it;
