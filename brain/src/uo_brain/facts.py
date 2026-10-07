@@ -152,12 +152,16 @@ def fact_question(sit: Situation) -> Callable[[str], dict[str, Any]]:
             "instructions": {"role": questions.role(sit),
                              "question": f"Would knowing this fact change what the {who} should do in the next minute?",
                              "fact": text},
+            # Asked whether a fact "bears on a choice", Jev scored everything about the place alike
+            # (0.41-0.58) and never picked the two decisive wisp notes in a 10-round run
+            # (2026-10-07); asked whether it says what to do about a creature in view, they came
+            # first at 0.63 and the general ones fell to 0.46 or less.
             "criteria": {
-                "true": f"It bears on a choice the {who} faces now or very soon: whether to fight a creature in view "
-                        "or leave it alone, which one to fight first, whether to stay in this area, what to pick up, "
-                        "or a danger to watch for here.",
-                "false": f"It is about another place or creature, about something the {who} can't act on in the next "
-                         "minute, or it only repeats what the situation already shows.",
+                "true": f"It says what to do about one of the creatures in `creatures_in_view` (fight it, leave it "
+                        f"alone, fight it first) or about something the {who} is choosing right now, and the "
+                        "situation doesn't already show it.",
+                "false": "It is general: about this place, other places or creatures not in view, loot or travel, or "
+                         f"something the {who} can't act on in the next minute.",
             },
         }
 
