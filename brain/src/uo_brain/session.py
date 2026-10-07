@@ -27,7 +27,7 @@ from .judge import Judge
 from .logs import session_name
 from .routine import HuntWatch, RoutineConfig
 from .rpc import AgentRpc
-from .world import World, name_score, tiles
+from .world import World, name_score, tiles, tokens
 
 # A vendor place's kind -> words its title carries in game ("Lucy the healer").
 VENDOR_TITLES: dict[str, tuple[str, ...]] = {
@@ -223,12 +223,23 @@ class Session:
             e = (await self.snap())["agent"].get("errand") or {}
             if e.get("state") in ("done", "failed"):
                 return e
+        await self.act("stop")  # the client's errand would go on, and take over the next walk
         return {"state": "failed", "detail": "timed out"}
 
-    async def go_near(self, kind: str, within: int, skip: set[str] = frozenset()) -> tuple[dict[str, Any] | None, Result | None]:
-        """The nearest place of a kind (or selling an item), walked to if further than `within`."""
+    async def go_near(self, kind: str, within: int, skip: set[str] = frozenset(),
+                      sells: str | None = None) -> tuple[dict[str, Any] | None, Result | None]:
+        """The nearest place of a kind (or selling an item), walked to if further than `within`.
+        With `sells`, places known not to sell that item are left out (a wandering healer is a
+        healer that sells no bandages), and those known to sell it come first."""
         snap = await self.snap()
-        found = [p for p in self.world.find_place(kind, near=list(self.where(snap)), limit=8) if p["name"] not in skip]
+        found = [p for p in self.world.find_place(kind, near=list(self.where(snap)), limit=12) if p["name"] not in skip]
+        if sells:
+            want = tokens(sells)
+            def stocks(p: dict[str, Any]) -> bool | None:
+                listed = p.get("sells")
+                return None if not listed else any(all(w in tokens(s) for w in want) for s in listed)
+            found = [p for p in found if stocks(p) is not False]
+            found.sort(key=lambda p: stocks(p) is not True)  # stable: nearest first within each group
         if not found:
             return None, Result(False, f"the world store knows no {'other ' if skip else ''}{kind}")
         place = found[0]
@@ -255,8 +266,8 @@ class Session:
         return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}", data | {"weight_before": before.get("weight")})
 
     async def vendor(self, kind: str, words: tuple[str, ...], exclude: set[int] = frozenset(),
-                     skip: set[str] = frozenset()) -> tuple[dict[str, Any] | None, int, Result | None]:
-        place, failed = await self.go_near(kind, 8, skip)
+                     skip: set[str] = frozenset(), sells: str | None = None) -> tuple[dict[str, Any] | None, int, Result | None]:
+        place, failed = await self.go_near(kind, 8, skip, sells)
         if failed:
             return place, 0, failed
         snap = await self.snap()
@@ -296,7 +307,7 @@ class Session:
         done_places: set[str] = set()
         spent, notes, place = 0, [], None
         while await self.held(item) - start < count and len(tried) < 8 and len(done_places) < 3:
-            place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places)
+            place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places, sells=item)
             if failed:
                 if place is None or "in sight" not in failed.summary:
                     if not tried:

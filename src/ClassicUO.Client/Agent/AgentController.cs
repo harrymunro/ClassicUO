@@ -879,6 +879,9 @@ namespace ClassicUO.Agent
                     return Errands.StartShop(a.Verb == "buy", a.Target, a.Items);
 
                 case "travel":
+                    // A new trip ends any errand still going: its walk to a vendor would otherwise
+                    // take the trip over (seen in a soak run: a 240-tile trip "arrived" in 3 s).
+                    Errands.Cancel();
                     _travelManual = a.Manual;
 
                     return StartTravel(a.X, a.Y, Math.Max(0, a.Distance));
