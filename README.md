@@ -780,7 +780,7 @@ Then 5 rounds each of the others (`brain/bench/2026-10-07-archetypes.json`, `--s
 | `mage-tamer-orcs` | three orcs on a mage-tamer: pet and spells, the bear kept alive | 5/5 | 4/5, 1 death |
 
 - **The ogre lord isn't escapable on foot:** it runs as fast as the tamer, and the bear only holds it off for a while. Jev left within 4 seconds of it coming, and the tamer still died. The scenario's first version also asked for the bear back; every round of every judge lost both.
-- **Tamers:** both judges set the pet on whatever attacks the tamer (that rule is code). The difference in `tamer-orcs` was bandaging: Jev's tamer bandaged the bear 33 times over the five rounds, the rules' 9. Veterinary at 90 heals a bear by about half its health in one bandage.
+- **Tamers:** setting the pet on whatever attacks the tamer, and bandaging the pet, are code for both judges; what differs is the target Jev picks otherwise and when it calls the pet back. Jev's rounds also saw more bandaging (33 bandages on the bear over five rounds, against 9). Five rounds is too few to say which made the difference.
 - **Bards:** both judges mostly provoke (the rules 22 of 29 songs, Jev 19 of 28); Jev used discordance more (4 against 1).
 
 ```bash
