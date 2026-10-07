@@ -37,7 +37,7 @@ def test_report_puts_goals_hunts_time_and_cost_together(tmp_path):
     assert r["travel"] == {"trips": 1, "arrived": 1, "stuck_spots": 1, "minutes": 0.5}
     assert r["cost_usd"] == {"planner": 0.03, "jev": 0.00015}
     assert r["disruptions"] == [{"minute": 10.0, "what": "despawn the graveyard", "next_goals": ["bank: bank it"]}]
-    assert "1 hunts, 9 kills, 0 deaths; 300 gold banked" in soak.markdown(r)
+    assert "1 hunts, 9 kills, 0 deaths; 300 gold banked (300 gold gained in hunts" in soak.markdown(r)
 
 
 def test_a_death_outside_a_hunt_counts(tmp_path):

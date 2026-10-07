@@ -75,14 +75,54 @@ class Session:
         self._threat_noted: dict[str, float] = {}
         self.recorder = None  # recorder.Recorder: what the character sees goes into the world store
         self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}  # all hunts
+        self.dangers: dict[str, dict[int, str]] = {}  # area -> creature serial -> kind, stronger than the character
         self.facts_mode = "jev"  # which world facts reach the fights: jev (Jev picks), all, none (facts.py)
 
     def seen(self, snap: dict[str, Any]) -> None:
+        self.note_dangers(snap)
         if self.recorder is None:
             return
         self.recorder.observe(snap)
         if self.recorder.due():
             asyncio.get_running_loop().create_task(self.recorder.flush())
+
+    def note_dangers(self, snap: dict[str, Any]) -> None:
+        """Creatures stronger than the character, by kind and area, for the goal's result and the
+        world store. A soak run's planner sent its character back to a graveyard where a lich and
+        two bone knights had driven it off, because nothing it could see or query said so."""
+        if not snap.get("in_game") or "player" not in snap:
+            return
+        from .state import BODY_KINDS, threat_words
+        p = snap["player"]
+        bestiary = self.world.bestiary()
+        for m in snap.get("mobiles", []):
+            known = bestiary.get(m.get("body", 0)) if m.get("monster") and not m.get("dead") else None
+            if not known or not threat_words(known, p.get("hits_max") or 100).startswith(("stronger", "far stronger")):
+                continue
+            kind = BODY_KINDS.get(m.get("body", 0)) or str(known.get("name") or m.get("name") or "a creature")
+            region = self.world.region_at(p["x"] + m.get("dx", 0), p["y"] + m.get("dy", 0))
+            area = region["name"] if region else f"{p['x'] + m.get('dx', 0)},{p['y'] + m.get('dy', 0)}"
+            self.dangers.setdefault(area, {})[m["serial"]] = kind.removeprefix("a ").removeprefix("an ")
+
+    def danger_words(self, since: dict[str, dict[int, str]]) -> str:
+        """The stronger creatures seen since `since` (a copy of self.dangers), in words."""
+        parts = []
+        for area, seen in self.dangers.items():
+            new = {s: k for s, k in seen.items() if s not in since.get(area, {})}
+            if new:
+                kinds: dict[str, int] = {}
+                for k in new.values():
+                    kinds[k] = kinds.get(k, 0) + 1
+                parts.append(", ".join(f"{n} {k}{'s' if n > 1 else ''}" for k, n in kinds.items()) + f" at {area}")
+        return "; ".join(parts)
+
+    def record_dangers(self, words: str) -> None:
+        """Note what was seen in the world store, once per area and wording."""
+        for part in words.split("; "):
+            if " at " in part:
+                what, area = part.rsplit(" at ", 1)
+                self.world.add_note(f"Stronger than a new character, seen {time.strftime('%Y-%m-%d %H:%M')}: {what}.",
+                                    area=area, tags=["danger"], source="seen")
 
     # ------------------------------------------------------------ helpers
 

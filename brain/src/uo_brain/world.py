@@ -665,6 +665,9 @@ class World:
             a["score"] = round(a["score"], 1)
             a["outcomes"] = self._outcomes(a["area"], archetype)
             a["past_results"] = self._outcome_note(a["area"])
+            # Stronger creatures seen there in play (Session.note_dangers): not in the spawn data.
+            a["dangers_seen"] = [n["text"] for n in self.notes(area=a["area"], limit=10)
+                                 if "danger" in (n.get("tags") or [])][:3]
             out.append((rank, a))
         out.sort(key=lambda t: -t[0])
         return [_compact(a) for _, a in out[:limit]]

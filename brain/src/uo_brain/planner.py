@@ -166,6 +166,7 @@ class Planner:
             await self.on_goal(self.goal, describe_goal(tool, args), why)
         self.log({"type": "goal", "t": time.time(), "tool": tool, "args": args})
         s = self.session
+        before = {a: dict(v) for a, v in getattr(s, "dangers", {}).items()}
         try:
             match tool:
                 case "travel_to":
@@ -194,6 +195,9 @@ class Planner:
                     r = Result(True, self.finished)
         except Exception as e:  # a goal that crashed is reported to the planner like a failure
             r = Result(False, f"error: {type(e).__name__}: {e}"[:300])
+        if hasattr(s, "danger_words") and (seen := s.danger_words(before)):
+            r = Result(r.ok, f"{r.summary}; stronger creatures seen: {seen}", r.data)
+            s.record_dangers(seen)
         step = PlanStep(tool, args, r.to_tool())
         self.history.append(step)
         self.log({"type": "goal_result", "t": time.time(), "tool": tool, "result": step.result})

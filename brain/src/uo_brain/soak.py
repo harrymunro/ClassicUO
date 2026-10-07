@@ -72,7 +72,8 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
         "hunts": len(hunts),
         "kills": sum(h.get("kills", 0) for h in hunts),
         # A death outside a hunt ends the session: its summary says so, or a goal ends at 0 health.
-        "deaths": sum(h.get("deaths", 0) for h in hunts) + (1 if any(
+        # One in a hunt is in the hunt's count already.
+        "deaths": max(sum(h.get("deaths", 0) for h in hunts), 1 if any(
             "died" in str(r.get("finished", "")) for r in records if r["type"] == "session_summary") or any(
             str((r.get("result") or {}).get("health", "")).startswith("0/") for r in results) else 0),
         "minutes_per_loop": round((t1 - t0) / 60 / len(hunts), 1) if hunts else None,
@@ -115,7 +116,7 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
 def markdown(r: dict[str, Any]) -> str:
     """The report as a short Markdown summary."""
     lines = [f"{r['minutes']} minutes, {r['hunts']} hunts, {r['kills']} kills, {r['deaths']} deaths; "
-             f"{r['gold_banked']} gold banked ({r['gold_from_hunts']} picked up in hunts); bought "
+             f"{r['gold_banked']} gold banked ({r['gold_from_hunts']} gold gained in hunts, less what was left on a corpse); bought "
              + (", ".join(f"{n} {k}" for k, n in r["bought"].items()) or "nothing") + ".",
              f"Time: " + ", ".join(f"{k} {v} min" for k, v in r["time_minutes"].items()) + ".",
              f"Travel: {r['travel']['trips']} trips, {r['travel']['arrived']} arrived, "

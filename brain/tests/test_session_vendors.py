@@ -69,3 +69,32 @@ def test_a_defended_goal_returns_its_result_and_stops_the_fight_loop(tmp_path):
     after = len([c for c in rpc.calls if c[0] == "snapshot"])
     assert after == polls  # and stopped with the goal
     w.close()
+
+
+def test_stronger_creatures_seen_go_into_the_goals_result_and_the_world_store(tmp_path):
+    from uo_brain.planner import Planner
+    w = World.open("test", root=tmp_path)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["mobiles"][1].update({"body": 24, "name": "a lich", "distance": 5, "dx": 5, "dy": 0})  # body 24: a lich
+    s = Session(FakeRpc(snap), w, None)
+    w.bestiary = lambda: {24: {"hits": 300, "difficulty": "deadly", "name": "a lich"}}
+    s.note_dangers(snap)
+    assert s.danger_words({}) == "1 lich at 1005,1000"
+    s.record_dangers(s.danger_words({}))
+    assert w.notes(area="1005,1000")[0]["text"].startswith("Stronger than a new character, seen ")
+
+    async def go():
+        p = Planner(s, "hunt", log=lambda r: None)
+        s.dangers.clear()
+
+        async def rest(seconds):
+            s.note_dangers(snap)
+            from uo_brain.session import Result
+            return Result(True, "rested 5 s")
+        s.rest = rest
+        s.defended = lambda work: work
+        return await p.carry_out("rest", {"seconds": 5})
+
+    step = asyncio.run(go())
+    assert step.result["result"] == "rested 5 s; stronger creatures seen: 1 lich at 1005,1000"
+    w.close()
