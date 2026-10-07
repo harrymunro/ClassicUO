@@ -745,6 +745,19 @@ decide anything, one of them a tempting "a wisp's corpse often holds gems". Each
 plays it three ways: `@none` (no world facts), `@all` (every shortlisted fact in the state)
 and `@jev` (the few Jev picks). The rule judge, which can't read facts, plays it once.
 
+Results, 2026-10-07, 10 rounds each (`--scenarios world --judges jev`; `world-v4`, and `world-v5` for `@jev` after the change below):
+
+| judge | right | deaths |
+|---|---|---|
+| rules | 0/7 | 7: they attack the wisp once the orcs are dead |
+| Jev, no facts | 5/10 | 3 |
+| Jev, every fact | 10/10 | 0 |
+| Jev, the facts it picks | 8/10 | 1 |
+
+- **Setup:** the first run spawned the wisp first, so for the first seconds it was the only creature in sight and every judge walked up to it and died; the orcs now come first.
+- **Caster priority:** the spellcaster-first target guidance from `priority` sent Jev at the idle wisp. Only a caster that is fighting now comes first, idle creatures are described as "not fighting", and Jev's "attack none of these" is respected.
+- **Picking facts:** asked whether a fact "bears on a choice the character faces", Jev scored every fact about the place alike (0.41–0.58) and never picked the two decisive notes. Asked whether a fact "says what to do about a creature in view", they came first, and Jev picked one in 4 of 10 selections. Picking still trails putting every fact in, at this shortlist size (25).
+
 Results on the local server, 2026-10-07, 10 rounds per judge (`uo-brain bench report brain/bench/2026-10-07-*.json`).
 The first run (`2026-10-07-core.json`) is the baseline; changes it led to were rerun the same day (`core-v2a`, `core-v2b`, `swarm-v3`):
 
@@ -842,7 +855,7 @@ Known limits:
 - The client can't see whom a pet is actually fighting, only whom it was told to: a pet that switched to another attacker still shows its order.
 - Bards don't use peacemaking on themselves (calming everyone), and songs aren't scored for difficulty: Jev only knows a song "can fail, more often against strong creatures".
 - Jev's routine hunt calls have only been checked offline, on 10 hand-made situations; the yes and no thresholds (0.65, 0.35) aren't tuned on live hunts yet.
-- World facts for fights are shortlisted by area and keyword: a fact stored under another area name, or that names a creature differently, can't be picked. The fact picker has unit tests and one smoke run, not yet a live benchmark.
+- World facts for fights are shortlisted by area and keyword: a fact stored under another area name, or that names a creature differently, can't be picked. Jev's picks trail putting every shortlisted fact in (8/10 against 10/10 in the wisp scenario).
 
 ---
 
