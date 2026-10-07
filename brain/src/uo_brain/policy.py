@@ -542,6 +542,11 @@ def pick_target(sit: Situation, ans: Answers, cfg: PolicyConfig) -> tuple[Candid
     if choice and choice.choice != "none" and choice.confidence >= cfg.min_target_confidence:
         if (c := sit.hostile(choice.choice)) is not None and c.allowed:
             return c, choice.confidence
+    # "None of these" is an answer too, unless something is on the character already: taken as no
+    # answer, it sent a warrior at the idle wisp Jev had said to leave (none 0.56).
+    if choice and choice.choice == "none" and choice.confidence >= max(cfg.min_target_confidence, 0.5) \
+            and not any(h.distance <= 1 and h.info.get("aggressive") for h in targets):
+        return None, choice.confidence
     if not targets:
         return None, None
     # In combat assist the player's own target comes first.

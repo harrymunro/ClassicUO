@@ -334,3 +334,16 @@ def test_defending_only_fights_what_is_close_or_attacking_and_never_seeks_or_loo
     dec = policy.decide(sit, a, policy.Memory(), cfg)
     assert dec.intent != "seek" and "seek" in dec.masked and "loot" in dec.masked
     assert [h.serial for h in sit.hostiles if h.allowed] == [0x101]
+
+
+def test_jev_saying_attack_none_is_respected_unless_something_is_on_the_character(snapshot):
+    snapshot["mobiles"] = snapshot["mobiles"][1:]  # the captain only, 6 tiles off and idle
+    snapshot["mobiles"][0]["war_mode"] = False
+    sit = state.build(snapshot, set(), [])
+    a = answers("fight", target="none")
+    a.choices["target"] = ChoiceResult("none", {"none": 0.56, "t1": 0.44}, 0.56)
+    dec = policy.decide(sit, a, policy.Memory(), CFG)
+    assert dec.target is None and not any(x["verb"] == "attack" for x in dec.actions)
+    snapshot["mobiles"][0].update({"distance": 1, "dx": 1, "war_mode": True})
+    dec = policy.decide(state.build(snapshot, set(), []), a, policy.Memory(), CFG)
+    assert dec.target is not None
