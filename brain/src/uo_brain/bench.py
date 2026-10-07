@@ -168,6 +168,11 @@ def check_loot(tr: Trace) -> tuple[bool, dict[str, Any]]:
                 "seconds_looting_with_monster_adjacent": round(tr.looting_with_monster_adjacent, 1)}
 
 
+def check_archer(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    return (not tr.player_died and kills >= 4), {"kills": kills, "kites": len(tr.actions("kite"))}
+
+
 def check_attrition(tr: Trace) -> tuple[bool, dict[str, Any]]:
     return not tr.player_died, {"fled": bool(tr.flees), "kills": len(tr.kills())}
 
@@ -236,6 +241,12 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "swarm", "cuo-46e.6",
         "Six melee monsters on a mage: survive and kill at least four.",
         "mage", ["[AgentArena 6 mix"], 120, check_swarm, quiet_after=20),
+    # Archetypes (cuo-cvl): the same judgments with another way of fighting.
+    Scenario(
+        "archer-kite", "cuo-cvl.1",
+        "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, "
+        "and kill all four without dying.",
+        "archer", ["[AgentSpawn Orc 4 10 n"], 120, check_archer, quiet_after=20),
     # Strategy adherence (cuo-46e.7): a template should change behaviour as written.
     Scenario(
         "relentless-never-flees", "cuo-46e.7", "With the relentless template, never flee, even running out of supplies.",
@@ -259,6 +270,7 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
 
 # The core set that compares judges; adherence scenarios fix their own template.
 CORE = ["mismatch", "priority", "loot", "attrition", "swarm"]
+ARCHETYPES = ["archer-kite"]
 
 
 # ---------------------------------------------------------------- statistics
@@ -291,17 +303,23 @@ def load_bestiary(shard: str = "local") -> None:
 
 @dataclass
 class JudgeSpec:
-    """"heuristic", "jev", or "jev+<template>" (Jev with that strategy template)."""
+    """"heuristic", "jev", or "jev+<template>" (Jev with that strategy template), each with an
+    optional "/nokite" (no stepping back from melee), to measure what kiting is worth."""
 
     label: str
 
     @property
     def kind(self) -> str:
-        return self.label.split("+", 1)[0]
+        return self.label.split("/", 1)[0].split("+", 1)[0]
 
     @property
     def template(self) -> str | None:
-        return self.label.split("+", 1)[1] if "+" in self.label else None
+        judge = self.label.split("/", 1)[0]
+        return judge.split("+", 1)[1] if "+" in judge else None
+
+    @property
+    def kite(self) -> bool:
+        return "/nokite" not in self.label
 
 
 async def say(rpc: AgentRpc, text: str, pause: float = 0.6) -> None:
@@ -312,8 +330,10 @@ async def say(rpc: AgentRpc, text: str, pause: float = 0.6) -> None:
 async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) -> None:
     """Reset, move to the lane, re-kit, set the strategy, and wait until the kit is known."""
     await rpc.call("mode", mode="off")
-    await say(rpc, "[AgentReset")
+    # The lane first: the reset sweeps leftovers around where the character stands, and after a
+    # test elsewhere (a town) an ogre lord left on the lane killed the first round's warrior.
     await say(rpc, f"[AgentGo {lane}")
+    await say(rpc, "[AgentReset")
     await say(rpc, f"[AgentKit {sc.kit}", 1.5)
     if template:
         await rpc.call("strategy", template=template, replace=True)
@@ -323,8 +343,10 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
     for _ in range(20):
         snap = await rpc.call("snapshot", since=0)
         magic = snap.get("magic")
-        if sc.kit != "mage" or (magic and magic.get("book_known") and
-                                sum(snap["player"]["supplies"].get("reagents", {}).values()) > 0):
+        if sc.kit == "archer" and snap["player"].get("ranged"):
+            break
+        if sc.kit not in ("mage", "archer") or (magic and magic.get("book_known") and
+                                                sum(snap["player"]["supplies"].get("reagents", {}).values()) > 0):
             break
         await asyncio.sleep(0.5)
     await rpc.call("mode", mode="auto")
@@ -359,7 +381,7 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
 
     judge = judges.make(spec.kind)
     lcfg = loop.LoopConfig(duration_s=sc.seconds, price_per_million=price)
-    pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence)
+    pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite)
     try:
         stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=sc.kit, on_snapshot=watch,
                                bestiary=BESTIARY.get("local"))
@@ -395,7 +417,7 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
         for n in range(1, rounds + 1):
             for label in labels:
                 spec = JudgeSpec(label)
-                log_path = log_dir / f"{name}-{label.replace('+', '_')}-{n:02d}.jsonl"
+                log_path = log_dir / f"{name}-{label.replace('+', '_').replace('/', '_')}-{n:02d}.jsonl"
                 log_path.unlink(missing_ok=True)
                 try:
                     r = await play_round(rpc, sc, spec, lane, log_path, price, min_confidence)

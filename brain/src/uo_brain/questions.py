@@ -27,6 +27,14 @@ MAGE_ROLE = (
     "choose what the mage does next."
 )
 
+ARCHER_ROLE = (
+    "You are deciding for an archer in the game Ultima Online. The archer shoots monsters from a distance "
+    "with a bow or crossbow. Every shot uses an arrow or bolt from the pack, so it cannot fight without them, "
+    "and it has to stand still for a moment to shoot. It is weaker in melee than a warrior and heals with "
+    "bandages. Bandages and potions are applied automatically when health is low, so you do not need to choose "
+    "healing; choose what the archer does next."
+)
+
 INTENTS: dict[str, Any] = {
     "fight": {
         "what": "Attack, or keep attacking, one of the hostile creatures.",
@@ -93,12 +101,46 @@ MAGE_INTENTS: dict[str, Any] = {
 }
 
 
+ARCHER_INTENTS: dict[str, Any] = {
+    "fight": {
+        "what": "Shoot one of the hostile creatures, or keep shooting it.",
+        "when": "A hostile creature is within shooting range and there are arrows or bolts left, "
+                "or a creature is already attacking the archer.",
+        "not_for": "When no arrows or bolts are left: the bow cannot shoot.",
+    },
+    "flee": {
+        "what": "Run away from the hostile creatures.",
+        "when": "Staying would probably get the archer killed: health is near death or falling fast while several "
+                "creatures are attacking at once, and bandages and potions cannot heal fast enough.",
+        "not_for": "Ordinary fights the archer is winning, or being lightly or moderately wounded.",
+    },
+    "leave": {
+        "what": "Get away from this place altogether: run until the hostile creatures are out of sight, and stay away "
+                "for now.",
+        "when": "A creature far stronger than the archer is here or coming, or arrows, bandages or potions are nearly "
+                "gone while creatures are still fighting, so the fight cannot be won.",
+        "not_for": "Fights the archer is winning, or a single weak creature that is nearly dead.",
+    },
+    "loot": {
+        "what": "Go to a corpse that has not been looted yet and take what is in it, including arrows: monsters that "
+                "were hit often carry some back.",
+        "when": "No hostile creature is close and there is an unlooted corpse nearby.",
+        "not_for": "While a hostile creature is adjacent or close.",
+    },
+    "seek": {
+        "what": "Walk towards a hostile creature that is out of shooting range, to start the next fight.",
+        "when": "Hostile creatures are around but none is within shooting range, and the archer has health and arrows.",
+    },
+    "rest": INTENTS["rest"],
+}
+
+
 def role(sit: Situation) -> str:
-    return MAGE_ROLE if sit.is_mage else ROLE
+    return MAGE_ROLE if sit.is_mage else ARCHER_ROLE if sit.is_archer else ROLE
 
 
 def character(sit: Situation) -> str:
-    return "mage" if sit.is_mage else "warrior"
+    return "mage" if sit.is_mage else "archer" if sit.is_archer else "warrior"
 
 
 def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
@@ -119,7 +161,7 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         "intent": {
             "type": "choice",
             "instructions": instructions(sit, f"What should the {who} do next?"),
-            "criteria": MAGE_INTENTS if sit.is_mage else INTENTS,
+            "criteria": MAGE_INTENTS if sit.is_mage else ARCHER_INTENTS if sit.is_archer else INTENTS,
         },
         # A factual risk judgment, so it does not see the strategy; code combines the two.
         "in_danger": {
@@ -243,6 +285,8 @@ def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
         parts.append(f"to the {info['direction']}")
     if "in_spell_range" in info:
         parts.append("within spell range" if info["in_spell_range"] else "out of spell range")
+    if "in_shooting_range" in info:
+        parts.append("within shooting range" if info["in_shooting_range"] else "out of shooting range")
     if info.get("your_current_target"):
         parts.append(f"the {who} is already fighting it")
     if info.get("the_players_target"):

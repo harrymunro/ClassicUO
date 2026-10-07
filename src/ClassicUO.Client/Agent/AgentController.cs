@@ -2278,7 +2278,8 @@ namespace ClassicUO.Agent
         {
             ushort g = it.Graphic;
 
-            return it.IsCoin || g == BANDAGE_GRAPHIC || g >= 0x0F06 && g <= 0x0F0D && g != 0x0F0A && g != 0x0F0D;
+            // Arrows and bolts too: a hit leaves some in the monster's pack for an archer to take back.
+            return it.IsCoin || g == BANDAGE_GRAPHIC || AgentWeapons.IsAmmo(g) || g >= 0x0F06 && g <= 0x0F0D && g != 0x0F0A && g != 0x0F0D;
         }
 
         // ---------------------------------------------------------------- helpers

@@ -32,7 +32,8 @@ How a session usually goes, which you should arrange yourself as the player's go
 buy supplies (bandages from a healer, reagents from a mage shop), travel to a hunting area,
 hunt for a while, come back when supplies run low or the bag gets heavy, bank gold and loot,
 restock, and go again. Before hunting, make sure there are enough supplies: a warrior wants
-at least 50 bandages, a mage at least 30 of each reagent. Selling loot is optional; banking
+at least 50 bandages, a mage at least 30 of each reagent, an archer at least 50 bandages and
+150 arrows or bolts for the bow in hand (a bowyer or a provisioner sells them). Selling loot is optional; banking
 it is enough.
 
 Rules:

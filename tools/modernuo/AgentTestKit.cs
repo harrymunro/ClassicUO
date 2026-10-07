@@ -108,9 +108,9 @@ public static class AgentTestKit
         logger.Information("AgentTestKit: seeded owner account {Username}", username);
     }
 
-    [Usage("AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword] [target]")]
+    [Usage("AgentKit [warrior|mage|archer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [target]")]
     [Description(
-        "Resets a test kit and wipes previous equipment and backpack contents. warrior (default): Swords/Tactics/Healing/Anatomy 80, 90/70/15 stats, weapon, ring/leather armor, bandages and potions. mage: Magery 90, Eval Int/Meditation/Wrestling 80, Resisting Spells 60, 70/35/100 stats, full spellbook, reagents, leather armor and potions. 'target' (GameMaster+) applies it to another player."
+        "Resets a test kit and wipes previous equipment and backpack contents. warrior (default): Swords/Tactics/Healing/Anatomy 80, 90/70/15 stats, weapon, ring/leather armor, bandages and potions. mage: Magery 90, Eval Int/Meditation/Wrestling 80, Resisting Spells 60, 70/35/100 stats, full spellbook, reagents, leather armor and potions. archer: Archery/Tactics/Healing/Anatomy 80, 75/85/15 stats, a bow (or the crossbow named) with 200 arrows or bolts, studded leather, bandages and potions. 'target' (GameMaster+) applies it to another player."
     )]
     public static void AgentKit_OnCommand(CommandEventArgs e)
     {
@@ -134,10 +134,19 @@ public static class AgentTestKit
                 continue;
             }
 
+            if (arg.InsensitiveEquals("archer"))
+            {
+                mage = false;
+                weapon = typeof(Bow);
+                continue;
+            }
+
             var type = GetWeaponType(arg);
             if (type == null)
             {
-                from.SendMessage("Usage: [AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword] [target]");
+                from.SendMessage(
+                    "Usage: [AgentKit [warrior|mage|archer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [target]"
+                );
                 return;
             }
 
@@ -380,9 +389,9 @@ public static class AgentTestKit
         from.SendMessage($"Spawn: {count} {kind.Name} in {delay:0.#}s.");
     }
 
-    [Usage("AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]")]
+    [Usage("AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [arrows N] [bolts N] [gold N] [loot N]")]
     [Description(
-        "Sets how many bandages, greater heal and greater cure potions and reagents (of each kind) are in your backpack, replacing what is there. Only the kinds named change. gold N adds N gold coins; loot N adds N sets of the [AgentLoot items (valuables and junk) to the pack."
+        "Sets how many bandages, greater heal and greater cure potions, reagents (of each kind), arrows and bolts are in your backpack, replacing what is there. Only the kinds named change. gold N adds N gold coins; loot N adds N sets of the [AgentLoot items (valuables and junk) to the pack."
     )]
     public static void AgentSupplies_OnCommand(CommandEventArgs e)
     {
@@ -451,6 +460,26 @@ public static class AgentTestKit
 
                         break;
                     }
+                case "arrows" or "arrow":
+                    {
+                        DeleteAll<Arrow>(pack);
+                        if (n > 0)
+                        {
+                            pack.DropItem(new Arrow(n));
+                        }
+
+                        break;
+                    }
+                case "bolts" or "bolt":
+                    {
+                        DeleteAll<Bolt>(pack);
+                        if (n > 0)
+                        {
+                            pack.DropItem(new Bolt(n));
+                        }
+
+                        break;
+                    }
                 case "loot":
                     {
                         for (var k = 0; k < Math.Min(n, 5); k++)
@@ -464,7 +493,7 @@ public static class AgentTestKit
                         break;
                     }
                 default:
-                    from.SendMessage($"Unknown supply '{what}': use bandages, heal, cure or reagents.");
+                    from.SendMessage($"Unknown supply '{what}': use bandages, heal, cure, reagents, arrows, bolts, gold or loot.");
                     return;
             }
         }
@@ -755,10 +784,11 @@ public static class AgentTestKit
         return false;
     }
 
-    // A null weapon type gives the mage kit.
+    // A null weapon type gives the mage kit, a bow or crossbow the archer kit.
     public static void ApplyKit(Mobile m, Type weaponType)
     {
         var mage = weaponType == null;
+        var archer = weaponType?.IsAssignableTo(typeof(BaseRanged)) == true;
 
         if (!m.Alive)
         {
@@ -792,7 +822,7 @@ public static class AgentTestKit
         }
         else
         {
-            skills[SkillName.Swords].Base = 80;
+            skills[archer ? SkillName.Archery : SkillName.Swords].Base = 80;
             skills[SkillName.Tactics].Base = 80;
             skills[SkillName.Healing].Base = 80;
             skills[SkillName.Anatomy].Base = 80;
@@ -802,8 +832,9 @@ public static class AgentTestKit
         m.StrLock = StatLockType.Locked;
         m.DexLock = StatLockType.Locked;
         m.IntLock = StatLockType.Locked;
-        m.RawStr = mage ? 70 : 90;
-        m.RawDex = mage ? 35 : 70;
+        // An archer trades strength for dexterity: dexterity sets how fast a bow fires.
+        m.RawStr = mage ? 70 : archer ? 75 : 90;
+        m.RawDex = mage ? 35 : archer ? 85 : 70;
         m.RawInt = mage ? 100 : 15;
 
         using var toDelete = PooledRefQueue<Item>.Create();
@@ -849,6 +880,22 @@ public static class AgentTestKit
             m.AddToBackpack(new Spellbook(ulong.MaxValue));
             m.AddToBackpack(new BagOfReagents(100));
         }
+        else if (archer)
+        {
+            // Studded leather: archers move and dodge, and a bow takes both hands.
+            var bow = weaponType.CreateInstance<BaseRanged>();
+            Equip(m, bow);
+            Equip(m, new StuddedChest());
+            Equip(m, new StuddedArms());
+            Equip(m, new StuddedLegs());
+            Equip(m, new StuddedGloves());
+            Equip(m, new StuddedGorget());
+            Equip(m, new LeatherCap());
+            Equip(m, new Boots());
+
+            m.AddToBackpack(new Bandage(200));
+            m.AddToBackpack(bow.AmmoType == typeof(Bolt) ? new Bolt(200) : new Arrow(200));
+        }
         else
         {
             Equip(m, weaponType.CreateInstance<Item>());
@@ -871,7 +918,7 @@ public static class AgentTestKit
 
         RestoreVitals(m);
 
-        m.SendMessage($"Agent {(mage ? "mage" : "warrior")} kit applied.");
+        m.SendMessage($"Agent {(mage ? "mage" : archer ? "archer" : "warrior")} kit applied.");
         logger.Information(
             "AgentKit: applied to {Mobile} (str {Str} dex {Dex} int {Int}, hits {Hits}/{HitsMax}, weapon {Weapon})",
             m,
@@ -1008,6 +1055,9 @@ public static class AgentTestKit
             "broadsword"            => typeof(Broadsword),
             "longsword"             => typeof(Longsword),
             "viking" or "vikingsword" => typeof(VikingSword),
+            "bow"                   => typeof(Bow),
+            "crossbow"              => typeof(Crossbow),
+            "heavycrossbow" or "heavy" => typeof(HeavyCrossbow),
             _                       => null
         };
 

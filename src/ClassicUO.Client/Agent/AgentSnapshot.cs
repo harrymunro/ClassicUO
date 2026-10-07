@@ -94,11 +94,22 @@ namespace ClassicUO.Agent
             Item weapon = p.FindItemByLayer(Layer.OneHanded) ?? p.FindItemByLayer(Layer.TwoHanded);
             w.WriteString("weapon", weapon == null ? string.Empty : NameOf(world, weapon));
 
+            if (weapon != null && AgentWeapons.TryGetRanged(weapon.Graphic, out AgentWeapons.Ranged ranged))
+            {
+                w.WriteStartObject("ranged");
+                w.WriteString("kind", ranged.Kind);
+                w.WriteString("ammo", ranged.AmmoName);
+                w.WriteNumber("range", ranged.Range);
+                w.WriteEndObject();
+            }
+
             w.WriteStartObject("supplies");
             w.WriteNumber("bandages", agent.CountByGraphic(AgentController.BANDAGE_GRAPHIC));
             w.WriteNumber("heal_potions", agent.CountByGraphic(AgentController.HEAL_POTION_GRAPHIC));
             w.WriteNumber("cure_potions", agent.CountByGraphic(AgentController.CURE_POTION_GRAPHIC));
             w.WriteNumber("refresh_potions", agent.CountByGraphic(AgentController.REFRESH_POTION_GRAPHIC));
+            w.WriteNumber("arrows", agent.CountByGraphic(AgentWeapons.ARROW_GRAPHIC));
+            w.WriteNumber("bolts", agent.CountByGraphic(AgentWeapons.BOLT_GRAPHIC));
             w.WriteStartObject("reagents");
 
             foreach ((_, string name, ushort graphic) in AgentSpells.ReagentGraphics)

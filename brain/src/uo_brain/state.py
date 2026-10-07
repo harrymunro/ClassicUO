@@ -118,6 +118,20 @@ class Situation:
     def is_mage(self) -> bool:
         return self.archetype == "mage"
 
+    @property
+    def is_archer(self) -> bool:
+        return self.archetype == "archer"
+
+    @property
+    def ranged(self) -> dict[str, Any]:
+        """The bow or crossbow in hand: kind, ammo ("arrows" or "bolts") and range; {} without one."""
+        return self.player.get("ranged") or {}
+
+    @property
+    def ammo(self) -> int:
+        """Arrows or bolts in the pack for the weapon in hand."""
+        return self.player.get("supplies", {}).get(self.ranged.get("ammo", "arrows"), 0)
+
     def can_cast(self, name: str) -> bool:
         """In the book, with the mana and reagents for it right now."""
         spells = (self.raw.get("magic") or {}).get("spells", [])
@@ -152,15 +166,27 @@ class Situation:
             # A mage re-decides when mana crosses a band. Its next spell is queued in the
             # client, so the moment a cast becomes possible needs no new decision.
             mana_words(self.mana_pct) if self.is_mage else None,
+            # An archer when its ammunition runs low or out.
+            ammo_band(self.ammo) if self.is_archer else None,
         )
 
 
+AMMO_LOW = 25  # arrows or bolts: "running low" at or below this
+
+
+def ammo_band(n: int) -> str:
+    return "none" if n <= 0 else "low" if n <= AMMO_LOW else "plenty"
+
+
 def archetype_of(snapshot: dict[str, Any]) -> str:
-    """A mage has a spellbook and Magery at least as high as any weapon skill."""
+    """A mage has a spellbook and Magery at least as high as any weapon skill; an archer has a
+    bow or crossbow in hand."""
     skills = snapshot["player"].get("skills", {})
     magery = skills.get("Magery", 0)
     if snapshot.get("magic") and magery >= 50 and magery >= max((skills.get(s, 0) for s in MELEE_SKILLS), default=0):
         return "mage"
+    if snapshot["player"].get("ranged"):
+        return "archer"
     return "warrior"
 
 
@@ -171,6 +197,7 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     p = snapshot["player"]
     archetype = archetype or archetype_of(snapshot)
     mage = archetype == "mage"
+    ranged = (p.get("ranged") or {}) if archetype == "archer" else {}
     casts_at = casts_at or {}
     hp_pct = round(100 * p["hits"] / p["hits_max"]) if p.get("hits_max") else 100
     mana_pct = round(100 * p["mana"] / p["mana_max"]) if p.get("mana_max") else 100
@@ -215,6 +242,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 info["attacking_you"] = bool(m.get("attacking_me"))
                 allowed = info["the_players_target"] or engage == "nearby" or \
                     (engage == "defend" and info["attacking_you"])
+            if ranged:
+                info["in_shooting_range"] = m["distance"] <= ranged.get("range", 10)
             if mage:
                 info["in_spell_range"] = m["distance"] <= SPELL_RANGE
                 n = casts_at.get(m["serial"], 0)
@@ -284,6 +313,16 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         you["supplies"] = f"running low: {bandages} bandages and {potions} heal potions left"
     else:
         you["supplies"] = "plenty"
+    if ranged:
+        # A bow or crossbow shoots nothing without its ammunition, so that comes first.
+        what, n = ranged.get("ammo", "arrows"), supplies.get(ranged.get("ammo", "arrows"), 0)
+        you["weapon"] = f"{p.get('weapon') or 'a ' + ranged.get('kind', 'bow')} (shoots up to {ranged.get('range', 10)} " \
+                        f"tiles; needs {what})"
+        you[f"{what}_left"] = n
+        if n <= 0:
+            you["supplies"] = f"nearly gone: no {what} left, so the {ranged.get('kind', 'bow')} cannot shoot"
+        elif n <= AMMO_LOW and not you["supplies"].startswith("nearly gone"):
+            you["supplies"] = f"running low: {n} {what}, {bandages} bandages and {potions} heal potions left"
     if mage:
         del you["bandages_left"]
         you["supplies"] = "plenty" if potions > 1 else f"{potions} heal potions left"

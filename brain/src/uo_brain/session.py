@@ -273,7 +273,8 @@ class Session:
         snap = await self.snap(pack=True)
         supplies = snap["player"].get("supplies", {})
         key = {"bandage": "bandages", "bandages": "bandages", "heal potion": "heal_potions",
-               "cure potion": "cure_potions"}.get(item.lower())
+               "cure potion": "cure_potions", "arrow": "arrows", "arrows": "arrows", "bolt": "bolts",
+               "bolts": "bolts"}.get(item.lower())
         if key:
             return supplies.get(key, 0)
         reg = item.lower().replace(" ", "_")
@@ -418,7 +419,8 @@ class Session:
             "health": f"{p1.get('hits')}/{p1.get('hits_max')}",
             "stopped_because": why[0] if why else f"{minutes} minutes up",
         }
-        kit = self.archetype or ("mage" if last and self.mage(last) else "warrior")
+        from .state import archetype_of
+        kit = self.archetype or (archetype_of(last) if last else "warrior")
         # Named after the log, so importing the log later (outcomes.py) replaces these rows.
         session = session_name(self.decisions_log) if self.decisions_log else None
         self.world.add_outcome(name, kit, "kills_per_hour", round(data["kills"] / max(mins / 60, 1e-6), 1), session=session)

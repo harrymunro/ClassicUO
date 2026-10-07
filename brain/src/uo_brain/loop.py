@@ -68,7 +68,7 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
               log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None,
               on_snapshot: Callable[[dict[str, Any]], None] | None = None,
               bestiary: dict[int, dict[str, Any]] | None = None) -> RunStats:
-    """archetype: "warrior" or "mage", or None to tell from the character's skills.
+    """archetype: "warrior", "mage" or "archer", or None to tell from the character's skills and weapon.
     on_snapshot sees every in-game snapshot (the benchmark records a trace with it)."""
     stats = RunStats()
     mem = policy.Memory()

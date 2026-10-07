@@ -93,8 +93,9 @@ def main() -> None:
     bn.add_argument("what", nargs="?", default="run", choices=["run", "list", "report"])
     bn.add_argument("files", nargs="*", type=Path, help="for report: results JSON files to compare")
     bn.add_argument("--scenarios", default="core",
-                    help="comma-separated names, 'core' (judge comparison) or 'adherence' or 'all'")
-    bn.add_argument("--judges", default="heuristic,jev", help="comma-separated: heuristic, jev, jev+<template>")
+                    help="comma-separated names, 'core' (judge comparison), 'adherence', 'archetypes' or 'all'")
+    bn.add_argument("--judges", default="heuristic,jev",
+                    help="comma-separated: heuristic, jev, jev+<template>, each optionally /nokite (no stepping back)")
     bn.add_argument("--rounds", type=int, default=10)
     bn.add_argument("--lane", type=int, default=0, help="test-field lane, so several clients can run at once")
     bn.add_argument("--out", type=Path, help="results JSON (default bench/<time>.json)")
@@ -174,7 +175,7 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--model", help="model id (default: ~typesafe/jev-latest on OpenRouter, jev-latest direct)")
     p.add_argument("--mode", choices=["keep", "off", "assist", "auto"], default="keep",
                    help="set the client's agent mode first (default: leave as is)")
-    p.add_argument("--archetype", choices=["auto", "warrior", "mage"], default="auto",
+    p.add_argument("--archetype", choices=["auto", "warrior", "mage", "archer"], default="auto",
                    help="how to play the character (default: tell from its skills)")
     p.add_argument("--duration", type=float, help="stop after this many seconds")
     p.add_argument("--strategy", type=Path, metavar="FILE", help="load this Markdown strategy into the character first")
@@ -548,6 +549,8 @@ def bench_names(spec: str) -> list[str]:
             return list(benchmark.CORE)
         case "adherence":
             return adherence
+        case "archetypes":
+            return list(benchmark.ARCHETYPES)
         case "all":
             return list(benchmark.SCENARIOS)
     names = [n.strip() for n in spec.split(",") if n.strip()]

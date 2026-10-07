@@ -20,9 +20,10 @@ class PolicyConfig:
     take_item: float = 0.6
     close_tiles: int = 3
     spell_range: int = 7            # a mage keeps its target within this many tiles
+    bow_range: int = 8              # an archer shoots from this far, or its weapon's range if shorter
     meditate_below: int = 80        # mana %: a resting mage meditates below this
     avoid_players: bool = True      # auto mode leaves when a red or criminal player comes close
-    kite: bool = True               # a mage steps back from melee between spells
+    kite: bool = True               # a mage or archer steps back from melee between spells or shots
     # Set from the player's strategy (strategy.py).
     allow_flee: bool = True
     target_priority: str = "current_first"
@@ -44,6 +45,7 @@ class Memory:
     last_kite: float = 0.0      # a mage's last step back from melee
     last_protection: float = -1e9  # when Protection was last cast: buff icons may not show it
     kite_casts: int = -1        # attack spells cast by then: the next step back waits for one more
+    kite_ammo: int = 1 << 30    # an archer's arrows by then: the next step back waits for a shot
 
     def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
         if now - self.hinted.get(key, -1e9) < every:
@@ -87,13 +89,14 @@ class Decision:
 
 def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tuple[str, float, list[str]]:
     close = [h for h in sit.hostiles if h.distance <= cfg.close_tiles]
-    # A warrior seeks anything not yet close; a mage only what it cannot reach with spells.
-    reach = SPELL_RANGE if sit.is_mage else cfg.close_tiles
+    # A warrior seeks anything not yet close; a mage or archer only what it cannot reach.
+    reach = SPELL_RANGE if sit.is_mage else shooting_range(sit, cfg) if sit.is_archer else cfg.close_tiles
     # Whatever walks needs moving allowed: combat assist never moves the character.
     move = sit.authority("move") != "off"
     within_reach = any(c.distance <= 2 for c in sit.corpses) or bool(sit.items)
     valid = {
-        "fight": bool(sit.targets),
+        # A bow without arrows shoots nothing.
+        "fight": bool(sit.targets) and not (sit.is_archer and sit.ammo <= 0),
         "flee": bool(close) and cfg.allow_flee and move,
         "loot": bool(sit.corpses or sit.items) and not close and cfg.looting != "nothing"
                 and sit.authority("loot") != "off" and (move or within_reach) and not sit.traveling,
@@ -108,7 +111,7 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
     if total <= 0:
         # Everything the model wanted is ruled out (e.g. flee under a never-flee strategy):
         # code decides. Cornered means fight.
-        return ("fight" if close and sit.targets else "rest"), 1.0, masked
+        return ("fight" if close and valid["fight"] else "rest"), 1.0, masked
     best = max(probs, key=probs.get)
     # Jev's confidence describes its whole distribution. It still holds when the
     # masked options had no real weight; otherwise use the winner's renormalised share.
@@ -174,6 +177,8 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         or danger >= cfg.panic_danger and sit.hp_pct < 25
     if sit.assisting and close and wanted_flee and cfg.allow_flee and mem.hint_due("danger", now):
         hints.append({"verb": "hint", "text": "this fight is going badly, get out", "reason": "danger"})
+    if sit.assisting and sit.is_archer and sit.ammo <= 0 and sit.hostiles and mem.hint_due("ammo", now, 20):
+        hints.append({"verb": "hint", "text": f"out of {sit.ranged.get('ammo', 'arrows')}", "reason": "ammo"})
 
     if conf < cfg.min_intent_confidence:
         dec = Decision(intent, conf, hints, f"unsure ({conf:.2f}), keeping course", masked, gated=True)
@@ -235,6 +240,21 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             if dec.spell:
                 actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True, **meta})
             dec.note = f"fight {target.name}" + (f" with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
+        elif sit.is_archer:
+            # Engage at range, as a mage does, so the client shoots without closing to melee.
+            rng = shooting_range(sit, cfg)
+            if target.serial != engaged or sit.agent.get("engaged_range", 1) != rng:
+                actions.append({"verb": "attack", "target": target.serial, "range": rng, **meta})
+            # Two or more in melee reach: step back, once per shot fired (arrows used) since the
+            # last step, since a bow only fires once the archer has stood still for a moment.
+            adjacent = [h for h in sit.hostiles if h.distance <= 1]
+            if cfg.kite and len(adjacent) >= 2 and sit.authority("move") == "auto" and now - mem.last_kite > 3 \
+                    and sit.ammo < mem.kite_ammo:
+                mem.last_kite, mem.kite_ammo = now, sit.ammo
+                actions.append({"verb": "kite", "tiles": 5, **meta, "reason": "kite"})
+            if sit.assisting and target.distance > rng and mem.hint_due(f"range{target.serial}", now, 8):
+                actions.append({"verb": "hint", "text": f"{target.name} is out of shooting range", "reason": "range"})
+            dec.note = f"{'shoot' if target.serial != engaged else 'keep shooting'} {target.name} ({conf:.2f})"
         else:
             if target.serial != engaged:
                 actions.append({"verb": "attack", "target": target.serial, **meta})
@@ -266,7 +286,7 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         dec.target = target
         raw = next(m for m in sit.raw["mobiles"] if m["serial"] == target.serial)
         p = sit.player
-        stop = cfg.spell_range - 1 if sit.is_mage else 1
+        stop = cfg.spell_range - 1 if sit.is_mage else shooting_range(sit, cfg) - 1 if sit.is_archer else 1
         actions.append({"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": stop, **meta})
         dec.note = f"seek {target.name} ({conf:.2f})"
 
@@ -280,6 +300,10 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             dec.note = f"meditate ({conf:.2f})"
 
     return dec
+
+
+def shooting_range(sit: Situation, cfg: PolicyConfig) -> int:
+    return max(1, min(cfg.bow_range, sit.ranged.get("range", cfg.bow_range)))
 
 
 def pick_target(sit: Situation, ans: Answers, cfg: PolicyConfig) -> tuple[Candidate | None, float | None]:
