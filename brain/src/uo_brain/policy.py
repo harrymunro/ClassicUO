@@ -176,9 +176,19 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             mem.last_pet_call = now
         if not near:
             return Decision("leave", 1.0, call, "left: nothing in sight", masked)
+        # Something stronger has caught up with a tamer: the pet covers the escape (it may not
+        # come back; most monsters run as fast as a character, and the tamer can't take the hits).
+        chaser = next((h for h in near if h.distance <= 3 and h.allowed
+                       and str(h.info.get("strength", "")).startswith(("far stronger", "stronger"))), None)
+        if sit.is_tamer and sit.pet and chaser and sit.agent.get("pet_target", 0) != chaser.serial:
+            return Decision("leave", 1.0, [{"verb": "pet", "kind": "kill", "target": chaser.serial, "confidence": 1.0,
+                                            "reason": "cover"},
+                                           {"verb": "flee", "target": chaser.serial, "tiles": 15, "confidence": 1.0,
+                                            "reason": "leave"}],
+                            f"leaving: the pet holds off {chaser.name}", masked, target=chaser)
         if sit.agent.get("fleeing"):
             return Decision("leave", 1.0, call, "leaving", masked)
-        if sit.is_tamer and sit.pet and sit.pet["distance"] > 6:
+        if sit.is_tamer and sit.pet and sit.pet["distance"] > 6 and not any(h.distance <= 4 for h in near):
             return Decision("leave", 1.0, call, "leaving, waiting for the pet", masked)
         nearest = min(near, key=lambda h: h.distance)
         tiles = 8 if sit.is_tamer else 15
@@ -189,6 +199,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # A cautious strategy gets out early: badly hurt with several creatures on the character.
     outmatched = any(str(h.info.get("strength", "")).startswith("far stronger") for h in sit.hostiles)
     low = str(sit.state["you"].get("supplies", "")).startswith("nearly gone")
+    # A mage or archer with four or more on it is outnumbered: a reason to leave, as low supplies are.
+    outnumbered = (sit.is_mage or sit.is_archer) and len(close) >= 4
     if cfg.allow_flee and cfg.flee_danger <= 0.45 and sit.hp_pct < 45 and len(close) >= 2 \
             and sit.authority("move") == "auto" and intent != "leave":
         intent, conf = "leave", 1.0
@@ -203,7 +215,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg)
     cannot_fight = bool(sit.targets) and "fight" in masked
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
-                                  or cannot_fight):
+                                  or cannot_fight or outnumbered):
         intent = "fight" if close and "fight" not in masked else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.

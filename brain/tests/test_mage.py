@@ -240,3 +240,15 @@ def test_protection_is_not_recast_while_its_icon_is_missing(mage):
     again = policy.decide(state.build(mage, set(), []), answers("fight", target="t1"), mem, cfg, now=55.0)
     assert any(a.get("spell") == "Protection" for a in first.actions)
     assert not any(a.get("spell") == "Protection" for a in again.actions)
+
+
+def test_a_mage_with_four_close_is_asked_whether_to_leave(mage):
+    import copy as _copy
+    orc = mage["mobiles"][0]
+    mage["mobiles"] = [dict(_copy.deepcopy(orc), serial=0x100 + i, distance=1 + i % 2, dx=1 + i % 2) for i in range(4)]
+    sit = sit_of(mage)
+    qs = questions.build(sit)
+    assert qs["leave_now"]["instructions"]["reason"] == "4 creatures are close to the mage, who is weak in melee."
+    a = answers(intent="leave", danger=0.2)
+    a.nouls["leave_now"] = 0.5
+    assert policy.decide(sit, a, policy.Memory(), CFG, now=10.0).intent == "leave"

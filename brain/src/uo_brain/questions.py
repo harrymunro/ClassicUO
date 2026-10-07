@@ -429,6 +429,9 @@ def leave_reason(sit: Situation) -> str:
     close = [h for h in sit.hostiles if h.distance <= CLOSE_TILES]
     if str(sit.state["you"].get("supplies", "")).startswith("nearly gone") and len(close) >= 2:
         return f"Supplies are {sit.state['you']['supplies']}, with {len(close)} creatures close."
+    # A mage or an archer can't take many hits: four or more at once outnumber it.
+    if (sit.is_mage or sit.is_archer) and len(close) >= 4:
+        return f"{len(close)} creatures are close to the {character(sit)}, who is weak in melee."
     if sit.known and sit.hostiles:
         return "Facts from earlier play and guides about this place and these creatures are in " \
                "`what_you_know_about_this_place`."

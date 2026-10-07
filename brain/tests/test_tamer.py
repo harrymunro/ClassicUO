@@ -178,3 +178,12 @@ def test_a_leaving_tamer_waits_for_and_calls_a_lagging_pet(tamer):
     dec = policy.decide(sit_of(tamer), answers(), mem, CFG, now=50.0)
     assert dec.note == "leaving, waiting for the pet"
     assert dec.actions == [{"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "leave"}]
+
+
+def test_a_tamer_caught_while_leaving_lets_the_pet_hold_off_the_chaser(tamer):
+    mem = policy.Memory(leaving_until=100.0)
+    tamer["mobiles"][1].update({"name": "an ogre lord", "distance": 2, "dx": -2})
+    sit = state.build(tamer, set(), [], bestiary={7: {"hits": 500, "difficulty": "deadly"}})
+    dec = policy.decide(sit, answers(), mem, CFG, now=50.0)
+    assert [a["verb"] for a in dec.actions] == ["pet", "flee"]
+    assert dec.actions[0]["kind"] == "kill" and dec.actions[0]["target"] == 0x101

@@ -205,8 +205,8 @@ def check_tamer_orcs(tr: Trace) -> tuple[bool, dict[str, Any]]:
          "pull_backs": sum(1 for a in tr.actions("pet") if a.get("kind") == "follow")}
 
 
-def check_tamer_keeps_pet(tr: Trace) -> tuple[bool, dict[str, Any]]:
-    return (not tr.player_died and not tr.pet_lost), \
+def check_tamer_survives(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    return not tr.player_died, \
         {"kills": len(tr.kills()), "pet_lost": tr.pet_lost, "pet_min_hp": min(tr.pet_hp, default=None),
          "pull_backs": sum(1 for a in tr.actions("pet") if a.get("kind") == "follow"),
          "sent_at": [a.get("target") for a in tr.actions("pet") if a.get("kind") == "kill"][:5]}
@@ -378,9 +378,12 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "tamer", ["[AgentSpawn Orc 3 8 n"], 120, check_tamer_orcs, quiet_after=20),
     Scenario(
         "tamer-ogre-lord", "cuo-cvl.2",
-        "An ogre lord walks up to a tamer with a grizzly bear, two orcs with it: the bear can't win against the "
-        "ogre lord, so don't lose it: fight only what it can beat, call it back, leave.",
-        "tamer", ["[AgentSpawn OgreLord 1 10 n", "[AgentSpawn Orc 2 6 n"], 90, check_tamer_keeps_pet,
+        "An ogre lord walks up to a tamer with a grizzly bear, two orcs with it. Neither can beat it, and it runs as "
+        "fast as the tamer: leave early, and if it catches up, let the bear hold it off. The tamer must survive; "
+        "losing the bear is reported.",
+        # First written as "keep the bear too": every round of every judge lost both, since an ogre
+        # lord outruns a tamer on foot; the bear holding it off is the only way out.
+        "tamer", ["[AgentSpawn OgreLord 1 10 n", "[AgentSpawn Orc 2 6 n"], 90, check_tamer_survives,
         quiet_after=20),
     Scenario(
         "bard-provoke", "cuo-cvl.3",
