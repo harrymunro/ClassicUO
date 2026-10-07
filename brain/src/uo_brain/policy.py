@@ -212,6 +212,12 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     if cfg.allow_flee and cfg.flee_danger <= 0.45 and sit.hp_pct < 45 and len(close) >= 2 \
             and sit.authority("move") == "auto" and intent != "leave":
         intent, conf = "leave", 1.0
+    # Code's call for a mage or archer with four or more on it once Jev judges it in danger: its
+    # spells or shots are interrupted by every hit, and Jev, seeing each creature as "an easy
+    # kill", put only 0.2-0.4 on leaving in swarm rounds that ended in death (2026-10-07).
+    if outnumbered and len([h for h in close if h.distance <= 1]) >= 4 and danger >= 0.5 and cfg.allow_flee \
+            and sit.authority("move") == "auto" and not sit.assisting and intent != "leave":
+        intent, conf = "leave", danger
     # Jev's yes/no on leaving, asked when there is a reason to: it decides, not the intent vote.
     # A cautious strategy leaves on weaker signals; relentless ones never (allow_flee off).
     if ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg) and cfg.allow_flee \

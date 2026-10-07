@@ -252,3 +252,13 @@ def test_a_mage_with_four_close_is_asked_whether_to_leave(mage):
     a = answers(intent="leave", danger=0.2)
     a.nouls["leave_now"] = 0.5
     assert policy.decide(sit, a, policy.Memory(), CFG, now=10.0).intent == "leave"
+
+
+def test_a_mage_with_four_on_it_leaves_once_jev_says_it_is_in_danger(mage):
+    import copy as _copy
+    orc = mage["mobiles"][0]
+    mage["mobiles"] = [dict(_copy.deepcopy(orc), serial=0x100 + i, distance=1, dx=1) for i in range(4)]
+    sit = sit_of(mage)
+    calm = policy.decide(sit, answers(danger=0.3), policy.Memory(), CFG, now=10.0)
+    assert calm.intent == "fight"
+    assert policy.decide(sit_of(mage), answers(danger=0.55), policy.Memory(), CFG, now=10.0).intent == "leave"
