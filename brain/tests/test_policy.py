@@ -170,3 +170,55 @@ def test_panic_counts_a_potion_on_cooldown_as_unavailable(snapshot):
 def test_potion_readiness_in_words(snapshot):
     snapshot["agent"]["heal_potion_ready_ms"] = 6400
     assert sit_of(snapshot).state["you"]["heal_potion_ready"] == "not for another 6 seconds"
+
+
+# ---------------------------------------------------------------- combat assist
+
+
+def assist_snapshot(snapshot, engage="defend"):
+    snapshot["agent"].update({"mode": "assist", "engage": engage,
+                              "authority": {"heal": "auto", "cure": "auto", "potion": "auto", "fight": "auto",
+                                            "loot": "suggest", "move": "off", "misc": "suggest"}})
+    return snapshot
+
+
+def test_combat_assist_offers_only_the_players_target_under_follow(snapshot):
+    snap = assist_snapshot(snapshot, "follow")
+    snap["mobiles"][1]["player_target"] = True  # the orc captain, 6 tiles away
+    sit = state.build(snap, set(), [])
+    assert [h.name for h in sit.targets] == ["an orc captain"]
+    qs = questions.build(sit)
+    assert set(qs["target"]["criteria"]) == {"t2", "none"}
+
+
+def test_combat_assist_defends_against_attackers(snapshot):
+    snap = assist_snapshot(snapshot, "defend")
+    snap["mobiles"][0]["attacking_me"] = True
+    sit = state.build(snap, set(), [])
+    assert [h.serial for h in sit.targets] == [0x100]
+    assert sit.hostiles[0].info["attacking_you"] is True
+
+
+def test_combat_assist_never_walks_or_flees_and_warns_instead(snapshot):
+    snap = assist_snapshot(snapshot, "nearby")
+    snap["player"]["hits"] = 15
+    snap["mobiles"][1].update({"distance": 1, "dx": 1, "dy": 1})
+    sit = state.build(snap, set(), [])
+    ans = answers("flee", probs={"flee": 0.9, "fight": 0.1}, danger=0.95)
+    mem = policy.Memory()
+    dec = policy.decide(sit, ans, mem, policy.PolicyConfig(), now=100.0)
+    assert dec.intent == "fight"
+    assert "flee" in dec.masked
+    assert not any(a["verb"] in ("flee", "walk_to") for a in dec.actions)
+    assert [a["text"] for a in dec.actions if a["verb"] == "hint"] == ["this fight is going badly, get out"]
+    # The same warning is not repeated straight away.
+    dec2 = policy.decide(sit, ans, mem, policy.PolicyConfig(), now=105.0)
+    assert not any(a["verb"] == "hint" for a in dec2.actions)
+
+
+def test_next_move_is_the_combat_action(mage):
+    mage["agent"]["engaged"] = 0
+    sit = state.build(mage, set(), [])
+    ans = answers("fight", probs={"fight": 0.9, "rest": 0.1}, target="t1")
+    dec = policy.decide(sit, ans, policy.Memory(), policy.PolicyConfig())
+    assert dec.next_move is not None and dec.next_move["verb"] in ("attack", "cast")

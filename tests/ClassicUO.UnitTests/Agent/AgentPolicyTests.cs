@@ -354,8 +354,10 @@ namespace ClassicUO.UnitTests.Agent
         [Theory]
         [InlineData("assist", "heal", "auto")]
         [InlineData("assist", "potion", "auto")]
-        [InlineData("assist", "fight", "suggest")]
-        [InlineData("assist", "move", "suggest")]
+        [InlineData("assist", "fight", "auto")]
+        [InlineData("assist", "move", "off")]
+        [InlineData("assist", "loot", "suggest")]
+        [InlineData("combat", "fight", "auto")]
         [InlineData("auto", "loot", "auto")]
         [InlineData("off", "heal", "off")]
         public void Presets(string mode, string behavior, string expected)
@@ -369,11 +371,32 @@ namespace ClassicUO.UnitTests.Agent
         [Theory]
         [InlineData("ASSIST", true)]
         [InlineData("auto", true)]
+        [InlineData("combat", true)]
         [InlineData("7", false)]
+        [InlineData("1", false)]
         [InlineData("chaos", false)]
         public void Parses_mode_names(string text, bool ok)
         {
             AgentModes.TryParse(text, out AgentMode _).Should().Be(ok);
+        }
+
+        [Fact]
+        public void Combat_is_the_assist_mode_and_keeps_its_saved_name()
+        {
+            AgentModes.TryParse("combat", out AgentMode m).Should().BeTrue();
+            m.Should().Be(AgentMode.Assist);
+            m.Name().Should().Be("assist");
+            m.Title().Should().Be("combat assist");
+        }
+
+        [Theory]
+        [InlineData("follow", "Follow")]
+        [InlineData("Defend", "Defend")]
+        [InlineData("nearby", "Nearby")]
+        public void Parses_engage_settings(string text, string expected)
+        {
+            AgentModes.TryParse(text, out AgentEngage e).Should().BeTrue();
+            e.ToString().Should().Be(expected);
         }
 
         [Theory]

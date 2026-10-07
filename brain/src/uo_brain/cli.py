@@ -7,6 +7,7 @@
   uo-brain strategy templates | strategy template relentless [--replace] | strategy drop relentless
   uo-brain status | snapshot [--semantic] | act attack target=0x1234 | say "[AgentKit" | shot out.png
   uo-brain report logs/run.jsonl
+  uo-brain bench --scenarios core --judges heuristic,jev --rounds 10   (bench report bench/*.json)
 """
 
 import argparse
@@ -17,6 +18,7 @@ import sys
 import time
 from pathlib import Path
 
+from . import bench as benchmark
 from . import judge as judges
 from . import loop, policy, state
 from . import strategy as strategies
@@ -80,6 +82,17 @@ def main() -> None:
     sc.add_argument("--kind", default="", help="monster kind for [AgentArena")
     sc.add_argument("--kit", choices=["warrior", "mage"], default="warrior", help="template for [AgentKit")
 
+    bn = sub.add_parser("bench", help="judgment benchmark: scenarios where fixed rules fail (local test server)")
+    bn.add_argument("what", nargs="?", default="run", choices=["run", "list", "report"])
+    bn.add_argument("files", nargs="*", type=Path, help="for report: results JSON files to compare")
+    bn.add_argument("--scenarios", default="core",
+                    help="comma-separated names, 'core' (judge comparison) or 'adherence' or 'all'")
+    bn.add_argument("--judges", default="heuristic,jev", help="comma-separated: heuristic, jev, jev+<template>")
+    bn.add_argument("--rounds", type=int, default=10)
+    bn.add_argument("--lane", type=int, default=0, help="test-field lane, so several clients can run at once")
+    bn.add_argument("--out", type=Path, help="results JSON (default bench/<time>.json)")
+    bn.add_argument("--min-confidence", type=float, default=policy.PolicyConfig.min_intent_confidence)
+
     rp = sub.add_parser("report", help="summarise a decision log")
     rp.add_argument("log")
 
@@ -96,6 +109,9 @@ def main() -> None:
         return
     if args.cmd == "replay":
         asyncio.run(replay(args))
+        return
+    if args.cmd == "bench" and args.what != "run":
+        bench_offline(args)
         return
     asyncio.run(dispatch(args))
 
@@ -155,6 +171,8 @@ async def dispatch(args) -> None:
                 await run_loop(rpc, args)
             case "scenario":
                 await scenario(rpc, args)
+            case "bench":
+                await bench(rpc, args)
     finally:
         await rpc.close()
 
@@ -271,6 +289,42 @@ async def scenario(rpc: AgentRpc, args) -> None:
     minutes = sum(r["minutes"] for r in results)
     print(json.dumps({"rounds": len(results), "kills": kills, "deaths": deaths, "minutes": round(minutes, 1),
                       "kills_per_hour": round(kills / max(minutes / 60, 1e-9), 1)}, indent=2))
+
+
+def bench_names(spec: str) -> list[str]:
+    adherence = [n for n, s in benchmark.SCENARIOS.items() if s.template]
+    match spec:
+        case "core":
+            return list(benchmark.CORE)
+        case "adherence":
+            return adherence
+        case "all":
+            return list(benchmark.SCENARIOS)
+    names = [n.strip() for n in spec.split(",") if n.strip()]
+    if unknown := [n for n in names if n not in benchmark.SCENARIOS]:
+        sys.exit(f"unknown scenario(s): {', '.join(unknown)} (see: uo-brain bench list)")
+    return names
+
+
+async def bench(rpc: AgentRpc, args) -> None:
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    out = args.out or Path("bench") / f"{stamp}.json"
+    result = await benchmark.run(rpc, bench_names(args.scenarios), [j.strip() for j in args.judges.split(",")],
+                                 args.rounds, args.lane, out, Path("logs") / "bench" / stamp,
+                                 min_confidence=args.min_confidence)
+    print(benchmark.table([result]))
+    print(f"results: {out}")
+
+
+def bench_offline(args) -> None:
+    if args.what == "list":
+        for name, sc in benchmark.SCENARIOS.items():
+            fixed = f" [template {sc.template}]" if sc.template else ""
+            print(f"{name:<28} {sc.kit:<8} {sc.bead}{fixed}\n    {sc.right}")
+        return
+    if not args.files:
+        sys.exit("bench report needs one or more results files")
+    print(benchmark.table([json.loads(f.read_text()) for f in args.files], [f.stem for f in args.files]))
 
 
 async def replay(args) -> None:

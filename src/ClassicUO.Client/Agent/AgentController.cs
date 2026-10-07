@@ -64,7 +64,12 @@ namespace ClassicUO.Agent
         private bool _profileLoaded;
         private bool _wasDead;
 
-        private uint _lastHumanInput;
+        private uint _lastHumanInput, _lastHumanMove, _lastHumanClick;
+
+        // Combat assist: the creature the player is fighting (their attack, or a creature
+        // they targeted with a cursor), and the creatures that have swung at the player.
+        private uint _playerTarget, _seenTargetInfo, _agentTargeted, _nextAssistLook;
+        private readonly Dictionary<uint, uint> _attackers = new Dictionary<uint, uint>();
         private uint _nextReflex;
         private uint _bandagingUntil;
         private uint _lastBandageAttempt, _lastHealPotion, _lastCurePotion;
@@ -98,6 +103,9 @@ namespace ClassicUO.Agent
         private bool _wasTargeting;
         private uint _cursorUpSince;
 
+        // Creatures seen dying, newest last, so a benchmark can tell what died in which order.
+        private readonly List<(uint Serial, string Name, ushort Body, uint Time)> _deaths = new List<(uint, string, ushort, uint)>();
+
         private readonly List<AgentDecision> _decisions = new List<AgentDecision>();
         private int _decisionSeq;
 
@@ -111,6 +119,7 @@ namespace ClassicUO.Agent
         }
 
         public AgentMode Mode { get; private set; }
+        public AgentEngage Engage { get; private set; } = AgentEngage.Defend;
         public ReflexSettings Reflexes { get; } = new ReflexSettings();
         public AgentJournal Journal { get; }
         public AgentStats Stats { get; } = new AgentStats();
@@ -163,6 +172,21 @@ namespace ClassicUO.Agent
             : _nextCastAt > Time.Ticks ? _nextCastAt - Time.Ticks : 0;
         public bool HumanActive => _lastHumanInput != 0 && Time.Ticks - _lastHumanInput < HumanPauseMs;
         public uint LastHumanInput => _lastHumanInput;
+        public uint PlayerTarget => _playerTarget;
+
+        // Whether the player's recent input holds back a brain action of this behaviour. In
+        // auto, touching the controls is a short override of everything but healing. In combat
+        // assist the fight goes on and only the agent's own walking (and looting, which walks)
+        // waits; moving is off there anyway unless overridden.
+        public bool Paused(AgentBehavior b)
+        {
+            if (!HumanActive || b == AgentBehavior.Heal || b == AgentBehavior.Cure || b == AgentBehavior.Potion)
+            {
+                return false;
+            }
+
+            return Mode != AgentMode.Assist || b == AgentBehavior.Move || b == AgentBehavior.Loot;
+        }
 
         public AgentAuthority GetAuthority(AgentBehavior b) => _authority[(int) b];
 
@@ -192,11 +216,42 @@ namespace ClassicUO.Agent
             SaveToProfile();
         }
 
-        // The player touched the controls: hand them back. Survival reflexes keep running.
-        public void NoteHumanInput()
+        // The one key between the two ways to play: combat assist (you drive) and auto.
+        public void SwitchPlayState()
         {
-            _lastHumanInput = Time.Ticks;
-            _queuedCast = null;
+            SetMode(Mode == AgentMode.Assist ? AgentMode.Auto : AgentMode.Assist);
+            Print($"mode {Mode.Title()}");
+        }
+
+        public void SetEngage(AgentEngage e)
+        {
+            EnsureProfileLoaded();
+            Engage = e;
+            SaveToProfile();
+        }
+
+        // The player touched the controls: hand them back. Survival reflexes keep running.
+        // movement: arrow keys or the right mouse button walking the character; otherwise a
+        // click in the world.
+        public void NoteHumanInput(bool movement)
+        {
+            uint now = Time.Ticks;
+            _lastHumanInput = now;
+
+            if (movement)
+            {
+                _lastHumanMove = now;
+            }
+            else
+            {
+                _lastHumanClick = now;
+            }
+
+            // In auto, any touch drops the spell waiting to be cast; in combat assist it is cast.
+            if (Mode != AgentMode.Assist)
+            {
+                _queuedCast = null;
+            }
 
             if (_agentWalking && _world.Player != null && _world.Player.Pathfinder.AutoWalking)
             {
@@ -260,9 +315,21 @@ namespace ClassicUO.Agent
             _decisionSeq++;
         }
 
+        public IReadOnlyList<(uint Serial, string Name, ushort Body, uint Time)> RecentDeaths => _deaths;
+
         // Called by the 0xAF death packet before the mobile is turned into a corpse.
         public void OnMobileDied(uint serial)
         {
+            if (_world.Mobiles.Get(serial) is Mobile dying)
+            {
+                _deaths.Add((serial, dying.Name?.Trim() ?? string.Empty, dying.Graphic, Time.Ticks));
+
+                if (_deaths.Count > 32)
+                {
+                    _deaths.RemoveAt(0);
+                }
+            }
+
             if (serial != 0 && (serial == _engaged || serial == _world.TargetManager.LastAttack))
             {
                 Stats.Kills++;
@@ -389,6 +456,8 @@ namespace ClassicUO.Agent
             }
 
             UpdatePeek(now);
+            UpdatePlayerTarget();
+            UpdateAssist(now);
             UpdateEngagement(now);
             UpdateLoot(now);
             UpdateTakes(now);
@@ -403,6 +472,12 @@ namespace ClassicUO.Agent
             if (!_world.InGame || _world.Player == null)
             {
                 return ("failed", "not in game");
+            }
+
+            // A hint is client-side text for the player and nothing else.
+            if (a.Verb == "hint")
+            {
+                return Execute(a);
             }
 
             if (!a.Manual)
@@ -424,15 +499,89 @@ namespace ClassicUO.Agent
                     return ("suggested", a.Describe(_world));
                 }
 
-                if (HumanActive && a.Behavior != AgentBehavior.Heal && a.Behavior != AgentBehavior.Cure && a.Behavior != AgentBehavior.Potion)
+                if (Paused(a.Behavior))
                 {
                     Stats.Deferred++;
 
                     return ("deferred", "player is in control");
                 }
+
+                // Combat assist takes on only what its engage setting allows.
+                if (a.Behavior == AgentBehavior.Fight && a.Target != 0 && a.Target != uint.MaxValue && !MayEngage(a.Target))
+                {
+                    Stats.Blocked++;
+
+                    return ("blocked", "not your target");
+                }
             }
 
             return Execute(a);
+        }
+
+        // Combat assist: whether the agent may take this creature on by itself. Your own
+        // target always; attackers too under "defend"; any monster under "nearby".
+        public bool MayEngage(uint serial)
+        {
+            if (Mode != AgentMode.Assist || serial == _playerTarget)
+            {
+                return true;
+            }
+
+            Mobile m = _world.Mobiles.Get(serial);
+
+            return m != null && (Engage == AgentEngage.Nearby || Engage == AgentEngage.Defend && IsAttackingMe(m));
+        }
+
+        // Swung at the player in the last 8 s, or a monster in war mode standing next to them.
+        public bool IsAttackingMe(Mobile m) =>
+            _attackers.TryGetValue(m.Serial, out uint at) && Time.Ticks - at < 8000
+            || m.InWarMode && m.Distance <= 1 && IsMonsterTarget(m);
+
+        // From the swing packet (0x2F) when the player is the defender.
+        public void NoteAttacker(uint serial)
+        {
+            if (serial != 0)
+            {
+                _attackers[serial] = Time.Ticks;
+            }
+        }
+
+        // The next-action key: Jev's pending suggestion if there is one, else the move its last
+        // decision made or wanted (a cast, a target switch), else a bandage when hurt.
+        public void DoNext()
+        {
+            if (AcceptSuggestion())
+            {
+                return;
+            }
+
+            AgentDecision d = LastDecision;
+            AgentAction next = d != null && Time.Ticks - d.Time < 6000 ? d.Next : null;
+
+            if (next != null)
+            {
+                var a = new AgentAction
+                {
+                    Verb = next.Verb, Target = next.Target, Spell = next.Spell, Range = next.Range, Kind = next.Kind,
+                    Manual = true, Reason = "next"
+                };
+
+                (string status, string detail) = Execute(a);
+                Print($"{a.Describe(_world)}: {status}{(string.IsNullOrEmpty(detail) ? "" : " (" + detail + ")")}");
+
+                return;
+            }
+
+            PlayerMobile p = _world.Player;
+
+            if (p != null && p.Hits < p.HitsMax && !Bandaging && BandageOn(p.Serial))
+            {
+                Print("bandage self");
+
+                return;
+            }
+
+            Print("jev has nothing to suggest right now");
         }
 
         public bool AcceptSuggestion()
@@ -571,6 +720,14 @@ namespace ClassicUO.Agent
                     return ("done", string.Empty);
 
                 case "wait":
+                    return ("done", string.Empty);
+
+                case "hint":
+                    if (!string.IsNullOrEmpty(a.Text))
+                    {
+                        player.AddMessage(MessageType.Regular, "jev: " + a.Text, 3, 0x0035, true, TextType.CLIENT);
+                    }
+
                     return ("done", string.Empty);
 
                 default:
@@ -724,7 +881,7 @@ namespace ClassicUO.Agent
                 return;
             }
 
-            if (now - _queuedCastAt > 4000 || HumanActive)
+            if (now - _queuedCastAt > 4000 || Paused(AgentBehavior.Fight))
             {
                 _queuedCast = null;
             }
@@ -756,7 +913,9 @@ namespace ClassicUO.Agent
             // up before then belongs to something else the player is doing.
             if (tm.IsTargeting && _cursorUpSince + 300 >= _castUntil)
             {
-                bool playerTookOver = !_castSurvival && _lastHumanInput != 0 && _lastHumanInput >= _castStarted;
+                // In combat assist only a click hands the cursor over: walking while it casts is normal.
+                uint touched = Mode == AgentMode.Assist ? _lastHumanClick : _lastHumanInput;
+                bool playerTookOver = !_castSurvival && touched != 0 && touched >= _castStarted;
                 Entity e = _castTarget == 0 ? null : _world.Get(_castTarget);
 
                 if (playerTookOver)
@@ -765,6 +924,7 @@ namespace ClassicUO.Agent
                 }
                 else if (e != null && !(e is Mobile m && m.IsDead) && (tm.TargetingState == CursorTarget.Object || tm.TargetingState == CursorTarget.Position))
                 {
+                    _agentTargeted = _castTarget;
                     tm.Target(_castTarget);
                 }
                 else
@@ -1090,6 +1250,95 @@ namespace ClassicUO.Agent
             }
         }
 
+        // What the player is fighting: their attack target (also set by the server when they
+        // fight back) or a creature they targeted with a cursor, whichever came last.
+        private void UpdatePlayerTarget()
+        {
+            TargetManager tm = _world.TargetManager;
+            uint last = tm.LastAttack;
+
+            if (last != _seenLastAttackForPlayer)
+            {
+                _seenLastAttackForPlayer = last;
+
+                if (last != 0 && last != _agentAttack)
+                {
+                    _playerTarget = last;
+                }
+            }
+
+            uint cursor = tm.LastTargetInfo.IsEntity ? tm.LastTargetInfo.Serial : 0;
+
+            if (cursor != _seenTargetInfo)
+            {
+                _seenTargetInfo = cursor;
+
+                if (cursor != 0 && cursor != _agentTargeted && cursor != _world.Player.Serial && _world.Mobiles.Get(cursor) is Mobile m && IsMonsterTarget(m))
+                {
+                    _playerTarget = cursor;
+                }
+            }
+
+            if (_playerTarget != 0 && (!(_world.Mobiles.Get(_playerTarget) is Mobile t) || t.IsDead))
+            {
+                _playerTarget = 0;
+            }
+        }
+
+        private uint _seenLastAttackForPlayer;
+
+        // Combat assist without walking: fight what the player fights, and, as the engage
+        // setting allows, what attacks them or anything nearby. A brain may pick targets too
+        // (Request checks them against the same setting); this keeps a warrior swinging with
+        // no brain running at all.
+        private void UpdateAssist(uint now)
+        {
+            if (Mode != AgentMode.Assist || GetAuthority(AgentBehavior.Fight) != AgentAuthority.Auto || _world.Player.IsDead || now < _nextAssistLook)
+            {
+                return;
+            }
+
+            _nextAssistLook = now + 400;
+
+            if (_playerTarget != 0 && _engaged != _playerTarget && _world.Mobiles.Get(_playerTarget) is Mobile chosen && IsMonsterTarget(chosen))
+            {
+                _engaged = _playerTarget;
+                _agentAttack = _playerTarget;
+                Journal.AddAgentEvent($"following your target 0x{_playerTarget:X8}");
+
+                return;
+            }
+
+            Mobile current = _engaged == 0 ? null : _world.Mobiles.Get(_engaged);
+
+            if (Engage == AgentEngage.Follow || current != null && !current.IsDead)
+            {
+                return;
+            }
+
+            Mobile pick = null;
+
+            foreach (Mobile m in _world.Mobiles.Values)
+            {
+                if (m == _world.Player || m.IsDead || !IsMonsterTarget(m))
+                {
+                    continue;
+                }
+
+                bool ok = Engage == AgentEngage.Nearby ? m.Distance <= 8 : IsAttackingMe(m);
+
+                if (ok && (pick == null || m.Distance < pick.Distance))
+                {
+                    pick = m;
+                }
+            }
+
+            if (pick != null)
+            {
+                Attack(pick.Serial, false, _engagedRange);
+            }
+        }
+
         private void UpdateEngagement(uint now)
         {
             // The player attacked something else themselves: their choice stands. The
@@ -1125,7 +1374,7 @@ namespace ClassicUO.Agent
             }
 
             // Casting roots the caster, so do not walk until the cast delay is over.
-            if (HumanActive || Fleeing || now < _nextPursuit || (_castSpell != 0 && now < _castUntil))
+            if (Paused(AgentBehavior.Fight) || Fleeing || now < _nextPursuit || (_castSpell != 0 && now < _castUntil))
             {
                 return;
             }
@@ -1140,8 +1389,9 @@ namespace ClassicUO.Agent
                 GameActions.Attack(_world, _engaged);
             }
 
-            // Melee closes to adjacent; a caster only closes to spell range.
-            if (m.Distance > _engagedRange)
+            // Melee closes to adjacent; a caster only closes to spell range. Only with moving
+            // allowed: combat assist never walks the character.
+            if (m.Distance > _engagedRange && GetAuthority(AgentBehavior.Move) == AgentAuthority.Auto && !Paused(AgentBehavior.Move))
             {
                 bool moved = m.X != _engagedLastX || m.Y != _engagedLastY;
 
@@ -1175,7 +1425,7 @@ namespace ClassicUO.Agent
 
             if (corpse.Distance > 2)
             {
-                if (!p.Pathfinder.AutoWalking && !HumanActive)
+                if (!p.Pathfinder.AutoWalking && !Paused(AgentBehavior.Loot))
                 {
                     WalkTo(corpse.X, corpse.Y, corpse.Z, 1);
                 }
@@ -1355,6 +1605,8 @@ namespace ClassicUO.Agent
 
             AgentModes.TryParse(profile.AgentMode, out AgentMode mode);
             Mode = mode;
+            Engage = AgentModes.TryParse(profile.AgentEngage, out AgentEngage engage) ? engage : AgentEngage.Defend;
+            AddDefaultMacros(profile);
 
             foreach (AgentBehavior b in AgentModes.AllBehaviors)
             {
@@ -1373,6 +1625,29 @@ namespace ClassicUO.Agent
             }
         }
 
+        // Once per character: Alt+A switches between combat assist and auto, Alt+N does Jev's
+        // next move. Keys the player already uses are left alone; the macros can be rebound or
+        // deleted in Options → Macros and are not added again.
+        private void AddDefaultMacros(Profile profile)
+        {
+            if (profile.AgentMacrosAdded || _world.Macros == null)
+            {
+                return;
+            }
+
+            profile.AgentMacrosAdded = true;
+
+            foreach ((string name, char key, MacroType type) in new[] { ("Agent: switch", 'a', MacroType.AgentSwitch), ("Agent: next move", 'n', MacroType.AgentNext) })
+            {
+                bool free = _world.Macros.FindMacro((SDL3.SDL.SDL_Keycode) key, true, false, false) == null;
+                var macro = new Macro(name, free ? (SDL3.SDL.SDL_Keycode) key : 0, free, false, false);
+                macro.PushToBack(new MacroObject(type, MacroSubType.MSC_NONE));
+                _world.Macros.PushToBack(macro);
+            }
+
+            _world.Macros.Save();
+        }
+
         private void SaveToProfile()
         {
             Profile profile = ProfileManager.CurrentProfile;
@@ -1383,6 +1658,7 @@ namespace ClassicUO.Agent
             }
 
             profile.AgentMode = Mode.Name();
+            profile.AgentEngage = Engage.Name();
             profile.AgentBandageBelowPercent = Reflexes.BandageBelowPercent;
             profile.AgentHealPotionBelowPercent = Reflexes.HealPotionBelowPercent;
             profile.AgentStrategy = Strategy;
@@ -1514,7 +1790,7 @@ namespace ClassicUO.Agent
 
         // ---------------------------------------------------------------- chat command
 
-        // "-agent [off|assist|auto|status|accept|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>
+        // "-agent [off|combat|auto|switch|next|status|accept|engage <follow|defend|nearby>|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>
         //         |strategy [set <text>|add <text>|clear]|template [list|<name>|set <name>|remove <name>]]"
         public void OnCommand(string[] args)
         {
@@ -1524,10 +1800,11 @@ namespace ClassicUO.Agent
             {
                 case "off":
                 case "assist":
+                case "combat":
                 case "auto":
                     AgentModes.TryParse(sub, out AgentMode mode);
                     SetMode(mode);
-                    Print($"mode {Mode.Name()}");
+                    Print($"mode {Mode.Title()}");
 
                     break;
 
@@ -1536,6 +1813,28 @@ namespace ClassicUO.Agent
                     {
                         Print("nothing to accept");
                     }
+
+                    break;
+
+                case "switch":
+                case "toggle":
+                    SwitchPlayState();
+
+                    break;
+
+                case "next":
+                    DoNext();
+
+                    break;
+
+                case "engage" when args.Length > 2 && AgentModes.TryParse(args[2], out AgentEngage engage):
+                    SetEngage(engage);
+                    Print($"combat assist engages {Engage.Title()}");
+
+                    break;
+
+                case "engage":
+                    Print($"combat assist engages {Engage.Title()}; -agent engage follow|defend|nearby");
 
                     break;
 
@@ -1601,7 +1900,7 @@ namespace ClassicUO.Agent
                     break;
 
                 case "status":
-                    var sb = new StringBuilder($"mode {Mode.Name()}:");
+                    var sb = new StringBuilder($"mode {Mode.Title()} (engages {Engage.Title()}):");
 
                     foreach (AgentBehavior beh in AgentModes.AllBehaviors)
                     {
@@ -1614,7 +1913,7 @@ namespace ClassicUO.Agent
                     break;
 
                 default:
-                    Print("usage: -agent off|assist|auto|status|accept|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>|strategy [set|add|clear] <text>|template [list|<name>|set <name>|remove <name>]");
+                    Print("usage: -agent off|combat|auto|switch|next|status|accept|engage <follow|defend|nearby>|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>|strategy [set|add|clear] <text>|template [list|<name>|set <name>|remove <name>]");
 
                     break;
             }

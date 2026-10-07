@@ -1873,13 +1873,17 @@ namespace ClassicUO.Network
             p.Skip(1);
 
             uint attackers = p.ReadUInt32BE();
+            uint defenders = p.ReadUInt32BE();
+
+            if (defenders == world.Player)
+            {
+                world.Agent.NoteAttacker(attackers);
+            }
 
             if (attackers != world.Player)
             {
                 return;
             }
-
-            uint defenders = p.ReadUInt32BE();
 
             const int TIME_TURN_TO_LASTTARGET = 2000;
 

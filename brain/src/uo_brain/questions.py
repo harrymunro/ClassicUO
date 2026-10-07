@@ -122,8 +122,8 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         },
     }
 
-    if sit.hostiles:
-        criteria = {h.id: describe_hostile(h.info, who) for h in sit.hostiles}
+    if sit.targets:
+        criteria = {h.id: describe_hostile(h.info, who) for h in sit.targets}
         criteria["none"] = "None of these creatures should be attacked."
         qs["target"] = {
             "type": "choice",
@@ -139,9 +139,9 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
 
     # Which spell, asked alongside the target so a cast needs no second round trip. The
     # question says where the fight stands, so "open with ..." strategies have a hook.
-    if sit.is_mage and sit.hostiles and sit.spells:
-        focus = next((h for h in sit.hostiles if h.info["your_current_target"]), None) \
-            or min(sit.hostiles, key=lambda h: h.distance)
+    if sit.is_mage and sit.targets and sit.spells:
+        focus = next((h for h in sit.targets if h.info["your_current_target"]), None) \
+            or min(sit.targets, key=lambda h: h.distance)
         if focus.casts == 0:
             question = (f"The mage is about to open the fight against {focus.name} ({focus.info['health']}): no spell "
                         "has been cast at it yet. Which spell from `you.attack_spells_available` should open the fight?")
@@ -196,4 +196,8 @@ def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
         parts.append("within spell range" if info["in_spell_range"] else "out of spell range")
     if info.get("your_current_target"):
         parts.append(f"the {who} is already fighting it")
+    if info.get("the_players_target"):
+        parts.append("the player's own target")
+    elif info.get("attacking_you"):
+        parts.append("attacking the player")
     return ", ".join(parts)

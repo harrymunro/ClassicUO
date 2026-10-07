@@ -26,7 +26,7 @@ namespace ClassicUO.Agent
         private static readonly List<Mobile> _mobiles = new List<Mobile>();
         private static readonly List<Item> _corpses = new List<Item>();
 
-        public static void Write(Utf8JsonWriter w, World world, long journalSince, int radius)
+        public static void Write(Utf8JsonWriter w, World world, long journalSince, int radius, bool pack = false)
         {
             AgentController agent = world.Agent;
             w.WriteStartObject();
@@ -46,6 +46,13 @@ namespace ClassicUO.Agent
             WriteCorpses(w, world, radius);
             WriteJournal(w, agent.Journal, journalSince);
             WriteMagic(w, p, agent);
+            WriteDeaths(w, agent);
+
+            if (pack)
+            {
+                WritePack(w, world, p);
+            }
+
             WriteAgent(w, world, agent);
             w.WriteEndObject();
         }
@@ -165,6 +172,8 @@ namespace ClassicUO.Agent
                 w.WriteNumber("dy", m.Y - p.Y);
                 w.WriteString("dir", Compass(m.X - p.X, m.Y - p.Y));
                 w.WriteBoolean("my_target", m.Serial == world.TargetManager.LastAttack);
+                w.WriteBoolean("player_target", m.Serial == world.Agent.PlayerTarget);
+                w.WriteBoolean("attacking_me", world.Agent.IsAttackingMe(m));
                 w.WriteEndObject();
             }
 
@@ -264,6 +273,65 @@ namespace ClassicUO.Agent
             w.WriteEndObject();
         }
 
+        // Creatures that died in the last minute, oldest first.
+        private static void WriteDeaths(Utf8JsonWriter w, AgentController agent)
+        {
+            w.WriteStartArray("deaths");
+
+            foreach ((uint serial, string name, ushort body, uint time) in agent.RecentDeaths)
+            {
+                if (Time.Ticks - time > 60_000)
+                {
+                    continue;
+                }
+
+                w.WriteStartObject();
+                w.WriteNumber("serial", serial);
+                w.WriteString("name", name);
+                w.WriteNumber("body", body);
+                w.WriteNumber("time_ms", time);
+                w.WriteEndObject();
+            }
+
+            w.WriteEndArray();
+        }
+
+        // Everything in the backpack, bags included (asked for with "pack": true).
+        private static void WritePack(Utf8JsonWriter w, World world, PlayerMobile p)
+        {
+            w.WriteStartArray("pack");
+            Item backpack = p.FindItemByLayer(Layer.Backpack);
+            int written = 0;
+
+            void Walk(Item container)
+            {
+                for (LinkedObject o = container.Items; o != null && written < 200; o = o.Next)
+                {
+                    var it = (Item) o;
+                    w.WriteStartObject();
+                    w.WriteNumber("serial", it.Serial);
+                    w.WriteNumber("container", container.Serial);
+                    w.WriteString("name", NameOf(world, it));
+                    w.WriteNumber("graphic", it.Graphic);
+                    w.WriteNumber("amount", Math.Max((int) it.Amount, 1));
+                    w.WriteEndObject();
+                    written++;
+
+                    if (it.Items != null && it.Graphic != AgentSpells.SPELLBOOK_GRAPHIC)
+                    {
+                        Walk(it);
+                    }
+                }
+            }
+
+            if (backpack != null)
+            {
+                Walk(backpack);
+            }
+
+            w.WriteEndArray();
+        }
+
         private static void WriteJournal(Utf8JsonWriter w, AgentJournal journal, long since)
         {
             int n = journal.CopySince(since, _journalBuf);
@@ -291,6 +359,8 @@ namespace ClassicUO.Agent
         {
             w.WriteStartObject("agent");
             w.WriteString("mode", agent.Mode.Name());
+            w.WriteString("engage", agent.Engage.Name());
+            w.WriteNumber("player_target", agent.PlayerTarget);
             w.WriteString("strategy", agent.Strategy);
             w.WriteNumber("strategy_rev", agent.StrategyRevision);
             w.WriteStartObject("authority");

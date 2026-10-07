@@ -766,7 +766,7 @@ namespace ClassicUO.Game.Scenes
 
                 if (_world.InGame && dir != Direction.NONE)
                 {
-                    _world.Agent.NoteHumanInput();
+                    _world.Agent.NoteHumanInput(true);
                 }
 
                 if (_world.InGame && !_world.Player.Pathfinder.AutoWalking && dir != Direction.NONE)

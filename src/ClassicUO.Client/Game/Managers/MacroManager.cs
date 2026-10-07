@@ -1552,6 +1552,16 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.AgentSwitch:
+                    _world.Agent.OnCommand(new[] { "agent", "switch" });
+
+                    break;
+
+                case MacroType.AgentNext:
+                    _world.Agent.OnCommand(new[] { "agent", "next" });
+
+                    break;
+
                 case MacroType.UsePotion:
                     scantype = (ScanTypeObject)(macro.SubCode - MacroSubType.ConfusionBlastPotion);
 
@@ -2372,7 +2382,9 @@ namespace ClassicUO.Game.Managers
         AgentOff,
         AgentAssist,
         AgentAuto,
-        AgentAccept
+        AgentAccept,
+        AgentSwitch,
+        AgentNext
     }
 
     internal enum MacroSubType

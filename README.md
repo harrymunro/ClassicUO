@@ -54,14 +54,15 @@ The original ClassicUO README follows [further down](#classicuo).
 Jev's thinking is shown inside the game, in a UO-style panel that opens beside the game view
 whenever the agent is on or a brain is connected. It shows:
 
-- **Mode buttons:** off, assist and auto.
-- **What the agent is doing:** for example "fighting Vorgak", "casting Explosion" or "bandaging", and "you have the controls" while you're playing.
+- **Play state buttons:** off, combat assist and auto, with the keys that switch between them and do Jev's next move.
+- **Combat assist settings:** what it engages (your target, also attackers, or anything near) and whether it fights on its own or waits for your next-move key.
+- **What the agent is doing:** for example "fighting Vorgak", "casting Explosion" or "bandaging", and "you're driving" or "you have the controls" while you're playing.
 - **Jev's judgment** for the latest decision:
   - a bar for each intent with Jev's probability, plus options the facts ruled out;
   - the danger judgment;
   - the target and spell it picked, with confidence, or "your strategy" when your strategy chose the spell;
   - what was done, and the latency.
-- **A pending suggestion** with an *accept* link (assist mode).
+- **A pending suggestion** with an *accept* link.
 - **Your strategy and how Jev read it**, an entry box to add a line, and the template links (see below).
 - **Earlier decisions**, with repeats collapsed ("fight an orc x5").
 - **Kills, deaths, heals and casts.**
@@ -69,34 +70,60 @@ whenever the agent is on or a brain is connected. It shows:
 When Jev picks a new target, "jev: target" appears above that creature in the world. *less*
 collapses the panel to a few lines; its position and whether it is collapsed are saved per character.
 
-### Modes and authority
+### Play states and authority
 
-Each behaviour has its own authority: `off`, `suggest` or `auto`. Modes are presets:
+There are two ways to play, and one key between them:
 
-| mode | heal / cure / potion | fight / loot / move / misc |
-|---|---|---|
-| `off` | off | off |
-| `assist` | auto | suggest |
-| `auto` | auto | auto |
+- **Combat assist:** you drive. The agent fights alongside you and never walks the character.
+- **Auto:** the agent plays on its own.
+- **Off:** nothing runs.
 
-- **Overrides:** change any single behaviour, e.g. `-agent set fight auto` while staying in assist.
+**Alt+A** switches between combat assist and auto (from off it starts combat assist), and
+**Alt+N** does Jev's next move. Both are ordinary macros (*Agent: switch* and *Agent: next
+move*) added once per character; rebind or delete them in Options → Macros. A key you
+already use is left alone, and the macro is added without a key.
+
+Each behaviour has its own authority: `off`, `suggest` or `auto`. The play states are presets:
+
+| state | heal / cure / potion | fight | loot / misc | move |
+|---|---|---|---|---|
+| `off` | off | off | off | off |
+| combat assist (`assist`) | auto | auto | suggest | off |
+| `auto` | auto | auto | auto | auto |
+
+- **Overrides:** change any single behaviour, e.g. `-agent set fight suggest` while in combat assist.
 - **Behaviours:** `heal` (bandages), `cure` (cure potions), `potion` (heal potions), `fight`, `loot`, `move`, `misc`.
-- **Saving:** settings are saved per character.
+- **Saving:** settings are saved per character. A character saved in the old assist mode starts in combat assist.
 
-**Assist** is for playing yourself. The agent heals you, and suggests fights and
-loot as text above your head and in the overlay. Accept a suggestion with
-`-agent accept` or the *AgentAccept* macro.
+**Combat assist** follows your target: it attacks, or casts at, whatever you attacked or
+targeted. A setting chooses what else it takes on by itself (`-agent engage`, or the
+*engages* row in the panel):
+
+| setting | it engages |
+|---|---|
+| `follow` | only what you attack |
+| `defend` (default) | that, and anything attacking you |
+| `nearby` | any monster within 8 tiles |
+
+- **A warrior** keeps swinging and bandages between hits; this works with no brain running.
+- **A mage** casts the next spell from your strategy, or Jev's pick, at your target, and says above your head when the target is out of spell range.
+- **It never walks or flees for you:** when Jev judges the fight is going badly, it says so ("this fight is going badly, get out") and leaves the moving to you.
+- **On your key:** set *fights* to *on your key* (`-agent set fight suggest`) and Jev only picks the move; Alt+N does it.
+
+**The next-move key** (Alt+N, `-agent next`) does Jev's pending suggestion if there is one,
+otherwise the combat move from its latest decision (a cast, a target switch), otherwise a
+bandage if you're hurt. You decide when, Jev decides what.
 
 **Auto** is fully autonomous play.
 
-**Handing over control:** moving, clicking in the world or using the arrow keys
-hands control back to you for 4 seconds, and stops any walk the agent started.
-Healing reflexes keep running while you're in control.
-- **Your target sticks:** if you attack a different monster yourself, the agent keeps fighting that one when it takes over again.
-- **Your spell cursors are yours:** if you touch the controls while one of the agent's attack spells is being cast, its target cursor is left to you.
+**Handing over control:**
+- **In auto,** moving, clicking in the world or using the arrow keys is a short override: control comes back to you for 4 seconds, any walk the agent started stops, and only the healing reflexes keep running. The Alt+A key is the real switch.
+- **In combat assist,** your input only pauses the agent's own movement (looting a corpse, if you accepted it). The fight goes on while you walk, and a spell it is casting still goes off at its target unless you clicked in the world.
+- **Your target sticks:** if you attack a different monster yourself, the agent follows your choice.
+- **Your spell cursors are yours:** if you click in the world while one of the agent's attack spells is being cast, its target cursor is left to you.
 - **Panel clicks don't count:** clicking the panel doesn't pause the agent.
 
-This was verified with real mouse and keyboard events; see [Results](#results-so-far).
+The auto-mode hand-back was verified with real mouse and keyboard events; see [Results](#results-so-far).
 
 ### Mages
 
@@ -184,7 +211,7 @@ The client runs these without the brain:
 - **Healing spells** (characters with no bandages): Heal below 65%, Greater Heal below 50%, and Cure when poisoned if no cure potion is ready.
 
 Adjust them with `-agent bandage 80` and `-agent potion 35`. They're also
-available on their own: assist mode with no brain running is an auto-healer.
+available on their own: combat assist with no brain running heals you and keeps a warrior swinging.
 
 ### Safety rules
 
@@ -201,7 +228,7 @@ These are in code, whatever the model says:
 - **Decision log:** every decision goes to a JSONL file with the state, all answers and probabilities, the actions and their results.
 - **`uo-brain report`** summarises a log.
 - **`uo-brain replay`** re-asks a log's questions to another judge offline, e.g. Jev against the rule baseline, and reports how often they agree.
-- **Assist agreement:** in assist mode the brain records whether you attacked the creature it suggested.
+- **Assist agreement:** with fight set to suggest, the brain records whether you attacked the creature it suggested.
 
 ## Quick start
 
@@ -239,37 +266,44 @@ With no model key, `--judge heuristic` runs the same loop on fixed rules (the ba
 
 These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO and work for normal player characters:
 
-- **`[AgentGo`:** go to the test field in Felucca, Green Acres (5445, 1153). It has no guards and no spawns.
+- **`[AgentGo [lane]`:** go to the test field in Felucca, Green Acres (5445, 1153). It has no guards and no spawns. Lanes 1–9 are copies 60 tiles apart, so several test characters can run at once.
 - **`[AgentKit`:** warrior template. Swords, Tactics, Healing and Anatomy at 80, katana, ringmail, 200 bandages, 5 heal and 5 cure potions.
 - **`[AgentKit mage`:** mage template. Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60. A full spellbook, a bag of 100 of each reagent, leather armour, and 5 heal and 5 cure potions.
 - **`[AgentArena [count] [kind]`:** spawns monsters in a ring 6–10 tiles out (orc, ratman, headless one and mongbat by default).
-- **`[AgentReset`:** resurrects and heals you, and removes the arena.
+- **`[AgentReset`:** resurrects and heals you, cancels pending spawns, and removes the arena and the corpses around you.
+- **`[AgentSpawn <kind> [count] [distance] [direction] [delay]`:** spawns creatures of a kind (`orc`, `ratman`, or any ModernUO type such as `OgreLord` or `OrcishMage`) at a distance and compass direction, optionally after a delay. They belong to your arena.
+- **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N]`:** sets your supplies.
+- **`[AgentLoot [distance] [direction]`:** lays a corpse holding three valuables (diamonds, a gold ring, a magic longsword) and five pieces of junk (bones, a head, a shirt, kindling, raw ribs).
 
 Accounts are created on first login. `admin`/`admin` is the owner.
 
 ## Reference
 
 **In game**
-- **`-agent off|assist|auto`:** set the mode.
-- **`-agent status`:** show the mode, authorities and thresholds.
+- **`-agent off|combat|auto`:** set the play state (`assist` also means combat assist).
+- **`-agent switch`:** switch between combat assist and auto (Alt+A).
+- **`-agent next`:** do Jev's next move (Alt+N).
+- **`-agent engage follow|defend|nearby`:** what combat assist takes on by itself.
+- **`-agent status`:** show the play state, authorities and thresholds.
 - **`-agent accept`:** accept the pending suggestion.
 - **`-agent set <behaviour> <off|suggest|auto>`:** override one behaviour.
 - **`-agent bandage <pct>`, `-agent potion <pct>`:** reflex thresholds.
 - **`-agent strategy [set|add|clear] <text>`:** edit the strategy.
 - **`-agent template [list|<name>|set <name>|remove <name>]`:** pull in, replace with or take out a strategy template.
-- **Macros** (bindable in Options → Macros): *AgentOff*, *AgentAssist*, *AgentAuto* and *AgentAccept*.
+- **Macros** (bindable in Options → Macros): *AgentOff*, *AgentAssist* (combat assist), *AgentAuto*, *AgentAccept*, *AgentSwitch* and *AgentNext*.
 
 **uo-brain**
 - **`run`:** play. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
+- **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
-- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius}`, `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
-- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`.
+- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack), `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
+- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, and `hint {text}` (text above your head, client-side only, never refused).
 - **Cast authority:** healing spells count as `heal`, Cure as `cure`, attack spells as `fight`, anything else as `misc`.
-- **Authority:** an act request is subject to authority unless it has `"source": "manual"`.
+- **Authority:** an act request is subject to authority unless it has `"source": "manual"`. In combat assist, an attack or harmful cast at a creature the engage setting doesn't allow is refused ("not your target").
 
 ## Results so far
 
@@ -333,6 +367,34 @@ These are single runs, so treat them as a smoke test rather than a benchmark.
 To reproduce, run `uo-brain scenario --judge jev --log logs/jev.jsonl`. To compare
 judges on the same logged states, run `uo-brain replay <log> --judge jev`.
 
+### Judgment benchmark
+
+The arena can't tell Jev from the rules: both win every round. `uo-brain bench` plays
+scenarios with a known right behaviour, built so that the obvious rule gets them wrong, many
+times per judge, and reports success rates with 95% Wilson intervals. Each scenario's setup is
+test-kit commands; what counts as right is checked from the snapshots and the decision log.
+Results are written to `brain/bench/<time>.json` after every round; compare runs with
+`uo-brain bench report A.json B.json`.
+
+| scenario | setup | right |
+|---|---|---|
+| `mismatch` | four weak monsters, then an ogre lord walks up | survive without engaging the ogre lord |
+| `priority` | three orcs close, an orcish mage casting from 9 tiles | kill the mage first |
+| `loot` | a corpse with valuables and junk, an orc arriving | take the valuables, skip the junk, stop looting when the orc arrives |
+| `attrition` | eight monsters on six bandages and one heal potion | get out alive |
+| `swarm` | six melee monsters on a mage | survive and kill at least four |
+
+The adherence scenarios fix a strategy template and check it is followed: `relentless`
+never flees, `survivor` flees (at what health is recorded, to compare with relentless),
+`no-loot` never loots, `nuker` opens on every creature with Explosion, and `champion`
+attacks the troll before the mongbats and the orc.
+
+```bash
+uv run uo-brain bench list
+uv run uo-brain bench --scenarios core --judges heuristic,jev,jev+survivor --rounds 10 --lane 1
+uv run uo-brain bench --scenarios adherence --rounds 10
+```
+
 ## Playing on public shards
 
 Assist mode is the same kind of tool as Razor or UOSteam, which many shards allow.
@@ -345,7 +407,7 @@ shards that allow it.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, strategy, templates)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py` |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`bench.py` (judgment benchmark)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py` |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
 | `tests/ClassicUO.UnitTests/Agent/`, `brain/tests/` | `dotnet test --filter "FullyQualifiedName~Agent"`, `cd brain && uv run pytest` |

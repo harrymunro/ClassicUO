@@ -151,6 +151,7 @@ namespace ClassicUO.Agent
 
                     return Target == 0 ? $"cast {spell}" : Target == uint.MaxValue ? $"cast {spell} on self" : $"cast {spell} at {target}";
                 case "skill": return $"use {Name}";
+                case "hint": return Text;
                 default: return Verb;
             }
         }

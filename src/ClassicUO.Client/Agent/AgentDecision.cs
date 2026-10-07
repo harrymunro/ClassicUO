@@ -35,6 +35,9 @@ namespace ClassicUO.Agent
         public string SpellWhy = string.Empty; // "strategy", "jev" or "fallback"
 
         public readonly List<AgentAction> Actions = new List<AgentAction>();
+
+        // Jev's best next combat move, done or not, for the next-move key.
+        public AgentAction Next;
         public readonly List<string> Results = new List<string>();
         public string Note = string.Empty;
 
@@ -114,6 +117,11 @@ namespace ClassicUO.Agent
                         {
                             d.Actions.Add(AgentAction.FromJson(a));
                         }
+
+                        break;
+
+                    case "next" when v.ValueKind == JsonValueKind.Object:
+                        d.Next = AgentAction.FromJson(v);
 
                         break;
 

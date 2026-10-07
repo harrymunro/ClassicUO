@@ -13,7 +13,8 @@ namespace Server.Custom;
 
 /// <summary>
 /// Commands for a repeatable warrior or mage test bed driven by an AI agent:
-/// [AgentKit, [AgentArena, [AgentReset and [AgentGo.
+/// [AgentKit, [AgentArena, [AgentReset and [AgentGo, plus the scenario pieces
+/// [AgentSpawn, [AgentSupplies and [AgentLoot.
 /// Monsters ignore staff (BaseAI skips AccessLevel > Player), so the test character must be a
 /// Player-level account; the commands therefore default to Player access on this local test shard.
 /// </summary>
@@ -27,11 +28,16 @@ public static class AgentTestKit
     private const int ArenaMaxRadius = 10;
     private const int ArenaHomeRange = 10;
     private const int OrphanSweepRange = 32;
+    private const int LaneSpacing = 60;
+    private const int MaxLane = 9;
 
     private static readonly Type[] _defaultMix =
         [typeof(Orc), typeof(Ratman), typeof(HeadlessOne), typeof(Mongbat)];
 
     private static readonly Dictionary<Mobile, List<BaseCreature>> _arenaSpawns = new();
+
+    // Spawns waiting for their delay ([AgentSpawn ... delay]); cancelled by a reset.
+    private static readonly Dictionary<Mobile, List<TimerExecutionToken>> _pending = new();
 
     // Every creature in _arenaSpawns, so the orphan sweep can tell live arenas from leftovers of a
     // previous boot (the tracking itself is not persisted).
@@ -57,6 +63,9 @@ public static class AgentTestKit
         CommandSystem.Register("AgentArena", _accessLevel, AgentArena_OnCommand);
         CommandSystem.Register("AgentReset", _accessLevel, AgentReset_OnCommand);
         CommandSystem.Register("AgentGo", _accessLevel, AgentGo_OnCommand);
+        CommandSystem.Register("AgentSpawn", _accessLevel, AgentSpawn_OnCommand);
+        CommandSystem.Register("AgentSupplies", _accessLevel, AgentSupplies_OnCommand);
+        CommandSystem.Register("AgentLoot", _accessLevel, AgentLoot_OnCommand);
     }
 
     // Runs before AccountPrompt.Initialize (default priority 50) so a headless first boot finds an
@@ -189,12 +198,6 @@ public static class AgentTestKit
         var center = from.Location;
         var spawned = 0;
 
-        if (!_arenaSpawns.TryGetValue(from, out var list))
-        {
-            list = [];
-            _arenaSpawns[from] = list;
-        }
-
         for (var i = 0; i < count; i++)
         {
             if (!TryFindRingSpot(map, center, i, count, out var spot))
@@ -202,24 +205,12 @@ public static class AgentTestKit
                 continue;
             }
 
-            var type = kind ?? _defaultMix[i % _defaultMix.Length];
-            var creature = type.CreateInstance<BaseCreature>();
-            if (creature == null)
+            // Arena spawns are marked RemoveIfUntamed, so they survive restarts only until the
+            // loyalty timer or the orphan sweep removes them.
+            if (SpawnInArena(from, kind ?? _defaultMix[i % _defaultMix.Length], spot, map, center, ArenaHomeRange))
             {
-                continue;
+                spawned++;
             }
-
-            creature.Home = center;
-            creature.RangeHome = ArenaHomeRange;
-
-            // Marks the creature as an arena spawn that survives restarts: the loyalty timer removes
-            // spawner-less RemoveIfUntamed creatures on its own, and the orphan sweep keys on it.
-            creature.RemoveIfUntamed = true;
-            creature.MoveToWorld(spot, map);
-
-            list.Add(creature);
-            _tracked.Add(creature);
-            spawned++;
         }
 
         from.SendMessage($"Arena: spawned {spawned}/{count} {(kind == null ? "mixed" : kind.Name)} monsters, removed {removed} old ones.");
@@ -236,7 +227,7 @@ public static class AgentTestKit
     }
 
     [Usage("AgentReset")]
-    [Description("Resurrects you if dead, restores hits/stam/mana, cures poison and removes your arena monsters.")]
+    [Description("Resurrects you if dead, restores hits/stam/mana, cures poison, cancels pending spawns and removes your arena monsters and nearby corpses.")]
     public static void AgentReset_OnCommand(CommandEventArgs e)
     {
         var from = e.Mobile;
@@ -259,14 +250,334 @@ public static class AgentTestKit
         );
     }
 
-    [Usage("AgentGo")]
-    [Description("Teleports you to the agent test location.")]
+    [Usage("AgentGo [lane]")]
+    [Description(
+        "Teleports you to the agent test location. Lanes 1-9 are copies of it 60 tiles apart (eastwards), so several test characters can run scenarios at once without meeting."
+    )]
     public static void AgentGo_OnCommand(CommandEventArgs e)
     {
         var from = e.Mobile;
-        from.MoveToWorld(TestLocation, TestMap);
-        from.SendMessage($"Moved to the agent test location {TestLocation} on {TestMap}.");
-        logger.Information("AgentGo: {Mobile} moved to {Location} on {Map}", from, TestLocation, TestMap);
+        var lane = e.Length > 0 ? Math.Clamp(e.GetInt32(0), 0, MaxLane) : 0;
+        var spot = LaneLocation(lane);
+        from.MoveToWorld(spot, TestMap);
+        from.SendMessage($"Moved to the agent test location {spot} on {TestMap} (lane {lane}).");
+        logger.Information("AgentGo: {Mobile} moved to {Location} on {Map} (lane {Lane})", from, spot, TestMap, lane);
+    }
+
+    private static Point3D LaneLocation(int lane)
+    {
+        var x = TestLocation.X + lane * LaneSpacing;
+        var y = TestLocation.Y;
+
+        // Nearest spawnable tile, spiralling out a little if the exact spot is blocked.
+        for (var r = 0; r < 6; r++)
+        {
+            for (var dx = -r; dx <= r; dx++)
+            {
+                for (var dy = -r; dy <= r; dy++)
+                {
+                    var z = TestMap.GetAverageZ(x + dx, y + dy);
+
+                    if (TestMap.CanSpawnMobile(x + dx, y + dy, z))
+                    {
+                        return new Point3D(x + dx, y + dy, z);
+                    }
+                }
+            }
+        }
+
+        return TestLocation;
+    }
+
+    [Usage("AgentSpawn <kind> [count] [distance] [direction] [delay seconds]")]
+    [Description(
+        "Spawns count (default 1) creatures of a kind (orc, ratman, a ModernUO type such as Dragon, Lich, OrcishMage) distance tiles (default 8) from you in a compass direction (n, ne, e, se, s, sw, w, nw; default n), after an optional delay. They belong to your arena, so [AgentReset removes them."
+    )]
+    public static void AgentSpawn_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var map = from.Map;
+
+        if (map == null || map == Map.Internal || e.Length < 1)
+        {
+            from.SendMessage("Usage: [AgentSpawn <kind> [count] [distance] [direction] [delay seconds]");
+            return;
+        }
+
+        var kind = GetCreatureType(e.GetString(0));
+        if (kind == null)
+        {
+            from.SendMessage($"Unknown creature kind '{e.GetString(0)}'.");
+            return;
+        }
+
+        var count = e.Length > 1 ? Math.Clamp(e.GetInt32(1), 1, MaxArenaCount) : 1;
+        var distance = e.Length > 2 ? Math.Clamp(e.GetInt32(2), 1, 20) : 8;
+        var angle = e.Length > 3 ? CompassAngle(e.GetString(3)) : CompassAngle("n");
+        var delay = e.Length > 4 ? Math.Clamp(e.GetDouble(4), 0, 300) : 0;
+
+        if (double.IsNaN(angle))
+        {
+            from.SendMessage($"Unknown direction '{e.GetString(3)}': use n, ne, e, se, s, sw, w or nw.");
+            return;
+        }
+
+        var center = from.Location;
+
+        void Spawn()
+        {
+            if (from.Deleted || from.Map != map)
+            {
+                return;
+            }
+
+            var spawned = 0;
+
+            for (var i = 0; i < count; i++)
+            {
+                // Spread a group sideways around the bearing so they do not stack on one tile.
+                var a = angle + (i - (count - 1) / 2.0) * (Math.PI / 16);
+
+                if (TrySpot(map, center, a, distance, out var spot) && SpawnInArena(from, kind, spot, map, center, distance + 4))
+                {
+                    spawned++;
+                }
+            }
+
+            from.SendMessage($"Spawn: {spawned}/{count} {kind.Name} at {distance} tiles.");
+        }
+
+        if (delay <= 0)
+        {
+            Spawn();
+            return;
+        }
+
+        if (!_pending.TryGetValue(from, out var tokens))
+        {
+            tokens = [];
+            _pending[from] = tokens;
+        }
+
+        Timer.StartTimer(TimeSpan.FromSeconds(delay), Spawn, out var token);
+        tokens.Add(token);
+        from.SendMessage($"Spawn: {count} {kind.Name} in {delay:0.#}s.");
+    }
+
+    [Usage("AgentSupplies [bandages N] [heal N] [cure N] [reagents N]")]
+    [Description(
+        "Sets how many bandages, greater heal and greater cure potions and reagents (of each kind) are in your backpack, replacing what is there. Only the kinds named change."
+    )]
+    public static void AgentSupplies_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var pack = from.Backpack;
+
+        if (pack == null || e.Length < 2 || e.Length % 2 != 0)
+        {
+            from.SendMessage("Usage: [AgentSupplies [bandages N] [heal N] [cure N] [reagents N]");
+            return;
+        }
+
+        for (var i = 0; i + 1 < e.Length; i += 2)
+        {
+            var what = e.GetString(i).ToLowerInvariant();
+            var n = Math.Clamp(e.GetInt32(i + 1), 0, 1000);
+
+            switch (what)
+            {
+                case "bandages" or "bandage":
+                    {
+                        DeleteAll<Bandage>(pack);
+                        if (n > 0)
+                        {
+                            pack.DropItem(new Bandage(n));
+                        }
+
+                        break;
+                    }
+                case "heal":
+                    {
+                        DeleteAll<BaseHealPotion>(pack);
+                        for (var k = 0; k < n; k++)
+                        {
+                            pack.DropItem(new GreaterHealPotion());
+                        }
+
+                        break;
+                    }
+                case "cure":
+                    {
+                        DeleteAll<BaseCurePotion>(pack);
+                        for (var k = 0; k < n; k++)
+                        {
+                            pack.DropItem(new GreaterCurePotion());
+                        }
+
+                        break;
+                    }
+                case "reagents" or "regs":
+                    {
+                        DeleteAll<BaseReagent>(pack);
+                        if (n > 0)
+                        {
+                            pack.DropItem(new BagOfReagents(n));
+                        }
+
+                        break;
+                    }
+                default:
+                    from.SendMessage($"Unknown supply '{what}': use bandages, heal, cure or reagents.");
+                    return;
+            }
+        }
+
+        from.SendMessage("Supplies set.");
+    }
+
+    [Usage("AgentLoot [distance] [direction]")]
+    [Description(
+        "Lays a fresh corpse distance tiles away (default 2, north) holding three valuable items (a diamond, a gold ring, a magic longsword) and five junk ones (bones, a head, a plain shirt, kindling, raw ribs)."
+    )]
+    public static void AgentLoot_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var map = from.Map;
+
+        if (map == null || map == Map.Internal)
+        {
+            return;
+        }
+
+        var distance = e.Length > 0 ? Math.Clamp(e.GetInt32(0), 1, 12) : 2;
+        var angle = e.Length > 1 ? CompassAngle(e.GetString(1)) : CompassAngle("n");
+
+        if (double.IsNaN(angle) || !TrySpot(map, from.Location, angle, distance, out var spot))
+        {
+            from.SendMessage("No room for the corpse there.");
+            return;
+        }
+
+        // A rabbit carries no loot of its own, so the corpse holds exactly these items. They go
+        // in after the death: a creature's pack is not carried over to its corpse here.
+        var carrier = new Rabbit();
+        carrier.MoveToWorld(spot, map);
+        carrier.Kill();
+
+        if (carrier.Corpse is not Container corpse)
+        {
+            from.SendMessage("The corpse did not appear.");
+            return;
+        }
+
+        Item[] items =
+        [
+            new Diamond(2), new GoldRing(), MagicLongsword(),
+            new Bone(3), new Head(), new Shirt(), new Kindling(5), new RawRibs(2)
+        ];
+
+        foreach (var item in items)
+        {
+            corpse.DropItem(item);
+        }
+
+        from.SendMessage($"Loot: a corpse with 3 valuables and 5 junk items at {distance} tiles.");
+    }
+
+    private static Item MagicLongsword()
+    {
+        var sword = new Longsword();
+
+        if (Core.AOS)
+        {
+            sword.Attributes.WeaponDamage = 35;
+            sword.Attributes.WeaponSpeed = 20;
+            sword.WeaponAttributes.HitLightning = 40;
+        }
+        else
+        {
+            sword.DamageLevel = WeaponDamageLevel.Vanq;
+            sword.AccuracyLevel = WeaponAccuracyLevel.Supremely;
+        }
+
+        sword.Identified = true;
+        return sword;
+    }
+
+    private static void DeleteAll<T>(Container pack) where T : Item
+    {
+        using var queue = PooledRefQueue<Item>.Create();
+
+        foreach (var item in pack.FindItemsByType<T>())
+        {
+            queue.Enqueue(item);
+        }
+
+        while (queue.Count > 0)
+        {
+            queue.Dequeue().Delete();
+        }
+    }
+
+    private static bool SpawnInArena(Mobile from, Type type, Point3D spot, Map map, Point3D home, int homeRange)
+    {
+        var creature = type.CreateInstance<BaseCreature>();
+        if (creature == null)
+        {
+            return false;
+        }
+
+        creature.Home = home;
+        creature.RangeHome = homeRange;
+        creature.RemoveIfUntamed = true;
+        creature.MoveToWorld(spot, map);
+
+        if (!_arenaSpawns.TryGetValue(from, out var list))
+        {
+            list = [];
+            _arenaSpawns[from] = list;
+        }
+
+        list.Add(creature);
+        _tracked.Add(creature);
+        return true;
+    }
+
+    // Radians, east = 0, growing clockwise on screen (UO's y axis points south). NaN when unknown.
+    private static double CompassAngle(string dir) =>
+        dir.ToLowerInvariant() switch
+        {
+            "e" or "east"       => 0,
+            "se" or "southeast" => Math.PI / 4,
+            "s" or "south"      => Math.PI / 2,
+            "sw" or "southwest" => 3 * Math.PI / 4,
+            "w" or "west"       => Math.PI,
+            "nw" or "northwest" => 5 * Math.PI / 4,
+            "n" or "north"      => 3 * Math.PI / 2,
+            "ne" or "northeast" => 7 * Math.PI / 4,
+            _                   => double.NaN
+        };
+
+    // A spawnable tile near the given bearing and distance, widening the search a little.
+    private static bool TrySpot(Map map, Point3D center, double angle, int distance, out Point3D spot)
+    {
+        for (var attempt = 0; attempt < 16; attempt++)
+        {
+            var a = angle + (attempt + 1) / 2 * (attempt % 2 == 0 ? 1 : -1) * (Math.PI / 32);
+            var r = distance + attempt / 8;
+            var x = center.X + (int)Math.Round(Math.Cos(a) * r);
+            var y = center.Y + (int)Math.Round(Math.Sin(a) * r);
+            var z = map.GetAverageZ(x, y);
+
+            if (map.CanSpawnMobile(x, y, z))
+            {
+                spot = new Point3D(x, y, z);
+                return true;
+            }
+        }
+
+        spot = Point3D.Zero;
+        return false;
     }
 
     // A null weapon type gives the mage kit.
@@ -422,6 +733,14 @@ public static class AgentTestKit
     {
         var removed = 0;
 
+        if (_pending.Remove(from, out var tokens))
+        {
+            foreach (var token in tokens)
+            {
+                token.Cancel();
+            }
+        }
+
         if (_arenaSpawns.Remove(from, out var list))
         {
             foreach (var creature in list)
@@ -456,6 +775,19 @@ public static class AgentTestKit
         {
             orphans.Dequeue().Delete();
             removed++;
+        }
+
+        // Corpses left by earlier rounds would be looted again; the player's own corpse
+        // too, since the kit is re-applied after a reset anyway.
+        using var corpses = PooledRefQueue<Item>.Create();
+        foreach (var item in map.GetItemsInRange<Corpse>(from.Location, OrphanSweepRange))
+        {
+            corpses.Enqueue(item);
+        }
+
+        while (corpses.Count > 0)
+        {
+            corpses.Dequeue().Delete();
         }
 
         return removed;

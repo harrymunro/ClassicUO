@@ -70,6 +70,7 @@ class Candidate:
     info: dict[str, Any]
     hits_pct: int | None = None
     casts: int = 0  # spells this mage has cast at it
+    allowed: bool = True  # combat assist: the engage setting lets the agent take it on
 
 
 @dataclass
@@ -84,6 +85,20 @@ class Situation:
     archetype: str = "warrior"
     spells: list[Candidate] = field(default_factory=list)  # attack spells castable right now
     mana_pct: int = 100
+    mode: str = "auto"         # "assist" is combat assist: the player drives, the agent only fights
+    engage: str = "defend"     # combat assist: follow (the player's target), defend (+ attackers), nearby
+
+    @property
+    def assisting(self) -> bool:
+        return self.mode == "assist"
+
+    @property
+    def targets(self) -> list[Candidate]:
+        """Hostiles the agent may take on: all of them, except in combat assist."""
+        return [h for h in self.hostiles if h.allowed]
+
+    def authority(self, behaviour: str) -> str:
+        return (self.raw["agent"].get("authority") or {}).get(behaviour, "auto")
 
     @property
     def is_mage(self) -> bool:
@@ -146,6 +161,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     stam_pct = round(100 * p["stam"] / p["stam_max"]) if p.get("stam_max") else 100
     engaged = snapshot["agent"].get("engaged", 0)
     supplies = p.get("supplies", {})
+    mode = snapshot["agent"].get("mode", "auto")
+    engage = snapshot["agent"].get("engage", "defend")
 
     hostiles: list[Candidate] = []
     others: list[dict[str, Any]] = []
@@ -169,12 +186,18 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 "your_current_target": bool(m.get("my_target")) or m["serial"] == engaged,
                 "aggressive": bool(m.get("war_mode")),
             }
+            allowed = True
+            if mode == "assist":
+                info["the_players_target"] = bool(m.get("player_target"))
+                info["attacking_you"] = bool(m.get("attacking_me"))
+                allowed = info["the_players_target"] or engage == "nearby" or \
+                    (engage == "defend" and info["attacking_you"])
             if mage:
                 info["in_spell_range"] = m["distance"] <= SPELL_RANGE
                 n = casts_at.get(m["serial"], 0)
                 info["your_spells_at_it"] = "none yet" if n == 0 else f"{n} so far"
             hostiles.append(Candidate(cid, m["serial"], info["name"], m["distance"], info, m.get("hits_pct"),
-                                      casts_at.get(m["serial"], 0)))
+                                      casts_at.get(m["serial"], 0), allowed))
         elif len(others) < 5:
             kind = "your pet" if m.get("pet") else "person" if m.get("human") else "creature"
             others.append({"name": m.get("name") or "someone", "kind": kind, "distance": distance_words(m["distance"])})
@@ -244,9 +267,12 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         "other_beings_nearby": others,
         "recent_events": events[-8:],
     }
+    if mode == "assist":
+        state["player_drives"] = ("The player is moving the character themselves; you only choose its fighting. "
+                                  "It never walks on its own.")
     return Situation(snapshot, state, hostiles, corpses, items, hp_pct,
                      strategy=(snapshot["agent"].get("strategy") or "").strip(),
-                     archetype=archetype, spells=spells, mana_pct=mana_pct)
+                     archetype=archetype, spells=spells, mana_pct=mana_pct, mode=mode, engage=engage)
 
 
 def journal_events(entries: list[dict[str, Any]]) -> list[str]:

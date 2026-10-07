@@ -165,7 +165,8 @@ namespace ClassicUO.Agent
                 case "snapshot":
                     long since = Get(p, "since", out JsonElement s) ? s.GetInt64() : 0;
                     int radius = Get(p, "radius", out JsonElement r) ? Math.Clamp(r.GetInt32(), 1, 24) : 18;
-                    Reply(conn, id, w => AgentSnapshot.Write(w, world, since, radius));
+                    bool pack = Get(p, "pack", out JsonElement pk) && pk.GetBoolean();
+                    Reply(conn, id, w => AgentSnapshot.Write(w, world, since, radius, pack));
 
                     break;
 

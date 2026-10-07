@@ -6,6 +6,7 @@ using System.Text;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
@@ -138,7 +139,8 @@ namespace ClassicUO.Agent
 
             return string.Concat
             (
-                _agent.Mode.Name(), "|", Expanded ? "x" : "c", "|", _agent.BrainActive ? "b" : "-", _agent.HumanActive ? "h" : "-", "|",
+                _agent.Mode.Name(), _agent.Engage.Name(), _agent.GetAuthority(AgentBehavior.Fight).Name(), "|", Expanded ? "x" : "c", "|",
+                _agent.BrainActive ? "b" : "-", _agent.HumanActive ? "h" : "-", "|",
                 Doing(), "|", _agent.DecisionSeq.ToString(), "|", _agent.StrategyRevision.ToString(), "|",
                 _agent.Suggestion?.Describe(World) ?? "", "|", d == null ? "" : Ago(d.Time), "|",
                 $"{s.Kills},{s.Deaths},{s.Bandages + s.HealPotions + s.SpellHeals},{s.Casts}"
@@ -158,7 +160,7 @@ namespace ClassicUO.Agent
             _content.Add(new ClickLabel(Expanded ? "less" : "more", LINK, () => { Expanded = !Expanded; _signature = string.Empty; }) { X = WIDTH - PAD - 28, Y = y });
             y += 22;
 
-            // Mode: three radio buttons.
+            // Play state: three radio buttons, and the key that switches between the two ways to play.
             int x = PAD;
 
             foreach (AgentMode mode in new[] { AgentMode.Off, AgentMode.Assist, AgentMode.Auto })
@@ -167,15 +169,31 @@ namespace ClassicUO.Agent
                 AgentMode m = mode;
                 var radio = new ClickPic(on ? RADIO_ON : RADIO_OFF, () => SetMode(m)) { X = x, Y = y - 2 };
                 _content.Add(radio);
-                var label = new ClickLabel(mode.Name(), on ? GOLD : WHITE, () => SetMode(m)) { X = x + radio.Width + 4, Y = y };
+                var label = new ClickLabel(mode.Title(), on ? GOLD : WHITE, () => SetMode(m)) { X = x + radio.Width + 4, Y = y };
                 _content.Add(label);
-                x = label.X + label.Width + 22;
+                x = label.X + label.Width + 18;
             }
 
-            y += 22;
+            y += 20;
+            string keys = KeyHelp();
+
+            if (keys.Length != 0)
+            {
+                y = AddWrapped(keys, PAD, y, INNER, DIM);
+            }
+
+            if (_agent.Mode == AgentMode.Assist)
+            {
+                y = AddAssistSettings(y + 2);
+            }
+
+            y += 4;
 
             string doing = Doing();
-            y = AddWrapped(_agent.HumanActive ? "you have the controls" : "now: " + doing, PAD, y, INNER, _agent.HumanActive ? GOLD : WHITE) + 4;
+            string status = !_agent.HumanActive ? "now: " + doing
+                : _agent.Mode == AgentMode.Assist ? "you're driving; " + doing
+                : "you have the controls";
+            y = AddWrapped(status, PAD, y, INNER, _agent.HumanActive ? GOLD : WHITE) + 4;
 
             AgentDecision d = _agent.LastDecision;
 
@@ -228,6 +246,83 @@ namespace ClassicUO.Agent
             _background.Height = Height = y;
             _shade.Height = y - 18;
             _content.Height = y;
+        }
+
+        // Combat assist: what it takes on by itself, and whether it fights on its own or waits for
+        // the next-move key.
+        private int AddAssistSettings(int y)
+        {
+            Label head = AddText("engages:", PAD, y, GREY);
+            int x = PAD + head.Width + 8;
+
+            foreach ((AgentEngage e, string text) in new[] { (AgentEngage.Follow, "your target"), (AgentEngage.Defend, "+ attackers"), (AgentEngage.Nearby, "anything near") })
+            {
+                AgentEngage engage = e;
+                var link = new ClickLabel(text, _agent.Engage == e ? GOLD : LINK, () => _agent.SetEngage(engage)) { X = x, Y = y };
+                link.SetTooltip(e.Title(), 200);
+                _content.Add(link);
+                x += link.Width + 10;
+            }
+
+            y += 17;
+            bool own = _agent.GetAuthority(AgentBehavior.Fight) == AgentAuthority.Auto;
+            head = AddText("fights:", PAD, y, GREY);
+            x = PAD + head.Width + 8;
+            var auto = new ClickLabel("on its own", own ? GOLD : LINK, () => _agent.SetAuthority(AgentBehavior.Fight, AgentAuthority.Auto)) { X = x, Y = y };
+            _content.Add(auto);
+            var onKey = new ClickLabel("on your key", !own ? GOLD : LINK, () => _agent.SetAuthority(AgentBehavior.Fight, AgentAuthority.Suggest)) { X = x + auto.Width + 10, Y = y };
+            onKey.SetTooltip("jev picks the move, you press the next-move key to do it", 200);
+            _content.Add(onKey);
+
+            return y + 17;
+        }
+
+        // "Alt+A switches · Alt+N next move", from the player's macros.
+        private string KeyHelp()
+        {
+            string switchKey = MacroKey(MacroType.AgentSwitch), nextKey = MacroKey(MacroType.AgentNext);
+            var parts = new List<string>();
+
+            if (switchKey != null)
+            {
+                parts.Add($"{switchKey} switches");
+            }
+
+            if (nextKey != null)
+            {
+                parts.Add($"{nextKey} next move");
+            }
+
+            return string.Join(" · ", parts);
+        }
+
+        private string MacroKey(MacroType type)
+        {
+            if (World.Macros == null)
+            {
+                return null;
+            }
+
+            foreach (Macro m in World.Macros.GetAllMacros())
+            {
+                if (m.Key == 0)
+                {
+                    continue;
+                }
+
+                for (LinkedObject o = m.Items; o != null; o = o.Next)
+                {
+                    if (o is MacroObject mo && mo.Code == type)
+                    {
+                        int k = (int) m.Key;
+                        string key = k > 32 && k < 127 ? ((char) k).ToString().ToUpperInvariant() : $"key {k}";
+
+                        return (m.Ctrl ? "Ctrl+" : "") + (m.Alt ? "Alt+" : "") + (m.Shift ? "Shift+" : "") + key;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private int AddThinking(AgentDecision d, int y)
@@ -510,7 +605,7 @@ namespace ClassicUO.Agent
         private void SetMode(AgentMode mode)
         {
             _agent.SetMode(mode);
-            _agent.Print($"mode {mode.Name()}");
+            _agent.Print($"mode {mode.Title()}");
         }
 
         private void AddStrategy()

@@ -135,6 +135,8 @@ namespace ClassicUO.Configuration
 
         // agent (Agent/AgentController.cs)
         public string AgentMode { get; set; } = "off";
+        public string AgentEngage { get; set; } = "defend";
+        public bool AgentMacrosAdded { get; set; }
         public string AgentAuthority { get; set; } = string.Empty;
         public int AgentBandageBelowPercent { get; set; } = 85;
         public int AgentHealPotionBelowPercent { get; set; } = 40;

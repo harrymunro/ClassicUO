@@ -40,7 +40,7 @@ namespace ClassicUO.Game.Scenes
         {
             if ((_rightMousePressed || _continueRunning) && _world.InGame) // && !Pathfinder.AutoWalking)
             {
-                _world.Agent.NoteHumanInput();
+                _world.Agent.NoteHumanInput(true);
 
                 if (_world.Player.Pathfinder.AutoWalking)
                 {
@@ -281,7 +281,8 @@ namespace ClassicUO.Game.Scenes
         {
             if (UIManager.IsMouseOverWorld)
             {
-                _world.Agent.NoteHumanInput();
+                // The right button walks the character; the left one clicks.
+                _world.Agent.NoteHumanInput(button == MouseButtonType.Right);
             }
 
             switch (button)
@@ -320,7 +321,7 @@ namespace ClassicUO.Game.Scenes
         {
             if (UIManager.IsMouseOverWorld)
             {
-                _world.Agent.NoteHumanInput();
+                _world.Agent.NoteHumanInput(false);
             }
 
             switch (button)

@@ -5,6 +5,7 @@ import json
 import statistics
 import time
 from collections import deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -64,8 +65,10 @@ class RunStats:
 
 
 async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyConfig,
-              log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None) -> RunStats:
-    """archetype: "warrior" or "mage", or None to tell from the character's skills."""
+              log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None,
+              on_snapshot: Callable[[dict[str, Any]], None] | None = None) -> RunStats:
+    """archetype: "warrior" or "mage", or None to tell from the character's skills.
+    on_snapshot sees every in-game snapshot (the benchmark records a trace with it)."""
     stats = RunStats()
     mem = policy.Memory()
     events: deque[str] = deque(maxlen=20)
@@ -98,6 +101,8 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
                 continue
 
             since = snap["journal_seq"]
+            if on_snapshot:
+                on_snapshot(snap)
             events.extend(state.journal_events(snap["journal"]))
             agent_stats = snap["agent"]["stats"]
             stats.first_agent_stats = stats.first_agent_stats or dict(agent_stats)
@@ -256,6 +261,8 @@ def decision_payload(judge: Judge, sit: state.Situation, qs: dict[str, Any], ans
         out["target"] = {"serial": dec.target.serial, "name": dec.target.name}
         if dec.target_confidence is not None:
             out["target"]["confidence"] = round(dec.target_confidence, 3)
+    if dec.next_move:
+        out["next"] = dec.next_move
     if dec.spell:
         out["spell"] = {"name": dec.spell.name, "why": dec.spell_why}
         if dec.spell_confidence is not None:

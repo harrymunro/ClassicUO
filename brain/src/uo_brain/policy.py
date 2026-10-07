@@ -37,6 +37,13 @@ class Memory:
     declined: set[int] = field(default_factory=set)
     casts_at: dict[int, int] = field(default_factory=dict)  # spells cast at each creature
     last_meditate: float = 0.0
+    hinted: dict[str, float] = field(default_factory=dict)  # combat assist: when each hint was last shown
+
+    def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
+        if now - self.hinted.get(key, -1e9) < every:
+            return False
+        self.hinted[key] = now
+        return True
 
     @property
     def skip_items(self) -> set[int]:
@@ -66,16 +73,25 @@ class Decision:
     spell_confidence: float | None = None
     spell_why: str = ""  # "strategy" (the player's named spell), "jev", or "fallback"
 
+    @property
+    def next_move(self) -> dict[str, Any] | None:
+        """The best combat move in this decision, for the client's next-move key."""
+        return next((a for a in self.actions if a["verb"] in ("cast", "attack")), None)
+
 
 def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tuple[str, float, list[str]]:
     close = [h for h in sit.hostiles if h.distance <= cfg.close_tiles]
     # A warrior seeks anything not yet close; a mage only what it cannot reach with spells.
     reach = SPELL_RANGE if sit.is_mage else cfg.close_tiles
+    # Whatever walks needs moving allowed: combat assist never moves the character.
+    move = sit.authority("move") != "off"
+    within_reach = any(c.distance <= 2 for c in sit.corpses) or bool(sit.items)
     valid = {
-        "fight": bool(sit.hostiles),
-        "flee": bool(close) and cfg.allow_flee,
-        "loot": bool(sit.corpses or sit.items) and not close and cfg.looting != "nothing",
-        "seek": bool(sit.hostiles) and not any(h.distance <= reach for h in sit.hostiles),
+        "fight": bool(sit.targets),
+        "flee": bool(close) and cfg.allow_flee and move,
+        "loot": bool(sit.corpses or sit.items) and not close and cfg.looting != "nothing"
+                and sit.authority("loot") != "off" and (move or within_reach),
+        "seek": bool(sit.targets) and not any(h.distance <= reach for h in sit.hostiles) and move,
         "rest": True,
     }
     masked = [k for k, ok in valid.items() if not ok and k in answer.probabilities]
@@ -84,7 +100,7 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
     if total <= 0:
         # Everything the model wanted is ruled out (e.g. flee under a never-flee strategy):
         # code decides. Cornered means fight.
-        return ("fight" if close else "rest"), 1.0, masked
+        return ("fight" if close and sit.targets else "rest"), 1.0, masked
     best = max(probs, key=probs.get)
     # Jev's confidence describes its whole distribution. It still holds when the
     # masked options had no real weight; otherwise use the winner's renormalised share.
@@ -107,11 +123,18 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
     potion_soon = sit.player.get("supplies", {}).get("heal_potions", 0) > 0 \
         and sit.agent.get("heal_potion_ready_ms", 0) <= 2000
     if cfg.allow_flee and intent != "flee" and close and danger >= cfg.panic_danger and sit.hp_pct < 25 \
-            and not potion_soon:
+            and not potion_soon and sit.authority("move") != "off":
         intent, conf = "flee", danger
 
+    # Combat assist never walks the character, so when it would flee it tells the player instead.
+    hints: list[dict[str, Any]] = []
+    wanted_flee = ans.choices["intent"].choice == "flee" and danger >= cfg.flee_danger \
+        or danger >= cfg.panic_danger and sit.hp_pct < 25
+    if sit.assisting and close and wanted_flee and cfg.allow_flee and mem.hint_due("danger", now):
+        hints.append({"verb": "hint", "text": "this fight is going badly, get out", "reason": "danger"})
+
     if conf < cfg.min_intent_confidence:
-        dec = Decision(intent, conf, [], f"unsure ({conf:.2f}), keeping course", masked, gated=True)
+        dec = Decision(intent, conf, hints, f"unsure ({conf:.2f}), keeping course", masked, gated=True)
         # Keeping course for a mage in a fight means casting again: the client does not
         # cast on its own the way a warrior's swings continue.
         current = next((h for h in sit.hostiles if h.serial == engaged), None)
@@ -123,7 +146,7 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
                                     "confidence": round(conf, 3), "reason": "keep course"})
         return dec
 
-    actions: list[dict[str, Any]] = []
+    actions: list[dict[str, Any]] = hints
     meta = {"confidence": round(conf, 3), "reason": intent}
     dec = Decision(intent, conf, actions, "", masked)
 
@@ -151,6 +174,8 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             # Queued: the client casts it the moment the current spell and recovery allow.
             if target.distance <= SPELL_RANGE:
                 dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, target)
+            elif sit.assisting and mem.hint_due(f"range{target.serial}", now, 8):
+                actions.append({"verb": "hint", "text": f"{target.name} is out of spell range", "reason": "range"})
             if dec.spell:
                 actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True, **meta})
             dec.note = f"fight {target.name}" + (f" with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
@@ -197,21 +222,24 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
 def pick_target(sit: Situation, ans: Answers, cfg: PolicyConfig) -> tuple[Candidate | None, float | None]:
     """Jev's pick when it is confident, otherwise the strategy's priority."""
     choice = ans.choices.get("target")
+    targets = sit.targets
     if choice and choice.choice != "none" and choice.confidence >= cfg.min_target_confidence:
-        if (c := sit.hostile(choice.choice)) is not None:
+        if (c := sit.hostile(choice.choice)) is not None and c.allowed:
             return c, choice.confidence
-    if not sit.hostiles:
+    if not targets:
         return None, None
-    current = next((h for h in sit.hostiles if h.info["your_current_target"]), None)
+    # In combat assist the player's own target comes first.
+    current = next((h for h in targets if h.info.get("the_players_target")), None) \
+        or next((h for h in targets if h.info["your_current_target"]), None)
     hp = lambda h: 100 if h.hits_pct is None else h.hits_pct  # noqa: E731
     match cfg.target_priority:
         case "weakest_first":
-            return min(sit.hostiles, key=lambda h: (hp(h), h.distance)), None
+            return min(targets, key=lambda h: (hp(h), h.distance)), None
         case "strongest_first":
-            return max(sit.hostiles, key=lambda h: (hp(h), -h.distance)), None
+            return max(targets, key=lambda h: (hp(h), -h.distance)), None
         case "closest_first":
-            return min(sit.hostiles, key=lambda h: h.distance), None
-    return current or min(sit.hostiles, key=lambda h: h.distance), None
+            return min(targets, key=lambda h: h.distance), None
+    return current or min(targets, key=lambda h: h.distance), None
 
 
 def pick_spell(sit: Situation, ans: Answers, cfg: PolicyConfig,
