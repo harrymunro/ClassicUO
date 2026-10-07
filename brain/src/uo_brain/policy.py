@@ -7,6 +7,7 @@ from typing import Any
 
 from .judge import Answers, ChoiceResult
 from .spells import GREATER_HEAL, MEDITATION, PROTECTION
+from .questions import leave_reason
 from .state import SPELL_RANGE, Candidate, Situation
 
 
@@ -236,9 +237,12 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # fact Jev picked for this place counts when Jev's own yes/no on leaving agrees, and so does
     # having nothing to fight with (no pet in sight, no arrows, no instrument).
     known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg)
+    # Jev's own yes on leaving counts with whatever reason it was asked for: checking only for
+    # stronger creatures that are close overruled it (0.43-0.45) while two bone knights came on.
+    asked = ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg) and bool(leave_reason(sit))
     cannot_fight = bool(sit.targets) and "fight" in masked
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
-                                  or cannot_fight or outnumbered or len(strong_close) >= 2):
+                                  or cannot_fight or outnumbered or len(strong_close) >= 2 or asked):
         intent = "fight" if close and "fight" not in masked else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.

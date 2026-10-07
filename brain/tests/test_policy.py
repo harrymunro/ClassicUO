@@ -368,3 +368,14 @@ def test_defending_only_lets_an_idle_bird_be(snapshot):
     sit = state.build(snapshot, set(), [])
     dec = policy.decide(sit, answers("fight", target="t1"), policy.Memory(), policy.PolicyConfig(defend_only=True))
     assert not any(a["verb"] == "attack" for a in dec.actions)
+
+
+def test_jevs_yes_on_leaving_stands_with_the_reason_it_was_asked_for(snapshot):
+    knights = {50: {"type": "BoneKnight", "name": "a bone knight", "hits": 120, "damage": "8-18", "difficulty": "strong",
+                    "caster": False}}
+    for m in snapshot["mobiles"][:2]:
+        m.update({"body": 50, "name": "a bone knight", "distance": 6, "dx": 6, "war_mode": True})
+    sit = state.build(snapshot, set(), [], bestiary=knights)
+    cfg = policy.PolicyConfig(flee_danger=0.625)
+    dec = policy.decide(sit, answers("rest", danger=0.15, leave_now=0.44), policy.Memory(), cfg)
+    assert dec.intent == "leave"
