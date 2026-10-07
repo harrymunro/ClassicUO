@@ -272,3 +272,6 @@ Data
 .beads-credential-key
 .beads/proxieddb/
 *.gate.lock*
+
+# macOS
+.DS_Store

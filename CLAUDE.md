@@ -58,6 +58,21 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 <!-- END BEADS INTEGRATION -->
 
 
+## Keep the README current
+
+`README.md` is the project's front page on GitHub and the user guide for the agent, so it
+must always describe what the code does now. Any change that adds, removes or changes a
+feature, command, RPC method, act verb, setting, template, test-server command or measured
+result updates the README in the same commit:
+
+- the feature sections and the Reference (in-game commands, `uo-brain` subcommands, RPC methods and verbs);
+- Quick start, when setup or launch steps change;
+- Results, with the date and the exact command that produced each number (single runs say so);
+- Where things are, and Known limits (remove a limit once it's fixed).
+
+Before closing a bead, check the README against the change. Keep this section the same in
+`AGENTS.md` and `CLAUDE.md`.
+
 ## Build & Test
 
 Requires the .NET 10 SDK (`/usr/local/share/dotnet`) and Xcode command line tools (NativeAOT links with clang).
@@ -69,12 +84,12 @@ dotnet test                               # tests/ClassicUO.UnitTests
 
 # Native Apple Silicon executable (standalone, no Mono/plugin host needed)
 dotnet publish src/ClassicUO.Client/ClassicUO.Client.csproj -c Release -r osx-arm64 -o bin/osx-arm64
-./bin/osx-arm64/cuo
+(cd bin/osx-arm64 && ./cuo -agent_port 5577)
 ```
 
 `scripts/build-naot.sh` builds the upstream release layout instead: osx-x64, client as a shared library loaded by the net472 `ClassicUO.Bootstrap` host. That layout is only needed for managed assistant plugins such as Razor.
 
-The client reads `settings.json` next to the executable. It needs `ultimaonlinedirectory` (a folder containing `tiledata.mul`) and `clientversion`. Game data lives in `~/Workspace/UOClassic` (client 7.0.117.1), fetched from EA's patch servers by `python3 tools/uo-download/download_uo.py --out <dir>`.
+The client reads `settings.json` from the current directory, so start it from `bin/osx-arm64` (launched from anywhere else it writes a fresh default `settings.json` there and fails on the empty client version). It needs `ultimaonlinedirectory` (a folder containing `tiledata.mul`) and `clientversion`. Game data lives in `~/Workspace/UOClassic` (client 7.0.117.1), fetched from EA's patch servers by `python3 tools/uo-download/download_uo.py --out <dir>`.
 
 Agent brain (Python, uv): `cd brain && uv run pytest`. Agent C# tests: `dotnet test tests/ClassicUO.UnitTests --filter "FullyQualifiedName~Agent"`.
 

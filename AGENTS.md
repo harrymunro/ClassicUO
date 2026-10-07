@@ -126,3 +126,50 @@ bd prime                # Refresh Beads context
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/core-concepts/sync-concepts.md for details and anti-patterns.
 <!-- END BEADS CODEX SETUP -->
+
+## Keep the README current
+
+`README.md` is the project's front page on GitHub and the user guide for the agent, so it
+must always describe what the code does now. Any change that adds, removes or changes a
+feature, command, RPC method, act verb, setting, template, test-server command or measured
+result updates the README in the same commit:
+
+- the feature sections and the Reference (in-game commands, `uo-brain` subcommands, RPC methods and verbs);
+- Quick start, when setup or launch steps change;
+- Results, with the date and the exact command that produced each number (single runs say so);
+- Where things are, and Known limits (remove a limit once it's fixed).
+
+Before closing a bead, check the README against the change. Keep this section the same in
+`AGENTS.md` and `CLAUDE.md`.
+
+## Build & Test
+
+Requires the .NET 10 SDK (`/usr/local/share/dotnet`) and Xcode command line tools (NativeAOT links with clang).
+
+```bash
+git submodule update --init --recursive   # FNA, FileEmbed, MP3Sharp
+dotnet build                              # Debug build, output in bin/Debug
+dotnet test                               # tests/ClassicUO.UnitTests
+
+# Native Apple Silicon executable (standalone, no Mono/plugin host needed)
+dotnet publish src/ClassicUO.Client/ClassicUO.Client.csproj -c Release -r osx-arm64 -o bin/osx-arm64
+(cd bin/osx-arm64 && ./cuo -agent_port 5577)
+```
+
+`scripts/build-naot.sh` builds the upstream release layout instead: osx-x64, client as a shared library loaded by the net472 `ClassicUO.Bootstrap` host. That layout is only needed for managed assistant plugins such as Razor.
+
+The client reads `settings.json` from the current directory, so start it from `bin/osx-arm64` (launched from anywhere else it writes a fresh default `settings.json` there and fails on the empty client version). It needs `ultimaonlinedirectory` (a folder containing `tiledata.mul`) and `clientversion`. Game data lives in `~/Workspace/UOClassic` (client 7.0.117.1), fetched from EA's patch servers by `python3 tools/uo-download/download_uo.py --out <dir>`.
+
+Agent brain (Python, uv): `cd brain && uv run pytest`. Agent C# tests: `dotnet test tests/ClassicUO.UnitTests --filter "FullyQualifiedName~Agent"`.
+
+## Architecture Overview
+
+- `src/ClassicUO.Client` builds the `cuo` executable. It is NativeAOT: serialize POCOs only through source-generated `JsonSerializerContext`s (or write JSON by hand with `Utf8JsonWriter`/`JsonDocument`, as the agent does); no reflection.
+- Everything runs single-threaded on the main loop: `GameController.Update` then `GameScene.Update`. Work done off-thread must be handed back through a queue.
+- Remotes: `origin` is the fork (harrymunro/ClassicUO) and `upstream` is ClassicUO/ClassicUO. `upstream/main-agent` has an unmerged JSON-RPC agent harness to use as a reference.
+
+### Agent (Jev)
+
+- `src/ClassicUO.Client/Agent/`: the in-client half. `AgentHost` runs a loopback JSON-lines RPC server (`-agent_port 5577` / `agent_port` in settings.json) and dispatches requests on the game thread from `GameController.Update`. `AgentController` (owned by `World`, ticked after `Macros.Update` in `GameScene.Update`) holds mode, per-behaviour authority (off/suggest/auto), reflexes (`ReflexPolicy`, pure), engagement/loot/flee execution and the human-input pause. `AgentSnapshot` writes the state JSON, `AgentJournal` keeps sequenced messages, `AgentLogin` drives the login screens, `AgentGump` is the in-game panel (fed by the brain's `decision` RPC), `AgentSpells` holds magery facts, `AgentTemplates` serves the strategy templates in `Agent/Templates/*.md` (embedded) plus a user `AgentTemplates/` folder next to the executable. Hooks into existing code are small and marked by `_world.Agent` / `AgentHost` calls.
+- `brain/`: the Python decision loop. `state.py` turns snapshots into worded state and candidate ids, `questions.py` builds one fan-out Jev request, `policy.py` masks, gates and composes actions (warrior and mage), `spells.py` lists attack spells, `strategy.py` compiles the player's strategy to settings, `loop.py` runs it and logs JSONL, `cli.py` is `uo-brain`.
+- Test server: ModernUO in `~/Workspace/ModernUO` (start with `./start-agent-server.sh`), custom commands `[AgentGo`, `[AgentKit`, `[AgentArena`, `[AgentReset` in `Projects/UOContent/Custom/AgentTestKit.cs`. The copy kept in this repo, with setup notes, is `tools/modernuo/`.

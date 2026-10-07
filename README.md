@@ -222,7 +222,7 @@ python3 tools/uo-download/download_uo.py --out ~/Workspace/UOClassic
 brain/set-openrouter-key.sh          # prompts without echoing; or: pbpaste | brain/set-openrouter-key.sh
 
 # 5. Play
-./bin/osx-arm64/cuo -agent_port 5577 &
+(cd bin/osx-arm64 && ./cuo -agent_port 5577 &)   # run it from its folder: settings.json is read from the current directory
 cd brain && uv sync
 uv run uo-brain login --account warrior --password warrior --create-warrior Brutus
 uv run uo-brain say "[AgentGo"; uv run uo-brain say "[AgentKit"; uv run uo-brain say "[AgentArena 6"
