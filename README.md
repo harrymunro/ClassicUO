@@ -239,9 +239,30 @@ sell (a table written from ModernUO's `SB*Info` classes), and creature stats are
 from the C# in `Projects/UOContent/Mobiles`. Re-running it replaces the `modernuo:` rows
 and keeps everything else. On 2026-10-06 it gave 1,152 places, 91 regions, 8,742 spawn
 rows (one per creature type per spawner), 403 creatures and 230 teleporter routes. For
-example, the Britain graveyard spawner at (1369, 1475) keeps up to 9 of Spectre, Wraith,
-Skeleton and Zombie and respawns in 5 to 10 minutes, and the bank nearest the graveyard
-is the West Britain bank at (1425, 1690).
+example, the Britain graveyard spawner at (1369, 1475) keeps up to 9 spectres, wraiths,
+skeletons and zombies alive and respawns them in 5 to 10 minutes, and the bank nearest the
+graveyard is the West Britain bank at (1425, 1690).
+
+**Guides and the model's own knowledge.** `uo-brain world import-guide URL|FILE [--area A]`
+has the planner model read a page (as plain text, up to 60,000 characters) and store one
+note per fact, each linked to the page as `guide:<url>`. Importing the same page again
+replaces its notes. `uo-brain world fill-gaps AREA` stores what the model knows about an
+area from its training as `model:unverified`, tagged `unverified`, until the game confirms
+it. The model is Claude Sonnet 5.5 through OpenRouter (`anthropic/claude-sonnet-5.5`;
+change it with `--planner-model` or `PLANNER_MODEL`), using the same `OPENROUTER_API_KEY`
+as Jev from `brain/.env`. `llm.py` is the small OpenRouter client behind it, which the
+planner will use as well: tool calling, Anthropic prompt caching on the system prompt, and
+the cost of every call. Sonnet 5.5 refuses a forced tool choice, so the client asks again
+with `auto` and the prompt names the tool to call.
+
+Single smoke run on 2026-10-06: `uo-brain world import-guide https://www.uoguide.com/Britain --area Britain`
+read 4,657 characters and stored 28 notes (banks, healer, shops, inns, guild halls, bridges
+and gates) for $0.033: 3,497 prompt and 2,557 completion tokens, 14 s. UOGuide gives
+positions in sextant degrees, and the notes keep them as written rather than converting
+them to tile coordinates.
+
+Nothing yet records what the agent sees in game, so on a public shard the store holds only
+your notes and imported guides for now.
 
 ```bash
 cd brain
@@ -250,6 +271,7 @@ uv run uo-brain world find bank --near-place "Britain graveyard"
 uv run uo-brain world hunt warrior new --near "West Britain bank"
 uv run uo-brain world spawns "Britain Graveyard"
 uv run uo-brain world note "Wraiths here are too much for a new mage." --area "Britain Graveyard"
+uv run uo-brain world import-guide https://www.uoguide.com/Britain --area Britain
 ```
 
 ## Quick start
@@ -313,7 +335,7 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
-- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`.
+- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`.
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
 - **Methods:** `ping`, `status`, `login`, `snapshot {since, radius}`, `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
@@ -395,7 +417,7 @@ shards that allow it.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, strategy, templates)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO) |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |

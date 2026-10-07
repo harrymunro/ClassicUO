@@ -18,8 +18,9 @@ import sys
 import time
 from pathlib import Path
 
+from . import guides
 from . import judge as judges
-from . import loop, policy, state
+from . import llm, loop, policy, state
 from . import strategy as strategies
 from . import world as worlds
 from . import world_import
@@ -170,6 +171,14 @@ def add_world_args(sub) -> None:
                     help="ModernUO checkout (default ~/Workspace/ModernUO)")
     im.add_argument("--maps", default="Felucca", help="comma-separated facets to import (default Felucca)")
 
+    ig = ws.add_parser("import-guide", help="have the planner model turn a guide page into notes")
+    ig.add_argument("source", metavar="URL|FILE")
+    ig.add_argument("--area", help="the area the page is about")
+    fg = ws.add_parser("fill-gaps", help="store what the planner model knows about an area, marked unverified")
+    fg.add_argument("area")
+    for p in (ig, fg):
+        p.add_argument("--planner-model", help=f"OpenRouter model (default $PLANNER_MODEL or {llm.PLANNER_MODEL})")
+
     for p in (f, sp, h, pl, rt, nt):
         p.add_argument("--limit", type=int, default=5)
 
@@ -195,9 +204,13 @@ def world_cmd(args) -> None:
                     out = w.notes(args.area, " ".join(args.keywords) or None, limit=args.limit)
                 case "import-modernuo":
                     out = world_import.import_modernuo(w, args.modernuo_dir, [m.strip() for m in args.maps.split(",")])
+                case "import-guide":
+                    out = asyncio.run(guides.import_guide(w, args.source, args.area, model=args.planner_model))
+                case "fill-gaps":
+                    out = asyncio.run(guides.fill_gaps(w, args.area, model=args.planner_model))
                 case _:
                     out = w.stats()
-    except (worlds.WorldError, FileNotFoundError) as e:
+    except (worlds.WorldError, llm.LlmError, OSError, ValueError) as e:
         sys.exit(f"world: {e}")
     print(json.dumps(out, indent=2))
 

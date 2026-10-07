@@ -83,10 +83,11 @@ CREATE TABLE IF NOT EXISTS notes (
 CREATE INDEX IF NOT EXISTS notes_source ON notes(source);
 """
 
-# Keyword search over notes. External-content FTS5 kept in step by triggers; if this
-# SQLite has no FTS5, notes() falls back to LIKE.
+# Keyword search over notes, stemmed so "lich" finds "liches". External-content FTS5 kept
+# in step by triggers; if this SQLite has no FTS5, notes() falls back to LIKE.
 FTS_SCHEMA = """
-CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(text, tags, area, content='notes', content_rowid='id');
+CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(text, tags, area, content='notes', content_rowid='id',
+    tokenize='porter unicode61');
 CREATE TRIGGER IF NOT EXISTS notes_ai AFTER INSERT ON notes BEGIN
   INSERT INTO notes_fts(rowid, text, tags, area) VALUES (new.id, new.text, new.tags, new.area);
 END;
