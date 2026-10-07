@@ -116,6 +116,11 @@ def main() -> None:
     rv.add_argument("--digest", action="store_true", help="only print the digest the model would read")
     rv.add_argument("--planner-model", help=f"OpenRouter model (default $PLANNER_MODEL or {llm.PLANNER_MODEL})")
 
+    sk = sub.add_parser("soak-report", help="report on an unattended session from its log (goals, loops, time, cost)")
+    sk.add_argument("log", type=Path)
+    sk.add_argument("--disruptions", type=Path, help="JSONL of {t, what} applied during the run")
+    sk.add_argument("--json", action="store_true", help="print the report as JSON instead of Markdown")
+
     rpl = sub.add_parser("replay", help="re-ask a log's questions to another judge and compare answers")
     rpl.add_argument("log")
     rpl.add_argument("--judge", choices=["jev", "heuristic"], default="jev")
@@ -162,6 +167,11 @@ def main() -> None:
         return
     if args.cmd == "review" and not args.accept:
         review_cmd(args)
+        return
+    if args.cmd == "soak-report":
+        from . import soak
+        r = soak.report(args.log, args.disruptions)
+        print(json.dumps(r, indent=2) if args.json else soak.markdown(r))
         return
     if args.cmd == "replay":
         asyncio.run(replay(args))
