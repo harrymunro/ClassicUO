@@ -150,6 +150,14 @@ def test_hunting_spots_show_past_outcomes(w):
     w.add_outcome("Britain Graveyard", "mage", "kills_per_hour", 5, session="s3")
     spot = next(s for s in w.hunting_spots("warrior", "moderate") if s["area"] == "Britain Graveyard")
     assert spot["outcomes"] == [{"metric": "kills_per_hour", "average": 50.0, "runs": 2}]
+    # Per-creature totals stay out of the averages; the area's outcome note comes along in words.
+    w.add_outcome("Britain Graveyard", "warrior", "bandages_vs_wraith", 9, session="s1")
+    w.add_note("Britain Graveyard: 12 kills a loop for the warrior kit.", area="Britain Graveyard",
+               tags=["outcome"], source="outcomes")
+    spot = next(s for s in w.hunting_spots("warrior", "moderate") if s["area"] == "Britain Graveyard")
+    assert [o["metric"] for o in spot["outcomes"]] == ["kills_per_hour"]
+    assert spot["past_results"] == "Britain Graveyard: 12 kills a loop for the warrior kit."
+    assert "past_results" not in next(s for s in w.hunting_spots("warrior", "new") if s["area"] != "Britain Graveyard")
 
 
 def test_route_lists_stored_paths_and_teleporters(w):
@@ -210,7 +218,7 @@ def test_region_at_and_guards(w):
 def test_tool_schemas_and_dispatch(w):
     schemas = worlds.tool_schemas()
     names = [s["function"]["name"] for s in schemas]
-    assert names == ["place", "find_place", "hunting_spots", "what_spawns", "route", "notes", "region_at"]
+    assert names == ["place", "find_place", "hunting_spots", "what_spawns", "route", "notes", "outcomes", "region_at"]
     for s in schemas:
         params = s["function"]["parameters"]
         assert s["type"] == "function" and len(s["function"]["description"]) > 80

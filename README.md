@@ -263,17 +263,18 @@ prompt. The store holds:
 - **Spawns:** which creatures spawn where, how many at once and how quickly they come back.
 - **Creatures:** hits, damage, fame and karma, and a difficulty word (trivial, weak, moderate, strong, deadly) used to rate hunting spots.
 - **Routes:** paths that worked, paths that got stuck and where, and teleporter links.
-- **Outcomes:** results of playing somewhere, such as kills per hour for a warrior.
+- **Outcomes:** what hunting somewhere gave, per area and kit: kills, deaths, supplies and gold per loop, and which creatures cost the most.
 - **Notes:** free-text facts, searched by keyword.
 
 The planner's queries are `place` (a loose name to coordinates: "britain bank", "Britain
 graveyard"), `find_place` (the nearest bank or healer, or a vendor that sells bandages),
-`hunting_spots` (for an archetype and level, towns left out), `what_spawns`, `route`,
-`notes` and `region_at`. `world.tool_schemas()` gives them as tool definitions for a model
+`hunting_spots` (for an archetype and level, towns left out, with past results there),
+`what_spawns`, `route`, `notes`, `outcomes` (how earlier hunts in an area went) and
+`region_at`. `world.tool_schemas()` gives them as tool definitions for a model
 and `World.call_tool` runs them. Distances are in tiles, counted as max(|dx|, |dy|).
 
-Every row records its source (`modernuo:<file>`, `seen`, `note`, `guide:<url>` or
-`model:unverified`) and when it was last seen. When something seen in game contradicts a
+Every row records its source (`modernuo:<file>`, `seen`, `note`, `guide:<url>`,
+`model:unverified`, or `outcomes` for the notes that sum up an area's outcomes) and when it was last seen. When something seen in game contradicts a
 stored fact, the old row is marked stale instead of deleted, and queries skip it. Other
 players' names and speech never go in: a PK sighting is stored as "a red player was seen
 here", not who it was.
@@ -314,10 +315,30 @@ whether the agent is playing or you are driving: townsfolk with titles become pl
 ("Lucy the healer" is a healer), shop signs become places by their text ("The Healer's
 Hut"), creatures that keep turning up in an area become spawns,
 travel adds routes and the spots where the character got stuck, and hunts add outcomes
-(kills per hour, deaths). Jev keeps it clean: it says what an unfamiliar title means
+(kills per hour, deaths; `uo-brain world outcomes` adds the rest from the log). Jev keeps it clean: it says what an unfamiliar title means
 (a choice), whether a creature is a regular of the area rather than passing through (a
 yes/no), and whether a sighting shows a stored place has moved (a yes/no, which marks the
 old fact stale). So attended sessions on a public shard double as mapping runs.
+
+**Outcomes from session logs** (`outcomes.py`). `uo-brain world outcomes LOG [LOG...]` reads
+session logs (a `uo-brain session` log is read together with its `.decisions.jsonl`) and
+records each hunt, one loop, for its area and kit: kills a loop and an hour, deaths, minutes a
+loop, gold a loop and an hour, and bandages and heal potions a kill and an hour. For each kind
+of creature fought it adds what the fights cost: between two decisions at most 30 s apart,
+health lost, bandages and heal potions go to the creature being fought, or else the nearest
+one within 3 tiles. That is what fights with a kind cost, not what the kind did: health is net
+of healing in between, and when several attack at once it all goes to the one being fought.
+Each area then gets one note in words from every loop recorded there (a real one is
+below); a kind is only named as costly after 3 fights. Rows are named after the log, so importing it again
+replaces them (and the rows the live hunt wrote). Logs without hunts (`run`, `scenario`,
+`bench`) need `--area`, and each run in them counts as a loop there. The planner sees the
+note in `hunting_spots` and the figures through its `outcomes` tool.
+
+Single run on 2026-10-07 over 18 bench logs (warrior arena rounds):
+`uo-brain world outcomes logs/bench/20261006-233040/relentless-never-flees-jev_relentless-*.jsonl logs/bench/20261006-233040/mismatch-jev-0*.jsonl --area "Test field"`
+wrote "Test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4
+deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1
+a fight over 25 fights, then ratmen at 0.8 a fight."
 
 ```bash
 cd brain
@@ -327,6 +348,7 @@ uv run uo-brain world hunt warrior new --near "West Britain bank"
 uv run uo-brain world spawns "Britain Graveyard"
 uv run uo-brain world note "Wraiths here are too much for a new mage." --area "Britain Graveyard"
 uv run uo-brain world import-guide https://www.uoguide.com/Britain --area Britain
+uv run uo-brain world outcomes logs/session.jsonl
 ```
 
 ### Goals and the planner
@@ -335,7 +357,7 @@ In auto mode the agent can work towards a goal you give it in words, for example
 the undead at the Britain graveyard, keep yourself supplied with bandages, bank your
 gold". Type it into the panel's goal box, pick a goal template, or use `-agent goal`.
 
-- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `region_at`).
+- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `outcomes`, `region_at`).
 - **No scripted loop:** the planner puts travel, hunting, banking and restocking together itself. Code carries out each goal ([below](#getting-around-travel-banking-and-shops)); Jev keeps the fighting.
 - **Cheap to call:** each step rebuilds a short prompt (a cached system prompt, the goal, the last 12 steps, the character now) instead of growing one long conversation. A call costs about $0.014.
 - **The panel** shows the step and why ("hunting at Britain Graveyard for up to 15 min: supplied with 80 bandages; time to hunt"). *pause* keeps the goal but stops work on it.
@@ -483,7 +505,7 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
-- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`.
+- **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`, `outcomes LOG… [--area A]` (record what each hunt in the logs gave, per area and kit; importing a log again replaces its rows).
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
 - **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around), `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `goal {text|clear|pause|template}`, `goal_status {step, why}` (from the planner, for the panel), `templates {kind: "goal"}`, `command`, `capture {path}`.
@@ -612,7 +634,7 @@ shards that allow it.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |

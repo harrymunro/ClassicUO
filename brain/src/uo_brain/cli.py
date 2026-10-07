@@ -9,6 +9,7 @@
   uo-brain report logs/run.jsonl
   uo-brain bench --scenarios core --judges heuristic,jev --rounds 10   (bench report bench/*.json)
   uo-brain world find bank --near-place "Britain graveyard" | world hunt warrior new | world note "..." --area Britain
+  uo-brain world outcomes logs/session.jsonl   (what each hunt gave, per area and kit)
 """
 
 import argparse
@@ -22,7 +23,7 @@ from pathlib import Path
 from . import bench as benchmark
 from . import guides
 from . import judge as judges
-from . import llm, loop, policy, state
+from . import llm, loop, outcomes, policy, state
 from . import strategy as strategies
 from . import world as worlds
 from . import world_import
@@ -212,6 +213,10 @@ def add_world_args(sub) -> None:
 
     ws.add_parser("stats", help="row counts by table and source")
 
+    oc = ws.add_parser("outcomes", help="record what happened per area and kit from session logs (re-import replaces)")
+    oc.add_argument("logs", nargs="+", type=Path, metavar="LOG")
+    oc.add_argument("--area", help="for logs without hunts (run, scenario, bench): count each run as a loop here")
+
     im = ws.add_parser("import-modernuo", help="fill the store from a ModernUO server's data (replaces modernuo rows)")
     im.add_argument("--modernuo-dir", type=Path, default=world_import.DEFAULT_MODERNUO,
                     help="ModernUO checkout (default ~/Workspace/ModernUO)")
@@ -254,6 +259,8 @@ def world_cmd(args) -> None:
                     out = asyncio.run(guides.import_guide(w, args.source, args.area, model=args.planner_model))
                 case "fill-gaps":
                     out = asyncio.run(guides.fill_gaps(w, args.area, model=args.planner_model))
+                case "outcomes":
+                    out = outcomes.import_logs(w, args.logs, area=args.area)
                 case _:
                     out = w.stats()
     except (worlds.WorldError, llm.LlmError, OSError, ValueError) as e:

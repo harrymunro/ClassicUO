@@ -14,6 +14,7 @@ Every row says where it came from (`source`) and when it was last confirmed (`la
     note               typed in by the player (uo-brain world note)
     guide:<url>        summarised from a guide or wiki page (guides.py)
     model:unverified   the planner model's own knowledge, until the game confirms it
+    outcomes           a note summing up the recorded outcomes of an area (outcomes.py)
 
 A fact that a newer observation contradicts is marked stale instead of being deleted:
 queries skip it, but the history stays. Other players' names and speech never go in.
@@ -663,15 +664,74 @@ class World:
                 rank = a["score"] / (1 + a["distance"] / 400)  # a spot across the map is worth less
             a["score"] = round(a["score"], 1)
             a["outcomes"] = self._outcomes(a["area"], archetype)
+            a["past_results"] = self._outcome_note(a["area"])
             out.append((rank, a))
         out.sort(key=lambda t: -t[0])
         return [_compact(a) for _, a in out[:limit]]
 
     def _outcomes(self, area: str, kit: str) -> list[dict[str, Any]]:
+        """Averages per loop, without the per-creature totals (those are in outcomes())."""
         rows = self.db.execute("SELECT metric, AVG(value) AS avg, COUNT(*) AS n FROM outcomes WHERE stale = 0 "
                                "AND area = ? COLLATE NOCASE AND (kit IS NULL OR kit = ? COLLATE NOCASE) "
-                               "GROUP BY metric", (area, kit)).fetchall()
+                               "AND metric NOT LIKE '%\\_vs\\_%' ESCAPE '\\' GROUP BY metric", (area, kit)).fetchall()
         return [{"metric": r["metric"], "average": round(r["avg"], 2), "runs": r["n"]} for r in rows]
+
+    def _outcome_note(self, area: str) -> str | None:
+        r = self.db.execute("SELECT text FROM notes WHERE source = 'outcomes' AND stale = 0 AND area = ? COLLATE NOCASE "
+                            "ORDER BY id DESC LIMIT 1", (area,)).fetchone()
+        return r["text"] if r else None
+
+    def outcomes(self, area: str | None = None, kit: str | None = None, exact: bool = False,
+                 limit: int = 10) -> list[dict[str, Any]]:
+        """What playing in an area gave, per area and kit: how many loops (hunts) were
+        recorded, the average per loop of each measure, the deaths in all, and what fights
+        with each creature kind cost (summed over the loops, then per fight). Most loops first."""
+        where, args = ["stale = 0"], []
+        if area:
+            where.append("area = ? COLLATE NOCASE")
+            args.append(area)
+        if kit:
+            where.append("(kit IS NULL OR kit = ? COLLATE NOCASE)")
+            args.append(kit)
+        sql = "SELECT * FROM outcomes WHERE {} ORDER BY id"
+        rows = self.db.execute(sql.format(" AND ".join(where)), args).fetchall()
+        if not rows and area and not exact:
+            where[1] = "area LIKE ?"
+            args[0] = f"%{area}%"
+            rows = self.db.execute(sql.format(" AND ".join(where)), args).fetchall()
+        groups: dict[tuple[str, str | None], list[sqlite3.Row]] = {}
+        for r in rows:
+            groups.setdefault((r["area"], r["kit"]), []).append(r)
+        out = []
+        for (a, k), rs in groups.items():
+            per: dict[str, list[float]] = {}
+            creatures: dict[str, dict[str, float]] = {}
+            for r in rs:
+                measure, vs, who = r["metric"].partition("_vs_")
+                if vs:
+                    c = creatures.setdefault(who, {"fights": 0})
+                    c[measure] = c.get(measure, 0) + (r["value"] or 0)
+                else:
+                    per.setdefault(measure, []).append(r["value"] or 0)
+            loops = max((len(per.get(m, [])) for m in ("kills_per_hour", "kills_per_loop", "deaths")), default=0)
+            costs = []
+            for who, c in creatures.items():
+                entry: dict[str, Any] = {"creature": who.replace("_", " "), "fights": int(c.pop("fights"))}
+                for measure, total in sorted(c.items()):
+                    entry[measure] = round(total, 1)
+                    if entry["fights"]:
+                        entry[f"{measure}_per_fight"] = round(total / entry["fights"], 2)
+                costs.append(entry)
+            costs.sort(key=lambda c: (-c.get("bandages_per_fight", 0), -c.get("health_pct_lost_per_fight", 0)))
+            s = {"area": a, "kit": k, "loops": loops, "sessions": len({r["session"] for r in rs if r["session"]}),
+                 "averages": {m: round(sum(v) / len(v), 2) for m, v in sorted(per.items())},
+                 "deaths": int(sum(per.get("deaths", []))), "creatures": costs[:8],
+                 "last_seen": max(r["last_seen"] for r in rs)}
+            if note := self._outcome_note(a):
+                s["note"] = note
+            out.append(s)
+        out.sort(key=lambda s: -s["loops"])
+        return out[:limit]
 
     def route(self, start: Any, end: Any, map: str = DEFAULT_MAP, limit: int = 5) -> dict[str, Any]:
         """Stored routes between two places, teleporters near either end, and the
@@ -773,7 +833,8 @@ class World:
         args = {k: v for k, v in (args or {}).items() if v is not None}
         fn = {"find_place": self.find_place, "hunting_spots": self.hunting_spots, "what_spawns": self.what_spawns,
               "route": lambda **a: self.route(a.pop("from"), a.pop("to"), **a), "notes": self.notes,
-              "place": self.place, "region_at": lambda **a: self.region_at(**a) or {"region": None}}.get(name)
+              "place": self.place, "region_at": lambda **a: self.region_at(**a) or {"region": None},
+              "outcomes": lambda **a: self.outcomes(**a) or {"outcomes": [], "note": "nothing recorded yet"}}.get(name)
         if fn is None:
             return {"error": f"no tool called {name!r}"}
         try:
@@ -903,6 +964,15 @@ def tool_schemas() -> list[dict[str, Any]]:
            "source \"model:unverified\" are unconfirmed guesses.",
            {"area": {"type": "string", "description": "Area name to filter by, e.g. \"Britain\"."},
             "keywords": {"type": "string", "description": "Words to search for, e.g. \"lich reagents\"."},
+            "limit": _LIMIT}, []),
+        fn("outcomes",
+           "What hunting in an area gave this character before, from its session logs: per area and kit, how "
+           "many loops (one hunt each) were recorded, the average per loop of kills, deaths, minutes, gold, and "
+           "bandages and heal potions per kill, which creatures cost the most (bandages, heal potions and "
+           "health lost per fight, health in percent of the character's maximum), and a note in words. Use it "
+           "to choose between areas and to plan supplies.",
+           {"area": {"type": "string", "description": "Area name, e.g. \"Britain Graveyard\". Leave out for all."},
+            "kit": {"type": "string", "description": "warrior or mage. Leave out for both."},
             "limit": _LIMIT}, []),
         fn("region_at",
            "Which named region a tile is in (town, dungeon, graveyard, cave...), whether guards protect it, "
