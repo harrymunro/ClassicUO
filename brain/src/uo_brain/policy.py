@@ -373,6 +373,16 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         target, dec.target_confidence = pick_target(sit, ans, cfg)
         target = target or min(sit.hostiles, key=lambda h: h.distance)
         dec.target = target
+        # A warrior-mage within spell range opens with a spell and lets the creature come: in a
+        # calibration run it walked up to orcs 5 tiles off and never cast its opener.
+        if sit.is_warrior_mage and target.casts == 0 and 2 <= target.distance <= SPELL_RANGE:
+            dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, target)
+            if dec.spell:
+                actions.append({"verb": "attack", "target": target.serial, **meta})
+                actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True,
+                                **meta, "reason": "opener"})
+                dec.note = f"open on {target.name} with {dec.spell.name} ({conf:.2f})"
+                return dec
         raw = next(m for m in sit.raw["mobiles"] if m["serial"] == target.serial)
         p = sit.player
         stop = cfg.spell_range - 1 if sit.is_mage else shooting_range(sit, cfg) - 1 if sit.is_archer \

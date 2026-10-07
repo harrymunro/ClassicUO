@@ -80,3 +80,8 @@ def test_warrior_mage_opens_on_a_creature_still_coming_then_fights_in_melee(warr
     warrior_mage["mobiles"][0].update({"distance": 1, "dx": 1})
     dec = policy.decide(sit_of(warrior_mage), answers(), policy.Memory(), CFG, now=10.0)
     assert [a["verb"] for a in dec.actions] == ["attack"]
+
+
+def test_a_seeking_warrior_mage_opens_with_a_spell_instead_of_walking_up(warrior_mage):
+    dec = policy.decide(sit_of(warrior_mage), answers(intent="seek"), policy.Memory(), CFG, now=10.0)
+    assert [a["verb"] for a in dec.actions] == ["attack", "cast"] and dec.actions[1]["reason"] == "opener"
