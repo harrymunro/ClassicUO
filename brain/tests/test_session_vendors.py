@@ -147,6 +147,6 @@ def test_goals_back_where_it_left_from_creatures_are_refused_for_a_while(tmp_pat
     r = asyncio.run(s.travel_to(x=1385, y=1500))
     assert not r.ok and r.summary.startswith("not going back near Britain Graveyard yet")
     assert s.avoided(1425, 1690) is None  # the bank is far enough
-    s.left_from[0] = (1380, 1480, _time.monotonic() - 16 * 60, "Britain Graveyard", "old")
+    s.left_from[0] = (1380, 1480, _time.monotonic() - 31 * 60, "Britain Graveyard", "old")
     assert s.avoided(1385, 1500) is None
     w.close()

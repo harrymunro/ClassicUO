@@ -1,0 +1,572 @@
+{
+  "started": "2026-10-07T14:15:30",
+  "rounds": 10,
+  "lane": 8,
+  "bestiary": true,
+  "scenarios": {
+    "swarm": {
+      "bead": "cuo-46e.6",
+      "right": "Six melee monsters on a mage: survive and kill at least four.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Chiktaki (ratman)"
+              ],
+              "seconds": 55.6,
+              "player_died": true,
+              "engaged": [
+                "Chiktaki (ratman)",
+                "Trugagh (orc)"
+              ],
+              "flees_at_hp": [
+                27
+              ],
+              "min_hp": 0,
+              "decisions": 64,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Ecckkekek (ratman)",
+                "a mongbat"
+              ],
+              "seconds": 72.5,
+              "player_died": true,
+              "engaged": [
+                "Ecckkekek (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                28
+              ],
+              "min_hp": 0,
+              "decisions": 90,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Ckeki (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 49.4,
+              "player_died": true,
+              "engaged": [
+                "Ckeki (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Oomigig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 62,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Kitavi (ratman)",
+                "a headless one"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Kitavi (ratman)",
+                "a headless one",
+                "Jregh (orc)"
+              ],
+              "flees_at_hp": [
+                26,
+                27,
+                7,
+                18
+              ],
+              "min_hp": 7,
+              "decisions": 141,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Taviactak (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Taviactak (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Gubdagog (orc)"
+              ],
+              "flees_at_hp": [
+                24,
+                15,
+                27,
+                21,
+                12,
+                24
+              ],
+              "min_hp": 12,
+              "decisions": 144,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Ritchekckiki (ratman)",
+                "Pofhug (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Ritchekckiki (ratman)",
+                "Pofhug (orc)",
+                "Sugha (orc)"
+              ],
+              "flees_at_hp": [
+                54,
+                22,
+                21
+              ],
+              "min_hp": 21,
+              "decisions": 136,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-06.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 17.4,
+              "player_died": true,
+              "engaged": [
+                "Ikchaki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 22,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-07.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "a headless one"
+              ],
+              "seconds": 98.5,
+              "player_died": true,
+              "engaged": [
+                "a headless one",
+                "Hokchek (ratman)"
+              ],
+              "flees_at_hp": [
+                22,
+                15,
+                25,
+                22,
+                27,
+                15,
+                5,
+                6,
+                19,
+                16,
+                11
+              ],
+              "min_hp": 0,
+              "decisions": 116,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-08.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 19.1,
+              "player_died": true,
+              "engaged": [
+                "Supgugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 23,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-09.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 77.3,
+              "player_died": true,
+              "engaged": [
+                "Duiltag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 101,
+              "log": "logs/bench/20261007-141530/swarm-heuristic-10.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 7,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Ckekickuk (ratman)",
+                "Barfu (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                91,
+                92,
+                94,
+                96,
+                99,
+                100,
+                100,
+                13
+              ],
+              "min_hp": 2,
+              "decisions": 111,
+              "log": "logs/bench/20261007-141530/swarm-jev-01.jsonl",
+              "input_tokens": 308627,
+              "est_cost_usd": 0.013
+            },
+            {
+              "success": true,
+              "kills": [
+                "a mongbat",
+                "Vitchak (ratman)",
+                "Zombilge (orc)",
+                "Xuthakug (orc)"
+              ],
+              "seconds": 118.8,
+              "player_died": false,
+              "engaged": [
+                "Kichak (ratman)",
+                "a mongbat",
+                "Vitchak (ratman)",
+                "Xuthakug (orc)"
+              ],
+              "flees_at_hp": [
+                67,
+                69,
+                71,
+                72,
+                74,
+                76,
+                79,
+                81
+              ],
+              "min_hp": 45,
+              "decisions": 88,
+              "log": "logs/bench/20261007-141530/swarm-jev-02.jsonl",
+              "input_tokens": 250857,
+              "est_cost_usd": 0.0105
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat",
+                "Chichachak (ratman)",
+                "Silge (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Yaghed (orc)",
+                "a mongbat",
+                "Chichachak (ratman)",
+                "Silge (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                91,
+                92,
+                93,
+                95,
+                98,
+                99,
+                100,
+                100,
+                86,
+                87,
+                88,
+                91,
+                92,
+                94,
+                96,
+                99
+              ],
+              "min_hp": 81,
+              "decisions": 89,
+              "log": "logs/bench/20261007-141530/swarm-jev-03.jsonl",
+              "input_tokens": 232552,
+              "est_cost_usd": 0.0098
+            },
+            {
+              "success": true,
+              "kills": [
+                "Dachek (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Bidgug (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Dachek (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Bidgug (orc)",
+                "Ckekckuki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 29,
+              "decisions": 116,
+              "log": "logs/bench/20261007-141530/swarm-jev-04.jsonl",
+              "input_tokens": 301746,
+              "est_cost_usd": 0.0127
+            },
+            {
+              "success": true,
+              "kills": [
+                "Chetickuki (ratman)",
+                "a mongbat",
+                "Urug (orc)",
+                "Hikitchaki (ratman)",
+                "Surghed (orc)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Chetickuki (ratman)",
+                "Urug (orc)",
+                "Hikitchaki (ratman)",
+                "Surghed (orc)"
+              ],
+              "flees_at_hp": [
+                82,
+                84,
+                86,
+                88,
+                91,
+                92,
+                94,
+                96
+              ],
+              "min_hp": 42,
+              "decisions": 97,
+              "log": "logs/bench/20261007-141530/swarm-jev-05.jsonl",
+              "input_tokens": 255411,
+              "est_cost_usd": 0.0107
+            },
+            {
+              "success": true,
+              "kills": [
+                "a mongbat",
+                "Chichak (ratman)",
+                "Vitchak (ratman)",
+                "Sunodagh (orc)"
+              ],
+              "seconds": 112.3,
+              "player_died": false,
+              "engaged": [
+                "Vitchak (ratman)",
+                "a mongbat",
+                "Chichak (ratman)",
+                "Vitchak (ratman)",
+                "Sunodagh (orc)"
+              ],
+              "flees_at_hp": [
+                85,
+                76,
+                78,
+                79,
+                81,
+                84,
+                86,
+                88
+              ],
+              "min_hp": 48,
+              "decisions": 80,
+              "log": "logs/bench/20261007-141530/swarm-jev-06.jsonl",
+              "input_tokens": 213839,
+              "est_cost_usd": 0.009
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat",
+                "Detckuki (ratman)",
+                "a headless one"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Detckuki (ratman)",
+                "a headless one",
+                "Yonkathu (orc)"
+              ],
+              "flees_at_hp": [
+                15,
+                27,
+                27,
+                69,
+                71,
+                72,
+                73,
+                75,
+                78,
+                80,
+                82
+              ],
+              "min_hp": 15,
+              "decisions": 109,
+              "log": "logs/bench/20261007-141530/swarm-jev-07.jsonl",
+              "input_tokens": 315183,
+              "est_cost_usd": 0.0132
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat",
+                "a headless one",
+                "Kietik (ratman)"
+              ],
+              "seconds": 101.9,
+              "player_died": true,
+              "engaged": [
+                "Kietik (ratman)",
+                "Grikug (orc)",
+                "Kireki (ratman)",
+                "Grikug (orc)"
+              ],
+              "flees_at_hp": [
+                6
+              ],
+              "min_hp": 0,
+              "decisions": 98,
+              "log": "logs/bench/20261007-141530/swarm-jev-08.jsonl",
+              "input_tokens": 273859,
+              "est_cost_usd": 0.0115
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat",
+                "Narfu (orc)"
+              ],
+              "seconds": 88.2,
+              "player_died": false,
+              "engaged": [
+                "Pakgu (orc)",
+                "a mongbat",
+                "Narfu (orc)"
+              ],
+              "flees_at_hp": [
+                66,
+                58,
+                55,
+                98,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 46,
+              "decisions": 57,
+              "log": "logs/bench/20261007-141530/swarm-jev-09.jsonl",
+              "input_tokens": 155528,
+              "est_cost_usd": 0.0065
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Ohomdud (orc)"
+              ],
+              "flees_at_hp": [
+                56,
+                92,
+                92,
+                93,
+                95,
+                98,
+                100,
+                100,
+                60,
+                72,
+                73,
+                74,
+                75,
+                78,
+                80,
+                82
+              ],
+              "min_hp": 34,
+              "decisions": 105,
+              "log": "logs/bench/20261007-141530/swarm-jev-10.jsonl",
+              "input_tokens": 297515,
+              "est_cost_usd": 0.0125
+            }
+          ],
+          "n": 10,
+          "successes": 4,
+          "rate": 0.4,
+          "ci95": [
+            0.168,
+            0.687
+          ],
+          "deaths": 1,
+          "cost_usd": 0.1094,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

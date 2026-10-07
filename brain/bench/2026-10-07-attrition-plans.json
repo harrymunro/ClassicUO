@@ -1,0 +1,723 @@
+{
+  "started": "2026-10-07T15:08:45",
+  "rounds": 5,
+  "lane": 5,
+  "bestiary": true,
+  "scenarios": {
+    "attrition": {
+      "bead": "cuo-46e.5",
+      "right": "A long fight on six bandages and one heal potion: disengage before the supplies are gone, unless the last monster is nearly dead.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Kitavi (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                85,
+                86,
+                87,
+                88,
+                89,
+                91,
+                92,
+                94,
+                96,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 85,
+              "decisions": 82,
+              "log": "logs/bench/20261007-150845/attrition-jev-01.jsonl",
+              "input_tokens": 154568,
+              "est_cost_usd": 0.0065
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Ratitchaki (ratman)",
+                "Chek (ratman)"
+              ],
+              "flees_at_hp": [
+                100,
+                93,
+                94,
+                95,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                64,
+                65,
+                66,
+                100,
+                100
+              ],
+              "min_hp": 64,
+              "decisions": 93,
+              "log": "logs/bench/20261007-150845/attrition-jev-02.jsonl",
+              "input_tokens": 174083,
+              "est_cost_usd": 0.0073
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Otugbu (orc)",
+                "a mongbat",
+                "Chikchickeki (ratman)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Kuki (ratman)",
+                "Otugbu (orc)",
+                "a mongbat",
+                "Chikchickeki (ratman)"
+              ],
+              "flees_at_hp": [
+                88,
+                89,
+                91,
+                92,
+                93,
+                95,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 84,
+              "decisions": 98,
+              "log": "logs/bench/20261007-150845/attrition-jev-03.jsonl",
+              "input_tokens": 183619,
+              "est_cost_usd": 0.0077
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Reki (ratman)",
+                "Deckarreki (ratman)"
+              ],
+              "seconds": 120.4,
+              "player_died": false,
+              "engaged": [
+                "Deckarreki (ratman)",
+                "Reki (ratman)",
+                "Deckarreki (ratman)",
+                "Zahgorim (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                95,
+                96,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 67,
+              "decisions": 89,
+              "log": "logs/bench/20261007-150845/attrition-jev-04.jsonl",
+              "input_tokens": 171315,
+              "est_cost_usd": 0.0072
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Iki (ratman)"
+              ],
+              "flees_at_hp": [
+                94,
+                86,
+                87,
+                88,
+                91,
+                92,
+                94,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                95,
+                96,
+                96
+              ],
+              "min_hp": 86,
+              "decisions": 105,
+              "log": "logs/bench/20261007-150845/attrition-jev-05.jsonl",
+              "input_tokens": 203921,
+              "est_cost_usd": 0.0086
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0373,
+          "errors": 0
+        },
+        "jev#planner-attrition": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Chotechiki (ratman)",
+                "Detik (ratman)"
+              ],
+              "flees_at_hp": [
+                94,
+                84,
+                84,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100,
+                94,
+                95,
+                96
+              ],
+              "min_hp": 83,
+              "decisions": 92,
+              "log": "logs/bench/20261007-150845/attrition-jev#planner-attrition-01.jsonl",
+              "input_tokens": 206075,
+              "est_cost_usd": 0.0087,
+              "plan": {
+                "machine": "cautious open-ground warrior",
+                "state": "hunt",
+                "moves": 9,
+                "seconds_in": {
+                  "hunt": 62.9,
+                  "out": 53.6,
+                  "recover": 3.6
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Vitavi (ratman)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Ckak (ratman)",
+                "Vitavi (ratman)",
+                "Ckak (ratman)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                94,
+                95,
+                67,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 67,
+              "decisions": 96,
+              "log": "logs/bench/20261007-150845/attrition-jev#planner-attrition-02.jsonl",
+              "input_tokens": 231689,
+              "est_cost_usd": 0.0097,
+              "plan": {
+                "machine": "cautious open-ground warrior",
+                "state": "hunt",
+                "moves": 9,
+                "seconds_in": {
+                  "hunt": 53.9,
+                  "out": 64.1,
+                  "recover": 2.3
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Tak (ratman)",
+                "Kadicchok (ratman)"
+              ],
+              "flees_at_hp": [
+                87,
+                74,
+                75,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                95,
+                96,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100,
+                94,
+                95,
+                96,
+                98
+              ],
+              "min_hp": 73,
+              "decisions": 90,
+              "log": "logs/bench/20261007-150845/attrition-jev#planner-attrition-03.jsonl",
+              "input_tokens": 194753,
+              "est_cost_usd": 0.0082,
+              "plan": {
+                "machine": "cautious open-ground warrior",
+                "state": "hunt",
+                "moves": 9,
+                "seconds_in": {
+                  "hunt": 71.5,
+                  "out": 45.8,
+                  "recover": 2.7
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Taktav (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 93,
+              "decisions": 89,
+              "log": "logs/bench/20261007-150845/attrition-jev#planner-attrition-04.jsonl",
+              "input_tokens": 184923,
+              "est_cost_usd": 0.0078,
+              "plan": {
+                "machine": "cautious open-ground warrior",
+                "state": "hunt",
+                "moves": 6,
+                "seconds_in": {
+                  "hunt": 91.4,
+                  "out": 26.0,
+                  "recover": 2.7
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Chitaviok (ratman)"
+              ],
+              "flees_at_hp": [
+                100,
+                95,
+                96,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 95,
+              "decisions": 94,
+              "log": "logs/bench/20261007-150845/attrition-jev#planner-attrition-05.jsonl",
+              "input_tokens": 205313,
+              "est_cost_usd": 0.0086,
+              "plan": {
+                "machine": "cautious open-ground warrior",
+                "state": "hunt",
+                "moves": 9,
+                "seconds_in": {
+                  "hunt": 72.5,
+                  "out": 44.7,
+                  "recover": 3.0
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.043,
+          "errors": 0
+        },
+        "jev#pull-one": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Deckarreki (ratman)"
+              ],
+              "flees_at_hp": [
+                94,
+                87,
+                88,
+                89,
+                91,
+                93,
+                94,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 87,
+              "decisions": 89,
+              "log": "logs/bench/20261007-150845/attrition-jev#pull-one-01.jsonl",
+              "input_tokens": 189415,
+              "est_cost_usd": 0.008,
+              "plan": {
+                "machine": "pull one at a time",
+                "state": "out",
+                "moves": 5,
+                "seconds_in": {
+                  "pull": 54.0,
+                  "out": 66.1
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "Vevactak (ratman)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "a headless one",
+                "Vevactak (ratman)"
+              ],
+              "flees_at_hp": [
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 89,
+              "decisions": 84,
+              "log": "logs/bench/20261007-150845/attrition-jev#pull-one-02.jsonl",
+              "input_tokens": 172862,
+              "est_cost_usd": 0.0073,
+              "plan": {
+                "machine": "pull one at a time",
+                "state": "pull",
+                "moves": 4,
+                "seconds_in": {
+                  "pull": 69.2,
+                  "out": 51.0
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a headless one"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                93,
+                94,
+                95,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 93,
+              "decisions": 90,
+              "log": "logs/bench/20261007-150845/attrition-jev#pull-one-03.jsonl",
+              "input_tokens": 200897,
+              "est_cost_usd": 0.0084,
+              "plan": {
+                "machine": "pull one at a time",
+                "state": "out",
+                "moves": 3,
+                "seconds_in": {
+                  "pull": 16.1,
+                  "out": 104.1
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a headless one"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "a headless one",
+                "Tickukitaki (ratman)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 92,
+              "log": "logs/bench/20261007-150845/attrition-jev#pull-one-04.jsonl",
+              "input_tokens": 201080,
+              "est_cost_usd": 0.0084,
+              "plan": {
+                "machine": "pull one at a time",
+                "state": "out",
+                "moves": 3,
+                "seconds_in": {
+                  "pull": 34.7,
+                  "out": 85.4
+                }
+              }
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a headless one"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 36,
+              "decisions": 99,
+              "log": "logs/bench/20261007-150845/attrition-jev#pull-one-05.jsonl",
+              "input_tokens": 244770,
+              "est_cost_usd": 0.0103,
+              "plan": {
+                "machine": "pull one at a time",
+                "state": "out",
+                "moves": 5,
+                "seconds_in": {
+                  "pull": 43.6,
+                  "out": 76.5
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0424,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

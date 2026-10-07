@@ -379,6 +379,11 @@ namespace ClassicUO.UnitTests.Agent
             d.Questions[1].Verdict.Should().Be("yes");
             d.Questions[1].Cut.Should().BeApproximately(0.425f, 0.001f);
 
+            using var did = System.Text.Json.JsonDocument.Parse(
+                "{\"did\": [{\"what\": \"run 15 tiles north-west from the pack\", \"result\": \"\"}]}");
+            AgentDecision.FromJson(did.RootElement).Did.Should().ContainSingle()
+                .Which.What.Should().Be("run 15 tiles north-west from the pack");
+
             using var call = System.Text.Json.JsonDocument.Parse(
                 "{\"kind\": \"facts\", \"title\": \"which facts matter here?\", \"latency_ms\": 300, \"questions\": [" +
                 "{\"q\": \"facts\", \"kind\": \"many\", \"options\": [{\"label\": \"Wisps never attack first\", \"p\": 0.74, \"kept\": true}]}]}");

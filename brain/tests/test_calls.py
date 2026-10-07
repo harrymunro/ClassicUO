@@ -31,3 +31,16 @@ def test_the_decision_payload_carries_the_calls_view(snapshot):
     a.choices["intent"] = ChoiceResult("fight", {"fight": 1.0}, 1.0)
     dec = policy.decide(sit, a, policy.Memory(), policy.PolicyConfig())
     assert loop.decision_payload(type("J", (), {"name": "jev"})(), sit, qs, a, dec, [])["intents"]
+
+
+def test_actions_are_put_in_words_with_where_a_move_goes():
+    sit = state.build(copy.deepcopy(SNAPSHOT), set(), [])  # the player at 1000,1000; the orc 0x100 east
+    acts = [{"verb": "flee", "target": 0, "tiles": 15}, {"verb": "walk_to", "x": 990, "y": 990},
+            {"verb": "attack", "target": 0x100}, {"verb": "cast", "spell": "Protection", "target": "self"}]
+    res = [{"status": "done", "detail": "15 tiles northwest"}, {"status": "done"}, {"status": "failed", "detail": "busy"}]
+    assert calls.did(sit, acts, res) == [
+        {"what": "run 15 tiles northwest from the pack", "result": ""},
+        {"what": "walk 10 tiles northwest", "result": ""},
+        {"what": "attack an orc", "result": "failed: busy"},
+        {"what": "cast Protection at itself", "result": ""}]
+    assert calls.compass(0, -3) == "north" and calls.compass(5, 5) == "southeast"

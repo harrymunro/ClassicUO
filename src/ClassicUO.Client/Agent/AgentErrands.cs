@@ -237,7 +237,7 @@ namespace ClassicUO.Agent
             {
                 var it = (Item) o;
 
-                if (gold && it.IsCoin || loot && IsLoot(it))
+                if (gold && it.IsCoin || loot && IsLoot(it) && it.Serial != _agent.HeldWeapon)
                 {
                     Enqueue(it, it.Amount, box.Serial, it.IsCoin ? "gold" : AgentSnapshot.NameOf(_world, it));
                 }
@@ -359,6 +359,17 @@ namespace ClassicUO.Agent
             if (item == null || _world.Items.Get(_current.Dest) is not Item target)
             {
                 Detail += $"lost track of {_current.What}; ";
+                _current = null;
+
+                return;
+            }
+
+            // Never what the character wears or holds: in a soak run a recall dropped the katana into the
+            // pack as a bank errand listed the loot, the weapon went back on, and the errand banked it
+            // from the warrior's hand, which then fought bare-handed until it died.
+            if (item.Container == _world.Player.Serial || item.Serial == _agent.HeldWeapon)
+            {
+                Detail += $"kept {_current.What}: the character's own; ";
                 _current = null;
 
                 return;
@@ -527,7 +538,8 @@ namespace ClassicUO.Agent
                 foreach (var o in offers)
                 {
                     Item it = _world.Items.Get(o.Serial);
-                    bool pick = loot ? it != null && IsLoot(it) : words.Exists(w => Matches(o.Name, o.Graphic, w));
+                    bool pick = o.Serial != _agent.HeldWeapon
+                                && (loot ? it != null && IsLoot(it) : words.Exists(w => Matches(o.Name, o.Graphic, w)));
 
                     if (pick && o.Amount > 0)
                     {

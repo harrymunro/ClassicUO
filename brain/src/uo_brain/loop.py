@@ -285,6 +285,7 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
     if dec.spell is not None:
         used["spell"] = dec.spell.id
     payload["questions"] = calls.view(qs, answers, cuts=cuts, used=used)
+    payload["did"] = calls.did(sit, dec.actions, results)
     if machine:
         payload["machine"] = machine.panel()
     await rpc.call("decision", **payload)

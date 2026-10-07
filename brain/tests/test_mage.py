@@ -357,3 +357,23 @@ def test_a_cornered_character_stops_trying_to_leave(mage):
     assert dec.intent == "fight" and mem.cornered_until == 25.0
     assert policy.decide(sit, swarm_answers(danger=0.9, leave_now=0.9), mem, policy.PolicyConfig(),
                          now=20.0).intent == "fight"
+    # Jev's own pick of leaving or fleeing doesn't take it back to the blocked ways out.
+    for intent in ("leave", "flee"):
+        dec = policy.decide(sit, swarm_answers(intent=intent, danger=0.9), mem, policy.PolicyConfig(), now=22.0)
+        assert dec.intent == "fight" and not any(a["verb"] == "flee" for a in dec.actions)
+    assert policy.decide(sit, swarm_answers(intent="leave", danger=0.9), mem, policy.PolicyConfig(),
+                         now=30.0).intent == "leave"
+
+
+def test_after_leaving_a_mage_still_casts_at_what_comes(mage):
+    """Held to what was within 3 tiles after leaving, a mage in swarm rounds stood resting while six
+    monsters closed in, and fought them only once they were on it."""
+    mage["mobiles"][0].update({"distance": 6, "dx": 6, "dy": 0, "war_mode": True})
+    mage["mobiles"] = mage["mobiles"][:1]
+    mem = policy.Memory(no_seek_until=100.0)
+    dec = policy.decide(state.build(mage, set(), []), answers("fight"), mem, policy.PolicyConfig(), now=10.0)
+    assert dec.intent == "fight" and any(a["verb"] == "cast" for a in dec.actions)
+    # Not one that isn't coming at it: that would be going back for it.
+    mage["mobiles"][0]["war_mode"] = False
+    dec = policy.decide(state.build(mage, set(), []), answers("fight"), mem, policy.PolicyConfig(), now=10.0)
+    assert dec.intent != "fight"

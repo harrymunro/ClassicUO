@@ -80,6 +80,26 @@ def test_panic_overrides_when_dying_without_potions(snapshot):
     assert dec.intent == "flee"
 
 
+def test_nearly_dead_keeps_running_from_what_follows(snapshot):
+    """cuo-d28.10: after a 10-tile flee the creature is "nearby", not close; the next decision
+    walked back in to fight it at 11%."""
+    snapshot["player"]["hits"] = 11
+    snapshot["player"]["supplies"]["heal_potions"] = 0
+    snapshot["mobiles"] = [dict(snapshot["mobiles"][1], name="a gargoyle"),  # 6 tiles off, in war mode
+                           dict(snapshot["mobiles"][0], serial=0x103, name="a timber wolf", war_mode=False, distance=2)]
+    dec = policy.decide(sit_of(snapshot), answers("fight", danger=0.93), policy.Memory(), CFG)
+    assert dec.intent == "flee"
+    assert dec.actions[0]["verb"] == "flee" and dec.actions[0]["target"] == 0x101  # the gargoyle, not the wolf
+    # Healthier, it is Jev's call again: something 6 tiles off is no reason to run.
+    snapshot["player"]["hits"] = 60
+    assert policy.decide(sit_of(snapshot), answers("fight", danger=0.93), policy.Memory(), CFG).intent == "fight"
+    # Nor is a creature that isn't after the character.
+    snapshot["player"]["hits"] = 11
+    snapshot["mobiles"] = [dict(snapshot["mobiles"][0], war_mode=False)]
+    snapshot["mobiles"][0]["distance"] = 6
+    assert policy.decide(sit_of(snapshot), answers("fight", danger=0.93), policy.Memory(), CFG).intent != "flee"
+
+
 def test_memory_marks_corpse_looted_once_client_is_done(snapshot):
     mem = policy.Memory()
     mem.loot_started[0x40000200] = 0.0
@@ -360,7 +380,8 @@ def test_two_stronger_creatures_on_the_character_are_a_reason_to_leave(snapshot)
     assert questions.build(sit)["leave_now"]["instructions"]["reason"].startswith("2 creatures stronger than the")
     cfg = policy.PolicyConfig(flee_danger=0.625)
     assert policy.decide(sit, answers("fight", danger=0.88), policy.Memory(), cfg).intent == "leave"
-    assert policy.decide(sit, answers("fight", danger=0.4), policy.Memory(), cfg).intent == "fight"
+    # Together they are a pack (2 + 0.8 for the hurt one): code leaves whatever Jev rates the danger.
+    assert policy.decide(sit, answers("fight", danger=0.4), policy.Memory(), cfg).intent == "leave"
 
 
 def test_defending_only_lets_an_idle_bird_be(snapshot):
@@ -390,6 +411,8 @@ PACK_BESTIARY = {
     47: {"type": "Reaper", "name": "a reaper", "hits": 129, "damage": "9-11", "difficulty": "moderate", "caster": True},
     53: {"type": "Troll", "name": "a troll", "hits": 123, "damage": "8-14", "difficulty": "moderate", "caster": False},
     26: {"type": "Spectre", "name": "a spectre", "hits": 60, "damage": "7-11", "difficulty": "moderate", "caster": True},
+    7: {"type": "OrcCaptain", "name": "an orc captain", "hits": 87, "damage": "5-15", "difficulty": "moderate",
+        "caster": False},
     211: {"type": "Grobu", "name": "Grobu", "hits": 1100, "damage": "20-25", "difficulty": "deadly", "caster": False,
           "kinds": [{"type": "BlackBear", "name": "a black bear", "hits": 60, "damage": "4-10", "difficulty": "weak",
                      "caster": False},
@@ -428,7 +451,7 @@ def test_three_fair_fights_coming_at_once_are_a_pack_to_leave_while_they_come(sn
 
 
 def test_two_fair_fights_or_a_beaten_pack_are_fought(snapshot):
-    pack_snapshot(snapshot, (53, "a troll", 3, True, 100), (53, "a troll", 5, True, 100))
+    pack_snapshot(snapshot, (7, "an orc captain", 3, True, 100), (7, "an orc captain", 5, True, 100))
     two = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
     assert two.state["coming_at_you"].endswith("together stronger than you: a hard fight")
     neutral = policy.PolicyConfig(flee_danger=0.625)  # what an empty or neutral strategy reads as
@@ -466,10 +489,10 @@ def test_a_pack_is_left_by_code_only_when_the_agent_may_walk_and_flee(snapshot):
     sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
     assert policy.decide(sit, answers("fight", danger=0.1), policy.Memory(), CFG).intent != "leave"
     # An aggressive strategy needs a heavier pack; a cautious one leaves from less.
-    # No strategy reads as aggression 0.5, a danger threshold of 0.625: three fair fights.
-    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.625)) == pytest.approx(3)
-    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.885)) > 4
-    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.3)) == 2
+    # No strategy reads as aggression 0.5, a danger threshold of 0.625.
+    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.625)) == pytest.approx(2.5)
+    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.885)) > 3.5
+    assert policy.pack_cut(policy.PolicyConfig(flee_danger=0.3)) == 1.8
 
 
 def test_a_creature_is_known_by_its_name_among_those_sharing_its_body(snapshot):
@@ -507,3 +530,19 @@ def test_a_leave_says_which_rule_chose_it(snapshot):
     cautious = policy.PolicyConfig(flee_danger=0.4)
     dec = policy.decide(state.build(snapshot, set(), []), answers("fight", danger=0.5), policy.Memory(), cautious)
     assert dec.intent == "leave" and dec.leave_why == "badly hurt (40%) with 2 close, and the strategy is cautious"
+
+
+def test_leaving_on_a_trip_keeps_to_the_road_unless_they_are_ahead(snapshot):
+    """An open-goal soak run's warrior fled off its road to the bank into the wilds and died."""
+    pack_snapshot(snapshot, (4, "a gargoyle", 6, True, 100), (4, "a gargoyle", 7, True, 100))
+    for m in snapshot["mobiles"]:
+        m["dx"], m["dy"] = 0, -m["distance"]  # behind: north, with the bank to the south
+    snapshot["agent"]["travel"] = {"state": "walking", "x": 1000, "y": 1150}
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    dec = policy.decide(sit, answers("fight"), policy.Memory(), CFG)
+    assert dec.intent == "leave" and not any(a["verb"] == "flee" for a in dec.actions)
+    for m in snapshot["mobiles"]:
+        m["dy"] = m["distance"]  # ahead, on the road
+    ahead = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    dec = policy.decide(ahead, answers("fight"), policy.Memory(), CFG)
+    assert dec.intent == "leave" and any(a["verb"] == "flee" for a in dec.actions)

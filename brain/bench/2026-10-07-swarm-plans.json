@@ -1,0 +1,469 @@
+{
+  "started": "2026-10-07T14:51:36",
+  "rounds": 5,
+  "lane": 8,
+  "bestiary": true,
+  "scenarios": {
+    "swarm": {
+      "bead": "cuo-46e.6",
+      "right": "Six melee monsters on a mage: survive and kill at least four.",
+      "judges": {
+        "jev#mage-swarm": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Ritiki (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Ritiki (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Ckikicheki (ratman)"
+              ],
+              "flees_at_hp": [
+                45,
+                34,
+                60,
+                46,
+                60,
+                74,
+                75,
+                56,
+                68,
+                69,
+                72,
+                73,
+                75
+              ],
+              "min_hp": 24,
+              "decisions": 106,
+              "log": "logs/bench/20261007-145136/swarm-jev#mage-swarm-01.jsonl",
+              "input_tokens": 340707,
+              "est_cost_usd": 0.0143,
+              "plan": {
+                "machine": "mage against a crowd",
+                "state": "open",
+                "moves": 3,
+                "seconds_in": {
+                  "open": 65.0,
+                  "blast": 24.7,
+                  "out": 30.5
+                }
+              }
+            },
+            {
+              "success": true,
+              "kills": [
+                "Ditecckek (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Baghig (orc)"
+              ],
+              "seconds": 120.4,
+              "player_died": false,
+              "engaged": [
+                "Ditecckek (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Baghig (orc)",
+                "Wecckak (ratman)"
+              ],
+              "flees_at_hp": [
+                46,
+                44,
+                45
+              ],
+              "min_hp": 33,
+              "decisions": 120,
+              "log": "logs/bench/20261007-145136/swarm-jev#mage-swarm-02.jsonl",
+              "input_tokens": 354931,
+              "est_cost_usd": 0.0149,
+              "plan": {
+                "machine": "mage against a crowd",
+                "state": "open",
+                "moves": 3,
+                "seconds_in": {
+                  "open": 62.8,
+                  "blast": 26.3,
+                  "out": 31.3
+                }
+              }
+            },
+            {
+              "success": false,
+              "kills": [
+                "Chachaktak (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 34.8,
+              "player_died": true,
+              "engaged": [
+                "Chachaktak (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Mazhug (orc)"
+              ],
+              "flees_at_hp": [
+                52,
+                5
+              ],
+              "min_hp": 0,
+              "decisions": 32,
+              "log": "logs/bench/20261007-145136/swarm-jev#mage-swarm-03.jsonl",
+              "input_tokens": 120507,
+              "est_cost_usd": 0.0051,
+              "plan": {
+                "machine": "mage against a crowd",
+                "state": "out",
+                "moves": 2,
+                "seconds_in": {
+                  "open": 12.7,
+                  "blast": 17.2,
+                  "out": 5.0
+                }
+              }
+            },
+            {
+              "success": false,
+              "kills": [
+                "Kikiaki (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 118.2,
+              "player_died": true,
+              "engaged": [
+                "Kikiaki (ratman)",
+                "Fecckik (ratman)",
+                "Gnadug (orc)",
+                "Fecckik (ratman)",
+                "Wauktug (orc)"
+              ],
+              "flees_at_hp": [
+                27,
+                41,
+                42,
+                51,
+                12,
+                12,
+                11,
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 112,
+              "log": "logs/bench/20261007-145136/swarm-jev#mage-swarm-04.jsonl",
+              "input_tokens": 345342,
+              "est_cost_usd": 0.0145,
+              "plan": {
+                "machine": "mage against a crowd",
+                "state": "open",
+                "moves": 3,
+                "seconds_in": {
+                  "open": 67.4,
+                  "blast": 20.2,
+                  "out": 30.6
+                }
+              }
+            },
+            {
+              "success": true,
+              "kills": [
+                "Dikfachok (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Murbag (orc)",
+                "Tituki (ratman)",
+                "Vrograg (orc)"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Dikfachok (ratman)",
+                "a headless one",
+                "Murbag (orc)",
+                "Tituki (ratman)",
+                "Vrograg (orc)"
+              ],
+              "flees_at_hp": [
+                60,
+                71,
+                72,
+                73,
+                75,
+                78,
+                80,
+                82
+              ],
+              "min_hp": 48,
+              "decisions": 106,
+              "log": "logs/bench/20261007-145136/swarm-jev#mage-swarm-05.jsonl",
+              "input_tokens": 336992,
+              "est_cost_usd": 0.0142,
+              "plan": {
+                "machine": "mage against a crowd",
+                "state": "finish",
+                "moves": 2,
+                "seconds_in": {
+                  "open": 11.9,
+                  "blast": 66.4,
+                  "finish": 41.8
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 2,
+          "rate": 0.4,
+          "ci95": [
+            0.118,
+            0.769
+          ],
+          "deaths": 2,
+          "cost_usd": 0.063,
+          "errors": 0
+        },
+        "jev#planner-swarm": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Chectik (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Hagob (orc)"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Chectik (ratman)",
+                "Hagob (orc)",
+                "a headless one",
+                "Hagob (orc)",
+                "Karrghed (orc)"
+              ],
+              "flees_at_hp": [
+                45,
+                35,
+                42,
+                47,
+                35,
+                66,
+                67,
+                68,
+                69,
+                72,
+                74
+              ],
+              "min_hp": 22,
+              "decisions": 103,
+              "log": "logs/bench/20261007-145136/swarm-jev#planner-swarm-01.jsonl",
+              "input_tokens": 296650,
+              "est_cost_usd": 0.0125,
+              "plan": {
+                "machine": "open-ground mage vs weak packs",
+                "state": "recover",
+                "moves": 7,
+                "seconds_in": {
+                  "hunt": 12.3,
+                  "blast": 5.2,
+                  "escape": 68.2,
+                  "recover": 34.5
+                }
+              }
+            },
+            {
+              "success": false,
+              "kills": [
+                "Ckikhiki (ratman)",
+                "a mongbat"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Ckikhiki (ratman)",
+                "Kekachik (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                39,
+                62,
+                61,
+                53,
+                59,
+                61,
+                73,
+                74,
+                76,
+                79,
+                81,
+                84,
+                85,
+                87
+              ],
+              "min_hp": 26,
+              "decisions": 96,
+              "log": "logs/bench/20261007-145136/swarm-jev#planner-swarm-02.jsonl",
+              "input_tokens": 306236,
+              "est_cost_usd": 0.0129,
+              "plan": {
+                "machine": "open-ground mage vs weak packs",
+                "state": "hunt",
+                "moves": 6,
+                "seconds_in": {
+                  "hunt": 13.8,
+                  "blast": 9.6,
+                  "escape": 52.0,
+                  "recover": 44.7
+                }
+              }
+            },
+            {
+              "success": false,
+              "kills": [
+                "Feractav (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Feractav (ratman)",
+                "Sorgulg (orc)"
+              ],
+              "flees_at_hp": [
+                49,
+                48,
+                36,
+                51,
+                64,
+                78,
+                79,
+                81,
+                84,
+                86,
+                88
+              ],
+              "min_hp": 36,
+              "decisions": 109,
+              "log": "logs/bench/20261007-145136/swarm-jev#planner-swarm-03.jsonl",
+              "input_tokens": 335003,
+              "est_cost_usd": 0.0141,
+              "plan": {
+                "machine": "open-ground mage vs weak packs",
+                "state": "recover",
+                "moves": 5,
+                "seconds_in": {
+                  "hunt": 12.4,
+                  "blast": 14.6,
+                  "escape": 52.2,
+                  "recover": 41.2
+                }
+              }
+            },
+            {
+              "success": false,
+              "kills": [
+                "Dickiki (ratman)",
+                "a mongbat"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Dickiki (ratman)",
+                "Haguk (orc)",
+                "a mongbat",
+                "Dafactik (ratman)"
+              ],
+              "flees_at_hp": [
+                65,
+                68,
+                69,
+                72,
+                69,
+                71,
+                72,
+                74,
+                76,
+                32,
+                68,
+                68,
+                69,
+                71,
+                73,
+                75,
+                78,
+                80,
+                82
+              ],
+              "min_hp": 22,
+              "decisions": 87,
+              "log": "logs/bench/20261007-145136/swarm-jev#planner-swarm-04.jsonl",
+              "input_tokens": 288284,
+              "est_cost_usd": 0.0121,
+              "plan": {
+                "machine": "open-ground mage vs weak packs",
+                "state": "hunt",
+                "moves": 8,
+                "seconds_in": {
+                  "hunt": 64.6,
+                  "blast": 11.2,
+                  "escape": 42.9,
+                  "recover": 1.4
+                }
+              }
+            },
+            {
+              "success": false,
+              "kills": [
+                "Chikckak (ratman)",
+                "a headless one"
+              ],
+              "seconds": 26.5,
+              "player_died": true,
+              "engaged": [
+                "Chikckak (ratman)",
+                "a headless one",
+                "Woglug (orc)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                16
+              ],
+              "min_hp": 0,
+              "decisions": 27,
+              "log": "logs/bench/20261007-145136/swarm-jev#planner-swarm-05.jsonl",
+              "input_tokens": 103878,
+              "est_cost_usd": 0.0044,
+              "plan": {
+                "machine": "open-ground mage vs weak packs",
+                "state": "escape",
+                "moves": 2,
+                "seconds_in": {
+                  "hunt": 11.7,
+                  "blast": 2.5,
+                  "escape": 12.3
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 1,
+          "rate": 0.2,
+          "ci95": [
+            0.036,
+            0.624
+          ],
+          "deaths": 1,
+          "cost_usd": 0.056,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

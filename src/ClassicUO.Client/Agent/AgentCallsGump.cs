@@ -118,9 +118,21 @@ namespace ClassicUO.Agent
                     y = AddQuestion(q, y);
                 }
 
+                // What was done about it: each action, with where a move went.
+                if (d.Did.Count != 0)
+                {
+                    y = AddWrapped("actions", PAD, y, INNER, DIM);
+
+                    foreach ((string what, string result) in d.Did)
+                    {
+                        y = AddWrapped("· " + what + (result.Length != 0 ? $"  ({result})" : ""), PAD + 6, y, INNER - 6,
+                                       result.Length != 0 ? GREY : WHITE);
+                    }
+                }
+
                 if (!string.IsNullOrEmpty(d.Note))
                 {
-                    y = AddWrapped("did: " + d.Note, PAD, y, INNER, GREY) + 4;
+                    y = AddWrapped("so: " + d.Note, PAD, y, INNER, GREY) + 4;
                 }
             }
 

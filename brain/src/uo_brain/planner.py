@@ -55,7 +55,7 @@ Rules:
 - If a hunt ended because the character left the area (stronger creatures or a pack came at it;
   the result names them), don't hunt there again for at least 30 minutes: they are still about,
   and another spot of the same place counts as there. Code refuses goals within 30 tiles of it
-  for 15 minutes. Bank, restock or hunt somewhere else. hunting_spots marks areas with danger
+  for 30 minutes. Bank, restock or hunt somewhere else. hunting_spots marks areas with danger
   seen recently.
 - If a goal fails, read why and try something different (another vendor, another area,
   waiting for a respawn) rather than repeating the same thing. A vendor that is sold out

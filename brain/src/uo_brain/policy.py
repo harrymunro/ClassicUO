@@ -113,11 +113,28 @@ class Decision:
         return next((a for a in self.actions if a["verb"] in ("cast", "attack")), None)
 
 
+CHASE_TILES = 8  # nearly dead, an aggressive creature this close is still after the character
+
+
+def fighting_reach(sit: Situation, cfg: PolicyConfig) -> int:
+    """How far off the character fights from where it stands: spells, arrows, a pet, songs, or a
+    weapon's few tiles."""
+    return SPELL_RANGE if sit.is_mage else shooting_range(sit, cfg) if sit.is_archer \
+        else PET_REACH if sit.is_tamer else BARD_REACH if sit.is_bard else cfg.close_tiles
+
+
+def chasers(sit: Situation, cfg: PolicyConfig) -> list[Candidate]:
+    """What there is to run from: anything close and, nearly dead, anything aggressive within
+    CHASE_TILES. After a 10-tile flee the creature run from is "nearby", not close; with fleeing
+    then off the menu, a warrior at 11% walked back to fight the gargoyle it had fled (cuo-d28.10)."""
+    return [h for h in sit.hostiles if h.distance <= cfg.close_tiles
+            or sit.hp_pct < 25 and h.distance <= CHASE_TILES and h.info.get("aggressive")]
+
+
 def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tuple[str, float, list[str]]:
     close = [h for h in sit.hostiles if h.distance <= cfg.close_tiles]
     # A warrior seeks anything not yet close; a mage or archer only what it cannot reach.
-    reach = SPELL_RANGE if sit.is_mage else shooting_range(sit, cfg) if sit.is_archer \
-        else PET_REACH if sit.is_tamer else BARD_REACH if sit.is_bard else cfg.close_tiles
+    reach = fighting_reach(sit, cfg)
     # Whatever walks needs moving allowed: combat assist never moves the character.
     move = sit.authority("move") != "off"
     within_reach = any(c.distance <= 2 for c in sit.corpses) or bool(sit.items)
@@ -126,7 +143,7 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
         # instrument, has nothing to fight with.
         "fight": bool(sit.targets) and not (sit.is_archer and sit.ammo <= 0) and not (sit.is_tamer and not sit.pet)
         and not (sit.is_bard and not sit.player.get("supplies", {}).get("instrument")),
-        "flee": bool(close) and cfg.allow_flee and move,
+        "flee": bool(chasers(sit, cfg)) and cfg.allow_flee and move,
         "loot": bool(sit.corpses or sit.items) and not close and cfg.looting != "nothing"
                 and sit.authority("loot") != "off" and (move or within_reach) and not sit.traveling,
         "seek": bool(sit.targets) and not any(h.distance <= reach for h in sit.hostiles) and move
@@ -168,9 +185,13 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             h.allowed = h.allowed and (bool(h.info.get("aggressive")) and h.distance <= 6 or attacking_me(sit, h))
     if now < mem.no_seek_until:
         # After leaving, only what is close or attacking is fought: going after one further off took a
-        # warrior in a pack round back to the gargoyles it had left, as seeking would have.
+        # warrior in a pack round back to the gargoyles it had left, as seeking would have. What comes
+        # at the character within the reach it fights at from where it stands is fought too: held to
+        # 3 tiles, a mage in swarm rounds stood resting until the monsters were on it.
+        reach = fighting_reach(sit, cfg)
         for h in sit.hostiles:
-            h.allowed = h.allowed and (h.distance <= cfg.close_tiles or attacking_me(sit, h))
+            h.allowed = h.allowed and (h.distance <= cfg.close_tiles or attacking_me(sit, h)
+                                       or h.distance <= reach and bool(h.info.get("aggressive")))
     dec = decide_intent(sit, ans, mem, cfg, now)
     if sit.is_tamer:
         tend_pet(sit, dec, mem, cfg, now)
@@ -189,7 +210,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # potion can be drunk in the next couple of seconds (none left, or on cooldown).
     potion_soon = sit.player.get("supplies", {}).get("heal_potions", 0) > 0 \
         and sit.agent.get("heal_potion_ready_ms", 0) <= 2000
-    if cfg.allow_flee and intent != "flee" and close and danger >= cfg.panic_danger and sit.hp_pct < 25 \
+    chasing = chasers(sit, cfg)
+    if cfg.allow_flee and intent != "flee" and chasing and danger >= cfg.panic_danger and sit.hp_pct < 25 \
             and not potion_soon and sit.authority("move") != "off":
         intent, conf = "flee", danger
 
@@ -231,6 +253,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         if sit.is_tamer and sit.pet and sit.pet["distance"] > 6 and not any(h.distance <= 4 for h in near):
             return Decision("leave", 1.0, call, "leaving, waiting for the pet", masked)
         nearest = min(near, key=lambda h: h.distance)
+        if keep_travelling(sit):
+            return Decision("leave", 1.0, call, "leaving by the road: the trip goes on", masked, target=nearest)
         tiles = 8 if sit.is_tamer else 15
         away = 0 if len(sit.pack) >= 2 else nearest.serial  # from the whole pack, weighed by the client
         return Decision("leave", 1.0, call + [{"verb": "flee", "target": away, "tiles": tiles, "confidence": 1.0,
@@ -288,6 +312,10 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     cannot_fight = bool(sit.targets) and "fight" in masked
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
                                   or cannot_fight or outnumbered or len(strong_close) >= 2 or asked or pack):
+        intent = "fight" if close and "fight" not in masked else "rest"
+    # Cornered, Jev's own pick of leaving or fleeing fails as code's did: in a pack round a warrior
+    # tried nine times in a row ("no path away") while three gargoyles closed in, and died standing.
+    if cornered and intent in ("leave", "flee"):
         intent = "fight" if close and "fight" not in masked else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.
@@ -453,13 +481,18 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         if sit.is_tamer and sit.pet:
             mem.last_pet_call = now
             actions.append({"verb": "pet", "kind": "follow", **meta})
-        # Away from the whole pack (the client weighs the creatures within 10 tiles), else the threat.
-        actions.append({"verb": "flee", "target": 0 if pack else threat.serial, "tiles": 8 if sit.is_tamer else 15,
-                        **meta})
-        dec.note = f"leave, away from {'the pack' if pack else threat.name} ({conf:.2f})"
+        if keep_travelling(sit):
+            dec.note = f"leave by the road: the trip goes on ({conf:.2f})"
+        else:
+            # Away from the whole pack (the client weighs every creature in view), else the threat.
+            actions.append({"verb": "flee", "target": 0 if pack else threat.serial, "tiles": 8 if sit.is_tamer else 15,
+                            **meta})
+            dec.note = f"leave, away from {'the pack' if pack else threat.name} ({conf:.2f})"
 
     elif intent == "flee":
-        threat = min(close, key=lambda h: h.distance)
+        # From what is after the character: a timber wolf a few steps off that wasn't once took the
+        # run's direction from the gargoyle that was.
+        threat = min(chasing, key=lambda h: (not h.info.get("aggressive"), h.distance))
         dec.target = threat
         if sit.is_tamer and sit.pet:
             actions.append({"verb": "pet", "kind": "follow", **meta})
@@ -507,14 +540,37 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     return dec
 
 
+def keep_travelling(sit: Situation) -> bool:
+    """Leaving while on a trip (to a bank, say): the trip goes on, at a run, unless something within
+    10 tiles is ahead on it (within 60 degrees of the way). Fleeing away from whatever was nearest
+    took an open-goal soak run's warrior off its road to the bank into the wilds, where it gathered a
+    dire wolf, a gazer, an ettin and an ogre, and died."""
+    travel = sit.agent.get("travel") or {}
+    if travel.get("state") != "walking":
+        return False
+    p = sit.player
+    gx, gy = travel.get("x", p["x"]) - p["x"], travel.get("y", p["y"]) - p["y"]
+    g = (gx * gx + gy * gy) ** 0.5
+    if g < 3:
+        return False
+    for m in sit.raw.get("mobiles", []):
+        if not m.get("monster") or m.get("dead") or m["distance"] > 10:
+            continue
+        hx, hy = m.get("dx", 0), m.get("dy", 0)
+        h = (hx * hx + hy * hy) ** 0.5 or 1.0
+        if (gx * hx + gy * hy) / (g * h) > 0.5:
+            return False
+    return True
+
+
 NEUTRAL_FLEE_DANGER = 0.625  # what strategy.apply sets for a neutral strategy, and with no text at all
 
 
 def pack_cut(cfg: PolicyConfig) -> float:
-    """What a pack coming at the character must weigh, in fair fights, before code leaves: 3 with
+    """What a pack coming at the character must weigh, in fair fights, before code leaves: 2.5 with
     no strategy (three fair fights at once, two stronger creatures, an ogre lord and anything else),
     less for a cautious strategy, more for an aggressive one."""
-    return min(5.0, max(2.0, PACK_FAR + 4 * (cfg.flee_danger - NEUTRAL_FLEE_DANGER)))
+    return min(5.0, max(1.8, PACK_FAR + 4 * (cfg.flee_danger - NEUTRAL_FLEE_DANGER)))
 
 
 def bless(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, target: Candidate, meta: dict[str, Any],

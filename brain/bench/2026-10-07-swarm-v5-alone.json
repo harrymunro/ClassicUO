@@ -1,0 +1,293 @@
+{
+  "started": "2026-10-07T18:45:34",
+  "rounds": 10,
+  "lane": 8,
+  "bestiary": true,
+  "scenarios": {
+    "swarm": {
+      "bead": "cuo-46e.6",
+      "right": "Six melee monsters on a mage: survive and kill at least four.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Chichak (ratman)"
+              ],
+              "seconds": 52.2,
+              "player_died": true,
+              "engaged": [
+                "Chichak (ratman)",
+                "Dachek (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 50,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-01.jsonl",
+              "input_tokens": 175618,
+              "est_cost_usd": 0.0074
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 36.2,
+              "player_died": true,
+              "engaged": [
+                "Tukituki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 32,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-02.jsonl",
+              "input_tokens": 111772,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": false,
+              "kills": [
+                "Cheki (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 59.8,
+              "player_died": true,
+              "engaged": [
+                "Cheki (ratman)",
+                "Kitaki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 61,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-03.jsonl",
+              "input_tokens": 197827,
+              "est_cost_usd": 0.0083
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 101.4,
+              "player_died": true,
+              "engaged": [
+                "Darfu (orc)",
+                "Ccketakiki (ratman)"
+              ],
+              "flees_at_hp": [
+                62,
+                56,
+                60,
+                64,
+                67,
+                68,
+                69,
+                72,
+                74,
+                76,
+                79
+              ],
+              "min_hp": 0,
+              "decisions": 88,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-04.jsonl",
+              "input_tokens": 271118,
+              "est_cost_usd": 0.0114
+            },
+            {
+              "success": true,
+              "kills": [
+                "Vachichak (ratman)",
+                "a mongbat",
+                "Chikchickeki (ratman)",
+                "Zodagh (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Vachichak (ratman)",
+                "Zodagh (orc)",
+                "a mongbat",
+                "Zodagh (orc)",
+                "Chikchickeki (ratman)",
+                "Zodagh (orc)",
+                "Smegugh (orc)"
+              ],
+              "flees_at_hp": [
+                92,
+                93,
+                94,
+                95,
+                98,
+                99,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 48,
+              "decisions": 108,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-05.jsonl",
+              "input_tokens": 309755,
+              "est_cost_usd": 0.013
+            },
+            {
+              "success": false,
+              "kills": [
+                "Deckarreki (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 83.5,
+              "player_died": true,
+              "engaged": [
+                "Deckarreki (ratman)",
+                "Vubub (orc)",
+                "Nehrakgu (orc)"
+              ],
+              "flees_at_hp": [
+                73,
+                27,
+                36,
+                34,
+                24
+              ],
+              "min_hp": 0,
+              "decisions": 79,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-06.jsonl",
+              "input_tokens": 227504,
+              "est_cost_usd": 0.0096
+            },
+            {
+              "success": true,
+              "kills": [
+                "a mongbat",
+                "Kiktaki (ratman)",
+                "Cagan (orc)",
+                "Xunaakt (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Kiktaki (ratman)",
+                "Cagan (orc)",
+                "Kiktaki (ratman)",
+                "Cagan (orc)",
+                "Xunaakt (orc)",
+                "Fitactaki (ratman)"
+              ],
+              "flees_at_hp": [
+                87,
+                87,
+                88,
+                89,
+                92,
+                94,
+                96,
+                99,
+                100
+              ],
+              "min_hp": 51,
+              "decisions": 108,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-07.jsonl",
+              "input_tokens": 285298,
+              "est_cost_usd": 0.012
+            },
+            {
+              "success": true,
+              "kills": [
+                "Kaki (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Xaakt (orc)",
+                "Tidetckuki (ratman)"
+              ],
+              "seconds": 120.4,
+              "player_died": false,
+              "engaged": [
+                "Kaki (ratman)",
+                "Xaakt (orc)",
+                "Tidetckuki (ratman)",
+                "Almthu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 31,
+              "decisions": 110,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-08.jsonl",
+              "input_tokens": 267003,
+              "est_cost_usd": 0.0112
+            },
+            {
+              "success": true,
+              "kills": [
+                "a mongbat",
+                "Kireki (ratman)",
+                "Otugbu (orc)",
+                "Slughig (orc)"
+              ],
+              "seconds": 113.6,
+              "player_died": false,
+              "engaged": [
+                "Tavchichoki (ratman)",
+                "a mongbat",
+                "Kireki (ratman)",
+                "Otugbu (orc)",
+                "Kireki (ratman)",
+                "Otugbu (orc)",
+                "Slughig (orc)"
+              ],
+              "flees_at_hp": [
+                66,
+                67,
+                68,
+                69,
+                72,
+                74,
+                76,
+                79
+              ],
+              "min_hp": 47,
+              "decisions": 97,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-09.jsonl",
+              "input_tokens": 262980,
+              "est_cost_usd": 0.011
+            },
+            {
+              "success": false,
+              "kills": [
+                "Taktav (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Taktav (ratman)",
+                "Kecckik (ratman)",
+                "a headless one",
+                "Kecckik (ratman)"
+              ],
+              "flees_at_hp": [
+                31,
+                16,
+                19,
+                20
+              ],
+              "min_hp": 8,
+              "decisions": 114,
+              "log": "logs/bench/20261007-184534-lane8/swarm-jev-10.jsonl",
+              "input_tokens": 343155,
+              "est_cost_usd": 0.0144
+            }
+          ],
+          "n": 10,
+          "successes": 4,
+          "rate": 0.4,
+          "ci95": [
+            0.168,
+            0.687
+          ],
+          "deaths": 5,
+          "cost_usd": 0.103,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

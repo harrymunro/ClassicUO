@@ -85,7 +85,7 @@ class Session:
         self.left_from: list[tuple[int, int, float, str, str]] = []
 
     AVOID_TILES = 30
-    AVOID_MINUTES = 15
+    AVOID_MINUTES = 30
 
     def avoided(self, x: int, y: int) -> str | None:
         """Why a goal at (x, y) is refused, or None: within AVOID_TILES of where a hunt ended in a

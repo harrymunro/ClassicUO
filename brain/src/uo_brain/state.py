@@ -62,8 +62,11 @@ def known_creature(bestiary: dict[int, dict[str, Any]] | None, m: dict[str, Any]
 # words; scaled by its health, since a badly hurt one is nearly done.
 THREAT_WEIGHTS = {"far stronger": 4.0, "stronger": 2.0, "a fair fight": 1.0, "weak": 0.4}
 UNKNOWN_WEIGHT = 0.5  # no stats in the bestiary
-PACK_FAR = 3.0        # the group together outweighs the character: too many to fight at once
-PACK_HARD = 2.0
+# The group together outweighs the character: too many to fight at once. Six weak arena monsters
+# (2.4) are won every time; a troll, a harpy and a ratman (about 2.5), or two gargoyles (3.3),
+# killed a lone warrior in soak runs.
+PACK_FAR = 2.5
+PACK_HARD = 1.6
 
 
 CASTER_FACTOR = 1.5   # a spellcaster hurts from a distance, running or not: two gargoyles killed a warrior in 6 s

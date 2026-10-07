@@ -9,6 +9,7 @@ designs) go to the client as `ai_call` records through `emit`.
 """
 
 import asyncio
+import math
 import re
 import time
 from collections.abc import Awaitable, Callable
@@ -94,4 +95,51 @@ def view(questions: dict[str, dict[str, Any]], answers: Any, cuts: dict[str, flo
                         "verdict": "yes" if p >= cut else "no"})
         elif kind == "score" and key in answers.scores:
             out.append({"q": key, "title": title(key), "kind": "score", "p": round(answers.scores[key], 3)})
+    return out
+
+
+def compass(dx: float, dy: float) -> str:
+    """Which way (dx, dy) points, in words, as the client words it; north is -y, as in the game."""
+    if dx == 0 and dy == 0:
+        return "here"
+    names = ["east", "southeast", "south", "southwest", "west", "northwest", "north", "northeast"]
+    return names[round((math.degrees(math.atan2(dy, dx)) % 360) / 45) % 8]
+
+
+def did(sit: Any, actions: list[dict[str, Any]], results: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Each action of a decision in words, with where a move goes, and how it went."""
+    p = sit.player
+
+    def who(serial: Any) -> str:
+        if serial in ("self", None) or serial == p.get("serial"):
+            return "itself"
+        h = sit.hostile_by_serial(serial) if isinstance(serial, int) else None
+        return h.name if h else "something"
+
+    out = []
+    for a, r in zip(actions, results + [{}] * (len(actions) - len(results))):
+        verb, detail = a.get("verb", "?"), (r or {}).get("detail") or ""
+        if verb in ("walk_to", "travel"):
+            dx, dy = a.get("x", p["x"]) - p["x"], a.get("y", p["y"]) - p["y"]
+            what = f"{'walk' if verb == 'walk_to' else 'travel'} {max(abs(dx), abs(dy))} tiles {compass(dx, dy)}"
+        elif verb == "flee":
+            what = "run" + (f" {detail}" if detail else "") + (" from the pack" if a.get("target") == 0 else
+                                                                f" from {who(a.get('target'))}")
+        elif verb == "kite":
+            what = "step back" + (f" {detail}" if detail else "")
+        elif verb == "attack":
+            what = f"attack {who(a.get('target'))}"
+        elif verb == "cast":
+            what = f"cast {a.get('spell')} at {who(a.get('target'))}"
+        elif verb == "skill":
+            what = f"{a.get('name', 'a skill')}" + (f" on {who(a['targets'][0])}" if a.get("targets") else "")
+        elif verb == "pet":
+            what = f"pet: all {a.get('kind')}" + (f" {who(a['target'])}" if a.get("target") else "")
+        elif verb == "hint":
+            what = f"say \"{a.get('text', '')}\""
+        else:
+            what = verb.replace("_", " ")
+        status = (r or {}).get("status", "")
+        out.append({"what": what, "result": "" if status in ("done", "") else status
+                    + (f": {detail}" if detail and verb not in ("flee", "kite") else "")})
     return out

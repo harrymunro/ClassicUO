@@ -1421,9 +1421,11 @@ namespace ClassicUO.Agent
             }
             else
             {
+                // The whole pack in view, nearer ones counting more. Within 10 tiles only, a pack
+                // still 11 or more away gave no direction and the run went north, into a dead end.
                 foreach (Mobile m in _world.Mobiles.Values)
                 {
-                    if (m != p && !m.IsDead && m.Distance <= 10 && IsMonsterTarget(m))
+                    if (m != p && !m.IsDead && m.Distance <= _world.ClientViewRange && IsMonsterTarget(m))
                     {
                         away += new Vector2(p.X - m.X, p.Y - m.Y) / Math.Max(1, m.Distance);
                     }
@@ -1439,20 +1441,23 @@ namespace ClassicUO.Agent
             _engaged = 0;
             _lootCorpse = 0;
 
-            // Try straight away from the threat first, then fan out.
-            foreach (float turn in new[] { 0f, 0.6f, -0.6f, 1.2f, -1.2f })
+            // Try straight away from the threat first, then fan out as far as sideways, then the
+            // same at half the distance: a far spot past a wall or water has no path.
+            foreach (int run in new[] { tiles, Math.Max(3, tiles / 2) })
             {
-                float cos = MathF.Cos(turn), sin = MathF.Sin(turn);
-                var dir = new Vector2(away.X * cos - away.Y * sin, away.X * sin + away.Y * cos);
-                int x = p.X + (int) MathF.Round(dir.X * tiles);
-                int y = p.Y + (int) MathF.Round(dir.Y * tiles);
-
-                if (WalkTo(x, y, p.Z, 0))
+                foreach (float turn in new[] { 0f, 0.6f, -0.6f, 1.2f, -1.2f, 1.8f, -1.8f })
                 {
-                    _fleeUntil = Time.Ticks + 6000;
-                    Stats.Flees++;
+                    float cos = MathF.Cos(turn), sin = MathF.Sin(turn);
+                    var dir = new Vector2(away.X * cos - away.Y * sin, away.X * sin + away.Y * cos);
+                    int dx = (int) MathF.Round(dir.X * run), dy = (int) MathF.Round(dir.Y * run);
 
-                    return ("done", string.Empty);
+                    if (WalkTo(p.X + dx, p.Y + dy, p.Z, 0))
+                    {
+                        _fleeUntil = Time.Ticks + 6000;
+                        Stats.Flees++;
+
+                        return ("done", $"{run} tiles {AgentSnapshot.Compass(dx, dy)}");
+                    }
                 }
             }
 
@@ -1794,13 +1799,14 @@ namespace ClassicUO.Agent
             {
                 float cos = MathF.Cos(turn), sin = MathF.Sin(turn);
                 var dir = new Vector2(away.X * cos - away.Y * sin, away.X * sin + away.Y * cos);
+                int dx = (int) MathF.Round(dir.X * tiles), dy = (int) MathF.Round(dir.Y * tiles);
 
-                if (WalkTo(p.X + (int) MathF.Round(dir.X * tiles), p.Y + (int) MathF.Round(dir.Y * tiles), p.Z, 0))
+                if (WalkTo(p.X + dx, p.Y + dy, p.Z, 0))
                 {
                     _kiteUntil = Time.Ticks + 2500;
                     Stats.Kites++;
 
-                    return ("done", string.Empty);
+                    return ("done", $"{tiles} tiles {AgentSnapshot.Compass(dx, dy)}");
                 }
             }
 

@@ -17,9 +17,12 @@ namespace ClassicUO.Agent
         private Layer _rearmLayer;
         private int _rearmTries;
 
-        // The last weapon seen in hand, so auto mode can put it back on if it ends up in the pack.
+        // The last weapon seen in hand, so auto mode can put it back on if it ends up in the pack,
+        // and errands never bank or sell it.
         private uint _heldWeapon, _nextHandsCheck;
         private Layer _heldLayer;
+
+        public uint HeldWeapon => _heldWeapon;
 
         // Called as a spell starts. A recall through a runebook's gump is a magery cast the client
         // doesn't time, and equipping during a cast breaks it, so that waits until it is through.

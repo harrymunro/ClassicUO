@@ -1,0 +1,1128 @@
+{
+  "started": "2026-10-07T15:07:19",
+  "rounds": 5,
+  "lane": 3,
+  "bestiary": true,
+  "scenarios": {
+    "pack-gargoyles": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; three gargoyles (a fair fight each, and spellcasters) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Xunaakt (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 53,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Xunaakt (orc)",
+                "Xugaa (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                63,
+                54,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 77,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (94%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Wholug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 17,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Wholug (orc)",
+                "Xoroku (orc)"
+              ],
+              "flees_at_hp": [
+                94,
+                20,
+                17,
+                51,
+                93,
+                95,
+                97,
+                99,
+                83,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 71,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Narod (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 63,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Narod (orc)",
+                "Prigka (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                64,
+                65,
+                66,
+                63,
+                100,
+                77
+              ],
+              "decisions": 72,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Slapdud (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 60,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Slapdud (orc)",
+                "Bruigig (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                60,
+                61,
+                100,
+                100,
+                75,
+                76,
+                79,
+                94,
+                95,
+                97,
+                99,
+                100
+              ],
+              "decisions": 75,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (88%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Omaghed (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 55,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Omaghed (orc)",
+                "Surgha (orc)"
+              ],
+              "flees_at_hp": [
+                88,
+                55,
+                56,
+                58,
+                59,
+                60,
+                61,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 87,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (92%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Soughat (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 74,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Soughat (orc)",
+                "Zogugh (orc)",
+                "Eekckuk (ratman)"
+              ],
+              "flees_at_hp": [
+                92,
+                74,
+                76,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 57,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev-01.jsonl",
+              "input_tokens": 109284,
+              "est_cost_usd": 0.0046
+            },
+            {
+              "success": false,
+              "left": true,
+              "left_at_hp": "wounded (66%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Ughat (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 0,
+              "seconds": 21.8,
+              "player_died": true,
+              "engaged": [
+                "Ughat (orc)",
+                "Mughragh (orc)"
+              ],
+              "flees_at_hp": [
+                58,
+                19,
+                0
+              ],
+              "decisions": 19,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev-02.jsonl",
+              "input_tokens": 39786,
+              "est_cost_usd": 0.0017
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (89%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Kegigoth (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 44,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Kegigoth (orc)",
+                "Gunug (orc)"
+              ],
+              "flees_at_hp": [
+                89,
+                84,
+                85,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                93
+              ],
+              "decisions": 67,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev-03.jsonl",
+              "input_tokens": 121573,
+              "est_cost_usd": 0.0051
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (58%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Gruul (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 57,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Gruul (orc)",
+                "Sildud (orc)"
+              ],
+              "flees_at_hp": [
+                58,
+                59,
+                60,
+                100,
+                100,
+                100,
+                100,
+                100,
+                75,
+                76,
+                100,
+                100,
+                100
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev-04.jsonl",
+              "input_tokens": 111285,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (83%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Hegug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 56,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Hegug (orc)",
+                "Paghorim (orc)"
+              ],
+              "flees_at_hp": [
+                83,
+                84,
+                76,
+                78,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 59,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev-05.jsonl",
+              "input_tokens": 106002,
+              "est_cost_usd": 0.0045
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0206,
+          "errors": 0
+        },
+        "jev/nopack": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (75%)",
+              "why": "4 creatures are coming at the warrior at once: 2 orcs (weak each) and 2 gargoyles (a fair fight and a spellcaster each);",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 43,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Xagu (orc)"
+              ],
+              "flees_at_hp": [
+                75,
+                66,
+                44,
+                44,
+                46,
+                93,
+                95,
+                97,
+                98,
+                100,
+                100,
+                88,
+                91
+              ],
+              "decisions": 62,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev_nopack-01.jsonl",
+              "input_tokens": 115630,
+              "est_cost_usd": 0.0049
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (95%)",
+              "why": "3 creatures are coming at the warrior at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); toge",
+              "kills": [
+                "Yagnatz (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 49,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Yagnatz (orc)",
+                "Opoguk (orc)"
+              ],
+              "flees_at_hp": [
+                95,
+                86,
+                71,
+                100,
+                100,
+                100,
+                100,
+                51,
+                89,
+                92,
+                94,
+                96,
+                98,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev_nopack-02.jsonl",
+              "input_tokens": 110950,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (73%)",
+              "why": "5 creatures are coming at the warrior at once: 2 orcs (weak each) and 3 gargoyles (a fair fight and a spellcaster each);",
+              "kills": [],
+              "engaged_pack": true,
+              "min_hp": 42,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Sulmthu (orc)",
+                "a gargoyle"
+              ],
+              "flees_at_hp": [
+                73,
+                47,
+                49,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                94,
+                97,
+                99,
+                100
+              ],
+              "decisions": 65,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev_nopack-03.jsonl",
+              "input_tokens": 123796,
+              "est_cost_usd": 0.0052
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (95%)",
+              "why": "4 creatures are coming at the warrior at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); toge",
+              "kills": [
+                "Wogharod (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 43,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Wogharod (orc)",
+                "Hokulk (orc)",
+                "a gargoyle"
+              ],
+              "flees_at_hp": [
+                95,
+                75,
+                43,
+                44,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                79,
+                100,
+                100,
+                100,
+                94,
+                85
+              ],
+              "decisions": 59,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev_nopack-04.jsonl",
+              "input_tokens": 110621,
+              "est_cost_usd": 0.0046
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (69%)",
+              "why": "3 creatures are coming at the warrior at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); toge",
+              "kills": [
+                "Surgug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 42,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Surgug (orc)",
+                "Argug (orc)"
+              ],
+              "flees_at_hp": [
+                69,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                90,
+                69,
+                69,
+                100,
+                100,
+                100,
+                91,
+                91
+              ],
+              "decisions": 62,
+              "log": "logs/bench/20261007-150719/pack-gargoyles-jev_nopack-05.jsonl",
+              "input_tokens": 115974,
+              "est_cost_usd": 0.0049
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0243,
+          "errors": 0
+        }
+      }
+    },
+    "pack-bone-knights": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; two bone knights (each stronger than it) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "2 coming at once: 2 skeletons (stronger than you each); together far stronger than you: too many to fight at once",
+              "kills": [
+                "Wubdagog (orc)",
+                "Seakgu (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 78,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Wubdagog (orc)",
+                "Seakgu (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 64,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "left": false,
+              "left_at_hp": null,
+              "why": null,
+              "kills": [
+                "Xonoth (orc)",
+                "Gaakt (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 0,
+              "seconds": 33.1,
+              "player_died": true,
+              "engaged": [
+                "Xonoth (orc)",
+                "Gaakt (orc)",
+                "a bone knight (skeleton)"
+              ],
+              "flees_at_hp": [],
+              "decisions": 37,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (99%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Zonagh (orc)",
+                "Vlorg (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 49,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Zonagh (orc)",
+                "Vlorg (orc)"
+              ],
+              "flees_at_hp": [
+                99,
+                71,
+                72,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 79,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (80%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Xnaurl (orc)",
+                "Dergu (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 68,
+              "seconds": 94.3,
+              "player_died": false,
+              "engaged": [
+                "Xnaurl (orc)",
+                "Dergu (orc)"
+              ],
+              "flees_at_hp": [
+                80,
+                81,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 77,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "badly wounded (42%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Xothkug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 42,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Kilug (orc)",
+                "Xothkug (orc)"
+              ],
+              "flees_at_hp": [
+                42,
+                92,
+                93,
+                94,
+                96,
+                98,
+                100,
+                100
+              ],
+              "decisions": 71,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (63%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Sildud (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 37,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Sildud (orc)",
+                "Yukha (orc)"
+              ],
+              "flees_at_hp": [
+                63,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 70,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev-01.jsonl",
+              "input_tokens": 127833,
+              "est_cost_usd": 0.0054
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (58%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Sildud (orc)",
+                "Zurpigig (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 56,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Sildud (orc)",
+                "Zurpigig (orc)"
+              ],
+              "flees_at_hp": [
+                58,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 65,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev-02.jsonl",
+              "input_tokens": 117919,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (78%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Traugh (orc)",
+                "Turbag (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 77,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Traugh (orc)",
+                "Turbag (orc)"
+              ],
+              "flees_at_hp": [
+                78,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev-03.jsonl",
+              "input_tokens": 102393,
+              "est_cost_usd": 0.0043
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (82%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Sulgha (orc)",
+                "Frukag (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 47,
+              "seconds": 91.8,
+              "player_died": false,
+              "engaged": [
+                "Sulgha (orc)",
+                "Frukag (orc)"
+              ],
+              "flees_at_hp": [
+                82,
+                83,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 58,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev-04.jsonl",
+              "input_tokens": 99616,
+              "est_cost_usd": 0.0042
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (83%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Narhbub (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 76,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Narhbub (orc)",
+                "Targhed (orc)"
+              ],
+              "flees_at_hp": [
+                83,
+                84,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 57,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev-05.jsonl",
+              "input_tokens": 99589,
+              "est_cost_usd": 0.0042
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0231,
+          "errors": 0
+        },
+        "jev/nopack": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (85%)",
+              "why": "2 creatures stronger than the character are near: a bone knight (a skeleton) far away, a bone knight (a skeleton) far aw",
+              "kills": [
+                "Bahgigoth (orc)",
+                "Hagub (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 71,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Bahgigoth (orc)",
+                "Hagub (orc)"
+              ],
+              "flees_at_hp": [
+                85,
+                79,
+                72,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 57,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev_nopack-01.jsonl",
+              "input_tokens": 98317,
+              "est_cost_usd": 0.0041
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (82%)",
+              "why": "2 creatures stronger than the character are near: a bone knight (a skeleton) far away, a bone knight (a skeleton) far aw",
+              "kills": [
+                "Zumhug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 44,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Zumhug (orc)",
+                "Urgran (orc)"
+              ],
+              "flees_at_hp": [
+                74,
+                45,
+                46,
+                48,
+                99,
+                100,
+                100,
+                86,
+                62
+              ],
+              "decisions": 66,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev_nopack-02.jsonl",
+              "input_tokens": 124085,
+              "est_cost_usd": 0.0052
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (84%)",
+              "why": "2 creatures stronger than the character are near: a bone knight (a skeleton) far away, a bone knight (a skeleton) far aw",
+              "kills": [
+                "Wurtguth (orc)",
+                "Yokgagu (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 56,
+              "seconds": 90.5,
+              "player_died": false,
+              "engaged": [
+                "Wurtguth (orc)",
+                "Yokgagu (orc)",
+                "Parhbub (orc)"
+              ],
+              "flees_at_hp": [
+                84,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 67,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev_nopack-03.jsonl",
+              "input_tokens": 120007,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (91%)",
+              "why": "2 creatures stronger than the character are near: a bone knight (a skeleton) far away, a bone knight (a skeleton) far aw",
+              "kills": [
+                "Karrhig (orc)",
+                "Parod (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 68,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Karrhig (orc)",
+                "Parod (orc)"
+              ],
+              "flees_at_hp": [
+                92,
+                92,
+                93,
+                95,
+                97,
+                99,
+                100,
+                100
+              ],
+              "decisions": 56,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev_nopack-04.jsonl",
+              "input_tokens": 96329,
+              "est_cost_usd": 0.004
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (82%)",
+              "why": "2 creatures stronger than the character are near: a bone knight (a skeleton) far away, a bone knight (a skeleton) far aw",
+              "kills": [
+                "Corgak (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 82,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Corgak (orc)",
+                "Grikug (orc)"
+              ],
+              "flees_at_hp": [
+                83,
+                84,
+                84,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 54,
+              "log": "logs/bench/20261007-150719/pack-bone-knights-jev_nopack-05.jsonl",
+              "input_tokens": 94166,
+              "est_cost_usd": 0.004
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0223,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

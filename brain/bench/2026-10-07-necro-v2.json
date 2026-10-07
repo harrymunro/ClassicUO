@@ -1,0 +1,296 @@
+{
+  "started": "2026-10-07T14:57:12",
+  "rounds": 5,
+  "lane": 3,
+  "bestiary": true,
+  "scenarios": {
+    "necro-orcs": {
+      "bead": "cuo-cvl.5",
+      "right": "Three orcs come at a necromancer from 8 tiles: kill them with necromancy without dying.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Karfu (orc)",
+                "Xorag (orc)",
+                "Wudhagh (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 7,
+                "Poison Strike": 21
+              },
+              "seconds": 51.5,
+              "player_died": false,
+              "engaged": [
+                "Karfu (orc)",
+                "Xorag (orc)",
+                "Wudhagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 34,
+              "log": "logs/bench/20261007-145712/necro-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Orpigig (orc)",
+                "Dugorim (orc)",
+                "Corgak (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 6,
+                "Poison Strike": 43
+              },
+              "seconds": 56.8,
+              "player_died": false,
+              "engaged": [
+                "Orpigig (orc)",
+                "Dugorim (orc)",
+                "Corgak (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 54,
+              "log": "logs/bench/20261007-145712/necro-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Podagog (orc)",
+                "Frikug (orc)",
+                "Kertug (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 19,
+                "Poison Strike": 22
+              },
+              "seconds": 61.2,
+              "player_died": false,
+              "engaged": [
+                "Podagog (orc)",
+                "Frikug (orc)",
+                "Kertug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 60,
+              "decisions": 47,
+              "log": "logs/bench/20261007-145712/necro-orcs-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Varkgorim (orc)",
+                "Klog (orc)",
+                "Vrigka (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 4,
+                "Poison Strike": 24
+              },
+              "seconds": 46.7,
+              "player_died": false,
+              "engaged": [
+                "Varkgorim (orc)",
+                "Klog (orc)",
+                "Vrigka (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 46,
+              "decisions": 34,
+              "log": "logs/bench/20261007-145712/necro-orcs-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Waruk (orc)",
+                "Varthurg (orc)",
+                "Koughat (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 28,
+                "Poison Strike": 26
+              },
+              "seconds": 64.0,
+              "player_died": false,
+              "engaged": [
+                "Waruk (orc)",
+                "Koughat (orc)",
+                "Varthurg (orc)",
+                "Koughat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 59,
+              "decisions": 59,
+              "log": "logs/bench/20261007-145712/necro-orcs-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Silug (orc)",
+                "Urulg (orc)",
+                "Xuthakug (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 18,
+                "Poison Strike": 10
+              },
+              "seconds": 52.0,
+              "player_died": false,
+              "engaged": [
+                "Silug (orc)",
+                "Urulg (orc)",
+                "Xuthakug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 61,
+              "decisions": 34,
+              "log": "logs/bench/20261007-145712/necro-orcs-jev-01.jsonl",
+              "input_tokens": 81176,
+              "est_cost_usd": 0.0034
+            },
+            {
+              "success": true,
+              "kills": [
+                "Yalakgh (orc)",
+                "Pargu (orc)",
+                "Nurghed (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 12,
+                "Poison Strike": 10
+              },
+              "seconds": 48.6,
+              "player_died": false,
+              "engaged": [
+                "Yalakgh (orc)",
+                "Pargu (orc)",
+                "Nurghed (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 58,
+              "decisions": 28,
+              "log": "logs/bench/20261007-145712/necro-orcs-jev-02.jsonl",
+              "input_tokens": 67363,
+              "est_cost_usd": 0.0028
+            },
+            {
+              "success": true,
+              "kills": [
+                "Nildud (orc)",
+                "Xunag (orc)",
+                "Gorlag (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 21,
+                "Poison Strike": 8
+              },
+              "seconds": 48.9,
+              "player_died": false,
+              "engaged": [
+                "Nildud (orc)",
+                "Xunag (orc)",
+                "Gorlag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 34,
+              "log": "logs/bench/20261007-145712/necro-orcs-jev-03.jsonl",
+              "input_tokens": 82932,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "kills": [
+                "Buordud (orc)",
+                "Xarpug (orc)",
+                "Ulmrougha (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 14,
+                "Wither": 9,
+                "Poison Strike": 8
+              },
+              "seconds": 45.7,
+              "player_died": false,
+              "engaged": [
+                "Buordud (orc)",
+                "Xarpug (orc)",
+                "Ulmrougha (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 36,
+              "log": "logs/bench/20261007-145712/necro-orcs-jev-04.jsonl",
+              "input_tokens": 90457,
+              "est_cost_usd": 0.0038
+            },
+            {
+              "success": false,
+              "kills": [
+                "Laghed (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 19,
+                "Wither": 3,
+                "Poison Strike": 9
+              },
+              "seconds": 33.6,
+              "player_died": true,
+              "engaged": [
+                "Laghed (orc)",
+                "Varthurg (orc)",
+                "Laghed (orc)",
+                "Varthurg (orc)"
+              ],
+              "flees_at_hp": [
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 35,
+              "log": "logs/bench/20261007-145712/necro-orcs-jev-05.jsonl",
+              "input_tokens": 91118,
+              "est_cost_usd": 0.0038
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0173,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

@@ -642,8 +642,10 @@ def bench_names(spec: str) -> list[str]:
 async def bench(rpc: AgentRpc, args) -> None:
     stamp = time.strftime("%Y%m%d-%H%M%S")
     out = args.out or Path("bench") / f"{stamp}.json"
+    # Lanes run side by side: two benches started in the same second shared one log folder.
+    logs = Path("logs") / "bench" / (stamp if args.lane == 0 else f"{stamp}-lane{args.lane}")
     result = await benchmark.run(rpc, bench_names(args.scenarios), [j.strip() for j in args.judges.split(",")],
-                                 args.rounds, args.lane, out, Path("logs") / "bench" / stamp,
+                                 args.rounds, args.lane, out, logs,
                                  min_confidence=args.min_confidence,
                                  fact_modes=[m.strip() for m in args.facts.split(",") if m.strip()])
     print(benchmark.table([result]))

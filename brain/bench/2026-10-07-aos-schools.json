@@ -1,0 +1,605 @@
+{
+  "started": "2026-10-07T14:24:50",
+  "rounds": 5,
+  "lane": 3,
+  "bestiary": true,
+  "scenarios": {
+    "necro-orcs": {
+      "bead": "cuo-cvl.5",
+      "right": "Three orcs come at a necromancer from 8 tiles: kill them with necromancy without dying.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Todagog (orc)"
+              ],
+              "spells": {
+                "Strangle": 26,
+                "Pain Spike": 78
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Todagog (orc)",
+                "Malthu (orc)"
+              ],
+              "flees_at_hp": [
+                24,
+                24,
+                14,
+                15,
+                22,
+                12,
+                13,
+                27,
+                22,
+                13,
+                28
+              ],
+              "min_hp": 12,
+              "decisions": 144,
+              "log": "logs/bench/20261007-142450/necro-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Ewkbanok (orc)",
+                "Holkurg (orc)"
+              ],
+              "spells": {
+                "Strangle": 67,
+                "Pain Spike": 57
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Ewkbanok (orc)",
+                "Holkurg (orc)",
+                "Piggu (orc)"
+              ],
+              "flees_at_hp": [
+                6,
+                4,
+                25
+              ],
+              "min_hp": 4,
+              "decisions": 147,
+              "log": "logs/bench/20261007-142450/necro-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Gulrn (orc)"
+              ],
+              "spells": {
+                "Strangle": 33,
+                "Wither": 1,
+                "Pain Spike": 25
+              },
+              "seconds": 66.4,
+              "player_died": true,
+              "engaged": [
+                "Gulrn (orc)",
+                "Wholug (orc)"
+              ],
+              "flees_at_hp": [
+                12,
+                7
+              ],
+              "min_hp": 0,
+              "decisions": 76,
+              "log": "logs/bench/20261007-142450/necro-orcs-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Xulgag (orc)"
+              ],
+              "spells": {
+                "Strangle": 39,
+                "Pain Spike": 79
+              },
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Xulgag (orc)",
+                "Verthurg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 35,
+              "decisions": 140,
+              "log": "logs/bench/20261007-142450/necro-orcs-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Xomath (orc)"
+              ],
+              "spells": {
+                "Strangle": 19,
+                "Pain Spike": 84
+              },
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Xomath (orc)",
+                "Gunaakt (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 8,
+              "decisions": 136,
+              "log": "logs/bench/20261007-142450/necro-orcs-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.434
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "spells": {
+                "Poison Strike": 1,
+                "Wither": 8,
+                "Pain Spike": 1
+              },
+              "seconds": 19.9,
+              "player_died": true,
+              "engaged": [
+                "Zogugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 18,
+              "log": "logs/bench/20261007-142450/necro-orcs-jev-01.jsonl",
+              "input_tokens": 45596,
+              "est_cost_usd": 0.0019
+            },
+            {
+              "success": true,
+              "kills": [
+                "Magdud (orc)",
+                "Tulgan (orc)",
+                "Vukgilug (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 2,
+                "Wither": 9,
+                "Pain Spike": 6
+              },
+              "seconds": 44.8,
+              "player_died": false,
+              "engaged": [
+                "Magdud (orc)",
+                "Tulgan (orc)",
+                "Vukgilug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 29,
+              "log": "logs/bench/20261007-142450/necro-orcs-jev-02.jsonl",
+              "input_tokens": 69451,
+              "est_cost_usd": 0.0029
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zarod (orc)",
+                "Oguk (orc)",
+                "Darfu (orc)",
+                "Vregu (orc)",
+                "Wingloug (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 27,
+                "Pain Spike": 59
+              },
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Zarod (orc)",
+                "Oguk (orc)",
+                "Darfu (orc)",
+                "Vregu (orc)",
+                "Wingloug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 101,
+              "log": "logs/bench/20261007-142450/necro-orcs-jev-03.jsonl",
+              "input_tokens": 253252,
+              "est_cost_usd": 0.0106
+            },
+            {
+              "success": true,
+              "kills": [
+                "Toghat (orc)",
+                "Oomigig (orc)",
+                "Ouhgan (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 10,
+                "Wither": 1,
+                "Pain Spike": 19
+              },
+              "seconds": 64.6,
+              "player_died": false,
+              "engaged": [
+                "Toghat (orc)",
+                "Oomigig (orc)",
+                "Ouhgan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 41,
+              "log": "logs/bench/20261007-142450/necro-orcs-jev-04.jsonl",
+              "input_tokens": 97456,
+              "est_cost_usd": 0.0041
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gnarlug (orc)",
+                "Jughragh (orc)",
+                "Woglug (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 15,
+                "Pain Spike": 39
+              },
+              "seconds": 75.5,
+              "player_died": false,
+              "engaged": [
+                "Gnarlug (orc)",
+                "Jughragh (orc)",
+                "Woglug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 60,
+              "log": "logs/bench/20261007-142450/necro-orcs-jev-05.jsonl",
+              "input_tokens": 143720,
+              "est_cost_usd": 0.006
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0255,
+          "errors": 0
+        }
+      }
+    },
+    "paladin-orcs": {
+      "bead": "cuo-cvl.5",
+      "right": "Four orcs come at a paladin: fight them in melee with its blessings (at least one cast) and kill all four without dying.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Hokulk (orc)",
+                "Bumhug (orc)",
+                "Xoruk (orc)",
+                "Kurbag (orc)"
+              ],
+              "blessings": {
+                "Consecrate Weapon": 2,
+                "Divine Fury": 1,
+                "Holy Light": 6
+              },
+              "seconds": 70.6,
+              "player_died": false,
+              "engaged": [
+                "Hokulk (orc)",
+                "Bumhug (orc)",
+                "Xoruk (orc)",
+                "Kurbag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 54,
+              "decisions": 53,
+              "log": "logs/bench/20261007-142450/paladin-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gug (orc)",
+                "Yughragh (orc)",
+                "Kulgha (orc)",
+                "Xig (orc)"
+              ],
+              "blessings": {
+                "Consecrate Weapon": 2,
+                "Divine Fury": 4,
+                "Holy Light": 6
+              },
+              "seconds": 75.3,
+              "player_died": false,
+              "engaged": [
+                "Gug (orc)",
+                "Yughragh (orc)",
+                "Kulgha (orc)",
+                "Xig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 42,
+              "decisions": 53,
+              "log": "logs/bench/20261007-142450/paladin-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Buordud (orc)",
+                "Dabub (orc)",
+                "Narfu (orc)",
+                "Oghuglat (orc)"
+              ],
+              "blessings": {
+                "Consecrate Weapon": 2,
+                "Divine Fury": 2,
+                "Holy Light": 16
+              },
+              "seconds": 85.3,
+              "player_died": false,
+              "engaged": [
+                "Buordud (orc)",
+                "Dabub (orc)",
+                "Narfu (orc)",
+                "Oghuglat (orc)"
+              ],
+              "flees_at_hp": [
+                21,
+                13
+              ],
+              "min_hp": 13,
+              "decisions": 76,
+              "log": "logs/bench/20261007-142450/paladin-orcs-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zornaraugh (orc)",
+                "Parfu (orc)",
+                "Zildud (orc)",
+                "Curbag (orc)"
+              ],
+              "blessings": {
+                "Consecrate Weapon": 2,
+                "Divine Fury": 2,
+                "Holy Light": 18
+              },
+              "seconds": 100.1,
+              "player_died": false,
+              "engaged": [
+                "Zornaraugh (orc)",
+                "Parfu (orc)",
+                "Zildud (orc)",
+                "Curbag (orc)"
+              ],
+              "flees_at_hp": [
+                27,
+                20
+              ],
+              "min_hp": 20,
+              "decisions": 90,
+              "log": "logs/bench/20261007-142450/paladin-orcs-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "blessings": {
+                "Holy Light": 14
+              },
+              "seconds": 37.3,
+              "player_died": true,
+              "engaged": [
+                "Zodagh (orc)"
+              ],
+              "flees_at_hp": [
+                21
+              ],
+              "min_hp": 0,
+              "decisions": 42,
+              "log": "logs/bench/20261007-142450/paladin-orcs-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Sildud (orc)",
+                "Cubub (orc)",
+                "Oogorim (orc)",
+                "Farfu (orc)"
+              ],
+              "blessings": {
+                "Holy Light": 6
+              },
+              "seconds": 78.1,
+              "player_died": false,
+              "engaged": [
+                "Sildud (orc)",
+                "Cubub (orc)",
+                "Oogorim (orc)",
+                "Farfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 51,
+              "decisions": 51,
+              "log": "logs/bench/20261007-142450/paladin-orcs-jev-01.jsonl",
+              "input_tokens": 123861,
+              "est_cost_usd": 0.0052
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sarod (orc)",
+                "Varguk (orc)",
+                "Waruk (orc)",
+                "Karthurg (orc)"
+              ],
+              "blessings": {
+                "Divine Fury": 1,
+                "Holy Light": 7
+              },
+              "seconds": 86.1,
+              "player_died": false,
+              "engaged": [
+                "Sarod (orc)",
+                "Varguk (orc)",
+                "Waruk (orc)",
+                "Karthurg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 53,
+              "decisions": 56,
+              "log": "logs/bench/20261007-142450/paladin-orcs-jev-02.jsonl",
+              "input_tokens": 136252,
+              "est_cost_usd": 0.0057
+            },
+            {
+              "success": true,
+              "kills": [
+                "Hebub (orc)",
+                "Vetorkag (orc)",
+                "Kebub (orc)",
+                "Nargulg (orc)"
+              ],
+              "blessings": {
+                "Divine Fury": 1,
+                "Holy Light": 7
+              },
+              "seconds": 84.3,
+              "player_died": false,
+              "engaged": [
+                "Hebub (orc)",
+                "Vetorkag (orc)",
+                "Kebub (orc)",
+                "Nargulg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 54,
+              "log": "logs/bench/20261007-142450/paladin-orcs-jev-03.jsonl",
+              "input_tokens": 130764,
+              "est_cost_usd": 0.0055
+            },
+            {
+              "success": true,
+              "kills": [
+                "Kurmbag (orc)",
+                "Urulg (orc)",
+                "Supaugh (orc)",
+                "Prigka (orc)"
+              ],
+              "blessings": {
+                "Divine Fury": 2,
+                "Holy Light": 8
+              },
+              "seconds": 89.6,
+              "player_died": false,
+              "engaged": [
+                "Kurmbag (orc)",
+                "Urulg (orc)",
+                "Supaugh (orc)",
+                "Prigka (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 46,
+              "decisions": 62,
+              "log": "logs/bench/20261007-142450/paladin-orcs-jev-04.jsonl",
+              "input_tokens": 151865,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": true,
+              "kills": [
+                "Shomdud (orc)",
+                "Dilug (orc)",
+                "Krouthu (orc)",
+                "Zalthu (orc)"
+              ],
+              "blessings": {
+                "Holy Light": 8
+              },
+              "seconds": 81.6,
+              "player_died": false,
+              "engaged": [
+                "Shomdud (orc)",
+                "Dilug (orc)",
+                "Krouthu (orc)",
+                "Zalthu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 53,
+              "log": "logs/bench/20261007-142450/paladin-orcs-jev-05.jsonl",
+              "input_tokens": 127972,
+              "est_cost_usd": 0.0054
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0282,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

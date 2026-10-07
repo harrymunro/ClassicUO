@@ -49,8 +49,10 @@ namespace ClassicUO.Agent
         public string PlanLast = string.Empty;
         public readonly List<string> PlanSteps = new List<string>();
 
-        // Every question of the call with Jev's options and pick, for the live view of calls.
+        // Every question of the call with Jev's options and pick, for the live view of calls, and
+        // what was done about it in words, with where each move went ("run 15 tiles northwest").
         public readonly List<AgentCallQuestion> Questions = new List<AgentCallQuestion>();
+        public readonly List<(string What, string Result)> Did = new List<(string, string)>();
 
         public static AgentDecision FromJson(JsonElement p)
         {
@@ -155,6 +157,16 @@ namespace ClassicUO.Agent
 
                     case "questions":
                         d.Questions.AddRange(AgentCall.ParseQuestions(v));
+
+                        break;
+
+                    case "did" when v.ValueKind == JsonValueKind.Array:
+                        foreach (JsonElement a in v.EnumerateArray())
+                        {
+                            string what = a.TryGetProperty("what", out JsonElement w) ? w.GetString() ?? "" : "";
+                            string result = a.TryGetProperty("result", out JsonElement r) ? r.GetString() ?? "" : "";
+                            d.Did.Add((what, result));
+                        }
 
                         break;
 

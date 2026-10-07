@@ -162,7 +162,10 @@ flowchart LR
 4. **The policy is code.** It masks options the facts rule out (no looting with a
    monster adjacent), requires the intent and the danger judgment to agree before
    fleeing, keeps its current course when confidence is low, and applies your
-   strategy settings.
+   strategy settings. Its own emergency flee runs when the character is below 25% health,
+   Jev is at least 0.9 sure of the danger and no heal potion can be drunk in the next two
+   seconds; it keeps running while anything aggressive is within 8 tiles, rather than turning
+   back once the first run has opened a gap.
 5. **The client has the last word.** It checks the behaviour's authority before
    anything happens, and the brain may only ever attack monsters.
 
@@ -253,11 +256,16 @@ collapses the panel to a few lines; its position and whether it is collapsed are
 window beside it that shows every model call as it happens, not just the latest intent:
 
 - **The latest fight decision, question by question:** what next, which creature, which spell or blessing, and so on, each option as a bar with Jev's probability, its pick marked *jev* in green and, where code went with something else (a code rule, your strategy's spell, an unsure answer), that marked *code* in gold. A yes/no (in danger?, leave now?, a [plan](#plans-for-fights)'s next step?) is one bar with the cut that decides it in red, and the verdict.
+- **What was done about it:** each action of that decision in words, with the way a move went: "run 15 tiles northwest from the pack", "step back 4 tiles south", "walk 12 tiles east", "attack a gargoyle", "cast Explosion at a lich", and the result when it didn't simply go through (refused, out of reach).
 - **The latest of each other kind of call:** Jev's routine questions inside a hunt with its verdict, its pick of world facts (each fact with its score, the kept ones in green), a strategy read, and the planner's goals and world queries with their reason and cost.
 - **How many calls of each kind** there have been.
 
 <p align="center">
-  <img src="docs/images/jev-calls.png" width="660" alt="The calls window beside the agent panel during a mage's fight: what next with fight at 99% picked by Jev, in danger at 27% under its cut, which creature with Gnurl the orc at 39% picked, and which spell with Magic Arrow at 77% picked.">
+  <img src="docs/images/jev-calls.png" width="650" alt="The calls window beside the agent panel during an unattended hunt at the Britain graveyard. Counts at the top (strategy 1, fight 29, planner 2, facts 1, hunt). The fight decision: what next, seek at 83% picked by Jev; in danger at 3% under its red cut; which creature, where Jev picked none at 58% and code went with a wraith, marked in gold. A hunt question: head back to town at 5%, no; spot still worth it at 90%, yes. A pick of world facts with each fact's score, none kept at 0.6.">
+</p>
+
+<p align="center">
+  <img src="docs/images/jev-calls-actions.png" width="658" alt="The calls window during a pack round, beside the agent panel, which says now: fleeing. What next: seek at 90% picked by Jev, leave at 3% marked code in gold, and the line 'jev picked seek; code went with leave'. In danger at 4%, no. Which creature: a gargoyle at 65%, picked by Jev. Under actions: run 15 tiles north from a gargoyle. Then: so: leaving, away from a gargoyle.">
 </p>
 
 ### Reflexes
@@ -288,14 +296,17 @@ These are in code, whatever the model says:
 
 In auto mode the agent leaves a fight it can't win: it runs until nothing hostile is in
 sight, keeps running from whatever is still there for 40 seconds, and for two minutes after
-that doesn't go looking for creatures, only fights what comes close. In a pack round the
+that doesn't go looking for creatures, only fights what comes at it (within 3 tiles for a
+warrior, within its reach for a mage, archer, tamer or bard). In a pack round the
 warrior got away untouched, went after the orc it had left once the 40 seconds were up, and
 walked back into the gargoyles.
 
 - **It runs.** The agent's walks always run, as players do. The client's pathfinder only ran walks longer than 14 tiles, so a 10-tile flee, a step back from melee, and a 15-tile leave on a diagonal (11 tiles each way) walked at half the speed of the monsters chasing it.
 - **No idle gap.** A flee counts as running only while the character is moving: held for a fixed 6 seconds, a 3-second run left it standing for the rest, with nothing deciding and whatever followed hitting it.
-- **Packs.** The state says what is coming at the character together (fighting, within 12 tiles, or already on it), weighed against it: a creature far stronger than it counts 4, stronger 2, a fair fight 1, weak 0.4, each scaled by its health (`coming_at_you`: "2 gargoyles (a fair fight each) and a reaper (a fair fight); together far stronger than you: too many to fight at once"). From 3 on, Jev's `leave_now` is asked; and at that weight with two or more coming, code leaves while they are still coming (3 with no strategy, less for a cautious one, more for an aggressive one; never under a never-flee strategy, never in combat assist). The open-goal soak run died to two gargoyles and a reaper, each "a fair fight", while Jev's leave stayed at 0.39–0.44.
-- **Away from all of them.** Leaving a pack runs away from the creatures in sight taken together, not from one of them.
+- **Packs.** The state says what is coming at the character together (fighting, within 12 tiles, or already on it), weighed against it: a creature far stronger than it counts 4, stronger 2, weak 0.4, a fair fight 1 scaled by its hits against the character's (between 0.5 and 1.5, so two spectres don't weigh as two gargoyles), a spellcaster half as much again (it hurts from a distance, running or not), and each by its health (`coming_at_you`: "2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: too many to fight at once"). From 2.5 on, Jev's `leave_now` is asked; and at that weight with two or more coming, code leaves while they are still coming (2.5 with no strategy, less for a cautious one, more for an aggressive one; never under a never-flee strategy, never in combat assist). The open-goal soak runs died to two gargoyles and a reaper while Jev's leave stayed at 0.39–0.44, and to a troll, a harpy and a ratman (2.5) when the cut was 3.
+- **Not back too soon.** In a session, a hunt that ended in a leave from creatures stops the planner sending the character within 30 tiles of there for 30 minutes; the refusal says why and how long is left. With 15 minutes, the planner sent it back as soon as they were up, and it died there.
+- **Away from all of them.** Leaving a pack runs away from every creature in view taken together, nearer ones counting more, not from one of them. It used to count only those within 10 tiles, so a pack still further off gave no direction and the run went north, whatever was there. A blocked way out is now tried turned up to about 100 degrees either side (it was 70), then at half the distance: in a round on another lane of the test field, the warrior ran into a corner, where nine runs in a row failed and three gargoyles caught it.
+- **Cornered:** when two runs in a row fail ("no path away"), it stops trying to leave for 15 seconds and fights what is close, whether code or Jev wanted to leave.
 - **Told apart by name.** Several kinds share a body graphic, and the strongest used to stand for all: a black bear read as "far stronger" because a named boss bear shares its graphic. Creatures are now matched by name among the kinds with their graphic.
 
 In a session hunt, leaving ends the hunt (see [hunting](#travel-banking-shops-and-hunting)).
@@ -337,7 +348,7 @@ this order, or you name it with `uo-brain run --archetype warrior|mage|archer|ta
 - **Protection:** as soon as melee monsters come at it (in war mode within 10 tiles), it casts Protection first, since every hit otherwise interrupts a spell; cast once they were adjacent, it was broken too. It's asked for again until its buff icon shows, at most three times in 20 seconds, since it is a toggle and a server that sends no icon would see it turned off again. A queued Protection or heal isn't pushed out of the client's one-spell queue by an attack spell from the next decision. That's AOS: on older shards Protection only adds armour, so it's skipped (see [Older rules](#older-rules-pre-aos-shards-such-as-uo-renaissance)).
 - **Crowds:** with three or more monsters within 2 tiles of one of them, and nobody else (a player, a pet, a townsperson) within a tile of the blast, Chain Lightning and Meteor Swarm are offered too, aimed at the creature that has the most others around it. Under AOS rules their damage is shared once more than two are hit, but twice over, so three creatures each take about two thirds of a single hit for 40 mana. Code casts one when Jev isn't sure, doesn't step back while it can, and with three or more on it goes for the creature with least health left: every kill is one fewer hitting it.
 - **Kiting:** with two or more monsters in melee reach it steps back 5 tiles between spells, keeping its target; the next spell waits for the step, since casting roots the mage. It steps back once per attack spell cast: stepping back again before a spell went off kept one test mage from ever casting.
-- **Cornered:** when two runs in a row fail ("no path away"), it stops trying to leave for 15 seconds and fights: in swarm rounds a mage kept "leaving" for 40 s while six monsters hit it.
+- **Cornered:** when two runs in a row fail ("no path away"), it stops trying to leave for 15 seconds and fights, as any character does (see [leaving and packs](#leaving-and-packs)): in swarm rounds a mage kept "leaving" for 40 s while six monsters hit it.
 - **Meditation:** it meditates while resting with mana below 80%.
 - **Seeing inside:** the server only says what's in a spellbook or a bag once it's opened, so the agent opens the spellbook and any unopened bags in the backpack once, and closes them again.
 - **Snapshot:** mana, reagent counts, every spell in the book with its cost and why it can't be cast ("mana", "reagents"), and the cast timing.
@@ -739,8 +750,9 @@ The arena can't tell Jev from the rules: both win every round. `uo-brain bench` 
 scenarios with a known right behaviour, built so that the obvious rule gets them wrong, many
 times per judge, and reports success rates with 95% Wilson intervals. Each scenario's setup is
 test-kit commands; what counts as right is checked from the snapshots and the decision log.
-Results are written to `brain/bench/<time>.json` after every round; compare runs with
-`uo-brain bench report A.json B.json`.
+Results are written to `brain/bench/<time>.json` after every round, and each round's decision
+log to `brain/logs/bench/<time>/` (`<time>-lane<n>/` on another lane, so benches can run side by
+side on several clients); compare runs with `uo-brain bench report A.json B.json`.
 
 ```bash
 uv run uo-brain bench list
@@ -775,7 +787,30 @@ What changed, and why:
 - **`priority` was retuned:** three orcs and the mage's spells killed the test warrior in about 60% of rounds whatever it targeted, so it measured luck. Jev also put 100% on the adjacent orc it was fighting, because the target guidance said to prefer the current and the closest creature. With zombies as the fodder and guidance that a spellcaster that is fighting comes first, Jev opens on the orcish mage. The survivor template says "fight whatever is closest", so it does, and fails this scenario by design.
 - **Leaving:** on logged attrition decisions that went on to die, Jev put 0.24–0.30 on "leave now" when asked about "supplies nearly gone with several creatures still attacking". Asked whether there was enough healing left to outlast them, it put 0.40–0.60, against 0.2 where staying won, and the ogre-lord cases didn't change (the same 20 logged decisions re-asked offline). The cut on that answer was the strategy's danger threshold (0.625 with no strategy) and is now 0.2 below it. That is what took `mismatch` to 10/10.
 - **Moved into code:** a mage or archer with four or more creatures adjacent leaves once Jev's danger judgment reaches 0.5, and so does any character with two or more stronger creatures close. In both cases Jev rated each creature an easy kill and kept its intent on fighting. An added "outnumbered" clause only moved its leave answer from 0.27 to 0.30.
-- **Still open:** `attrition` and `swarm` are mostly lost by every judge with these kits. Eight monsters on six bandages, or six on a mage, kill the character whether it fights or runs: monsters run as fast as a character, and every hit interrupts a mage's spells. Jev doesn't beat the rules on these two.
+- **Still open (then):** `attrition` and `swarm` were mostly lost by every judge with these kits. Eight monsters on six bandages, or six on a mage, killed the character whether it fought or ran, and every hit interrupted a mage's spells.
+
+**Later the same day: running, packs and swarms** (cuo-d28.9, cuo-cvl.4; [above](#leaving-and-packs)
+and [Mages](#mages)). The character now runs instead of walking, leaves a pack while it is
+still coming and doesn't go back, and a mage keeps Protection up, uses area spells on a crowd
+and finishes the weakest first. Rerun with 5 or 10 rounds (`bench/2026-10-07-swarm-v4.json`,
+`core-v3.json`; `--scenarios swarm --rounds 10` and `--scenarios attrition,mismatch --rounds 5`):
+
+| scenario | rules before | Jev before | rules now | Jev now |
+|---|---|---|---|---|
+| `swarm` | 0/10, 9 deaths, median 0 kills | 0/10, 7 deaths, median 0.5 | 0/10, 7 deaths, median 1.5 | 4/10, 1 death, median 3 kills |
+| `attrition` | 5/10, 5 deaths | 5/10 (after the leave fix) | 4/5, 1 death | 5/5, no deaths |
+| `mismatch` | 0/10, 10 deaths | 10/10 | 4/5, 1 death | 5/5, no deaths |
+
+- **Swarm:** in the earlier logs, Protection cast once a creature was adjacent was broken, as was every spell after it, and the next decision's attack spell pushed a queued Protection out of the client's queue. Now it goes up while the monsters come and Chain Lightning lands on the crowd. The changes were rerun together, so which one mattered most isn't measured. The rules still lose: they cast the strongest single spell at whatever is in front of them.
+- **Attrition:** Jev left in every round on its own yes/no, asked because supplies were nearly gone with creatures close; the rules got away by fleeing, which now runs.
+- **Mismatch:** the code's pack rule left for both judges once the ogre lord came with company ("2 coming at once: a ratman (weak) and an ogre lord (far stronger than you)"), which is why the rules now pass a scenario built for them to fail.
+
+**On the final code**, after the changes to running from packs, fleeing near death and fighting
+after leaving, the same commands that evening (`core-v4.json`, `swarm-v5-alone.json`,
+`swarm-v5.json`, `swarm-before-reach.json`; `swarm-v5-alone.json` is `--judges jev` with no other client running):
+- **Attrition and mismatch** are unchanged: the rules 4/5 with one death each, Jev 5/5 each.
+- **Swarm:** Jev 4/10 with 5 deaths (median 3 kills), against 4/10 with 1 death that afternoon; the rules 1/10 with 9 deaths. Run alongside three other benchmark clients, Jev won none (3 deaths, median 3 kills), so this scenario is sensitive to load as well as to chance.
+- **A regression found on the way:** the rule that keeps a character from going back for what it left held every character to fighting what was within 3 tiles for two minutes after leaving. A mage stood resting while the swarm closed in and fought it only in melee range, where every hit interrupts a spell: Jev won none, with a median of 0 kills. Now what comes at the character within its own reach (10 tiles for a mage) is fought.
 
 **Adherence:** each scenario fixes a strategy template and checks it is followed: `relentless`
 never flees, `survivor` flees (at what health is recorded, to compare with relentless),
@@ -804,6 +839,36 @@ Then 5 rounds each of the others (`brain/bench/2026-10-07-archetypes.json`, `--s
 - **Tamers:** setting the pet on whatever attacks the tamer, and bandaging the pet, are code for both judges; what differs is the target Jev picks otherwise and when it calls the pet back. Jev's rounds also saw more bandaging (33 bandages on the bear over five rounds, against 9). Five rounds is too few to say which made the difference.
 - **Bards:** both judges mostly provoke (the rules 22 of 29 songs, Jev 19 of 28); Jev used discordance more (4 against 1).
 
+**Packs** (cuo-d28.9): two orcs fight a warrior while three gargoyles (`pack-gargoyles`) or two
+bone knights (`pack-bone-knights`) come at it from 14 tiles; right is surviving. `jev/nopack`
+turns the code's pack rule off, leaving it to Jev's own `leave_now`, which is now asked with the
+pack in words. 2026-10-07, 5 rounds each on two lanes of the test field
+(`bench/2026-10-07-packs-v5.json` and `packs-lane0-v2.json`,
+`--scenarios packs --judges heuristic,jev,jev/nopack --rounds 5 --lane 3`, and `--lane 0`):
+
+| scenario | rules | Jev | Jev without the pack rule |
+|---|---|---|---|
+| `pack-gargoyles` | 10/10 | 10/10 | 9/10, 1 death |
+| `pack-bone-knights` | 10/10 | 10/10 | 10/10 |
+| lowest health, median of each judge's 20 rounds | 55% | 65% | 54% |
+| rounds under 20% health | 1 (15%) | none | 2 (the death, and 13%) |
+
+- **Everyone got away:** every round of every judge left the fight. With the pack rule, code left while the pack was still coming ("3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you"). Without it, Jev's own `leave_now` left too, on the pack words against the gargoyles and on "2 creatures stronger than the character are near" against the bone knights.
+- **The death without the pack rule:** Jev's leave ran from the nearest creature, an orc beside the warrior, which took it straight towards the gargoyles; a leave the pack rule chooses runs from them all (cuo-d28.11).
+- **Earlier the same day:** with the cut at 3 (`packs-v2.json`), Jev died in one round of five against the gargoyles and the rules in one against the bone knights. With the final cut but before the changes to running and to fleeing near death (`packs-v3.json`, lane 3) all 30 rounds survived; a run between those changes (`packs-v4.json`) lost a Jev round to turning back near death and a rules round to looting with a gargoyle nearby, and a single round on lane 0 died cornered.
+- **Cost:** Jev about $0.0045 a round.
+
+**Necromancers and paladins** (cuo-cvl.5), 5 rounds each, 2026-10-07
+(`bench/2026-10-07-necro-v2.json` and `aos-schools.json`, `--scenarios necro-orcs,paladin-orcs --judges heuristic,jev --rounds 5`):
+
+| scenario | right | rules | Jev |
+|---|---|---|---|
+| `necro-orcs` | three orcs on a necromancer: kill them all, survive | 5/5 | 4/5, 1 death |
+| `paladin-orcs` | four orcs on a paladin: kill them all with at least one blessing, survive | 4/5, 1 death | 5/5 |
+
+- **Necromancers:** the first run had the rules at 0/5. They skipped any spell whose name started with "Poison" (meant for magery's Poison) and so never cast Poison Strike; and every caster began its rounds with no reagents, because the bench waited for the kit with the agent off and the client only opens a new reagent bag while it is on. Both fixed for the rerun.
+- **Paladins:** Jev used Holy Light against the four orcs in every round and Divine Fury in three; the rule of thumb added Consecrate Weapon. Close Wounds is a reflex for both.
+
 **World facts.** `wisp-leave-alone` checks that a stored fact changes the move: a wisp floats
 7 tiles away while two orcs attack. In ModernUO a wisp only fights when attacked, and then it
 hits for 17 to 18, casts spells and has about 130 hits, so the right move is to kill the orcs
@@ -826,6 +891,23 @@ Results, 2026-10-07, 10 rounds each (`--scenarios world --judges jev`; `world-v4
 - **Setup:** the first run spawned the wisp first, so for the first seconds it was the only creature in sight and every judge walked up to it and died; the orcs now come first.
 - **Caster priority:** the spellcaster-first target guidance from `priority` sent Jev at the idle wisp. Only a caster that is fighting now comes first, idle creatures are described as "not fighting", and Jev's "attack none of these" is respected.
 - **Picking facts:** asked whether a fact "bears on a choice the character faces", Jev scored every fact about the place alike (0.41–0.58) and never picked the two decisive notes. Asked whether a fact "says what to do about a creature in view", they came first, and Jev picked one in 4 of 10 selections. Picking still trails putting every fact in, at this shortlist size (25).
+
+### Plans for fights
+
+Plans against the fixed policy where the rules lost (cuo-6om), 5 rounds each, 2026-10-07
+(`bench/2026-10-07-swarm-plans.json`, `attrition-plans.json`, `--judges "jev#<plan>"`). The
+planner model wrote `planner-swarm` and `planner-attrition` from a one-paragraph description of
+the character and the creatures it meets, not from the scenario (`uo-brain machine design`,
+$0.018 and $0.015); `mage-swarm` and `pull-one` are the hand-written ones.
+
+| scenario | Jev, no plan | Jev + hand-written plan | Jev + planner's plan |
+|---|---|---|---|
+| `swarm` | 4/10, 1 death | `mage-swarm` 2/5, 2 deaths | `planner-swarm` 1/5, 1 death |
+| `attrition` | 5/5 | `pull-one` 5/5 | `planner-attrition` 5/5 |
+
+- **No plan beat the fixed policy:** on `attrition` every judge got out alive once leaving packs and running were fixed, and on `swarm` the plans did worse. The planner's plan went from "blast" to "escape" early in every round and spent 12–68 s of its 120 escaping or recovering: four of five rounds survived, with 2–4 kills, short of the four needed. The hand-written plan left for 30 s whenever mana fell below 25%; of its two deaths, one came in its "blast" step and one in its first step after coming back.
+- **The moves between steps work as written:** every round logged its moves with Jev's yes ("open -> blast (0.68)", "blast -> out (0.74)", "out -> open (after 30 s)").
+- **What it costs:** a plan adds one to four yes/no questions to each fight request, about 300 input tokens.
 
 ### Real input
 
@@ -913,6 +995,56 @@ disruptions (`logs/soak-goal2b.jsonl`), 25 minutes:
 - **Results:** 19 kills, then the character died there to a group of black bears with a corpser nearby, before it banked anything. The gold it carried stayed on its corpse.
 - **Cost:** 18 planner calls ($0.58 an hour).
 - **What changed after it:** the run before it had died the same way at the graveyard, sent there while a lich was still about. So every goal's result now names the stronger creatures seen during it, as "danger" notes the planner's `hunting_spots` shows for the area.
+
+**Packs, unattended** (cuo-d28.9): the graveyard goal again, on a copy of the server, a
+warrior with a runebook to the bank and the graveyard, and two packs sent at it quietly by
+`brain/scripts/soak_packs.py`: three gargoyles 14 tiles from it at 8 minutes, and a lich with
+two bone knights at the graveyard at 25 minutes, each once it is hunting there (or 15 minutes
+later regardless). From `brain/`, prepared with `uv run python scripts/soak_prep.py runes` and run with
+`scripts/soak_run.sh soak-packs5 0.85 yes "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied: bandages for a warrior, reagents for a mage. Bank your gold and loot when the bag gets heavy."`;
+report: `uo-brain soak-report logs/soak-packs5.jsonl --disruptions logs/soak-packs5.disruptions.jsonl`.
+Five runs on 2026-10-07, each fixing what the one before found:
+
+| run | how it ended | what it found |
+|---|---|---|
+| 1 | died at 16 min, no kills | a runebook recall is a magery cast on ModernUO, so it dropped the katana into the pack and the warrior fought bare-handed; the healers were still sold out from earlier runs |
+| 2 | died at 1 min | after leaving two ghouls and a zombie it stopped to recall to the bank with them still on it |
+| 3 | died at 11 min | the "had to leave" note was picked as a fight fact on the next hunt, which left at once and wrote another; the planner then sent it back to the gargoyles |
+| 4 | died at 24 min | a bank errand banked the katana; and after leaving two ghouls twice it was sent back once a 15-minute refusal ran out |
+| 5 | 56 minutes, no deaths | |
+
+The fixes: the weapon goes back in hand after a recall (and, in auto mode, whenever it is in the
+pack), and errands never move the held weapon or anything worn; the retreat to town recalls only
+with nothing within 10 tiles and nothing in war mode, and runs with the fight loop beside it;
+danger notes are for the planner only; and code refuses a hunt within 30 tiles of a place it
+left for 30 minutes, telling the planner why.
+
+Run 5: 23 goals, 14 kills, 830 gold banked, $0.27 on the planner (32 calls) and $0.08 on Jev
+(1,092 fight decisions, 39 routine questions). It left the graveyard twice: at 12 minutes from
+two of the gargoyles ("2 coming at once: 2 gargoyles (a fair fight and a spellcaster each);
+together far stronger than you"), and at 43 minutes, back after the refusal, from six ("2
+gargoyles, 3 skeletons and a ghoul"); the lich and bone knights had gone in at 40 minutes while
+it rested in town. It then hunted the weaker spawns in the open country to the north. The cost of
+staying alive was time: 31.7 of the 56 minutes were rests, the planner choosing to wait out the
+refusal at the graveyard rather than hunt somewhere else.
+
+**The open goal with packs about**: the same open goal on the main server, a warrior, no
+disruptions, where the open country north of Britain has gazers, reapers, ettins and trolls.
+`uv run uo-brain --port 5579 session "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold." --hours 0.67 --log logs/soak-open5.jsonl`, 2026-10-07:
+
+| run | how it ended | what it found |
+|---|---|---|
+| 3 | died at 16.5 min, 24 kills | it left two gargoyles and ran off the road into the wilds, among gazers, reapers and an ettin; leaving while travelling now keeps to the route |
+| 4 | died at 7.7 min, 2 kills | a troll, a harpy and a ratman together weighed 2.5, under the pack cut of 3 then; the cut is now 2.5 |
+| 5 | died at 40 min, 19 kills | see below |
+
+Run 5: 10 hunts, 452 gold banked, $0.25 on the planner (33 calls) and $0.06 on Jev. It left three
+packs (3 ghouls; a panther and 2 ogres; a dire wolf, a gazer, a bull and a corpser) and lived
+through all three. It died to a single gargoyle, a fair fight for it: with no heal potions left,
+a slipped bandage and poison, it went from 76% to 11% health in about 2.5 seconds. Code fled at
+11%, but one decision later the gargoyle was no longer close, flee wasn't on offer, and it went
+back in to fight. Fixed since: near death, fleeing now stays on offer while anything aggressive
+is within 8 tiles (cuo-d28.10).
 
 ### Travel and errands
 
@@ -1017,7 +1149,10 @@ yet tried on UO Renaissance itself, which needs a real account.
 ## Known limits
 
 - Results are single small runs, apart from the benchmark's 5 or 10 rounds.
-- Mages use Magery only, with single-target attack spells. A mage kites by stepping back from melee, but most monsters run as fast as a character: against six at once it lost every benchmark round (`swarm`, 0/10), and leaving when four are adjacent only cut the deaths from 8 to 7.
+- Against six melee monsters at once a mage now wins 4 rounds in 10 (`swarm`), up from none, but on the final code with 5 deaths in 10, and none won with three other benchmark clients running; the rules win at most one. Summons (Blade Spirits, Energy Vortex) and fields aren't used.
+- Necromancy and chivalry are tested only under the local server's AOS rules. ClassicUO's chivalry table has OSI's mana costs (Divine Fury 10 where ModernUO asks 15), used only for the client's own check before casting. The agent can't restock tithing points.
+- Plans for fights didn't beat the fixed policy on the two scenarios tried, and haven't been soak-tested in sessions.
+- A pack's weight comes from the store's creature stats; a creature it doesn't know counts 0.5. When Jev says "attack none of these" but its intent is to seek, code still walks to the nearest creature (cuo-8ga).
 - Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does, under both rule sets), and from the English text otherwise. They have not yet been checked against what UO Renaissance itself sends.
 - On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
@@ -1026,8 +1161,9 @@ yet tried on UO Renaissance itself, which needs a real account.
 - The client can't see whom a pet is actually fighting, only whom it was told to: a pet that switched to another attacker still shows its order.
 - Bards don't use peacemaking on themselves (calming everyone), and songs aren't scored for difficulty: Jev only knows a song "can fail, more often against strong creatures".
 - Underground areas such as the Britain sewer come up as hunting spots but can't be walked to; the planner learns that only by failing ("no route").
-- Unattended, a lone warrior still dies to packs of creatures stronger than it (black bears, bone knights): it leaves, but most run as fast as it does. Recall runes, or leaving earlier, would help.
-- Jev's routine hunt calls have run live only in the soak runs (four, 2026-10-07); the yes and no thresholds (0.65, 0.35) are as first set. In a thinly spawned area most hunts end on "unsure twice running" after about a minute, which hands back to the planner often.
+- A leave that Jev chooses, rather than the pack rule, runs from the nearest creature only, which can be towards the rest (cuo-d28.11).
+- Unattended, a lone warrior now leaves packs and lived through an hour with two sent at it, but it pays in time: after leaving, the planner tends to wait out the 30-minute refusal in town rather than hunt elsewhere (31.7 of 56 minutes resting in that run). The 30 tiles and 30 minutes are as first set.
+- Jev's routine hunt calls have run live only in the soak runs (2026-10-07); the yes and no thresholds (0.65, 0.35) are as first set. In a thinly spawned area most hunts end on "unsure twice running" after about a minute, which hands back to the planner often.
 - World facts for fights are shortlisted by area and keyword: a fact stored under another area name, or that names a creature differently, can't be picked. Jev's picks trail putting every shortlisted fact in (8/10 against 10/10 in the wisp scenario).
 
 ## Reference
@@ -1212,6 +1348,7 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 |---|---|
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `brain/machines/` | plans for fights: two written by hand, and the planner's |
+| `brain/scripts/` | soak runs: preparing the character (`soak_prep.py`), sending packs at it (`soak_packs.py`), and both with a session (`soak_run.sh`) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
 | `docs/` | upstream ClassicUO's README, and the images for this one |
