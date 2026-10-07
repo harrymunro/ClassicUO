@@ -386,6 +386,7 @@ gold". Type it into the panel's goal box, pick a goal template, or use `-agent g
 
 - **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `outcomes`, `region_at`).
 - **No scripted loop:** the planner puts travel, hunting, banking and restocking together itself. Code carries out each goal ([below](#getting-around-travel-banking-and-shops)); Jev keeps the fighting.
+- **Routine calls are Jev's:** inside a hunt, whether to head back, stay or walk elsewhere in the spawn are quick Jev questions, not fixed thresholds and not planner calls ([Hunting](#getting-around-travel-banking-and-shops)). The planner is called when a goal ends, including when Jev is unsure twice running, so open-ended choices (where next, what to buy) stay with it.
 - **Cheap to call:** each step rebuilds a short prompt (a cached system prompt, the goal, the last 12 steps, the character now) instead of growing one long conversation. A call costs about $0.014.
 - **The panel** shows the step and why ("hunting at Britain Graveyard for up to 15 min: supplied with 80 bandages; time to hunt"). *pause* keeps the goal but stops work on it.
 - **Handing over:** switching to combat assist (Alt+A) stops the agent walking at once and pauses the planner, so it stops costing tokens. Switching back to auto tells the planner you drove for a while, and it resumes from wherever the character is, with whatever it carries.
@@ -424,7 +425,13 @@ goal that code carries out, using the world store for places:
 - **Banking** (`bank`): says "bank" near a banker and moves items one at a time, checking each arrives (the server refuses moves that come too fast). Deposit `gold`, `loot` (anything that isn't kit or supplies) or named items (`bandage:150`); withdraw named items.
 - **Buying** (`buy`): walks up to the vendor (ModernUO answers "vendor buy" only next to it), reads its list and buys what's wanted and affordable. A vendor only stocks so many (Britain's healer has 20 bandages at a time), so it goes round the vendors in sight, then the next shop.
 - **Selling** (`sell`): the same, from the vendor's sell list: `loot`, or named items.
-- **Hunting** (`hunt`): walks to a spawn area and lets Jev fight there until time is up, bandages or reagents run low, the bag gets heavy, or nothing shows up for 4 minutes. When it's quiet it walks to another spot of the spawn.
+- **Hunting** (`hunt`): walks to a spawn area and lets Jev fight there until time is up or one of Jev's routine calls ends it (`routine.py`):
+  - **The questions:** "should it head back to town now?" and "is this spot still worth hunting?", plus, while nothing is in sight, "walk to another part of the spawn rather than wait?". They're yes/no questions (Nouls) about the hunt so far in words: supplies and how many more kills they last at this hunt's rate (code works that out), the bag, kills and the usual time between them, the lowest health, flees, and your strategy text.
+  - **When:** after a kill, when supplies or the bag cross a level ("running low", "getting heavy"), every 30 s while it's quiet, and otherwise once a minute; never more often than every 10 s, one at a time, beside the fight loop rather than in its way.
+  - **What the answers do:** at 0.65 or more on "head back", or 0.35 or less on "worth it", the hunt ends with Jev's number and the facts in the reason ("Jev: time to head back (0.79): 9 bandages and 0 heal potions left, about 6.0 bandages a kill so far: enough for about 1 more kill; bag light (30% of what the character can carry)"), after the fight at hand (up to 30 s). A confident "walk elsewhere" sends it to another spot of the spawn. Unsure (between 0.35 and 0.65) twice running ends the hunt too, and the planner decides with Jev's numbers in front of it.
+  - **Floors in code**, no question asked: dead, no bandages and no heal potions, no reagents for any attack spell, no arrows or bolts for the bow in hand, a full bag (98%), 10 minutes with nothing to fight, a red or criminal player close.
+  - **Without Jev** (the rule judge, or two failed questions in a row) the old fixed rules apply: under 10 bandages, under 5 of a reagent, under 20 arrows, 85% weight, 4 quiet minutes, and a walk round the spawn every 25 s when quiet.
+  - **Logged:** each question goes to the session log as a `routine` record (moment, the state in words, the questions, Jev's answers, the verdict and why); the `hunted` record and the session summary count them and their cost (`routine_cost_per_hunt_hour`).
 
 ```bash
 cd brain
@@ -447,6 +454,19 @@ On the local server, 2026-10-06, single runs with a warrior:
 | sell loot to a weaponsmith, gems to a jeweller | +54 and +426 gold; the junk stayed |
 | a mage at the graveyard travels to the West Britain bank with a runebook in the pack | recalled, 11.5 s (63 s walking) |
 | Gate Travel from the runebook at the bank, then through the gate | at the graveyard; the town-exit warning answered |
+
+Jev's routine hunt calls, 2026-10-07, one run over 10 hand-made situations with no game
+connected (`cd brain && uv run python tests/smoke_routine.py`): every situation got the
+right verdict (stay, head back, leave the spot, walk elsewhere, wait), and 13 of 14 answers
+fell on the expected side of 0.5. The miss was "is this spot still worth it?" at 0.48 after
+two quiet minutes with steady kills; the confident "walk elsewhere" (0.69) decided it.
+Several right answers were close to the line (0.66 for a 93% full bag, 0.64 and 0.71 for
+staying), so the 0.65 and 0.35 thresholds need a live hunt to settle. A question is about
+1,000 input tokens, $0.00004, answered in about 250 ms; at a question every 30 to 60 s that
+is well under a cent an hour, against $0.014 for one planner call. The first wording got 7
+of 10: it gave a mage's reagents and the bag without what they meant, so code now works out
+how many kills the scarcest reagent lasts, the usual time between kills, and says when the
+bag leaves little room for loot.
 
 ## Quick start
 
@@ -688,7 +708,7 @@ Not yet tried on UO Renaissance itself, which needs a real account.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`routine.py` (Jev's routine calls inside a hunt: head back, stay, walk elsewhere)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
@@ -700,6 +720,7 @@ Known limits:
 - Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does, under both rule sets), and from the English text otherwise. They have not yet been checked against what UO Renaissance itself sends.
 - On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
+- Jev's routine hunt calls have only been checked offline, on 10 hand-made situations; the yes and no thresholds (0.65, 0.35) aren't tuned on live hunts yet.
 
 ---
 

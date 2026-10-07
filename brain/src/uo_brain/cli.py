@@ -499,6 +499,7 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     finally:
         await judge.close()
         world.close()
+    summary |= session.routine_summary()
     write({"type": "session_summary", "t": time.time(), **summary})
     if log:
         log.close()
