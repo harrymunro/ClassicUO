@@ -24,7 +24,7 @@ from .judge import Judge
 from .planner import Planner, PlanStep
 from .recorder import Recorder
 from .rpc import AgentRpc
-from .session import Session, describe, note_threats
+from .session import Session, describe, note_threats, routine_totals
 from .world import World
 
 
@@ -50,6 +50,8 @@ class Autopilot:
         # Whatever the character sees, driven or not, goes into the world store.
         self.recorder = Recorder(world, judge) if world is not None else None
         self.driven_since: float | None = None   # when the player took over from the planner
+        # Jev's routine questions inside hunts (routine.py), over every session object of a goal.
+        self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}
 
     def log(self, rec: dict[str, Any]) -> None:
         if self.log_file:
@@ -145,8 +147,11 @@ class Autopilot:
                 await planner.step()
         finally:
             watcher.cancel()
+            for k, v in session.routine.items():
+                self.routine[k] += v
         if planner.finished:
             await self.rpc.call("goal_status", step=f"finished: {planner.finished}", why="")
             await self.rpc.call("goal", pause=True)
-            self.log({"type": "session_summary", "t": time.time(), "goal": text, **planner.summary()})
+            self.log({"type": "session_summary", "t": time.time(), "goal": text, **planner.summary(),
+                      **routine_totals(self.routine)})
             del self.planners[text]

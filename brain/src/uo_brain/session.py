@@ -24,6 +24,7 @@ from typing import Any
 from . import loop, policy
 from .judge import Judge
 from .logs import session_name
+from .routine import HuntWatch, RoutineConfig
 from .rpc import AgentRpc
 from .world import World, name_score, tiles
 
@@ -72,6 +73,7 @@ class Session:
         self.interrupt = asyncio.Event()  # set to cut the current goal short (handover, shutdown)
         self._threat_noted: dict[str, float] = {}
         self.recorder = None  # recorder.Recorder: what the character sees goes into the world store
+        self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}  # all hunts
 
     def seen(self, snap: dict[str, Any]) -> None:
         if self.recorder is None:
@@ -338,9 +340,10 @@ class Session:
 
     async def hunt(self, area: str, minutes: float = 10, min_bandages: int = 10, max_weight_pct: int = 85,
                    log_path: Path | None = None) -> Result:
-        """Go to a hunting area and let Jev fight there until time is up, supplies run low,
-        the bag gets heavy, or nothing shows up for a while. Walks around the spawn when it
-        is quiet."""
+        """Go to a hunting area and let Jev fight there until time is up, or until Jev judges it's
+        time to head back or the spot isn't worth it (routine.py). Code still stops on the floors
+        (dead, out of supplies, a full bag); without Jev, min_bandages and max_weight_pct are the
+        old fixed rules. Walks around the spawn when it is quiet."""
         spawns = self.world.what_spawns(area=area, limit=1) or self.world.what_spawns(near=area, limit=1)
         target = self.resolve(area, None, None)
         if spawns:
@@ -361,40 +364,30 @@ class Session:
         await self.rpc.call("mode", mode="auto")
         stop = asyncio.Event()
         why: list[str] = []
-        quiet_since = [time.monotonic()]
-        patrol_at = [0.0]
         first: dict[str, Any] = {}
         last: dict[str, Any] = {}
+        # When to head back, whether to stay, whether to walk elsewhere in the spawn: Jev's calls.
+        hw = HuntWatch(name, minutes, self.judge, RoutineConfig(min_bandages=min_bandages, max_weight_pct=max_weight_pct),
+                       log=self._log, archetype=self.archetype, radius=radius)
+        asking: list[asyncio.Task] = []
 
         def watch(snap: dict[str, Any]) -> None:
             nonlocal first, last
             first = first or snap
             last = snap
-            p = snap["player"]
-            now = time.monotonic()
-            if p["dead"]:
-                why.append("died")
-            elif p.get("weight_max") and p["weight"] * 100 >= max_weight_pct * p["weight_max"]:
-                why.append("bag is heavy")
-            elif not self.mage(snap) and p["supplies"].get("bandages", 0) < min_bandages:
-                why.append("low on bandages")
-            elif self.mage(snap) and min(p["supplies"].get("reagents", {"x": 0}).values()) < 5:
-                why.append("low on reagents")
+            look = hw.observe(snap)
+            if look.stop:
+                why.append(look.stop)
             elif self.interrupt.is_set():
                 why.append("interrupted")
             elif any(t["kind"] in ("red", "criminal") for t in snap["agent"].get("threats", [])):
                 why.append("a red or criminal player came close")
             note_threats(self.world, snap, self._threat_noted)
             self.seen(snap)
-            hostile = any(m.get("monster") and not m.get("dead") for m in snap["mobiles"])
-            busy = snap["agent"].get("engaged") or snap["agent"].get("looting")
-            if hostile or busy:
-                quiet_since[0] = now
-            elif now - quiet_since[0] > 240:
-                why.append("nothing to fight for 4 minutes")
-            elif now - quiet_since[0] > 20 and now > patrol_at[0] and not (snap["agent"].get("travel") or {}).get("state") == "walking":
+            if look.ask:
+                asking.append(asyncio.get_running_loop().create_task(hw.ask(snap, look.ask)))
+            if look.patrol and not (snap["agent"].get("travel") or {}).get("state") == "walking":
                 # Quiet: wander to another spot of the spawn to find something.
-                patrol_at[0] = now + 25
                 a = random.uniform(0, 6.283)
                 tx, ty = cx + round(radius * 0.7 * math.cos(a)), cy + round(radius * 0.7 * math.sin(a))
                 asyncio.get_running_loop().create_task(self.act("travel", x=tx, y=ty, distance=1))
@@ -405,8 +398,14 @@ class Session:
         began = time.monotonic()
         stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path or self.decisions_log, stop,
                                archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary())
+        for task in asking:
+            task.cancel()  # a question still out when the hunt ends has nothing left to decide
         s = stats.summary(lcfg.price_per_million)["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
+        routine = hw.summary()
+        for k in ("questions", "input_tokens", "cost_usd"):
+            self.routine[k] += routine[k]
+        self.routine["hunt_minutes"] += mins
         p0, p1 = (first or last).get("player", {}), last.get("player", {})
         s0, s1 = p0.get("supplies", {}), p1.get("supplies", {})
         data = {
@@ -423,7 +422,7 @@ class Session:
         session = session_name(self.decisions_log) if self.decisions_log else None
         self.world.add_outcome(name, kit, "kills_per_hour", round(data["kills"] / max(mins / 60, 1e-6), 1), session=session)
         self.world.add_outcome(name, kit, "deaths", data["deaths"], session=session)
-        self.log("hunted", area=name, kit=kit, **data)
+        self.log("hunted", area=name, kit=kit, routine=routine, **data)
         return Result(data["deaths"] == 0, f"hunted {name} for {mins} min: {data['kills']} kills, "
                                            f"stopped because {data['stopped_because']}", data)
 
@@ -431,6 +430,17 @@ class Session:
     def mage(snap: dict[str, Any]) -> bool:
         from .state import archetype_of
         return archetype_of(snap) == "mage"
+
+    def routine_summary(self) -> dict[str, Any]:
+        """Jev's routine questions over all hunts so far, and what they cost an hour of hunting."""
+        return routine_totals(self.routine)
+
+
+def routine_totals(r: dict[str, Any]) -> dict[str, Any]:
+    hours = r["hunt_minutes"] / 60
+    return {"routine_questions": r["questions"], "routine_input_tokens": r["input_tokens"],
+            "routine_cost_usd": round(r["cost_usd"], 5),
+            "routine_cost_per_hunt_hour": round(r["cost_usd"] / hours, 4) if hours else None}
 
 
 def note_threats(world: World, snap: dict[str, Any], noted: dict[str, float], every_s: float = 600) -> None:
