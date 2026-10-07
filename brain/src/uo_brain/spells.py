@@ -22,6 +22,7 @@ ATTACK_SPELLS: dict[str, str] = {
 
 MEDITATION = "Meditation"
 PROTECTION = "Protection"  # stops damage from interrupting the mage's spells (AOS)
+GREATER_HEAL = "Greater Heal"
 
 
 def find(text: str) -> str | None:

@@ -25,6 +25,34 @@ namespace ClassicUO.UnitTests.Agent
             AgentWeapons.TryGetRanged(0x13FF, out _).Should().BeFalse();
         }
 
+        [Theory]
+        [InlineData("kill", "Fight")]
+        [InlineData("follow", "Move")]
+        [InlineData("stay", "Move")]
+        public void Setting_the_pet_on_a_creature_is_fighting_calling_it_back_is_moving(string order, string behaviour)
+        {
+            new AgentAction { Verb = "pet", Kind = order }.Behavior.ToString().Should().Be(behaviour);
+        }
+
+        [Fact]
+        public void A_song_carries_its_targets_and_answers_to_fight()
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse("{\"verb\":\"skill\",\"name\":\"Provocation\",\"targets\":[256,\"0x101\"]}");
+            AgentAction a = AgentAction.FromJson(doc.RootElement);
+            a.Targets.Should().Equal(256u, 0x101u);
+            a.Behavior.ToString().Should().Be("Fight");
+            new AgentAction { Verb = "skill", Name = "Meditation" }.Behavior.ToString().Should().Be("Misc");
+        }
+
+        [Theory]
+        [InlineData((ushort) 0x0EB3, true)]  // lute
+        [InlineData((ushort) 0x0E9C, true)]  // drum
+        [InlineData((ushort) 0x0EFA, false)] // spellbook
+        public void Instruments(ushort graphic, bool instrument)
+        {
+            AgentBard.IsInstrument(graphic).Should().Be(instrument);
+        }
+
         [Fact]
         public void Arrows_and_bolts_are_ammo()
         {

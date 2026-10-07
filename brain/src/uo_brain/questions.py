@@ -35,6 +35,22 @@ ARCHER_ROLE = (
     "healing; choose what the archer does next."
 )
 
+TAMER_ROLE = (
+    "You are deciding for a tamer in the game Ultima Online. The tamer fights by sending its pet, an animal it "
+    "tamed, to attack a creature, while the tamer stays back: it is weak in a fight itself. Its pet is described "
+    "under `you.pet`. A pet that dies is gone for good, so a tamer calls it back before it loses. Bandaging the "
+    "tamer and its pet is done automatically when either is hurt and close, so you do not need to choose healing; "
+    "choose what the tamer does next."
+)
+
+BARD_ROLE = (
+    "You are deciding for a bard in the game Ultima Online. The bard fights with music played on an instrument: "
+    "provocation turns one monster against another so they fight each other, peacemaking calms a monster so it "
+    "stops attacking for a while, and discordance weakens one. Songs can fail, more often against strong "
+    "creatures, and it is weak in a fight itself. Bandages and potions are applied automatically when health is "
+    "low, so you do not need to choose healing; choose what the bard does next."
+)
+
 INTENTS: dict[str, Any] = {
     "fight": {
         "what": "Attack, or keep attacking, one of the hostile creatures.",
@@ -135,12 +151,99 @@ ARCHER_INTENTS: dict[str, Any] = {
 }
 
 
+TAMER_INTENTS: dict[str, Any] = {
+    "fight": {
+        "what": "Send the pet to attack one of the hostile creatures, or keep it attacking.",
+        "when": "The pet is in sight and healthy enough to fight, and a hostile creature is near, or one is attacking "
+                "the tamer or its pet.",
+        "not_for": "When the tamer has no pet in sight.",
+    },
+    "flee": {
+        "what": "Run away from the hostile creatures, calling the pet along.",
+        "when": "Staying would probably get the tamer killed: the tamer itself is being attacked and its health is "
+                "near death or falling fast.",
+        "not_for": "Ordinary fights the pet is winning.",
+    },
+    "leave": {
+        "what": "Get away from this place altogether with the pet: run until the hostile creatures are out of sight, "
+                "and stay away for now.",
+        "when": "A creature far stronger than the pet is here or coming, or the pet is gone, or bandages are nearly "
+                "gone while creatures are still fighting.",
+        "not_for": "Fights the pet is winning, or a single weak creature that is nearly dead.",
+    },
+    "loot": INTENTS["loot"],
+    "seek": {
+        "what": "Walk, with the pet following, towards a hostile creature that is far away, to start the next fight.",
+        "when": "Hostile creatures are around but far off, and the tamer and its pet are healthy.",
+    },
+    "rest": {
+        "what": "Stay put with the pet and wait.",
+        "when": "Nothing needs doing, or the pet should recover health before the next fight.",
+    },
+}
+
+
+MAGE_TAMER = ("It is also a mage: it casts attack spells at the creature its pet fights, from a distance, and "
+              "heals its pet with spells.")
+WARRIOR_MAGE = ("It is also a mage: it can open a fight with an attack spell while a creature is still coming, "
+                "then fights in melee.")
+
+TARGET_GUIDANCE = (
+    "Unless the player's strategy says otherwise: a creature that casts spells hurts from any distance and can "
+    "paralyse, so go for it first, even past closer ones, unless the creature being fought is nearly dead. Otherwise "
+    "prefer the creature already being fought unless another is much more dangerous or much closer, and close, "
+    "weakened creatures over distant ones."
+)
+TAMER_TARGETS = "For a tamer this is the creature to set its pet on; anything attacking the tamer itself comes first. "
+
+BARD_INTENTS: dict[str, Any] = {
+    "fight": {
+        "what": "Use a song on the hostile creatures: incite one against another, calm one, or weaken one.",
+        "when": "Hostile creatures are near and the bard has an instrument.",
+        "not_for": "When the bard has no instrument.",
+    },
+    "flee": {
+        "what": "Run away from the hostile creatures.",
+        "when": "Staying would probably get the bard killed: creatures are attacking it and its health is near death "
+                "or falling fast.",
+        "not_for": "Fights where the creatures are busy with each other or calmed.",
+    },
+    "leave": INTENTS["leave"],
+    "loot": INTENTS["loot"],
+    "seek": {
+        "what": "Walk towards hostile creatures that are far away, to start the next fight.",
+        "when": "Hostile creatures are around but far off, and the bard is healthy.",
+    },
+    "rest": {
+        "what": "Stay put and wait, for example while incited creatures fight each other.",
+        "when": "Nothing needs doing, or the creatures are busy fighting each other.",
+    },
+}
+
+SONG_CHOICES = {
+    "provoke": "Provocation: incite the target to attack another hostile creature, so they fight each other. Best "
+               "with two or more creatures, inciting the strongest against another.",
+    "peace": "Peacemaking: calm the target so it stops attacking for a while. Best when one creature is on the bard "
+             "and nothing else can be set against it.",
+    "discord": "Discordance: weaken the target, lowering its strength and skills. Best before a hard fight with a "
+               "single strong creature.",
+    "none": "Play nothing right now, for example while creatures already fight each other.",
+}
+
+
 def role(sit: Situation) -> str:
-    return MAGE_ROLE if sit.is_mage else ARCHER_ROLE if sit.is_archer else ROLE
+    if sit.archetype == "mage-tamer":
+        return f"{TAMER_ROLE} {MAGE_TAMER}"
+    if sit.is_warrior_mage:
+        return f"{ROLE} {WARRIOR_MAGE}"
+    return MAGE_ROLE if sit.is_mage else ARCHER_ROLE if sit.is_archer else TAMER_ROLE if sit.is_tamer \
+        else BARD_ROLE if sit.is_bard else ROLE
 
 
 def character(sit: Situation) -> str:
-    return "mage" if sit.is_mage else "archer" if sit.is_archer else "warrior"
+    """The word the questions use for the character; a hybrid goes by its main way of fighting."""
+    return "tamer" if sit.is_tamer else "mage" if sit.is_mage else "archer" if sit.is_archer \
+        else "bard" if sit.is_bard else "warrior"
 
 
 def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
@@ -164,7 +267,8 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
         "intent": {
             "type": "choice",
             "instructions": instructions(sit, f"What should the {who} do next?"),
-            "criteria": MAGE_INTENTS if sit.is_mage else ARCHER_INTENTS if sit.is_archer else INTENTS,
+            "criteria": TAMER_INTENTS if sit.is_tamer else MAGE_INTENTS if sit.is_mage
+            else ARCHER_INTENTS if sit.is_archer else BARD_INTENTS if sit.is_bard else INTENTS,
         },
         # A factual risk judgment, so it does not see the strategy; code combines the two.
         "in_danger": {
@@ -200,6 +304,20 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             },
         }
 
+    # A tamer's pet is lost for good if it dies, so whether to call it back is asked on its own.
+    if sit.is_tamer and (reason := pull_back_reason(sit)):
+        qs["pull_back"] = {
+            "type": "noul",
+            "instructions": instructions(
+                sit, "Should the tamer call its pet back now, before the pet dies?", reason=reason),
+            "criteria": {
+                "true": "The pet is losing: its health is falling while it fights something stronger than it, or "
+                        "several creatures at once, and it will die if it stays.",
+                "false": "The pet can still win: its health is holding, or the creature it fights is nearly dead "
+                         "or weak.",
+            },
+        }
+
     if sit.targets:
         criteria = {h.id: describe_hostile(h.info, who) for h in sit.targets}
         criteria["none"] = "None of these creatures should be attacked."
@@ -208,25 +326,38 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             "instructions": instructions(
                 sit,
                 f"If the {who} fights, which hostile creature in `hostile_creatures` should they attack?",
-                guidance="Unless the player's strategy says otherwise: a creature that casts spells hurts from any "
-                         "distance and can paralyse, so go for it first, even past closer ones, unless the creature "
-                         "being fought is nearly dead. Otherwise prefer the creature already being fought unless "
-                         "another is much more dangerous or much closer, and close, weakened creatures over distant "
-                         "ones.",
+                guidance=(TAMER_TARGETS if sit.is_tamer else "") + TARGET_GUIDANCE,
             ),
             "criteria": criteria,
         }
 
+    # A bard's song, asked alongside the target; provocation also needs whom the target attacks.
+    if sit.is_bard and sit.targets:
+        qs["song"] = {
+            "type": "choice",
+            "instructions": instructions(sit, "Which song should the bard play at the creature it targets?"),
+            "criteria": SONG_CHOICES,
+        }
+        if len(sit.targets) >= 2:
+            qs["onto"] = {
+                "type": "choice",
+                "instructions": instructions(
+                    sit, "If the bard incites one creature against another, which creature in `hostile_creatures` "
+                         "should be attacked by it?",
+                    guidance="The one that would otherwise hurt the bard most, so the two keep each other busy."),
+                "criteria": {h.id: describe_hostile(h.info, who) for h in sit.targets},
+            }
+
     # Which spell, asked alongside the target so a cast needs no second round trip. The
     # question says where the fight stands, so "open with ..." strategies have a hook.
-    if sit.is_mage and sit.targets and sit.spells:
+    if sit.casts and sit.targets and sit.spells:
         focus = next((h for h in sit.targets if h.info["your_current_target"]), None) \
             or min(sit.targets, key=lambda h: h.distance)
         if focus.casts == 0:
-            question = (f"The mage is about to open the fight against {focus.name} ({focus.info['health']}): no spell "
+            question = (f"The {who} is about to open the fight against {focus.name} ({focus.info['health']}): no spell "
                         "has been cast at it yet. Which spell from `you.attack_spells_available` should open the fight?")
         else:
-            question = (f"The mage has already cast {focus.casts} spell{'s' if focus.casts > 1 else ''} at "
+            question = (f"The {who} has already cast {focus.casts} spell{'s' if focus.casts > 1 else ''} at "
                         f"{focus.name}, which is now {focus.info['health']}. Which spell from "
                         "`you.attack_spells_available` should it cast at it next?")
         criteria = {c.id: f"{c.name}: {c.info['effect']} ({c.info['mana']} mana)" for c in sit.spells}
@@ -268,6 +399,24 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
     return qs
 
 
+def pull_back_reason(sit: Situation) -> str:
+    """Why the pet might need calling back, or "" when it is fine (or not fighting)."""
+    pet = sit.pet
+    fighting = sit.agent.get("pet_target", 0)
+    if not pet or not fighting:
+        return ""
+    foe = next((h for h in sit.hostiles if h.serial == fighting), None)
+    on_it = [h for h in sit.hostiles if h.distance <= 12]
+    if sit.pet_pct < 60:
+        return f"The pet is {sit.state['you']['pet']['health']}" + (f", fighting {foe.name} ({foe.info['health']})"
+                                                                     if foe else "") + "."
+    if foe and str(foe.info.get("strength", "")).startswith(("far stronger", "stronger")):
+        return f"The pet is fighting {foe.name}, {foe.info['strength']}."
+    if len(on_it) >= 3:
+        return f"{len(on_it)} creatures are near the fight."
+    return ""
+
+
 def leave_reason(sit: Situation) -> str:
     """Why leaving might be right, in words, or "" when there is no reason to ask."""
     strong = [h for h in sit.hostiles if str(h.info.get("strength", "")).startswith("far stronger") and h.distance <= 12]
@@ -294,6 +443,8 @@ def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
         parts.append("within spell range" if info["in_spell_range"] else "out of spell range")
     if "in_shooting_range" in info:
         parts.append("within shooting range" if info["in_shooting_range"] else "out of shooting range")
+    if info.get("your_pet_is_fighting_it"):
+        parts.append("the pet is fighting it")
     if info.get("your_current_target"):
         parts.append(f"the {who} is already fighting it")
     if info.get("the_players_target"):

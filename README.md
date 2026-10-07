@@ -137,7 +137,9 @@ The auto-mode hand-back was verified with real mouse and keyboard events; see [R
 ### Mages
 
 The agent plays a mage when the character has a spellbook and its Magery is at least as
-high as any weapon skill, or with `uo-brain run --archetype mage`.
+high as any weapon skill, or with `uo-brain run --archetype mage`. The other archetypes,
+told apart the same way from the skills and what is in hand, follow below: archers, tamers,
+bards and two hybrids.
 
 - **Range:** it engages from up to 7 tiles away and casts Jev's pick from the attack spells it can cast right now: Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze.
 - **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; code picks the strongest castable spell when Jev isn't sure.
@@ -147,6 +149,41 @@ high as any weapon skill, or with `uo-brain run --archetype mage`.
 - **Meditation:** it meditates while resting with mana below 80%.
 - **Seeing inside:** the server only says what's in a spellbook or a bag once it's opened, so the agent opens the spellbook and any unopened bags in the backpack once, and closes them again.
 - **Snapshot:** mana, reagent counts, every spell in the book with its cost and why it can't be cast ("mana", "reagents"), and the cast timing.
+
+### Archers
+
+A character with a bow or crossbow in hand plays as an archer (`--archetype archer`).
+
+- **Range:** it engages from up to 8 tiles, or the weapon's own range if shorter (a bow reaches 10, a crossbow 8, a repeating crossbow 7), and the client keeps that distance while it shoots.
+- **Ammunition:** the snapshot counts arrows and bolts and says which the weapon in hand needs. With none left it can't fight, so fighting is ruled out and it leaves. At 25 or fewer the supplies read "running low", and an empty quiver ends a hunt. A hit leaves some arrows in the monster's pack, so the client takes arrows and bolts from corpses as it does gold and bandages.
+- **Kiting:** with two or more monsters in melee reach it steps back 5 tiles, once per shot fired (counted by arrows used), since a bow fires only once the archer has stood still for a moment.
+- **Restocking:** the planner knows an archer wants 150 arrows or bolts, and `do buy arrow 200` finds a bowyer or provisioner in the world store.
+
+### Tamers
+
+With Animal Taming of 50 or more (and higher than any weapon skill), the character plays as a tamer: its pet fights and it stays back.
+
+- **Finding the pet:** a pet looks like any other blue creature; only its status says the owner may rename it. The client asks the server for the status of each non-hostile creature in sight, once a minute, and lists the pets in the snapshot with their health.
+- **Orders:** the `pet` verb says what a player would: `all kill` (the client answers the target cursor with the creature), `all follow me`, `all guard me`, `all stay`. The brain only sets a pet on monsters.
+- **Fighting:** Jev picks the creature to set the pet on; anything attacking the tamer itself comes first.
+- **Looking after the pet:** below 70% health, the tamer bandages it when it's within 2 tiles (Veterinary), or walks over when it's further off. It also walks back to a pet more than 7 tiles away, since a pet out of sight is lost.
+- **Calling it back:** when the pet is losing, Jev is asked on its own whether to call it back ("the pet is badly wounded (45%), fighting an orc"). A yes at 0.6 or more, or the pet under 20%, sends `all follow me` and runs 8 tiles. When leaving, the tamer goes in short legs, calls the pet every few seconds and waits for it to catch up. Without a pet in sight it can't fight, so it leaves.
+- **In combat assist** it says "call your pet back, it is losing" instead of moving.
+
+### Bards
+
+With Musicianship and a bard skill of 50 or more, the character plays as a bard and fights with songs (`--archetype bard`).
+
+- **The songs:** provocation sets one monster on another; peacemaking calms one (aimed at the bard itself, it calms everyone around); discordance weakens one. Each is a skill use followed by target cursors. The `skill` verb takes `targets`, and the client answers each cursor in turn. If the server first asks "What instrument shall you play?", the client answers with an instrument from the pack.
+- **Choosing:** Jev picks the song and the creature. For provocation it also picks whom the incited creature should attack. When Jev isn't sure, code incites the strongest against another if there are two, calms one that is close, and otherwise weakens it.
+- **Pacing:** one song every 6 seconds, and a creature a song has just hit is left alone for 20.
+- **No instrument, no fight:** the bard leaves instead.
+
+### Hybrids
+
+- **Mage-tamer** (Magery and Animal Taming both 50 or more, with a spellbook): sets the pet on the creature, casts at it from range as a mage does, and heals the pet with Greater Heal from up to 10 tiles away. It asks both the spell and the pull-back questions.
+- **Warrior-mage** (Magery and a weapon skill both 50 or more, a spellbook, a melee weapon in hand): opens with one spell on a creature that is still 2 to 7 tiles off, then fights in melee. ModernUO, like other RunUO-family servers, drops the weapon into the pack when a spell starts, so after each cast the client lifts it and puts it back on, as an assistant's arm macro does.
+- **Not done:** Necromancy and Chivalry, which only AOS-era shards have.
 
 ### Strategy, in your own words
 
@@ -541,14 +578,19 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO and work
 - **`[AgentGo [lane | x y]`:** go to the test field in Felucca, Green Acres (5445, 1153). It has no guards and no spawns. Lanes 1–9 are copies 60 tiles apart, so several test characters can run at once. With `x y`, go to that tile instead (for travel tests in town).
 - **`[AgentKit`:** warrior template. Swords, Tactics, Healing and Anatomy at 80, katana, ringmail, 200 bandages, 5 heal and 5 cure potions.
 - **`[AgentKit mage`:** mage template. Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60. A full spellbook, a bag of 100 of each reagent, leather armour, and 5 heal and 5 cure potions.
+- **`[AgentKit archer [bow|crossbow|heavycrossbow]`:** Archery, Tactics, Healing and Anatomy 80; dexterity 85; the bow (or crossbow) with 200 arrows (or bolts), studded leather, bandages and potions.
+- **`[AgentKit tamer [bear|wolf|hound|drake]`:** Animal Taming and Animal Lore 90, Veterinary 90, Healing and Anatomy 70, no weapon, and a tamed pet following (a grizzly bear unless another is named). Each kit replaces the last kit's pet.
+- **`[AgentKit bard`:** Musicianship, Provocation, Peacemaking and Discordance 90, Healing and Anatomy 60, a lute and no weapon.
+- **`[AgentKit warriormage`, `[AgentKit magetamer`:** the warrior kit plus Magery 80, a spellbook and reagents; the mage kit plus Animal Taming and Lore 85, Veterinary 60, bandages and a pet.
 - **`[AgentArena [count] [kind]`:** spawns monsters in a ring 6–10 tiles out (orc, ratman, headless one and mongbat by default).
 - **`[AgentReset`:** resurrects and heals you, cancels pending spawns, and removes the arena and the corpses around you.
 - **`[AgentSpawn <kind> [count] [distance] [direction] [delay]`:** spawns creatures of a kind (`orc`, `ratman`, or any ModernUO type such as `OgreLord` or `OrcishMage`) at a distance and compass direction, optionally after a delay. They belong to your arena.
-- **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]`:** sets your supplies; `gold` and `loot` add coins and sets of the loot items below to your pack.
+- **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [arrows N] [bolts N] [gold N] [loot N]`:** sets your supplies; `gold` and `loot` add coins and sets of the loot items below to your pack.
 - **`[AgentLoot [distance] [direction]`:** lays an orc's corpse holding three valuables (diamonds, a gold ring, a magic longsword) and five pieces of junk (bones, a head, a shirt, kindling, raw ribs).
 - **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall along a line, for stuck tests.
 - **`[AgentRestock [amount]`:** stocks the vendors within 12 tiles with at least that many of everything.
 - **`[AgentRunes`:** a runebook full of charges marked to the test field, the West Britain bank, the Britain graveyard and the Britain healer, and loose runes to the first two. (Green Acres itself can't be recalled out of.)
+- **`[AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore`:** disruptions at a place, for unattended runs. `despawn` empties and stops the spawners there (20 minutes by default); `strong` spawns creatures there; `sellout` empties the vendors' stock of an item; `restore` undoes the first and last.
 
 Accounts are created on first login. `admin`/`admin` is the owner.
 
@@ -573,15 +615,15 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
 - **`do travel|bank|buy|sell|hunt|rest …`:** one session goal (above); uses the world store.
 - **`session "GOAL" [--hours]`:** the planner towards a goal, from the command line.
-- **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|world|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
+- **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|archetypes|world|all|NAME,…`, `--judges heuristic,jev,jev+<template>` (each optionally `/nokite`, for no stepping back), `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`review LOG [--accept N…] [--again] [--digest] [--planner-model M]`:** the planner model proposes strategy lines from a log, with the evidence ([above](#after-action-review)); `--accept` adds saved ones to the character's strategy, the only part that connects to the game.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
 - **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`, `outcomes LOG… [--area A]` (record what each hunt in the logs gave, per area and kit; importing a log again replaces its rows).
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
-- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around); the snapshot's `travel_items` lists marked runes and runebook entries, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `goal {text|clear|pause|template}`, `goal_status {step, why}` (from the planner, for the panel), `templates {kind: "goal"}`, `command`, `capture {path}`.
-- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, `hint {text}` (text above your head, client-side only, never refused), `travel {x, y, distance}`, `recall {target: rune or runebook, distance: entry, kind: spell|charge|gate}`, `bank {deposit, withdraw}`, `buy {target, items}` and `sell {target, items}` (`items` like `"bandage:50"` or `"loot"`).
+- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, whether each corpse is a monster's, `player.ranged` (kind, ammunition and range of a bow or crossbow in hand), arrows, bolts and whether an instrument is in the pack under `player.supplies`, `pets` (the character's pets in sight, with health), and `agent.pet_order`/`pet_target`), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around); the snapshot's `travel_items` lists marked runes and runebook entries, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `goal {text|clear|pause|template}`, `goal_status {step, why}` (from the planner, for the panel), `templates {kind: "goal"}`, `command`, `capture {path}`.
+- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name, targets}` (with `targets`, a bard's song: the client answers each target cursor in turn, and the instrument prompt), `pet {kind: kill|follow|guard|stay, target}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, `hint {text}` (text above your head, client-side only, never refused), `travel {x, y, distance}`, `recall {target: rune or runebook, distance: entry, kind: spell|charge|gate}`, `bank {deposit, withdraw}`, `buy {target, items}` and `sell {target, items}` (`items` like `"bandage:50"` or `"loot"`).
 - **Cast authority:** healing spells count as `heal`, Cure as `cure`, attack spells as `fight`, anything else as `misc`.
 - **Authority:** an act request is subject to authority unless it has `"source": "manual"`. In combat assist, an attack or harmful cast at a creature the engage setting doesn't allow is refused ("not your target").
 
@@ -738,7 +780,7 @@ Not yet tried on UO Renaissance itself, which needs a real account.
 
 | | |
 |---|---|
-| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
+| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`AgentWeapons` (bows and crossbows)<br>`AgentPets` (finding pets, pet orders)<br>`AgentBard` (songs and their target cursors)<br>`AgentRearm` (a warrior-mage's weapon back after a cast)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
 | `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`routine.py` (Jev's routine calls inside a hunt: head back, stay, walk elsewhere)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`facts.py` (Jev picks the world facts for fights and re-ranks the planner's queries)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
@@ -751,6 +793,10 @@ Known limits:
 - Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does, under both rule sets), and from the English text otherwise. They have not yet been checked against what UO Renaissance itself sends.
 - On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
+- Archers don't pick up arrows that missed and fell on the ground (before Samurai Empire servers drop them there; from it on they come back on their own once the archer stops fighting).
+- A tamer knows its pet only while it's in sight: a pet left behind out of sight is lost to the agent even if it lives. Taming new pets isn't done.
+- The client can't see whom a pet is actually fighting, only whom it was told to: a pet that switched to another attacker still shows its order.
+- Bards don't use peacemaking on themselves (calming everyone), and songs aren't scored for difficulty: Jev only knows a song "can fail, more often against strong creatures".
 - Jev's routine hunt calls have only been checked offline, on 10 hand-made situations; the yes and no thresholds (0.65, 0.35) aren't tuned on live hunts yet.
 - World facts for fights are shortlisted by area and keyword: a fact stored under another area name, or that names a creature differently, can't be picked. The fact picker has unit tests and one smoke run, not yet a live benchmark.
 

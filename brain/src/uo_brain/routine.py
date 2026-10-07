@@ -15,7 +15,8 @@ Never more often than every 10 s, one question at a time, and never in the fight
 the question runs as its own task and the hunt reads the verdict on a later snapshot.
 
 Code keeps the floors that need no judgment: death, no bandages and no heal potions left,
-no reagents for any attack spell, no arrows (or bolts) for the bow in hand, a full bag, and
+no reagents for any attack spell, no arrows (or bolts) for the bow in hand, a tamer's pet
+gone (dead or out of sight), a full bag, and
 10 minutes without a creature. A "head back" verdict waits up to 30 s for the fight at hand
 to finish. A confident "walk elsewhere" outweighs doubts about the spot. When Jev is unsure
 (an answer between 0.35 and 0.65) twice in a row, the hunt ends and the planner decides,
@@ -115,7 +116,7 @@ class HuntWatch:
     # ------------------------------------------------------------ snapshots
 
     def mage(self, snap: dict[str, Any]) -> bool:
-        return (self.archetype or archetype_of(snap)) == "mage"
+        return (self.archetype or archetype_of(snap)) in ("mage", "mage-tamer")
 
     def observe(self, snap: dict[str, Any]) -> Look:
         now = self.clock()
@@ -184,6 +185,9 @@ class HuntWatch:
             return "out of bandages and heal potions"
         if (a := ammo(p)) and a[1] == 0:
             return f"out of {a[0]}"
+        if self.first and (self.first.get("pets") or []) and not (snap.get("pets") or []) \
+                and (p.get("skills") or {}).get("Animal Taming", 0) >= 50:
+            return "the pet is gone"
         if self.jev and self.failed < 2 and quiet_s >= self.cfg.quiet_floor_s:
             return f"nothing to fight for {round(quiet_s / 60)} minutes"
         return None

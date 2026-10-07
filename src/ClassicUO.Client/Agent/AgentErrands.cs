@@ -606,7 +606,7 @@ namespace ClassicUO.Agent
 
             if (g == AgentController.BANDAGE_GRAPHIC || g >= 0x0F06 && g <= 0x0F0D || g == AgentSpells.SPELLBOOK_GRAPHIC
                 || g == 0x22C5 /* runebook */ || g >= 0x1F14 && g <= 0x1F17 /* recall runes */ || g >= 0x1F2D && g <= 0x1F72 /* scrolls */
-                || AgentWeapons.IsAmmo(g))
+                || AgentWeapons.IsAmmo(g) || AgentBard.IsInstrument(g))
             {
                 return false;
             }

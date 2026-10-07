@@ -19,7 +19,8 @@ namespace ClassicUO.Agent
         {
             "Swordsmanship", "Mace Fighting", "Fencing", "Archery", "Wrestling", "Tactics",
             "Anatomy", "Healing", "Parrying", "Focus", "Resisting Spells", "Magery",
-            "Evaluating Intelligence", "Meditation"
+            "Evaluating Intelligence", "Meditation", "Animal Taming", "Animal Lore", "Veterinary",
+            "Musicianship", "Provocation", "Peacemaking", "Discordance"
         };
 
         private static readonly AgentJournal.Entry[] _journalBuf = new AgentJournal.Entry[64];
@@ -47,6 +48,7 @@ namespace ClassicUO.Agent
             PlayerMobile p = world.Player;
             WritePlayer(w, world, p, agent);
             WriteMobiles(w, world, p, radius);
+            WritePets(w, world, p);
             WriteCorpses(w, world, radius);
             WriteJournal(w, agent.Journal, journalSince);
             WriteMagic(w, p, agent);
@@ -110,6 +112,7 @@ namespace ClassicUO.Agent
             w.WriteNumber("refresh_potions", agent.CountByGraphic(AgentController.REFRESH_POTION_GRAPHIC));
             w.WriteNumber("arrows", agent.CountByGraphic(AgentWeapons.ARROW_GRAPHIC));
             w.WriteNumber("bolts", agent.CountByGraphic(AgentWeapons.BOLT_GRAPHIC));
+            w.WriteBoolean("instrument", agent.FindInstrument() != null);
             w.WriteStartObject("reagents");
 
             foreach ((_, string name, ushort graphic) in AgentSpells.ReagentGraphics)
@@ -204,6 +207,38 @@ namespace ClassicUO.Agent
                 {
                     w.WriteString("threat", threat);
                 }
+                w.WriteEndObject();
+            }
+
+            w.WriteEndArray();
+        }
+
+        // The player's pets in sight, with their health and what they were last told.
+        private static void WritePets(Utf8JsonWriter w, World world, PlayerMobile p)
+        {
+            w.WriteStartArray("pets");
+
+            foreach (Mobile m in world.Agent.Pets())
+            {
+                w.WriteStartObject();
+                w.WriteNumber("serial", m.Serial);
+                w.WriteString("name", m.Name?.Trim() ?? string.Empty);
+                w.WriteNumber("body", m.Graphic);
+
+                if (m.HitsMax > 0)
+                {
+                    w.WriteNumber("hits_pct", Math.Clamp(m.Hits * 100 / m.HitsMax, 0, 100));
+                }
+                else
+                {
+                    w.WriteNull("hits_pct");
+                }
+
+                w.WriteBoolean("poisoned", m.IsPoisoned);
+                w.WriteNumber("distance", m.Distance);
+                w.WriteNumber("dx", m.X - p.X);
+                w.WriteNumber("dy", m.Y - p.Y);
+                w.WriteString("dir", Compass(m.X - p.X, m.Y - p.Y));
                 w.WriteEndObject();
             }
 
@@ -516,6 +551,8 @@ namespace ClassicUO.Agent
             w.WriteBoolean("fleeing", agent.Fleeing);
             w.WriteNumber("engaged", agent.Engaged);
             w.WriteNumber("engaged_range", agent.EngagedRange);
+            w.WriteString("pet_order", agent.PetOrder);
+            w.WriteNumber("pet_target", agent.PetOrderTarget);
             w.WriteString("casting", agent.CastingSpell);
             w.WriteNumber("cast_ready_ms", agent.CastReadyInMs);
             w.WriteNumber("looting", agent.LootCorpse);
@@ -593,6 +630,9 @@ namespace ClassicUO.Agent
             w.WriteNumber("spell_heals", s.SpellHeals);
             w.WriteNumber("threats", s.Threats);
             w.WriteNumber("kites", s.Kites);
+            w.WriteNumber("pet_orders", s.PetOrders);
+            w.WriteNumber("songs", s.Songs);
+            w.WriteNumber("rearms", s.Rearms);
             w.WriteNumber("cliloc_messages", s.ClilocMessages);
             w.WriteNumber("text_messages", s.TextMessages);
             w.WriteEndObject();

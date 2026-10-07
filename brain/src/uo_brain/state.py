@@ -14,6 +14,8 @@ from .spells import ATTACK_SPELLS, mana_words
 
 SPELL_RANGE = 10  # tiles; ModernUO's magery range from Mondain's Legacy on
 MELEE_SKILLS = ("Swordsmanship", "Mace Fighting", "Fencing", "Archery")
+SONGS = ("Provocation", "Peacemaking", "Discordance")
+CASTERS = ("mage", "mage-tamer", "warrior-mage")  # archetypes that cast attack spells
 
 
 # Body graphic -> what the creature is. Monsters often carry personal names
@@ -117,11 +119,40 @@ class Situation:
 
     @property
     def is_mage(self) -> bool:
-        return self.archetype == "mage"
+        """Fights with spells from a distance (a mage, or a mage-tamer behind its pet)."""
+        return self.archetype in ("mage", "mage-tamer")
+
+    @property
+    def casts(self) -> bool:
+        """Has attack spells to choose from: the mages, and a warrior-mage opening a fight."""
+        return self.archetype in CASTERS
+
+    @property
+    def is_warrior_mage(self) -> bool:
+        return self.archetype == "warrior-mage"
 
     @property
     def is_archer(self) -> bool:
         return self.archetype == "archer"
+
+    @property
+    def is_tamer(self) -> bool:
+        return self.archetype in ("tamer", "mage-tamer")
+
+    @property
+    def is_bard(self) -> bool:
+        return self.archetype == "bard"
+
+    @property
+    def pet(self) -> dict[str, Any] | None:
+        """The nearest of the character's pets in sight (the snapshot's `pets`), or None."""
+        pets = self.raw.get("pets") or []
+        return pets[0] if pets else None
+
+    @property
+    def pet_pct(self) -> int:
+        pet = self.pet
+        return 100 if not pet or pet.get("hits_pct") is None else pet["hits_pct"]
 
     @property
     def ranged(self) -> dict[str, Any]:
@@ -149,6 +180,9 @@ class Situation:
     def hostile(self, cid: str) -> Candidate | None:
         return next((c for c in self.hostiles if c.id == cid), None)
 
+    def hostile_by_serial(self, serial: int) -> Candidate | None:
+        return next((c for c in self.hostiles if c.serial == serial), None)
+
     def corpse(self, cid: str) -> Candidate | None:
         return next((c for c in self.corpses if c.id == cid), None)
 
@@ -166,9 +200,11 @@ class Situation:
             self.agent.get("engaged"),
             # A mage re-decides when mana crosses a band. Its next spell is queued in the
             # client, so the moment a cast becomes possible needs no new decision.
-            mana_words(self.mana_pct) if self.is_mage else None,
+            mana_words(self.mana_pct) if self.casts else None,
             # An archer when its ammunition runs low or out.
             ammo_band(self.ammo) if self.is_archer else None,
+            # A tamer when its pet's health changes band, or the pet is lost.
+            (bool(self.pet), health_words(self.pet_pct)) if self.is_tamer else None,
         )
 
 
@@ -180,12 +216,27 @@ def ammo_band(n: int) -> str:
 
 
 def archetype_of(snapshot: dict[str, Any]) -> str:
-    """A mage has a spellbook and Magery at least as high as any weapon skill; an archer has a
-    bow or crossbow in hand."""
-    skills = snapshot["player"].get("skills", {})
+    """From the skills and what is in hand. With a spellbook and Magery 50 or more: a mage-tamer
+    if Animal Taming is 50 too, a warrior-mage with a melee weapon in hand and a weapon skill of
+    50, else a mage if Magery is at least as high as any weapon skill. Then a tamer, a bard, an
+    archer (a bow or crossbow in hand) or a warrior."""
+    p = snapshot["player"]
+    skills = p.get("skills", {})
     magery = skills.get("Magery", 0)
-    if snapshot.get("magic") and magery >= 50 and magery >= max((skills.get(s, 0) for s in MELEE_SKILLS), default=0):
-        return "mage"
+    weapon_skill = max((skills.get(s, 0) for s in MELEE_SKILLS), default=0)
+    taming = skills.get("Animal Taming", 0)
+    if snapshot.get("magic") and magery >= 50:
+        if taming >= 50:
+            return "mage-tamer"
+        if weapon_skill >= 50 and p.get("weapon") and not p.get("ranged"):
+            return "warrior-mage"
+        if magery >= weapon_skill:
+            return "mage"
+    if taming >= 50 and taming >= max((skills.get(s, 0) for s in MELEE_SKILLS), default=0):
+        return "tamer"
+    song = max((skills.get(s, 0) for s in SONGS), default=0)
+    if skills.get("Musicianship", 0) >= 50 and song >= 50 and song >= max((skills.get(s, 0) for s in MELEE_SKILLS), default=0):
+        return "bard"
     if snapshot["player"].get("ranged"):
         return "archer"
     return "warrior"
@@ -197,8 +248,10 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     """bestiary (World.bestiary): body -> creature stats, to say how strong each hostile is."""
     p = snapshot["player"]
     archetype = archetype or archetype_of(snapshot)
-    mage = archetype == "mage"
+    mage = archetype in CASTERS
     ranged = (p.get("ranged") or {}) if archetype == "archer" else {}
+    tamer = archetype in ("tamer", "mage-tamer")
+    pet_target = snapshot["agent"].get("pet_target", 0) if tamer else 0
     casts_at = casts_at or {}
     hp_pct = round(100 * p["hits"] / p["hits_max"]) if p.get("hits_max") else 100
     mana_pct = round(100 * p["mana"] / p["mana_max"]) if p.get("mana_max") else 100
@@ -245,12 +298,16 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                     (engage == "defend" and info["attacking_you"])
             if ranged:
                 info["in_shooting_range"] = m["distance"] <= ranged.get("range", 10)
+            if tamer:
+                info["your_pet_is_fighting_it"] = m["serial"] == pet_target
             if mage:
                 info["in_spell_range"] = m["distance"] <= SPELL_RANGE
                 n = casts_at.get(m["serial"], 0)
                 info["your_spells_at_it"] = "none yet" if n == 0 else f"{n} so far"
             hostiles.append(Candidate(cid, m["serial"], info["name"], m["distance"], info, m.get("hits_pct"),
                                       casts_at.get(m["serial"], 0), allowed, known["hits"] if known else 0))
+        elif m.get("pet") and tamer:
+            continue  # a tamer's own pets are described under `you`
         elif len(others) < 5:
             # Other players go in by what they are, never by name.
             if m.get("threat"):
@@ -324,10 +381,32 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
             you["supplies"] = f"nearly gone: no {what} left, so the {ranged.get('kind', 'bow')} cannot shoot"
         elif n <= AMMO_LOW and not you["supplies"].startswith("nearly gone"):
             you["supplies"] = f"running low: {n} {what}, {bandages} bandages and {potions} heal potions left"
-    if mage:
+    if archetype == "bard":
+        you["weapon"] = "music: provocation, peacemaking and discordance (the bard is weak in a fight itself)"
+        you["instrument"] = "in the pack" if supplies.get("instrument") else "none: no songs without one"
+    if tamer:
+        pets = snapshot.get("pets") or []
+        you["weapon"] = "its pet (the tamer is weak in a fight itself)"
+        if pets:
+            pet = pets[0]
+            kind = BODY_KINDS.get(pet.get("body", 0))
+            name = pet.get("name") or "the pet"
+            if kind and kind not in name.lower():
+                name = f"{name} (a {kind})" if kind[0] not in "aeiou" else f"{name} (an {kind})"
+            fighting = next((h.name for h in hostiles if h.serial == pet_target), "nothing")
+            you["pet"] = {"name": name, "health": f"{health_words(pet.get('hits_pct'))} ({pet.get('hits_pct')}%)",
+                          "distance": distance_words(pet["distance"]), "fighting": fighting}
+        else:
+            you["pet"] = "none in sight: without its pet the tamer cannot fight"
+    if archetype == "mage":
         del you["bandages_left"]
         you["supplies"] = "plenty" if potions > 1 else f"{potions} heal potions left"
         you["weapon"] = "spells (weak in melee)"
+    elif archetype == "mage-tamer":
+        you["weapon"] = "its pet, and spells (the tamer is weak in a fight itself)"
+    elif archetype == "warrior-mage":
+        you["weapon"] = f"{you['weapon']}, and spells to open a fight"
+    if mage:
         you["mana"] = f"{mana_words(mana_pct)} ({mana_pct}%)"
         you["casting_now"] = magic.get("casting") or "nothing"
         ready_ms = magic.get("cast_ready_ms", 0)

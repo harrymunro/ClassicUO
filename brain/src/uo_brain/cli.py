@@ -178,7 +178,7 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--model", help="model id (default: ~typesafe/jev-latest on OpenRouter, jev-latest direct)")
     p.add_argument("--mode", choices=["keep", "off", "assist", "auto"], default="keep",
                    help="set the client's agent mode first (default: leave as is)")
-    p.add_argument("--archetype", choices=["auto", "warrior", "mage", "archer"], default="auto",
+    p.add_argument("--archetype", choices=["auto", "warrior", "mage", "archer", "tamer", "bard"], default="auto",
                    help="how to play the character (default: tell from its skills)")
     p.add_argument("--duration", type=float, help="stop after this many seconds")
     p.add_argument("--strategy", type=Path, metavar="FILE", help="load this Markdown strategy into the character first")

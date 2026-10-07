@@ -33,6 +33,9 @@ namespace ClassicUO.Agent
         // (the player, the CLI, an accepted suggestion) run as asked.
         public bool Manual;
 
+        // A skill's targets, answered to its target cursors in order (provocation asks for two).
+        public uint[] Targets = System.Array.Empty<uint>();
+
         public AgentBehavior Behavior
         {
             get
@@ -49,6 +52,14 @@ namespace ClassicUO.Agent
                     case "attack":
                     case "war_mode":
                         return AgentBehavior.Fight;
+
+                    // A bard's songs are aimed at monsters, so they answer to fight.
+                    case "skill":
+                        return AgentBard.IsSong(Name) ? AgentBehavior.Fight : AgentBehavior.Misc;
+
+                    // Setting the pet on a creature is fighting; calling it back is moving.
+                    case "pet":
+                        return Kind == "kill" ? AgentBehavior.Fight : AgentBehavior.Move;
 
                     // Healing spells answer to the same authority as bandages and potions;
                     // attack spells to fight.
@@ -108,6 +119,17 @@ namespace ClassicUO.Agent
                     case "deposit": a.Deposit = v.GetString() ?? string.Empty; break;
                     case "withdraw": a.Withdraw = v.GetString() ?? string.Empty; break;
                     case "items": a.Items = v.GetString() ?? string.Empty; break;
+                    case "targets" when v.ValueKind == JsonValueKind.Array:
+                        var targets = new System.Collections.Generic.List<uint>();
+
+                        foreach (JsonElement t in v.EnumerateArray())
+                        {
+                            targets.Add(ReadSerial(t));
+                        }
+
+                        a.Targets = targets.ToArray();
+
+                        break;
                     case "source": a.Manual = v.GetString() == "manual"; break;
                 }
             }
@@ -150,6 +172,7 @@ namespace ClassicUO.Agent
                 case "walk_to": return $"walk to {X},{Y}";
                 case "travel": return $"travel to {X},{Y}";
                 case "kite": return "step back";
+                case "pet": return Kind == "kill" ? $"set the pet on {target}" : Kind == "follow" ? "call the pet back" : $"pet: {Kind}";
                 case "move": return $"move {Direction}";
                 case "war_mode": return On ? "war mode on" : "peace mode";
                 case "say": return $"say \"{Text}\"";
@@ -158,7 +181,8 @@ namespace ClassicUO.Agent
                     string spell = AgentSpells.Find(Spell)?.Name ?? Spell;
 
                     return Target == 0 ? $"cast {spell}" : Target == uint.MaxValue ? $"cast {spell} on self" : $"cast {spell} at {target}";
-                case "skill": return $"use {Name}";
+                case "skill": return Targets.Length == 0 ? $"use {Name}" : Targets.Length == 1 ? $"{Name} on {NameOf(world, Targets[0])}"
+                    : $"{Name}: {NameOf(world, Targets[0])} at {NameOf(world, Targets[1])}";
                 case "bank": return "bank" + (Deposit.Length != 0 ? $": deposit {Deposit}" : "") + (Withdraw.Length != 0 ? $", withdraw {Withdraw}" : "");
                 case "buy": return $"buy {Items}";
                 case "sell": return $"sell {Items}";

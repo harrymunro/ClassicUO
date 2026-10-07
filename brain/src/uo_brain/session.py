@@ -435,7 +435,7 @@ class Session:
     @staticmethod
     def mage(snap: dict[str, Any]) -> bool:
         from .state import archetype_of
-        return archetype_of(snap) == "mage"
+        return archetype_of(snap) in ("mage", "mage-tamer")
 
     def routine_summary(self) -> dict[str, Any]:
         """Jev's routine questions over all hunts so far, and what they cost an hour of hunting."""

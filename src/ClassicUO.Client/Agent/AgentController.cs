@@ -23,7 +23,7 @@ namespace ClassicUO.Agent
     // per-behaviour authority that decides whether a brain action runs, is suggested
     // to the player or is refused, and pausing when the player takes the controls.
     // Choosing *what* to do is left to the brain over RPC.
-    internal sealed class AgentController
+    internal sealed partial class AgentController
     {
         public const ushort BANDAGE_GRAPHIC = 0x0E21;
         public const ushort HEAL_POTION_GRAPHIC = 0x0F0C;
@@ -536,6 +536,11 @@ namespace ClassicUO.Agent
 
                     break;
 
+                case AgentMessage.InstrumentPrompt:
+                    _instrumentAsked = true;
+
+                    break;
+
                 case AgentMessage.BandageEnded:
                     _bandagingUntil = 0;
 
@@ -581,7 +586,10 @@ namespace ClassicUO.Agent
             AgentBrain.Update(this);
             UpdateThreats(now);
             UpdateNames(now);
+            UpdatePets(now);
+            UpdateSong(now);
             UpdateCast(now);
+            UpdateRearm(now);
 
             if (Mode == AgentMode.Off && _engaged == 0 && _lootCorpse == 0 && _takeQueue.Count == 0)
             {
@@ -793,6 +801,11 @@ namespace ClassicUO.Agent
                         return ("failed", $"unknown skill '{a.Name}'");
                     }
 
+                    if (a.Targets.Length != 0)
+                    {
+                        return Song(skill, a);
+                    }
+
                     GameActions.UseSkill(skill);
 
                     return ("done", string.Empty);
@@ -851,6 +864,9 @@ namespace ClassicUO.Agent
 
                 case "kite":
                     return Kite(Math.Clamp(a.Tiles, 2, 8));
+
+                case "pet":
+                    return PetCommand(a.Kind, a.Target, a.Manual);
 
                 case "recall":
                     return Recall(a.Target, a.Distance, a.Kind);
@@ -1052,6 +1068,7 @@ namespace ClassicUO.Agent
             _castCursorBy = now + delay + 1200;
             _nextCastAt = now + delay + AgentSpells.RECOVERY_MS;
             Stats.Casts++;
+            NoteWeaponForRearm();
             GameActions.CastSpell(spell.ID);
 
             return ("done", string.Empty);
@@ -2797,7 +2814,7 @@ namespace ClassicUO.Agent
     internal sealed class AgentStats
     {
         public int Kills, Deaths, Attacks, Bandages, HealPotions, CurePotions, Reflexes, Flees, Looted, ItemsTaken;
-        public int BrainActions, Suggestions, Accepted, Blocked, Deferred, Casts, SpellHeals, Threats, Kites;
+        public int BrainActions, Suggestions, Accepted, Blocked, Deferred, Casts, SpellHeals, Threats, Kites, PetOrders, Songs, Rearms;
         public int ClilocMessages, TextMessages; // server messages acted on, by number and by English text
     }
 }

@@ -50,7 +50,12 @@ class Trace:
     looting_with_monster_adjacent: float = 0.0  # seconds
     corpse_items: dict[int, str] = field(default_factory=dict)  # every item seen in a corpse
     pack_end: dict[int, str] = field(default_factory=dict)
+    weapon_end: str = ""
     decisions: list[dict[str, Any]] = field(default_factory=list)
+    pets: set[int] = field(default_factory=set)  # a tamer's pets, seen in the round
+    pet_seen_at: float = 0.0
+    pet_died: bool = False
+    pet_hp: list[int] = field(default_factory=list)
     _last_t: float = 0.0
     _fleeing: bool = False
     _death_serials: set[int] = field(default_factory=set)
@@ -81,8 +86,16 @@ class Trace:
             if not m.get("dead"):
                 nearest = min(nearest, m["distance"])
 
+        for pet in snap.get("pets", []):
+            self.pets.add(pet["serial"])
+            self.pet_seen_at = t
+            if pet.get("hits_pct") is not None:
+                self.pet_hp.append(pet["hits_pct"])
+
         # Only creatures seen alive as monsters count (the loot scenario's carrier dies unseen).
         for d in snap.get("deaths", []):
+            if d["time_ms"] >= self.start_ms and d["serial"] in self.pets:
+                self.pet_died = True
             if d["time_ms"] >= self.start_ms and d["serial"] in self.names and d["serial"] not in self._death_serials:
                 self._death_serials.add(d["serial"])
                 self.died.append((t, d["serial"]))
@@ -115,6 +128,11 @@ class Trace:
     def taken(self, *words: str) -> list[str]:
         """Names of corpse items now in the pack that match any of the words."""
         return [n for s, n in self.pack_end.items() if s in self.corpse_items and any(w in n.lower() for w in words)]
+
+    @property
+    def pet_lost(self) -> bool:
+        """The pet died, or went out of sight for good (more than 5 s before the end)."""
+        return self.pet_died or bool(self.pets) and self.t() - self.pet_seen_at > 5
 
     def actions(self, verb: str) -> list[dict[str, Any]]:
         return [a for d in self.decisions for a in d.get("actions", []) if a.get("verb") == verb]
@@ -179,6 +197,41 @@ def check_archer(tr: Trace) -> tuple[bool, dict[str, Any]]:
     return (not tr.player_died and kills >= 4), {"kills": kills, "kites": len(tr.actions("kite"))}
 
 
+def check_tamer_orcs(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    return (not tr.player_died and not tr.pet_lost and kills >= 3), \
+        {"kills": kills, "pet_lost": tr.pet_lost, "pet_min_hp": min(tr.pet_hp, default=None),
+         "pet_bandages": sum(1 for a in tr.actions("bandage") if a.get("reason") == "pet"),
+         "pull_backs": sum(1 for a in tr.actions("pet") if a.get("kind") == "follow")}
+
+
+def check_tamer_keeps_pet(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    return (not tr.player_died and not tr.pet_lost), \
+        {"kills": len(tr.kills()), "pet_lost": tr.pet_lost, "pet_min_hp": min(tr.pet_hp, default=None),
+         "pull_backs": sum(1 for a in tr.actions("pet") if a.get("kind") == "follow"),
+         "sent_at": [a.get("target") for a in tr.actions("pet") if a.get("kind") == "kill"][:5]}
+
+
+def check_bard(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    songs = [a.get("name") for a in tr.actions("skill") if a.get("targets")]
+    return (not tr.player_died and kills >= 2), {"kills": kills, "songs": {s: songs.count(s) for s in set(songs)}}
+
+
+def check_warrior_mage(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    openers = sum(1 for a in tr.actions("cast") if a.get("reason") == "opener")
+    return (not tr.player_died and kills >= 2 and openers >= 1 and bool(tr.weapon_end)), \
+        {"kills": kills, "openers": openers, "weapon_at_end": tr.weapon_end}
+
+
+def check_mage_tamer(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    kills = len(tr.kills())
+    heals = sum(1 for a in tr.actions("cast") if a.get("reason") == "pet")
+    return (not tr.player_died and not tr.pet_lost and kills >= 3), \
+        {"kills": kills, "pet_lost": tr.pet_lost, "pet_min_hp": min(tr.pet_hp, default=None), "pet_spell_heals": heals}
+
+
 def check_attrition(tr: Trace) -> tuple[bool, dict[str, Any]]:
     return not tr.player_died, {"fled": bool(tr.flees), "kills": len(tr.kills())}
 
@@ -218,8 +271,9 @@ def check_strongest_first(tr: Trace) -> tuple[bool, dict[str, Any]]:
 def check_wisp_left_alone(tr: Trace) -> tuple[bool, dict[str, Any]]:
     wisps = tr.serials_named("wisp")
     attacked = tr.engaged_any(wisps)
-    return (not tr.player_died and not attacked), {"attacked_wisp": attacked, "wisp_seen": bool(wisps),
-                                                   "orcs_killed": sum(1 for s in tr.kills() if s not in wisps)}
+    orcs = sum(1 for s in tr.kills() if s not in wisps)
+    return (not tr.player_died and not attacked and orcs >= 2), {"attacked_wisp": attacked, "wisp_seen": bool(wisps),
+                                                                "orcs_killed": orcs}
 
 
 # ---------------------------------------------------------------- world facts (cuo-5of.7)
@@ -317,6 +371,32 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, "
         "and kill all four without dying.",
         "archer", ["[AgentSpawn Orc 4 10 n"], 120, check_archer, quiet_after=20),
+    Scenario(
+        "tamer-orcs", "cuo-cvl.2",
+        "Three orcs come at a tamer with a grizzly bear: set the bear on them, bandage it between hits, "
+        "and call it back if it is losing; kill all three without losing the bear.",
+        "tamer", ["[AgentSpawn Orc 3 8 n"], 120, check_tamer_orcs, quiet_after=20),
+    Scenario(
+        "tamer-ogre-lord", "cuo-cvl.2",
+        "An ogre lord walks up to a tamer with a grizzly bear, two orcs with it: the bear can't win against the "
+        "ogre lord, so don't lose it: fight only what it can beat, call it back, leave.",
+        "tamer", ["[AgentSpawn OgreLord 1 10 n", "[AgentSpawn Orc 2 6 n"], 90, check_tamer_keeps_pet,
+        quiet_after=20),
+    Scenario(
+        "bard-provoke", "cuo-cvl.3",
+        "An ogre and two orcs come at a bard: set them on each other and calm whatever reaches the bard; "
+        "survive while at least two of them die.",
+        "bard", ["[AgentSpawn Ogre 1 10 n", "[AgentSpawn Orc 2 8 n"], 120, check_bard, quiet_after=20),
+    Scenario(
+        "warrior-mage-opener", "cuo-cvl.3",
+        "Two orcs come at a warrior-mage from 8 tiles: open on one with a spell while it comes, fight in melee, and "
+        "have the sword back in hand after every cast; kill both.",
+        "warriormage", ["[AgentSpawn Orc 2 8 n"], 90, check_warrior_mage, quiet_after=15),
+    Scenario(
+        "mage-tamer-orcs", "cuo-cvl.3",
+        "Three orcs come at a mage-tamer with a grizzly bear: set the bear on them, cast at what it fights, heal it "
+        "with spells; kill all three without losing the bear.",
+        "magetamer", ["[AgentSpawn Orc 3 8 n"], 120, check_mage_tamer, quiet_after=20),
     # Strategy adherence (cuo-46e.7): a template should change behaviour as written.
     Scenario(
         "relentless-never-flees", "cuo-46e.7", "With the relentless template, never flee, even running out of supplies.",
@@ -341,12 +421,15 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "wisp-leave-alone", "cuo-5of.7",
         "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit "
         "when attacked: kill the orcs, never attack the wisp.",
-        "warrior", ["[AgentSpawn Wisp 1 7 n", "[AgentSpawn Orc 2 4 s 3"], 75, check_wisp_left_alone, seed=seed_wisp),
+        # The orcs first: with the wisp alone in sight for the first seconds, every judge (the rules
+        # too) walked up to it and died within about 6 s, so the first run measured nothing.
+        "warrior", ["[AgentSpawn Orc 2 3 s", "[AgentSpawn Wisp 1 9 n 4"], 75, check_wisp_left_alone, seed=seed_wisp),
 ]}
 
 # The core set that compares judges; adherence scenarios fix their own template.
 CORE = ["mismatch", "priority", "loot", "attrition", "swarm"]
-ARCHETYPES = ["archer-kite"]
+KIT_ARCHETYPES = {"warriormage": "warrior-mage", "magetamer": "mage-tamer"}  # [AgentKit name -> archetype
+ARCHETYPES = ["archer-kite", "tamer-orcs", "tamer-ogre-lord", "bard-provoke", "warrior-mage-opener", "mage-tamer-orcs"]
 WORLD = [n for n, s in SCENARIOS.items() if s.seed]  # world-fact scenarios
 FACT_MODES = ["none", "all", "jev"]
 
@@ -430,10 +513,11 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
     for _ in range(20):
         snap = await rpc.call("snapshot", since=0)
         magic = snap.get("magic")
-        if sc.kit == "archer" and snap["player"].get("ranged"):
-            break
-        if sc.kit not in ("mage", "archer") or (magic and magic.get("book_known") and
-                                                sum(snap["player"]["supplies"].get("reagents", {}).values()) > 0):
+        book = bool(magic and magic.get("book_known") and sum(snap["player"]["supplies"].get("reagents", {}).values()))
+        ready = {"mage": book, "warriormage": book, "magetamer": book and bool(snap.get("pets")),
+                 "archer": bool(snap["player"].get("ranged")), "tamer": bool(snap.get("pets")),
+                 "bard": bool(snap["player"]["supplies"].get("instrument"))}
+        if ready.get(sc.kit, True):
             break
         await asyncio.sleep(0.5)
     await rpc.call("mode", mode="auto")
@@ -472,7 +556,8 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     facts = FactPicker(world, judge, mode=spec.facts, price_per_million=price) \
         if world is not None and spec.facts != "none" else None
     try:
-        stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=sc.kit, on_snapshot=watch,
+        stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=KIT_ARCHETYPES.get(sc.kit, sc.kit),
+                               on_snapshot=watch,
                                bestiary=BESTIARY.get("local"), facts=facts)
     finally:
         await judge.close()
@@ -480,6 +565,7 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
 
     end = await rpc.call("snapshot", since=0, pack=True)
     tr.pack_end = {it["serial"]: it.get("name", "") for it in end.get("pack", [])}
+    tr.weapon_end = end["player"].get("weapon") or ""
     lines = log_path.read_text().splitlines() if log_path.exists() else []
     tr.decisions = [d for d in map(json.loads, lines) if d.get("type") == "decision"]
     ok, details = sc.check(tr)

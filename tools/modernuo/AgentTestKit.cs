@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Server.Accounting;
 using Server.Collections;
 using Server.Commands;
+using Server.Engines.Spawners;
 using Server.Items;
 using Server.Logging;
 using Server.Misc;
@@ -46,6 +47,9 @@ public static class AgentTestKit
     // previous boot (the tracking itself is not persisted).
     private static readonly HashSet<BaseCreature> _tracked = new();
 
+    // The pet each tamer kit gave, replaced by the next kit.
+    private static readonly Dictionary<Mobile, BaseCreature> _kitPets = new();
+
     private static AccessLevel _accessLevel;
 
     public static Point3D TestLocation { get; private set; }
@@ -72,6 +76,7 @@ public static class AgentTestKit
         CommandSystem.Register("AgentWall", _accessLevel, AgentWall_OnCommand);
         CommandSystem.Register("AgentRestock", _accessLevel, AgentRestock_OnCommand);
         CommandSystem.Register("AgentRunes", _accessLevel, AgentRunes_OnCommand);
+        CommandSystem.Register("AgentDisrupt", _accessLevel, AgentDisrupt_OnCommand);
     }
 
     // Runs before AccountPrompt.Initialize (default priority 50) so a headless first boot finds an
@@ -108,9 +113,9 @@ public static class AgentTestKit
         logger.Information("AgentTestKit: seeded owner account {Username}", username);
     }
 
-    [Usage("AgentKit [warrior|mage|archer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [target]")]
+    [Usage("AgentKit [warrior|mage|archer|tamer|bard|warriormage|magetamer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [bear|wolf|hound|drake] [target]")]
     [Description(
-        "Resets a test kit and wipes previous equipment and backpack contents. warrior (default): Swords/Tactics/Healing/Anatomy 80, 90/70/15 stats, weapon, ring/leather armor, bandages and potions. mage: Magery 90, Eval Int/Meditation/Wrestling 80, Resisting Spells 60, 70/35/100 stats, full spellbook, reagents, leather armor and potions. archer: Archery/Tactics/Healing/Anatomy 80, 75/85/15 stats, a bow (or the crossbow named) with 200 arrows or bolts, studded leather, bandages and potions. 'target' (GameMaster+) applies it to another player."
+        "Resets a test kit and wipes previous equipment and backpack contents. warrior (default): Swords/Tactics/Healing/Anatomy 80, 90/70/15 stats, weapon, ring/leather armor, bandages and potions. mage: Magery 90, Eval Int/Meditation/Wrestling 80, Resisting Spells 60, 70/35/100 stats, full spellbook, reagents, leather armor and potions. archer: Archery/Tactics/Healing/Anatomy 80, 75/85/15 stats, a bow (or the crossbow named) with 200 arrows or bolts, studded leather, bandages and potions. tamer: Animal Taming/Lore/Veterinary 90, Healing/Anatomy 70, no weapon, and a tamed pet following (a grizzly bear, or the wolf, hell hound or drake named) that replaces the last kit's pet. bard: Musicianship/Provocation/Peacemaking/Discordance 90, Healing/Anatomy 60, a lute and no weapon. warriormage: the warrior kit plus Magery 80, Eval Int 60, a spellbook and reagents. magetamer: the mage kit plus Animal Taming/Lore 85, Veterinary 60, bandages and a pet. 'target' (GameMaster+) applies it to another player."
     )]
     public static void AgentKit_OnCommand(CommandEventArgs e)
     {
@@ -118,6 +123,9 @@ public static class AgentTestKit
         var weapon = typeof(Katana);
         var mage = false;
         var useTarget = false;
+        Type pet = null;
+        var bard = false;
+        var hybrid = string.Empty;
 
         for (var i = 0; i < e.Length; i++)
         {
@@ -141,16 +149,64 @@ public static class AgentTestKit
                 continue;
             }
 
+            if (arg.InsensitiveEquals("tamer"))
+            {
+                pet ??= typeof(GrizzlyBear);
+                continue;
+            }
+
+            if (arg.InsensitiveEquals("bard"))
+            {
+                bard = true;
+                continue;
+            }
+
+            if (arg.InsensitiveEquals("warriormage") || arg.InsensitiveEquals("magetamer"))
+            {
+                hybrid = arg.ToLowerInvariant();
+                continue;
+            }
+
+            if (GetPetType(arg) is { } petType)
+            {
+                pet = petType;
+                continue;
+            }
+
             var type = GetWeaponType(arg);
             if (type == null)
             {
                 from.SendMessage(
-                    "Usage: [AgentKit [warrior|mage|archer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [target]"
+                    "Usage: [AgentKit [warrior|mage|archer|tamer|bard|warriormage|magetamer] [katana|broadsword|longsword|vikingsword|bow|crossbow|heavycrossbow] [bear|wolf|hound|drake] [target]"
                 );
                 return;
             }
 
             weapon = type;
+        }
+
+        if (hybrid == "warriormage")
+        {
+            ApplyWarriorMageKit(from, weapon);
+            return;
+        }
+
+        if (hybrid == "magetamer")
+        {
+            ApplyMageTamerKit(from, pet ?? typeof(GrizzlyBear));
+            return;
+        }
+
+        if (pet != null)
+        {
+            ApplyTamerKit(from, pet);
+            return;
+        }
+
+        if (bard)
+        {
+            ApplyBardKit(from);
+            return;
         }
 
         if (!useTarget)
@@ -608,6 +664,142 @@ public static class AgentTestKit
         from.SendMessage($"Restock: {vendors} vendors stocked with at least {amount} of everything.");
     }
 
+    // Spawners [AgentDisrupt despawn stopped, and the vendors it sold out, for restore.
+    private static readonly List<BaseSpawner> _stoppedSpawners = [];
+    private static readonly List<BaseVendor> _soldOut = [];
+
+    [Usage("AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore")]
+    [Description(
+        "Disruptions for unattended runs, at a place rather than around you. despawn: removes what the spawners within radius of x y have spawned and stops them (for minutes, default 20). strong: spawns count creatures of kind around x y. sellout: empties the stock of item (by name) at the vendors within radius of x y. restore: restarts the stopped spawners and restocks the sold-out vendors."
+    )]
+    public static void AgentDisrupt_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var what = e.Length > 0 ? e.GetString(0).ToLowerInvariant() : "";
+        var map = TestMap;
+
+        switch (what)
+        {
+            case "despawn" when e.Length >= 4:
+                {
+                    var at = new Point3D(e.GetInt32(1), e.GetInt32(2), 0);
+                    var radius = Math.Clamp(e.GetInt32(3), 1, 60);
+                    var minutes = e.Length > 4 ? Math.Clamp(e.GetInt32(4), 1, 240) : 20;
+                    var stopped = new List<BaseSpawner>();
+
+                    foreach (var item in map.GetItemsInRange(at, radius))
+                    {
+                        if (item is BaseSpawner spawner)
+                        {
+                            stopped.Add(spawner);
+                        }
+                    }
+
+                    foreach (var spawner in stopped)
+                    {
+                        spawner.RemoveSpawns();
+                        spawner.Stop();
+                        _stoppedSpawners.Add(spawner);
+                    }
+
+                    Timer.StartTimer(TimeSpan.FromMinutes(minutes), () =>
+                        {
+                            foreach (var spawner in stopped)
+                            {
+                                if (!spawner.Deleted)
+                                {
+                                    spawner.Start();
+                                }
+                            }
+                        }
+                    );
+                    from.SendMessage($"Disrupt: {stopped.Count} spawners near {at.X},{at.Y} emptied and stopped for {minutes} min.");
+                    logger.Information("AgentDisrupt: despawned {Count} spawners near {At} for {Minutes} min", stopped.Count, at, minutes);
+                    return;
+                }
+            case "strong" when e.Length >= 5:
+                {
+                    var center = new Point3D(e.GetInt32(1), e.GetInt32(2), map.GetAverageZ(e.GetInt32(1), e.GetInt32(2)));
+                    var kind = GetCreatureType(e.GetString(3));
+                    var count = Math.Clamp(e.GetInt32(4), 1, 10);
+                    var made = 0;
+
+                    for (var i = 0; kind != null && i < count; i++)
+                    {
+                        if (TrySpot(map, center, i * 2 * Math.PI / count, 3, out var spot) &&
+                            kind.CreateInstance<BaseCreature>() is { } creature)
+                        {
+                            creature.Home = center;
+                            creature.RangeHome = 12;
+                            creature.MoveToWorld(spot, map);
+                            made++;
+                        }
+                    }
+
+                    from.SendMessage($"Disrupt: {made} {e.GetString(3)} near {center.X},{center.Y}.");
+                    logger.Information("AgentDisrupt: {Made} {Kind} near {At}", made, e.GetString(3), center);
+                    return;
+                }
+            case "sellout" when e.Length >= 5:
+                {
+                    var at = new Point3D(e.GetInt32(1), e.GetInt32(2), 0);
+                    var radius = Math.Clamp(e.GetInt32(3), 1, 60);
+                    var word = e.GetString(4).ToLowerInvariant().TrimEnd('s');
+                    var emptied = 0;
+
+                    foreach (var vendor in map.GetMobilesInRange<BaseVendor>(at, radius))
+                    {
+                        foreach (var info in vendor.GetBuyInfo())
+                        {
+                            if (info is GenericBuyInfo buy && buy.Type.Name.ToLowerInvariant().Contains(word))
+                            {
+                                buy.Amount = 0;
+                                emptied++;
+
+                                if (!_soldOut.Contains(vendor))
+                                {
+                                    _soldOut.Add(vendor);
+                                }
+                            }
+                        }
+                    }
+
+                    from.SendMessage($"Disrupt: {emptied} stocks of {word} emptied near {at.X},{at.Y}.");
+                    logger.Information("AgentDisrupt: sold out {Count} stocks of {Item} near {At}", emptied, word, at);
+                    return;
+                }
+            case "restore":
+                {
+                    foreach (var spawner in _stoppedSpawners)
+                    {
+                        if (!spawner.Deleted)
+                        {
+                            spawner.Start();
+                        }
+                    }
+
+                    foreach (var vendor in _soldOut)
+                    {
+                        foreach (var info in vendor.GetBuyInfo())
+                        {
+                            if (info is GenericBuyInfo buy)
+                            {
+                                buy.Amount = Math.Max(buy.Amount, buy.MaxAmount);
+                            }
+                        }
+                    }
+
+                    from.SendMessage($"Disrupt: {_stoppedSpawners.Count} spawners restarted, {_soldOut.Count} vendors restocked.");
+                    _stoppedSpawners.Clear();
+                    _soldOut.Clear();
+                    return;
+                }
+            default:
+                from.SendMessage("Usage: [AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore");
+                return;
+        }
+    }
+
     [Usage("AgentLoot [distance] [direction]")]
     [Description(
         "Lays a fresh corpse distance tiles away (default 2, north) holding three valuable items (a diamond, a gold ring, a magic longsword) and five junk ones (bones, a head, a plain shirt, kindling, raw ribs)."
@@ -806,6 +998,12 @@ public static class AgentTestKit
             pm.Young = false;
         }
 
+        // A tamer kit's pet goes with any new kit (the tamer kit then makes a new one).
+        if (_kitPets.Remove(m, out var oldPet) && !oldPet.Deleted)
+        {
+            oldPet.Delete();
+        }
+
         var skills = m.Skills;
         for (var i = 0; i < skills.Length; i++)
         {
@@ -930,6 +1128,134 @@ public static class AgentTestKit
             weaponType?.Name ?? "spellbook"
         );
     }
+
+    // A tamer: Animal Taming, Animal Lore and Veterinary 90, weak in a fight itself, with a
+    // pet already tamed and following. The previous kit's pet goes first.
+    public static void ApplyTamerKit(Mobile m, Type petType)
+    {
+        ApplyKit(m, typeof(Katana));
+
+        var skills = m.Skills;
+        for (var i = 0; i < skills.Length; i++)
+        {
+            skills[i].Base = 0;
+        }
+
+        skills[SkillName.AnimalTaming].Base = 90;
+        skills[SkillName.AnimalLore].Base = 90;
+        skills[SkillName.Veterinary].Base = 90;
+        skills[SkillName.Healing].Base = 70;
+        skills[SkillName.Anatomy].Base = 70;
+        skills[SkillName.Wrestling].Base = 50;
+        m.RawStr = 70;
+        m.RawDex = 60;
+        m.RawInt = 40;
+
+        // No weapon: the pet does the fighting.
+        m.FindItemOnLayer(Layer.OneHanded)?.Delete();
+        m.FindItemOnLayer(Layer.TwoHanded)?.Delete();
+
+        if (GivePet(m, petType) is { } pet)
+        {
+            RestoreVitals(m);
+            m.SendMessage($"Agent tamer kit applied, with {pet.Name}.");
+        }
+    }
+
+    // A pet tamed and following, replacing the last kit's.
+    private static BaseCreature GivePet(Mobile m, Type petType)
+    {
+        var pet = petType.CreateInstance<BaseCreature>();
+        if (!pet.SetControlMaster(m))
+        {
+            pet.Delete();
+            m.SendMessage("AgentKit: too many followers for the pet.");
+            return null;
+        }
+
+        pet.IsBonded = false;
+        pet.Loyalty = BaseCreature.MaxLoyalty;
+        pet.MoveToWorld(m.Location, m.Map);
+        pet.IssueOrder(OrderType.Follow, m, m);
+        pet.Hits = pet.HitsMax;
+        _kitPets[m] = pet;
+        logger.Information("AgentKit: pet {Pet} ({Hits} hits) for {Mobile}", pet.GetType().Name, pet.HitsMax, m);
+        return pet;
+    }
+
+    // A warrior-mage: the warrior kit with Magery 80 and Evaluating Intelligence 60, a spellbook
+    // and reagents in the pack. Casting takes the weapon out of its hands.
+    public static void ApplyWarriorMageKit(Mobile m, Type weaponType)
+    {
+        ApplyKit(m, weaponType);
+        m.Skills[SkillName.Magery].Base = 80;
+        m.Skills[SkillName.EvalInt].Base = 60;
+        m.RawInt = 50;
+        m.AddToBackpack(new Spellbook(ulong.MaxValue));
+        m.AddToBackpack(new BagOfReagents(100));
+        RestoreVitals(m);
+        m.SendMessage("Agent warrior-mage kit applied.");
+    }
+
+    // A mage-tamer: the mage kit with Animal Taming and Animal Lore 85, Veterinary 60, bandages,
+    // and a pet.
+    public static void ApplyMageTamerKit(Mobile m, Type petType)
+    {
+        ApplyKit(m, null);
+        m.Skills[SkillName.AnimalTaming].Base = 85;
+        m.Skills[SkillName.AnimalLore].Base = 85;
+        m.Skills[SkillName.Veterinary].Base = 60;
+        m.Skills[SkillName.Wrestling].Base = 0;
+        m.AddToBackpack(new Bandage(100));
+
+        if (GivePet(m, petType) is { } pet)
+        {
+            RestoreVitals(m);
+            m.SendMessage($"Agent mage-tamer kit applied, with {pet.Name}.");
+        }
+    }
+
+    // A bard: Musicianship, Provocation, Peacemaking and Discordance 90, a lute that won't wear
+    // out during a test, and no weapon: the songs do the fighting.
+    public static void ApplyBardKit(Mobile m)
+    {
+        ApplyKit(m, typeof(Katana));
+
+        var skills = m.Skills;
+        for (var i = 0; i < skills.Length; i++)
+        {
+            skills[i].Base = 0;
+        }
+
+        skills[SkillName.Musicianship].Base = 90;
+        skills[SkillName.Provocation].Base = 90;
+        skills[SkillName.Peacemaking].Base = 90;
+        skills[SkillName.Discordance].Base = 90;
+        skills[SkillName.Healing].Base = 60;
+        skills[SkillName.Anatomy].Base = 60;
+        skills[SkillName.Wrestling].Base = 50;
+        m.RawStr = 60;
+        m.RawDex = 50;
+        m.RawInt = 70;
+
+        m.FindItemOnLayer(Layer.OneHanded)?.Delete();
+        m.FindItemOnLayer(Layer.TwoHanded)?.Delete();
+        m.AddToBackpack(new Lute { UsesRemaining = 1000 });
+
+        RestoreVitals(m);
+        m.SendMessage("Agent bard kit applied.");
+        logger.Information("AgentKit: bard kit for {Mobile}", m);
+    }
+
+    private static Type GetPetType(string name) =>
+        name.ToLowerInvariant() switch
+        {
+            "bear" or "grizzly" => typeof(GrizzlyBear),
+            "wolf" or "direwolf" => typeof(DireWolf),
+            "hound" or "hellhound" => typeof(HellHound),
+            "drake" => typeof(Drake),
+            _ => null
+        };
 
     private static void Equip(Mobile m, Item item)
     {

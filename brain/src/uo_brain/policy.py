@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .judge import Answers, ChoiceResult
-from .spells import MEDITATION, PROTECTION
+from .spells import GREATER_HEAL, MEDITATION, PROTECTION
 from .state import SPELL_RANGE, Candidate, Situation
 
 
@@ -24,6 +24,11 @@ class PolicyConfig:
     meditate_below: int = 80        # mana %: a resting mage meditates below this
     avoid_players: bool = True      # auto mode leaves when a red or criminal player comes close
     kite: bool = True               # a mage or archer steps back from melee between spells or shots
+    pet_heal_below: int = 70        # a tamer bandages its pet below this health %, when within reach
+    pull_back: float = 0.6          # Jev's "call the pet back" at or above this does it
+    pet_last_stand: int = 20        # ...and below this pet health % code calls it back anyway
+    song_every: float = 6.0         # seconds between a bard's songs (the server's skill delay, with room)
+    min_song_confidence: float = 0.3
     # Set from the player's strategy (strategy.py).
     allow_flee: bool = True
     target_priority: str = "current_first"
@@ -46,6 +51,11 @@ class Memory:
     last_protection: float = -1e9  # when Protection was last cast: buff icons may not show it
     kite_casts: int = -1        # attack spells cast by then: the next step back waits for one more
     kite_ammo: int = 1 << 30    # an archer's arrows by then: the next step back waits for a shot
+    last_pet_bandage: float = -1e9  # a tamer's last bandage on its pet
+    pulling_until: float = 0.0      # the pet was called back: don't send it in again until then
+    last_song: float = -1e9         # a bard's last song
+    last_pet_call: float = -1e9     # a tamer's last "all follow me"
+    sung: dict[int, float] = field(default_factory=dict)  # creature -> when a song last hit it (provoked or calmed)
 
     def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
         if now - self.hinted.get(key, -1e9) < every:
@@ -90,13 +100,16 @@ class Decision:
 def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tuple[str, float, list[str]]:
     close = [h for h in sit.hostiles if h.distance <= cfg.close_tiles]
     # A warrior seeks anything not yet close; a mage or archer only what it cannot reach.
-    reach = SPELL_RANGE if sit.is_mage else shooting_range(sit, cfg) if sit.is_archer else cfg.close_tiles
+    reach = SPELL_RANGE if sit.is_mage else shooting_range(sit, cfg) if sit.is_archer \
+        else PET_REACH if sit.is_tamer else BARD_REACH if sit.is_bard else cfg.close_tiles
     # Whatever walks needs moving allowed: combat assist never moves the character.
     move = sit.authority("move") != "off"
     within_reach = any(c.distance <= 2 for c in sit.corpses) or bool(sit.items)
     valid = {
-        # A bow without arrows shoots nothing.
-        "fight": bool(sit.targets) and not (sit.is_archer and sit.ammo <= 0),
+        # A bow without arrows shoots nothing; a tamer without its pet, or a bard without an
+        # instrument, has nothing to fight with.
+        "fight": bool(sit.targets) and not (sit.is_archer and sit.ammo <= 0) and not (sit.is_tamer and not sit.pet)
+        and not (sit.is_bard and not sit.player.get("supplies", {}).get("instrument")),
         "flee": bool(close) and cfg.allow_flee and move,
         "loot": bool(sit.corpses or sit.items) and not close and cfg.looting != "nothing"
                 and sit.authority("loot") != "off" and (move or within_reach) and not sit.traveling,
@@ -122,6 +135,13 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
 
 def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: float | None = None) -> Decision:
     now = time.monotonic() if now is None else now
+    dec = decide_intent(sit, ans, mem, cfg, now)
+    if sit.is_tamer:
+        tend_pet(sit, dec, mem, cfg, now)
+    return dec
+
+
+def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: float) -> Decision:
     intent, conf, masked = masked_intent(sit, ans.choices["intent"], cfg)
     danger = ans.nouls.get("in_danger", 0.0)
     close = [h for h in sit.hostiles if h.distance <= cfg.close_tiles]
@@ -145,16 +165,26 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
                                         "confidence": 1.0, "reason": "player"}],
                         f"leaving: a {danger_player['kind']} player is {danger_player['distance']} tiles away", masked=[])
 
-    # Leaving: keep running from whatever is still in sight, then stay clear for a while.
+    # Leaving: keep running from whatever is still in sight, then stay clear for a while. A
+    # tamer goes in short legs and keeps calling its pet, which may still be fighting: a pet
+    # left out of sight is lost.
     if mem.leaving_until > now and sit.authority("move") == "auto":
         near = [h for h in sit.hostiles if h.distance <= 14]
+        call = [{"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "leave"}] \
+            if sit.is_tamer and sit.pet and sit.pet["distance"] > 3 and now - mem.last_pet_call > 3 else []
+        if call:
+            mem.last_pet_call = now
         if not near:
-            return Decision("leave", 1.0, [], "left: nothing in sight", masked)
+            return Decision("leave", 1.0, call, "left: nothing in sight", masked)
         if sit.agent.get("fleeing"):
-            return Decision("leave", 1.0, [], "leaving", masked)
+            return Decision("leave", 1.0, call, "leaving", masked)
+        if sit.is_tamer and sit.pet and sit.pet["distance"] > 6:
+            return Decision("leave", 1.0, call, "leaving, waiting for the pet", masked)
         nearest = min(near, key=lambda h: h.distance)
-        return Decision("leave", 1.0, [{"verb": "flee", "target": nearest.serial, "tiles": 15, "confidence": 1.0,
-                                        "reason": "leave"}], f"leaving, away from {nearest.name}", masked, target=nearest)
+        tiles = 8 if sit.is_tamer else 15
+        return Decision("leave", 1.0, call + [{"verb": "flee", "target": nearest.serial, "tiles": tiles, "confidence": 1.0,
+                                               "reason": "leave"}], f"leaving, away from {nearest.name}", masked,
+                        target=nearest)
 
     # A cautious strategy gets out early: badly hurt with several creatures on the character.
     outmatched = any(str(h.info.get("strength", "")).startswith("far stronger") for h in sit.hostiles)
@@ -168,10 +198,13 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             and sit.authority("move") == "auto" and not sit.assisting:
         intent, conf = "leave", ans.nouls["leave_now"]
     # Leaving needs a reason the facts back up, as fleeing needs the danger judgment. A stored
-    # fact Jev picked for this place counts when Jev's own yes/no on leaving agrees.
+    # fact Jev picked for this place counts when Jev's own yes/no on leaving agrees, and so does
+    # having nothing to fight with (no pet in sight, no arrows, no instrument).
     known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= max(0.5, cfg.flee_danger)
-    if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known):
-        intent = "fight" if close else "rest"
+    cannot_fight = bool(sit.targets) and "fight" in masked
+    if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
+                                  or cannot_fight):
+        intent = "fight" if close and "fight" not in masked else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.
     hints: list[dict[str, Any]] = []
@@ -181,6 +214,22 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         hints.append({"verb": "hint", "text": "this fight is going badly, get out", "reason": "danger"})
     if sit.assisting and sit.is_archer and sit.ammo <= 0 and sit.hostiles and mem.hint_due("ammo", now, 20):
         hints.append({"verb": "hint", "text": f"out of {sit.ranged.get('ammo', 'arrows')}", "reason": "ammo"})
+
+    # A tamer calls its pet back before it dies: Jev's yes/no, or code when the pet is nearly dead.
+    pet_fighting = sit.is_tamer and sit.pet and sit.agent.get("pet_target", 0)
+    if pet_fighting and (ans.nouls.get("pull_back", 0.0) >= cfg.pull_back or sit.pet_pct < cfg.pet_last_stand):
+        why = f"pet at {sit.pet_pct}%" + (f", pull back {ans.nouls['pull_back']:.2f}" if "pull_back" in ans.nouls else "")
+        if sit.assisting:
+            if mem.hint_due("pet", now, 8):
+                hints.append({"verb": "hint", "text": "call your pet back, it is losing", "reason": "pet"})
+            return Decision(intent, conf, hints, f"pet losing ({why})", masked)
+        if sit.authority("move") == "auto":
+            mem.pulling_until = now + 10
+            foe = next((h for h in sit.hostiles if h.serial == sit.agent["pet_target"]), None)
+            actions = [{"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "pull back"}]
+            if foe:
+                actions.append({"verb": "flee", "target": foe.serial, "tiles": 8, "confidence": 1.0, "reason": "pull back"})
+            return Decision("flee", 1.0, hints + actions, f"call the pet back ({why})", masked, target=foe)
 
     if conf < cfg.min_intent_confidence:
         dec = Decision(intent, conf, hints, f"unsure ({conf:.2f}), keeping course", masked, gated=True)
@@ -210,6 +259,13 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         if target is None:
             dec.note = "no target"
             return dec
+        pet_note = ""
+        if sit.is_tamer:
+            # The pet fights; the tamer stays back. Not while the pet is being called back.
+            if now < mem.pulling_until:
+                dec.note = f"pet called back, not sending it at {target.name}"
+                return dec
+            target, pet_note = set_pet_on(sit, dec, target, meta)
         if sit.is_mage:
             # Engage at range so the client follows the creature without closing to melee.
             if target.serial != engaged or sit.agent.get("engaged_range", 1) != cfg.spell_range:
@@ -241,7 +297,12 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
                 actions.append({"verb": "hint", "text": f"{target.name} is out of spell range", "reason": "range"})
             if dec.spell:
                 actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True, **meta})
-            dec.note = f"fight {target.name}" + (f" with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
+            dec.note = (f"{pet_note}, " if pet_note else "") + f"fight {target.name}" \
+                + (f" with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
+        elif sit.is_bard:
+            sing(sit, ans, mem, cfg, target, dec, meta, now)
+        elif sit.is_tamer:
+            dec.note = f"{pet_note} ({conf:.2f})"
         elif sit.is_archer:
             # Engage at range, as a mage does, so the client shoots without closing to melee.
             rng = shooting_range(sit, cfg)
@@ -258,21 +319,35 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
                 actions.append({"verb": "hint", "text": f"{target.name} is out of shooting range", "reason": "range"})
             dec.note = f"{'shoot' if target.serial != engaged else 'keep shooting'} {target.name} ({conf:.2f})"
         else:
+            # A warrior-mage opens on a creature that is still coming with one spell (queued:
+            # the client casts it as soon as it can, and re-arms the weapon after).
+            if sit.is_warrior_mage and target.casts == 0 and 2 <= target.distance <= SPELL_RANGE:
+                dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, target)
+                if dec.spell:
+                    actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True,
+                                    **meta, "reason": "opener"})
             if target.serial != engaged:
                 actions.append({"verb": "attack", "target": target.serial, **meta})
-            dec.note = f"{'fight' if target.serial != engaged else 'keep fighting'} {target.name} ({conf:.2f})"
+            dec.note = f"{'fight' if target.serial != engaged else 'keep fighting'} {target.name}" \
+                + (f", opening with {dec.spell.name}" if dec.spell else "") + f" ({conf:.2f})"
 
     elif intent == "leave":
         mem.leaving_until = now + 40
         threat = max(sit.hostiles, key=lambda h: (str(h.info.get("strength", "")).startswith("far"), -h.distance))
         dec.target = threat
-        actions.append({"verb": "flee", "target": threat.serial, "tiles": 15, **meta})
+        if sit.is_tamer and sit.pet:
+            mem.last_pet_call = now
+            actions.append({"verb": "pet", "kind": "follow", **meta})
+        actions.append({"verb": "flee", "target": threat.serial, "tiles": 8 if sit.is_tamer else 15, **meta})
         dec.note = f"leave, away from {threat.name} ({conf:.2f})"
 
     elif intent == "flee":
         threat = min(close, key=lambda h: h.distance)
         dec.target = threat
-        actions.append({"verb": "flee", "target": threat.serial, "tiles": 10, **meta})
+        if sit.is_tamer and sit.pet:
+            actions.append({"verb": "pet", "kind": "follow", **meta})
+        # A tamer runs a short way only, so its pet stays in sight and can follow.
+        actions.append({"verb": "flee", "target": threat.serial, "tiles": 6 if sit.is_tamer else 10, **meta})
         dec.note = f"flee from {threat.name} (danger {danger:.2f})"
 
     elif intent == "loot":
@@ -288,7 +363,8 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         dec.target = target
         raw = next(m for m in sit.raw["mobiles"] if m["serial"] == target.serial)
         p = sit.player
-        stop = cfg.spell_range - 1 if sit.is_mage else shooting_range(sit, cfg) - 1 if sit.is_archer else 1
+        stop = cfg.spell_range - 1 if sit.is_mage else shooting_range(sit, cfg) - 1 if sit.is_archer \
+            else 5 if sit.is_tamer else 8 if sit.is_bard else 1
         actions.append({"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": stop, **meta})
         dec.note = f"seek {target.name} ({conf:.2f})"
 
@@ -302,6 +378,120 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             dec.note = f"meditate ({conf:.2f})"
 
     return dec
+
+
+PET_REACH = 8   # tiles: a tamer sets its pet on what is this close, and seeks what is further
+BARD_REACH = 12  # a bard's songs carry 8 tiles plus one per 15 skill points: 14 at 90
+SONG_SKILLS = {"provoke": "Provocation", "peace": "Peacemaking", "discord": "Discordance"}
+
+
+def sing(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, target: Candidate, dec: Decision,
+         meta: dict[str, Any], now: float) -> None:
+    """A bard's turn in a fight: Jev's song when it is sure, else the rule of thumb: incite the
+    strongest against another when there are two, calm one on the bard, weaken a lone one.
+    One song every few seconds; a creature a song just hit is left alone for a while."""
+    if now - mem.last_song < cfg.song_every:
+        dec.note = f"between songs ({target.name})"
+        return
+    fresh = [h for h in sit.targets if now - mem.sung.get(h.serial, -1e9) > 20]
+    if not fresh:
+        dec.note = "the creatures are busy with each other"
+        return
+    choice = ans.choices.get("song")
+    song = choice.choice if choice and choice.confidence >= cfg.min_song_confidence else None
+    why = "jev" if song else "rule"
+    if target.serial not in {h.serial for h in fresh}:
+        target = max(fresh, key=lambda h: (h.max_hits, -h.distance))
+    if song is None:
+        song = "provoke" if len(sit.targets) >= 2 else "peace" if target.distance <= 2 else "discord"
+    if song == "none":
+        dec.note = "no song for now"
+        return
+    targets = [target.serial]
+    if song == "provoke":
+        onto = pick_onto(sit, ans, target)
+        if onto is None:
+            song = "peace" if target.distance <= 2 else "discord"
+        else:
+            targets.append(onto.serial)
+    mem.last_song = now
+    for t in targets:
+        mem.sung[t] = now
+    dec.actions.append({"verb": "skill", "name": SONG_SKILLS[song], "targets": targets, **meta, "reason": f"song {why}"})
+    dec.note = f"{SONG_SKILLS[song].lower()} on {target.name}" + (f" against {sit.hostile_by_serial(targets[1]).name}"
+                                                                    if len(targets) > 1 else "") + f" ({why})"
+
+
+def pick_onto(sit: Situation, ans: Answers, incited: Candidate) -> Candidate | None:
+    """Whom the incited creature should attack: Jev's pick, else the nearest other creature."""
+    others = [h for h in sit.targets if h.serial != incited.serial]
+    if not others:
+        return None
+    choice = ans.choices.get("onto")
+    if choice:
+        for cid, _ in sorted(choice.probabilities.items(), key=lambda kv: -kv[1]):
+            c = sit.hostile(cid)
+            if c is not None and c.serial != incited.serial and c.allowed:
+                return c
+    return min(others, key=lambda h: h.distance)
+
+
+def tend_pet(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, now: float) -> None:
+    """A tamer bandages its pet when it is hurt and within reach, whatever else it is doing
+    (not while running), and walks over to it when it is hurt a little further off."""
+    pet = sit.pet
+    if not pet or dec.intent in ("flee", "leave"):
+        return
+    moving = any(a["verb"] in ("walk_to", "flee", "kite") for a in dec.actions)
+    # Stay together: a pet far off can't be bandaged and is lost once out of sight.
+    if pet["distance"] > 7 and not moving and sit.authority("move") == "auto" \
+            and not any(h.distance <= 1 for h in sit.hostiles):
+        p = sit.player
+        dec.actions.append({"verb": "walk_to", "x": p["x"] + pet["dx"], "y": p["y"] + pet["dy"], "distance": 2,
+                            "confidence": 1.0, "reason": "pet"})
+        dec.note += "; back to the pet"
+        return
+    if sit.pet_pct >= cfg.pet_heal_below:
+        return
+    if now - mem.last_pet_bandage < 3 or sit.authority("heal") == "off":
+        return
+    # A mage-tamer heals from a distance; queued after any attack spell, so it goes first.
+    if sit.is_mage and sit.can_cast(GREATER_HEAL) and pet["distance"] <= 10:
+        mem.last_pet_bandage = now
+        dec.actions.append({"verb": "cast", "spell": GREATER_HEAL, "target": pet["serial"], "queue": True,
+                            "confidence": 1.0, "reason": "pet"})
+        dec.note += f"; heal the pet ({sit.pet_pct}%)"
+        return
+    if sit.player.get("supplies", {}).get("bandages", 0) <= 0 or sit.agent.get("bandaging"):
+        return
+    if pet["distance"] <= 2:
+        mem.last_pet_bandage = now
+        dec.actions.append({"verb": "bandage", "target": pet["serial"], "confidence": 1.0, "reason": "pet"})
+        dec.note += f"; bandage the pet ({sit.pet_pct}%)"
+    elif pet["distance"] <= 10 and sit.authority("move") == "auto" and not any(h.distance <= 1 for h in sit.hostiles) \
+            and not moving:
+        p = sit.player
+        dec.actions.append({"verb": "walk_to", "x": p["x"] + pet["dx"], "y": p["y"] + pet["dy"], "distance": 1,
+                            "confidence": 1.0, "reason": "pet"})
+        dec.note += f"; go to the hurt pet ({sit.pet_pct}%)"
+
+
+def set_pet_on(sit: Situation, dec: Decision, target: Candidate, meta: dict[str, Any]) -> tuple[Candidate, str]:
+    """Send the pet at the target, or at whatever is on the tamer itself, which comes first: the
+    tamer can't take many hits, and stepping back would only take it away from its pet."""
+    on_me = [h for h in sit.targets if h.distance <= 1 or attacking_me(sit, h)]
+    pet_on = next((h for h in sit.hostiles if h.serial == sit.agent.get("pet_target", 0)), None)
+    if on_me and (pet_on is None or pet_on not in on_me) and target not in on_me:
+        target = dec.target = min(on_me, key=lambda h: h.distance)
+    if sit.agent.get("pet_target", 0) != target.serial:
+        dec.actions.append({"verb": "pet", "kind": "kill", "target": target.serial, **meta})
+        return target, f"set the pet on {target.name}"
+    return target, f"pet fighting {target.name}"
+
+
+def attacking_me(sit: Situation, h: Candidate) -> bool:
+    raw = next((m for m in sit.raw.get("mobiles", []) if m["serial"] == h.serial), {})
+    return bool(raw.get("attacking_me"))
 
 
 def shooting_range(sit: Situation, cfg: PolicyConfig) -> int:

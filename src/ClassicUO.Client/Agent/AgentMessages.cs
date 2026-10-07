@@ -10,7 +10,8 @@ namespace ClassicUO.Agent
         BandageStarted,
         BandageEnded,
         CastFailed,       // the spell never started, or was interrupted before its cursor
-        CastNotRecovered  // too soon after the last spell
+        CastNotRecovered, // too soon after the last spell
+        InstrumentPrompt  // a bard's song asks which instrument to play
     }
 
     // The server messages the agent acts on. Servers send most of them as cliloc numbers,
@@ -45,6 +46,9 @@ namespace ClassicUO.Agent
 
                 case 502644: // You have not yet recovered from casting a spell.
                     return AgentMessage.CastNotRecovered;
+
+                case 500617: // What instrument shall you play?
+                    return AgentMessage.InstrumentPrompt;
 
                 case 502642: // You are already casting a spell.
                 case 502625: // Insufficient mana (for this spell).
@@ -87,6 +91,11 @@ namespace ClassicUO.Agent
             if (text.Contains("begin applying the bandages", StringComparison.OrdinalIgnoreCase))
             {
                 return AgentMessage.BandageStarted;
+            }
+
+            if (text.Contains("What instrument shall you play", StringComparison.OrdinalIgnoreCase))
+            {
+                return AgentMessage.InstrumentPrompt;
             }
 
             foreach (string s in CastFail)
