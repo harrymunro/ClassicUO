@@ -667,10 +667,11 @@ public static class AgentTestKit
     // Spawners [AgentDisrupt despawn stopped, and the vendors it sold out, for restore.
     private static readonly List<BaseSpawner> _stoppedSpawners = [];
     private static readonly List<BaseVendor> _soldOut = [];
+    private static readonly List<BaseCreature> _strong = [];
 
     [Usage("AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore [quiet]")]
     [Description(
-        "Disruptions for unattended runs, at a place rather than around you. despawn: removes what the spawners within radius of x y have spawned and stops them (for minutes, default 20). strong: spawns count creatures of kind around x y. sellout: empties the stock of item (by name) at the vendors within radius of x y. restore: restarts the stopped spawners and restocks the sold-out vendors. quiet (last) leaves the caller's journal alone, so an agent under test can't read about it."
+        "Disruptions for unattended runs, at a place rather than around you. despawn: removes what the spawners within radius of x y have spawned and stops them (for minutes, default 20). strong: spawns count creatures of kind around x y. sellout: empties the stock of item (by name) at the vendors within radius of x y. restore: restarts the stopped spawners, restocks the sold-out vendors and removes what strong spawned. quiet (last) leaves the caller's journal alone, so an agent under test can't read about it."
     )]
     public static void AgentDisrupt_OnCommand(CommandEventArgs e)
     {
@@ -741,6 +742,7 @@ public static class AgentTestKit
                             creature.Home = center;
                             creature.RangeHome = 12;
                             creature.MoveToWorld(spot, map);
+                            _strong.Add(creature);
                             made++;
                         }
                     }
@@ -798,9 +800,20 @@ public static class AgentTestKit
                         }
                     }
 
-                    Say($"Disrupt: {_stoppedSpawners.Count} spawners restarted, {_soldOut.Count} vendors restocked.");
+                    var removed = 0;
+                    foreach (var creature in _strong)
+                    {
+                        if (!creature.Deleted)
+                        {
+                            creature.Delete();
+                            removed++;
+                        }
+                    }
+
+                    Say($"Disrupt: {_stoppedSpawners.Count} spawners restarted, {_soldOut.Count} vendors restocked, {removed} creatures removed.");
                     _stoppedSpawners.Clear();
                     _soldOut.Clear();
+                    _strong.Clear();
                     return;
                 }
             default:

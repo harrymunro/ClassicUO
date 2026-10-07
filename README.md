@@ -631,7 +631,7 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO and work
 - **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall along a line, for stuck tests.
 - **`[AgentRestock [amount]`:** stocks the vendors within 12 tiles with at least that many of everything.
 - **`[AgentRunes`:** a runebook full of charges marked to the test field, the West Britain bank, the Britain graveyard and the Britain healer, and loose runes to the first two. (Green Acres itself can't be recalled out of.)
-- **`[AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore`:** disruptions at a place, for unattended runs. `despawn` empties and stops the spawners there (20 minutes by default); `strong` spawns creatures there; `sellout` empties the vendors' stock of an item; `restore` undoes the first and last.
+- **`[AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore [quiet]`:** disruptions at a place, for unattended runs. `despawn` empties and stops the spawners there (20 minutes by default); `strong` spawns creatures there; `sellout` empties the vendors' stock of an item; `restore` undoes all three. A `quiet` last word keeps the replies out of the caller's journal, so an agent under test can't read about it.
 
 Accounts are created on first login. `admin`/`admin` is the owner.
 
