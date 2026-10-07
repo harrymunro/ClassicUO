@@ -830,7 +830,8 @@ class World:
         {"error": ...} so the model can correct itself instead of the loop failing."""
         if isinstance(args, str):
             args = _load_json(args, {}) if args.strip() else {}
-        args = {k: v for k, v in (args or {}).items() if v is not None}
+        # `question` is for re-ranking the results (facts.Ranker), not for the query itself.
+        args = {k: v for k, v in (args or {}).items() if v is not None and k != "question"}
         fn = {"find_place": self.find_place, "hunting_spots": self.hunting_spots, "what_spawns": self.what_spawns,
               "route": lambda **a: self.route(a.pop("from"), a.pop("to"), **a), "notes": self.notes,
               "place": self.place, "region_at": lambda **a: self.region_at(**a) or {"region": None},
@@ -907,6 +908,8 @@ _NEAR = {"type": "string", "description": "A place name (\"Britain graveyard\", 
                                           "or coordinates \"x,y\"."}
 _MAP = {"type": "string", "description": "Facet. Default Felucca.", "default": DEFAULT_MAP}
 _LIMIT = {"type": "integer", "description": "Most results to return.", "minimum": 1, "maximum": 25}
+_QUESTION = {"type": "string", "description": "Optional: what you want to find out, in one sentence. The results "
+                                              "then come back best answer first, each with its relevance (0-1)."}
 
 
 def tool_schemas() -> list[dict[str, Any]]:
@@ -943,7 +946,7 @@ def tool_schemas() -> list[dict[str, Any]]:
                       "description": "new (skills around 30-50), moderate (60-80), strong (90+), expert (GM, "
                                      "well equipped)."},
             "near": {**_NEAR, "description": "Optional: rank closer spots higher. " + _NEAR["description"]},
-            "map": _MAP, "limit": _LIMIT}, ["archetype", "level"]),
+            "question": _QUESTION, "map": _MAP, "limit": _LIMIT}, ["archetype", "level"]),
         fn("what_spawns",
            "List the spawners in an area, or within a radius of a point: for each, where it is, the "
            "creatures it spawns (type, in-game name, max count, difficulty, hits, damage), its walking "
@@ -952,7 +955,7 @@ def tool_schemas() -> list[dict[str, Any]]:
            {"area": {"type": "string", "description": "Area or region name, e.g. \"Britain Graveyard\", "
                                                      "\"Covetous\", \"Shame\"."},
             "near": _NEAR, "radius": {"type": "integer", "description": "Tiles around `near`. Default 60."},
-            "map": _MAP, "limit": _LIMIT}, []),
+            "question": _QUESTION, "map": _MAP, "limit": _LIMIT}, []),
         fn("route",
            "How to get from one place to another: the straight-line distance in tiles, routes the agent "
            "has walked before (with \"stuck\" ones and where they got stuck), the dungeon entrance when "
@@ -964,7 +967,7 @@ def tool_schemas() -> list[dict[str, Any]]:
            "source \"model:unverified\" are unconfirmed guesses.",
            {"area": {"type": "string", "description": "Area name to filter by, e.g. \"Britain\"."},
             "keywords": {"type": "string", "description": "Words to search for, e.g. \"lich reagents\"."},
-            "limit": _LIMIT}, []),
+            "question": _QUESTION, "limit": _LIMIT}, []),
         fn("outcomes",
            "What hunting in an area gave this character before, from its session logs: per area and kit, how "
            "many loops (one hunt each) were recorded, the average per loop of kills, deaths, minutes, gold, and "

@@ -12,6 +12,7 @@ from typing import Any
 
 from . import policy, questions, state
 from . import strategy as strategies
+from .facts import FactPicker
 from .judge import Judge
 from .rpc import AgentRpc, RpcError
 
@@ -33,6 +34,8 @@ class RunStats:
     errors: int = 0
     latencies: list[float] = field(default_factory=list)
     input_tokens: int = 0
+    fact_tokens: int = 0  # of input_tokens, what choosing world facts cost (facts.py)
+    fact_selections: int = 0
     intents: dict[str, int] = field(default_factory=dict)
     statuses: dict[str, int] = field(default_factory=dict)
     assist_agree: int = 0
@@ -53,6 +56,8 @@ class RunStats:
             "latency_ms_avg": round(statistics.fmean(lat), 1) if lat else None,
             "latency_ms_p95": round(lat[int(0.95 * (len(lat) - 1))], 1) if lat else None,
             "input_tokens": self.input_tokens,
+            "fact_selections": self.fact_selections,
+            "fact_input_tokens": self.fact_tokens,
             "est_cost_usd": round(self.input_tokens / 1e6 * price, 4),
             "est_cost_usd_per_hour": round(self.input_tokens / 1e6 * price / hours, 4),
             "intents": self.intents,
@@ -67,9 +72,10 @@ class RunStats:
 async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyConfig,
               log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None,
               on_snapshot: Callable[[dict[str, Any]], None] | None = None,
-              bestiary: dict[int, dict[str, Any]] | None = None) -> RunStats:
+              bestiary: dict[int, dict[str, Any]] | None = None, facts: FactPicker | None = None) -> RunStats:
     """archetype: "warrior" or "mage", or None to tell from the character's skills.
-    on_snapshot sees every in-game snapshot (the benchmark records a trace with it)."""
+    on_snapshot sees every in-game snapshot (the benchmark records a trace with it).
+    facts picks the world facts that reach the decisions (facts.py); None for none."""
     stats = RunStats()
     mem = policy.Memory()
     events: deque[str] = deque(maxlen=20)
@@ -85,6 +91,8 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
     casts_seen: int | None = None  # the client's attack-spell count, to credit spells to targets
     log = log_path.open("a") if log_path else None
     stop = stop or asyncio.Event()
+    if facts is not None and log:
+        facts.log = lambda rec: log.write(json.dumps(rec) + "\n")
 
     try:
         while not stop.is_set():
@@ -144,6 +152,13 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
             mem.update(snap["agent"], now)
             sit = state.build(snap, mem.looted, list(events), mem.skip_items, archetype=arch, casts_at=mem.casts_at,
                               bestiary=bestiary)
+            if facts is not None:
+                facts.update(snap, sit)
+                facts.apply(sit)
+                spent = facts.take_tokens()
+                stats.input_tokens += spent
+                stats.fact_tokens += spent
+                stats.fact_selections = facts.selections
 
             # With the agent off there is nothing to decide: don't spend tokens asking.
             busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting") \
@@ -159,6 +174,9 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
 
             await asyncio.sleep(cfg.poll_s)
     finally:
+        if facts is not None:
+            facts.close()
+            facts.log = lambda rec: None
         if log:
             log.write(json.dumps({"type": "summary", "t": time.time(), **stats.summary(cfg.price_per_million)}) + "\n")
             log.close()

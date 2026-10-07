@@ -164,8 +164,10 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
     if ans.nouls.get("leave_now", 0.0) >= max(0.5, cfg.flee_danger) and cfg.allow_flee \
             and sit.authority("move") == "auto" and not sit.assisting:
         intent, conf = "leave", ans.nouls["leave_now"]
-    # Leaving needs a reason the facts back up, as fleeing needs the danger judgment.
-    if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2):
+    # Leaving needs a reason the facts back up, as fleeing needs the danger judgment. A stored
+    # fact Jev picked for this place counts when Jev's own yes/no on leaving agrees.
+    known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= max(0.5, cfg.flee_danger)
+    if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known):
         intent = "fight" if close else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.

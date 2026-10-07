@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from . import loop, policy
+from .facts import FactPicker
 from .judge import Judge
 from .logs import session_name
 from .rpc import AgentRpc
@@ -72,6 +73,7 @@ class Session:
         self.interrupt = asyncio.Event()  # set to cut the current goal short (handover, shutdown)
         self._threat_noted: dict[str, float] = {}
         self.recorder = None  # recorder.Recorder: what the character sees goes into the world store
+        self.facts_mode = "jev"  # which world facts reach the fights: jev (Jev picks), all, none (facts.py)
 
     def seen(self, snap: dict[str, Any]) -> None:
         if self.recorder is None:
@@ -403,8 +405,10 @@ class Session:
 
         lcfg = loop.LoopConfig(duration_s=minutes * 60)
         began = time.monotonic()
+        facts = FactPicker(self.world, self.judge, mode=self.facts_mode, focus=name)
         stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path or self.decisions_log, stop,
-                               archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary())
+                               archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary(),
+                               facts=facts)
         s = stats.summary(lcfg.price_per_million)["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         p0, p1 = (first or last).get("player", {}), last.get("player", {})
