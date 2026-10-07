@@ -228,7 +228,7 @@ whenever the agent is on or a brain is connected. It shows:
 - **Play state buttons:** off, combat assist and auto, with the keys that switch between them and do Jev's next move.
 - **Combat assist settings:** what it engages (your target, also attackers, or anything near) and whether it fights on its own or waits for your next-move key.
 - **The goal** (auto mode): what you asked for, the step the planner is on and why, *pause*/*resume* and *clear*, an entry box, and the goal templates (see [Goals and the planner](#goals-and-the-planner)).
-- **The brain's state** in the title row ("brain starting", "brain running"), and a *paste key* link while there is no model key.
+- **The brain's state** in the title row ("brain starting", "brain running"), then the character type and judge it is playing with ("warrior · jev/openrouter") from the moment it connects, goal or no goal, and a *paste key* link while there is no model key.
 - **Watch out:** a red, criminal or unknown player within 8 tiles.
 - **What the agent is doing:** for example "fighting Vorgak", "casting Explosion" or "bandaging", and "you're driving" or "you have the controls" while you're playing.
 - **Jev's judgment** for the latest decision:

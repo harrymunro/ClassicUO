@@ -183,6 +183,10 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
     return stats
 
 
+# Strategy text -> how it was last read, in words: the autopilot tells the panel before any fight.
+READINGS: dict[str, str] = {}
+
+
 async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.PolicyConfig, stats: RunStats,
                         log) -> tuple[policy.PolicyConfig, str]:
     """The strategy as settings, and how it was read in words ("" when there is none)."""
@@ -193,6 +197,7 @@ async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.Pol
         await rpc.call("note", text=f"strategy not read: {type(e).__name__}")
         return base, "not read (judge error)"
     reading = knobs.describe() if answers else ""
+    READINGS[text] = reading
     if answers:
         stats.input_tokens += answers.input_tokens
         await rpc.call("note", text=f"strategy: {reading}")

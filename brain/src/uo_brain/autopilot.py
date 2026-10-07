@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import loop, policy
+from . import loop, policy, state
 from .facts import FactPicker
 from .judge import Judge
 from .planner import Planner, PlanStep
@@ -55,6 +55,14 @@ class Autopilot:
         # Jev's routine questions inside hunts (routine.py), over every session object of a goal.
         self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}
 
+    async def announce(self, snap: dict[str, Any]) -> None:
+        """What the brain is running, for the panel's title row, as soon as it is connected. The
+        fight loop says so at its first look, but the planner's first step and a walk from the bank
+        can take a minute before that, and the panel read "brain off" meanwhile."""
+        text = (snap["agent"].get("strategy") or "").strip()
+        await self.rpc.call("brain_info", judge=self.judge.name, archetype=self.archetype or state.archetype_of(snap),
+                            strategy_reading=loop.READINGS.get(text))
+
     def log(self, rec: dict[str, Any]) -> None:
         if self.log_file:
             self.log_file.write(json.dumps(rec) + "\n")
@@ -67,6 +75,7 @@ class Autopilot:
                 if not snap.get("in_game"):
                     await asyncio.sleep(1)
                     continue
+                await self.announce(snap)
                 if wants_planner(snap) and self.world is not None:
                     await self.work_on_goal(snap, stop)
                 else:
@@ -128,10 +137,16 @@ class Autopilot:
             self.log({"type": "handover", "t": time.time(), "minutes_driven": minutes})
 
         # Cut the current goal short as soon as the player switches away, pauses or changes the goal.
+        # Meanwhile keep the panel's brain state fresh: it counts the brain gone after 15 s without
+        # word, and the planner thinking, or a goal with nothing to fight, can say nothing for longer.
         async def guard() -> None:
+            said = time.monotonic()
             while not session.interrupt.is_set():
                 await asyncio.sleep(1)
                 s = await self.rpc.call("snapshot", since=0)
+                if s.get("in_game") and time.monotonic() - said >= 10:
+                    said = time.monotonic()
+                    await self.announce(s)
                 g = s["agent"].get("goal") or {}
                 if stop.is_set() or not wants_planner(s) or g.get("rev") != rev:
                     session.interrupt.set()
