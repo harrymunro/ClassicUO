@@ -47,6 +47,7 @@ namespace ClassicUO.Agent
             WriteJournal(w, agent.Journal, journalSince);
             WriteMagic(w, p, agent);
             WriteDeaths(w, agent);
+            WriteSigns(w, world, radius);
 
             if (pack)
             {
@@ -152,9 +153,9 @@ namespace ClassicUO.Agent
 
                 // The full name a vendor or banker shows, title included ("Lucy the healer"),
                 // when the server sends item properties.
-                if (world.OPL.TryGetNameAndData(m.Serial, out string label, out _) && !string.IsNullOrWhiteSpace(label))
+                if (world.Agent.LabelOf(m) is string label)
                 {
-                    w.WriteString("label", label.Trim());
+                    w.WriteString("label", label);
                 }
 
                 w.WriteNumber("body", m.Graphic);
@@ -182,6 +183,11 @@ namespace ClassicUO.Agent
                 w.WriteBoolean("my_target", m.Serial == world.TargetManager.LastAttack);
                 w.WriteBoolean("player_target", m.Serial == world.Agent.PlayerTarget);
                 w.WriteBoolean("attacking_me", world.Agent.IsAttackingMe(m));
+
+                if (AgentController.ThreatKind(m, world) is string threat)
+                {
+                    w.WriteString("threat", threat);
+                }
                 w.WriteEndObject();
             }
 
@@ -292,6 +298,38 @@ namespace ClassicUO.Agent
             w.WriteEndObject();
         }
 
+        // Shop signs in view ("The Healer's Hut"), for recording where shops are.
+        private static void WriteSigns(Utf8JsonWriter w, World world, int radius)
+        {
+            w.WriteStartArray("signs");
+            int n = 0;
+
+            foreach (Item it in world.Items.Values)
+            {
+                if (n >= 10 || !it.OnGround || it.IsDestroyed || it.Distance > radius
+                    || it.ItemData.Name == null || !it.ItemData.Name.Contains("sign", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string name = NameOf(world, it);
+
+                if (name.Length == 0 || name.Equals(it.ItemData.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue; // a bare "sign" says nothing
+                }
+
+                w.WriteStartObject();
+                w.WriteString("text", name);
+                w.WriteNumber("x", it.X);
+                w.WriteNumber("y", it.Y);
+                w.WriteEndObject();
+                n++;
+            }
+
+            w.WriteEndArray();
+        }
+
         // Creatures that died in the last minute, oldest first.
         private static void WriteDeaths(Utf8JsonWriter w, AgentController agent)
         {
@@ -382,6 +420,12 @@ namespace ClassicUO.Agent
             w.WriteNumber("player_target", agent.PlayerTarget);
             w.WriteString("strategy", agent.Strategy);
             w.WriteNumber("strategy_rev", agent.StrategyRevision);
+            w.WriteStartObject("goal");
+            w.WriteString("text", agent.Goal);
+            w.WriteNumber("rev", agent.GoalRevision);
+            w.WriteBoolean("paused", agent.GoalPaused);
+            w.WriteString("step", agent.GoalStep);
+            w.WriteEndObject();
             w.WriteStartObject("authority");
 
             foreach (AgentBehavior b in AgentModes.AllBehaviors)
@@ -400,6 +444,18 @@ namespace ClassicUO.Agent
             w.WriteString("casting", agent.CastingSpell);
             w.WriteNumber("cast_ready_ms", agent.CastReadyInMs);
             w.WriteNumber("looting", agent.LootCorpse);
+            w.WriteStartArray("threats");
+
+            foreach ((uint serial, string kind, int distance) in agent.Threats)
+            {
+                w.WriteStartObject();
+                w.WriteNumber("serial", serial);
+                w.WriteString("kind", kind);
+                w.WriteNumber("distance", distance);
+                w.WriteEndObject();
+            }
+
+            w.WriteEndArray();
 
             if (agent.Errands.Kind.Length != 0)
             {
@@ -460,6 +516,10 @@ namespace ClassicUO.Agent
             w.WriteNumber("deferred", s.Deferred);
             w.WriteNumber("casts", s.Casts);
             w.WriteNumber("spell_heals", s.SpellHeals);
+            w.WriteNumber("threats", s.Threats);
+            w.WriteNumber("kites", s.Kites);
+            w.WriteNumber("cliloc_messages", s.ClilocMessages);
+            w.WriteNumber("text_messages", s.TextMessages);
             w.WriteEndObject();
             w.WriteEndObject();
         }

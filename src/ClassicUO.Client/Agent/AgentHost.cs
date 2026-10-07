@@ -275,12 +275,55 @@ namespace ClassicUO.Agent
 
                     break;
 
+                // {text: "..."} sets the goal, {clear: true}, {pause: true|false}, {template: "name"}.
+                case "goal":
+                    RequireInGame(world);
+
+                    if (Get(p, "template", out JsonElement gt))
+                    {
+                        AgentTemplate goal = AgentTemplates.FindGoal(gt.GetString()) ?? throw new AgentRpcException(-32602, $"no goal template '{gt.GetString()}'");
+                        world.Agent.SetGoal(goal.Text);
+                    }
+                    else if (Get(p, "text", out JsonElement gtext))
+                    {
+                        world.Agent.SetGoal(gtext.GetString());
+                    }
+                    else if (Get(p, "clear", out JsonElement gc) && gc.GetBoolean())
+                    {
+                        world.Agent.SetGoal(string.Empty);
+                    }
+
+                    if (Get(p, "pause", out JsonElement gp))
+                    {
+                        world.Agent.PauseGoal(gp.GetBoolean());
+                    }
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteString("goal", world.Agent.Goal);
+                        w.WriteNumber("rev", world.Agent.GoalRevision);
+                        w.WriteBoolean("paused", world.Agent.GoalPaused);
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
+                // {step, why}: what the planner is doing about the goal, for the panel.
+                case "goal_status":
+                    RequireInGame(world);
+                    world.Agent.SetGoalStatus(Get(p, "step", out JsonElement gs) ? gs.GetString() : string.Empty,
+                                              Get(p, "why", out JsonElement gw) ? gw.GetString() : string.Empty);
+                    Reply(conn, id, w => w.WriteBooleanValue(true));
+
+                    break;
+
                 case "templates":
                     Reply(conn, id, w =>
                     {
                         w.WriteStartArray();
 
-                        foreach (AgentTemplate t in AgentTemplates.All())
+                        foreach (AgentTemplate t in Get(p, "kind", out JsonElement tk) && tk.GetString() == "goal" ? AgentTemplates.Goals() : AgentTemplates.All())
                         {
                             w.WriteStartObject();
                             w.WriteString("name", t.Name);

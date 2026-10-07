@@ -69,6 +69,7 @@ namespace ClassicUO.Agent
                     case "travel":
                     case "move":
                     case "flee":
+                    case "kite":
                     case "stop":
                         return AgentBehavior.Move;
 
@@ -148,6 +149,7 @@ namespace ClassicUO.Agent
                 case "flee": return Target != 0 ? $"flee from {target}" : "flee";
                 case "walk_to": return $"walk to {X},{Y}";
                 case "travel": return $"travel to {X},{Y}";
+                case "kite": return "step back";
                 case "move": return $"move {Direction}";
                 case "war_mode": return On ? "war mode on" : "peace mode";
                 case "say": return $"say \"{Text}\"";

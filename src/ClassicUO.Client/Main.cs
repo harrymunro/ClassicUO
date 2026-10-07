@@ -410,6 +410,11 @@ namespace ClassicUO
 
                         break;
 
+                    case "agent_start_brain":
+                        Settings.GlobalSettings.AgentStartBrain = bool.Parse(value);
+
+                        break;
+
                     case "use_verdata":
                         Settings.GlobalSettings.UseVerdata = bool.Parse(value);
 

@@ -21,6 +21,8 @@ class PolicyConfig:
     close_tiles: int = 3
     spell_range: int = 7            # a mage keeps its target within this many tiles
     meditate_below: int = 80        # mana %: a resting mage meditates below this
+    avoid_players: bool = True      # auto mode leaves when a red or criminal player comes close
+    kite: bool = True               # a mage steps back from melee between spells
     # Set from the player's strategy (strategy.py).
     allow_flee: bool = True
     target_priority: str = "current_first"
@@ -38,6 +40,8 @@ class Memory:
     casts_at: dict[int, int] = field(default_factory=dict)  # spells cast at each creature
     last_meditate: float = 0.0
     hinted: dict[str, float] = field(default_factory=dict)  # combat assist: when each hint was last shown
+    leaving_until: float = 0.0  # leaving the area: keep running from whatever is in sight until then
+    last_kite: float = 0.0      # a mage's last step back from melee
 
     def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
         if now - self.hinted.get(key, -1e9) < every:
@@ -93,6 +97,7 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
                 and sit.authority("loot") != "off" and (move or within_reach) and not sit.traveling,
         "seek": bool(sit.targets) and not any(h.distance <= reach for h in sit.hostiles) and move
                 and not sit.traveling,
+        "leave": bool(sit.hostiles) and cfg.allow_flee and move,
         "rest": True,
     }
     masked = [k for k, ok in valid.items() if not ok and k in answer.probabilities]
@@ -126,6 +131,35 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
     if cfg.allow_flee and intent != "flee" and close and danger >= cfg.panic_danger and sit.hp_pct < 25 \
             and not potion_soon and sit.authority("move") != "off":
         intent, conf = "flee", danger
+
+    # A red or criminal player close by: in auto mode, leave (the agent never fights players).
+    # In combat assist the client has already warned the player.
+    danger_player = next((t for t in sit.agent.get("threats", []) if t["kind"] in ("red", "criminal")), None)
+    if danger_player and not sit.assisting and sit.authority("move") == "auto" and cfg.avoid_players:
+        return Decision("flee", 1.0, [{"verb": "flee", "target": danger_player["serial"], "tiles": 15,
+                                        "confidence": 1.0, "reason": "player"}],
+                        f"leaving: a {danger_player['kind']} player is {danger_player['distance']} tiles away", masked=[])
+
+    # Leaving: keep running from whatever is still in sight, then stay clear for a while.
+    if mem.leaving_until > now and sit.authority("move") == "auto":
+        near = [h for h in sit.hostiles if h.distance <= 14]
+        if not near:
+            return Decision("leave", 1.0, [], "left: nothing in sight", masked)
+        if sit.agent.get("fleeing"):
+            return Decision("leave", 1.0, [], "leaving", masked)
+        nearest = min(near, key=lambda h: h.distance)
+        return Decision("leave", 1.0, [{"verb": "flee", "target": nearest.serial, "tiles": 15, "confidence": 1.0,
+                                        "reason": "leave"}], f"leaving, away from {nearest.name}", masked, target=nearest)
+
+    # A cautious strategy gets out early: badly hurt with several creatures on the character.
+    outmatched = any(str(h.info.get("strength", "")).startswith("far stronger") for h in sit.hostiles)
+    low = str(sit.state["you"].get("supplies", "")).startswith("nearly gone")
+    if cfg.allow_flee and cfg.flee_danger <= 0.45 and sit.hp_pct < 45 and len(close) >= 2 \
+            and sit.authority("move") == "auto" and intent != "leave":
+        intent, conf = "leave", 1.0
+    # Leaving needs a reason the facts back up, as fleeing needs the danger judgment.
+    if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2):
+        intent = "fight" if close else "rest"
 
     # Combat assist never walks the character, so when it would flee it tells the player instead.
     hints: list[dict[str, Any]] = []
@@ -166,6 +200,13 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             # Engage at range so the client follows the creature without closing to melee.
             if target.serial != engaged or sit.agent.get("engaged_range", 1) != cfg.spell_range:
                 actions.append({"verb": "attack", "target": target.serial, "range": cfg.spell_range, **meta})
+            # Two or more creatures in melee reach: step back between spells (kiting), since
+            # every hit interrupts a spell. Not while a spell is being cast: casting roots the mage.
+            adjacent = [h for h in sit.hostiles if h.distance <= 1]
+            if cfg.kite and len(adjacent) >= 2 and not (sit.raw.get("magic") or {}).get("casting") \
+                    and sit.authority("move") == "auto" and now - mem.last_kite > 2.5:
+                mem.last_kite = now
+                actions.append({"verb": "kite", "tiles": 5, **meta, "reason": "kite"})
             # With creatures in melee reach every hit interrupts a spell, unless Protection is up.
             if close and PROTECTION not in sit.player.get("buffs", []) and sit.can_cast(PROTECTION):
                 actions.append({"verb": "cast", "spell": PROTECTION, "target": "self", "queue": True,
@@ -184,6 +225,13 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             if target.serial != engaged:
                 actions.append({"verb": "attack", "target": target.serial, **meta})
             dec.note = f"{'fight' if target.serial != engaged else 'keep fighting'} {target.name} ({conf:.2f})"
+
+    elif intent == "leave":
+        mem.leaving_until = now + 40
+        threat = max(sit.hostiles, key=lambda h: (str(h.info.get("strength", "")).startswith("far"), -h.distance))
+        dec.target = threat
+        actions.append({"verb": "flee", "target": threat.serial, "tiles": 15, **meta})
+        dec.note = f"leave, away from {threat.name} ({conf:.2f})"
 
     elif intent == "flee":
         threat = min(close, key=lambda h: h.distance)
@@ -237,7 +285,8 @@ def pick_target(sit: Situation, ans: Answers, cfg: PolicyConfig) -> tuple[Candid
         case "weakest_first":
             return min(targets, key=lambda h: (hp(h), h.distance)), None
         case "strongest_first":
-            return max(targets, key=lambda h: (hp(h), -h.distance)), None
+            # The most dangerous: the creature with the most to it, then the healthiest.
+            return max(targets, key=lambda h: (h.max_hits, hp(h), -h.distance)), None
         case "closest_first":
             return min(targets, key=lambda h: h.distance), None
     return current or min(targets, key=lambda h: h.distance), None

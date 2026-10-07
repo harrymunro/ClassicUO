@@ -73,6 +73,7 @@
   <!-- Strategy templates for the agent (Agent/AgentTemplates.cs) -->
   <ItemGroup>
     <EmbeddedResource Include="Agent\Templates\*.md" LogicalName="AgentTemplates.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Agent\Goals\*.md" LogicalName="AgentGoals.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

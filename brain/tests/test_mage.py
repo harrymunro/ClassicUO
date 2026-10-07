@@ -48,7 +48,7 @@ def test_spell_question_offers_castable_spells_and_none(mage):
     assert set(qs["spell"]["criteria"]) == {"s1", "s2", "s3", "s4", "s5", "none"}
     assert qs["spell"]["criteria"]["s2"].startswith("Explosion:")
     assert qs["spell"]["instructions"]["player_strategy"] == "Open every fight with an explosion spell."
-    assert set(qs["intent"]["criteria"]) == {"fight", "flee", "loot", "seek", "rest"}
+    assert set(qs["intent"]["criteria"]) == {"fight", "flee", "leave", "loot", "seek", "rest"}
     assert "mage" in qs["intent"]["instructions"]["role"]
     assert "within spell range" in qs["target"]["criteria"]["t1"]
 
@@ -164,7 +164,7 @@ def test_decision_payload_for_the_panel(mage):
         name = "jev/test"
 
     out = loop.decision_payload(J(), sit, qs, ans, dec, [{"status": "done"}])
-    assert list(out["intents"]) == ["fight", "flee", "loot", "seek", "rest"]
+    assert list(out["intents"]) == ["fight", "flee", "leave", "loot", "seek", "rest"]
     assert out["target"] == {"serial": 0x100, "name": "an orc", "confidence": 0.9}
     assert out["spell"] == {"name": "Explosion", "confidence": 0.8, "why": "jev"}
     assert out["results"] == ["done"] and out["archetype"] == "mage" and out["danger"] == 0.1

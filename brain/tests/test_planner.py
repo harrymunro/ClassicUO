@@ -139,3 +139,15 @@ def test_a_dead_character_ends_the_session(tmp_path):
 def test_describe_puts_the_situation_in_words():
     d = describe(json.loads(json.dumps(SNAPSHOT)))
     assert d["health"] == "60/100" and d["bandages"] == 40 and d["hostiles_in_sight"] == 2
+
+
+def test_the_planner_only_works_in_auto_mode_with_an_unpaused_goal():
+    from uo_brain.autopilot import wants_planner
+
+    def snap(mode, text, paused=False):
+        return {"agent": {"mode": mode, "goal": {"text": text, "rev": 1, "paused": paused}}}
+
+    assert wants_planner(snap("auto", "hunt the graveyard"))
+    assert not wants_planner(snap("assist", "hunt the graveyard"))  # the player is driving
+    assert not wants_planner(snap("auto", "hunt the graveyard", paused=True))
+    assert not wants_planner(snap("auto", ""))

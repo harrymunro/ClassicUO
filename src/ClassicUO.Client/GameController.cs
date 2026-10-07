@@ -933,6 +933,7 @@ namespace ClassicUO
 
         protected override void OnExiting(object sender, EventArgs args)
         {
+            Agent.AgentBrain.Stop("client closing");
             Scene?.Dispose();
 
             base.OnExiting(sender, args);

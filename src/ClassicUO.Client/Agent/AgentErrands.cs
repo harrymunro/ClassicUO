@@ -263,6 +263,15 @@ namespace ClassicUO.Agent
 
             foreach ((string word, int amount) in Wanted(_items))
             {
+                // Banked gold is account balance on AOS-era servers: ask the banker for it.
+                if (word == "gold")
+                {
+                    GameActions.Say($"withdraw {amount}");
+                    _movedAt = Time.Ticks;
+
+                    continue;
+                }
+
                 int need = amount;
 
                 foreach (Item it in Find(box, word))
@@ -325,8 +334,8 @@ namespace ClassicUO.Agent
             {
                 if (_moves.Count == 0)
                 {
-                    // A purchase or sale shows up as a change in gold a moment later.
-                    if (Kind != "bank" && now - _movedAt < 1500)
+                    // A purchase, a sale or a gold withdrawal shows up as a change in gold a moment later.
+                    if ((Kind != "bank" || _items.Contains("gold")) && now - _movedAt < 1500)
                     {
                         return;
                     }

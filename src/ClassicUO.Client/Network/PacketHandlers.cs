@@ -4758,6 +4758,12 @@ namespace ClassicUO.Network
             string name = p.ReadASCII(30);
             string affix = p[0] == 0xCC ? p.ReadASCII() : string.Empty;
 
+            // System messages and the player's own: by number for the agent (Agent/AgentMessages.cs).
+            if (entity == null || entity == world.Player)
+            {
+                world.Agent.OnCliloc(cliloc);
+            }
+
             string arguments = null;
 
             if (cliloc == 1008092 || cliloc == 1005445) // value for "You notify them you don't want to join the party" || "You have been added to the party"

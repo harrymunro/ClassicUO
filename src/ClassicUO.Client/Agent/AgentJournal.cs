@@ -68,6 +68,11 @@ namespace ClassicUO.Agent
 
             bool agent = e.Text.StartsWith(AGENT_PREFIX);
 
+            if (e.Type == MessageType.Label && e.Parent is Mobile labelled)
+            {
+                _world.Agent?.OnLabel(labelled.Serial, e.Text);
+            }
+
             Add
             (
                 new Entry

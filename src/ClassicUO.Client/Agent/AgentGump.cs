@@ -48,12 +48,14 @@ namespace ClassicUO.Agent
         private readonly ResizePic _background;
         private readonly AlphaBlendControl _shade;
         private readonly DataBox _content;
-        private readonly DataBox _entry;
-        private readonly StbTextBox _strategyBox;
+        private readonly DataBox _entry, _goalEntry;
+        private readonly StbTextBox _strategyBox, _goalBox;
 
         private uint _nextUpdate;
+        private bool _hasKey = true;
+        private uint _keyCheckedAt;
         private string _signature = string.Empty;
-        private List<AgentTemplate> _templates;
+        private List<AgentTemplate> _templates, _goals;
         private uint _templatesAt;
 
         public AgentGump(World world, AgentController agent) : base(world, 0, 0)
@@ -97,6 +99,22 @@ namespace ClassicUO.Agent
             _entry.Add(new ClickLabel("clear", LINK, () => SetStrategy(string.Empty)) { X = INNER - 36, Y = 2 });
             Add(_entry);
 
+            // Goal entry (auto mode): a text field with "set".
+            _goalEntry = new DataBox(PAD, 0, INNER, 24);
+            _goalEntry.Add(new ResizePic(ENTRY_BACKGROUND) { Width = INNER - 40, Height = 22 });
+            _goalEntry.Add
+            (
+                _goalBox = new StbTextBox(FONT, AgentController.MAX_STRATEGY_LENGTH, INNER - 50, true, FontStyle.None, 0x0386)
+                {
+                    X = 5,
+                    Y = 2,
+                    Width = INNER - 50,
+                    Height = 18
+                }
+            );
+            _goalEntry.Add(new ClickLabel("set", LINK, SetGoal) { X = INNER - 30, Y = 2 });
+            Add(_goalEntry);
+
             Rebuild();
         }
 
@@ -122,6 +140,13 @@ namespace ClassicUO.Agent
             }
 
             _nextUpdate = Time.Ticks + 200;
+
+            if (_keyCheckedAt == 0 || Time.Ticks - _keyCheckedAt > 5000)
+            {
+                _keyCheckedAt = Time.Ticks;
+                _hasKey = AgentBrain.HasKey;
+            }
+
             string sig = Signature();
 
             if (sig != _signature)
@@ -140,6 +165,8 @@ namespace ClassicUO.Agent
             return string.Concat
             (
                 _agent.Mode.Name(), _agent.Engage.Name(), _agent.GetAuthority(AgentBehavior.Fight).Name(), "|", Expanded ? "x" : "c", "|",
+                AgentBrain.State, _hasKey ? "k" : "-", ThreatLine(), "|",
+                _agent.GoalRevision.ToString(), _agent.GoalStep, "|",
                 _agent.BrainActive ? "b" : "-", _agent.HumanActive ? "h" : "-", "|",
                 Doing(), "|", _agent.DecisionSeq.ToString(), "|", _agent.StrategyRevision.ToString(), "|",
                 _agent.Suggestion?.Describe(World) ?? "", "|", d == null ? "" : Ago(d.Time), "|",
@@ -154,8 +181,9 @@ namespace ClassicUO.Agent
 
             // Title row: name, brain state, collapse toggle.
             AddText("Jev", PAD, y, GOLD);
-            string brain = !_agent.BrainActive ? "brain off"
-                : string.Join(" · ", new[] { _agent.BrainArchetype, _agent.BrainJudge }).Trim(' ', '·');
+            string brain = _agent.BrainActive ? string.Join(" · ", new[] { _agent.BrainArchetype, _agent.BrainJudge }).Trim(' ', '·')
+                : AgentBrain.State.Length != 0 ? "brain " + AgentBrain.State
+                : "brain off";
             AddText(brain, PAD + 34, y + 1, _agent.BrainActive ? GREEN : GREY);
             _content.Add(new ClickLabel(Expanded ? "less" : "more", LINK, () => { Expanded = !Expanded; _signature = string.Empty; }) { X = WIDTH - PAD - 28, Y = y });
             y += 22;
@@ -175,6 +203,22 @@ namespace ClassicUO.Agent
             }
 
             y += 20;
+
+            // No model key yet: Jev can't be asked. Copy the key, then click; it is never shown.
+            if (_agent.Mode != AgentMode.Off && !_hasKey)
+            {
+                Label noKey = AddText("no model key:", PAD, y, RED);
+                var paste = new ClickLabel("paste key", LINK, () =>
+                {
+                    _agent.Print(AgentBrain.SaveKey(Utility.StringHelper.GetClipboardText(false)));
+                    _keyCheckedAt = 0;
+                    _signature = string.Empty;
+                }) { X = PAD + noKey.Width + 8, Y = y };
+                paste.SetTooltip("Copy your OpenRouter key (openrouter.ai/keys), then click. It is saved to brain/.env and never shown.", 240);
+                _content.Add(paste);
+                y += 18;
+            }
+
             string keys = KeyHelp();
 
             if (keys.Length != 0)
@@ -189,6 +233,11 @@ namespace ClassicUO.Agent
 
             y += 4;
 
+            if (_agent.Threats.Count != 0)
+            {
+                y = AddWrapped(ThreatLine(), PAD, y, INNER, RED) + 2;
+            }
+
             string doing = Doing();
             string status = !_agent.HumanActive ? "now: " + doing
                 : _agent.Mode == AgentMode.Assist ? "you're driving; " + doing
@@ -196,6 +245,23 @@ namespace ClassicUO.Agent
             y = AddWrapped(status, PAD, y, INNER, _agent.HumanActive ? GOLD : WHITE) + 4;
 
             AgentDecision d = _agent.LastDecision;
+
+            if (_agent.Mode == AgentMode.Auto && Expanded)
+            {
+                y = AddGoal(y);
+                _goalEntry.IsVisible = true;
+                _goalEntry.Y = y;
+                y = AddGoalTemplates(y + _goalEntry.Height + 2);
+            }
+            else
+            {
+                _goalEntry.IsVisible = false;
+
+                if (_agent.Mode == AgentMode.Auto && _agent.GoalStep.Length != 0)
+                {
+                    y = AddWrapped("goal: " + _agent.GoalStep, PAD, y, INNER, GOLD) + 2;
+                }
+            }
 
             if (Expanded)
             {
@@ -248,6 +314,75 @@ namespace ClassicUO.Agent
             _content.Height = y;
         }
 
+        // Auto mode: the session goal, the step the planner is on and why, pause and clear.
+        private int AddGoal(int y)
+        {
+            y = AddHeader("goal", y);
+
+            if (_agent.Goal.Length == 0)
+            {
+                return AddWrapped("none yet: type one, e.g. \"hunt the Britain graveyard, keep stocked, bank gold\", or pick one below", PAD, y, INNER, GREY) + 4;
+            }
+
+            y = AddWrapped("\"" + _agent.Goal.Replace('\n', ' ') + "\"", PAD, y, INNER, WHITE);
+
+            if (_agent.GoalPaused)
+            {
+                y = AddWrapped("paused", PAD, y + 2, INNER, GOLD);
+            }
+            else if (_agent.GoalStep.Length != 0)
+            {
+                y = AddWrapped("now: " + _agent.GoalStep, PAD, y + 2, INNER, GREEN);
+
+                if (_agent.GoalWhy.Length != 0)
+                {
+                    y = AddWrapped("why: " + _agent.GoalWhy, PAD, y, INNER, GREY);
+                }
+            }
+            else if (!_agent.BrainActive)
+            {
+                y = AddWrapped("no brain running to work on it", PAD, y + 2, INNER, GREY);
+            }
+
+            var pause = new ClickLabel(_agent.GoalPaused ? "resume" : "pause", LINK, () => _agent.PauseGoal(!_agent.GoalPaused)) { X = PAD, Y = y + 2 };
+            _content.Add(pause);
+            _content.Add(new ClickLabel("clear", LINK, () => _agent.SetGoal(string.Empty)) { X = PAD + pause.Width + 12, Y = y + 2 });
+
+            return y + 22;
+        }
+
+        private int AddGoalTemplates(int y)
+        {
+            if (_goals == null || Time.Ticks - _templatesAt > 5000)
+            {
+                _goals = AgentTemplates.Goals();
+            }
+
+            Label head = AddText("goals:", PAD, y, GREY);
+            int x = PAD + head.Width + 8;
+
+            foreach (AgentTemplate t in _goals)
+            {
+                AgentTemplate goal = t;
+                bool inUse = _agent.Goal == t.Text;
+                var link = new ClickLabel(t.Name, inUse ? GOLD : LINK, () => _agent.SetGoal(goal.Text));
+
+                if (x + link.Width > PAD + INNER)
+                {
+                    x = PAD;
+                    y += 16;
+                }
+
+                link.X = x;
+                link.Y = y;
+                link.SetTooltip(t.Summary + "\n\n" + t.Text, 260);
+                _content.Add(link);
+                x += link.Width + 10;
+            }
+
+            return y + 20;
+        }
+
         // Combat assist: what it takes on by itself, and whether it fights on its own or waits for
         // the next-move key.
         private int AddAssistSettings(int y)
@@ -275,6 +410,32 @@ namespace ClassicUO.Agent
             _content.Add(onKey);
 
             return y + 17;
+        }
+
+        // The nearest red player first, then criminals, then unknown players.
+        private string ThreatLine()
+        {
+            if (_agent.Threats.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            (uint _, string kind, int distance) = _agent.Threats[0];
+
+            foreach (var t in _agent.Threats)
+            {
+                int rank = t.Kind == "red" ? 0 : t.Kind == "criminal" ? 1 : 2, best = kind == "red" ? 0 : kind == "criminal" ? 1 : 2;
+
+                if (rank < best || rank == best && t.Distance < distance)
+                {
+                    (kind, distance) = (t.Kind, t.Distance);
+                }
+            }
+
+            string who = kind == "unknown" ? "an unknown player" : $"a {kind} player";
+            string more = _agent.Threats.Count > 1 ? $" (+{_agent.Threats.Count - 1})" : string.Empty;
+
+            return $"watch out: {who}, {distance} tile{(distance == 1 ? "" : "s")} away{more}";
         }
 
         // "Alt+A switches · Alt+N next move", from the player's macros.
@@ -331,7 +492,10 @@ namespace ClassicUO.Agent
 
             if (d == null)
             {
-                return AddWrapped(_agent.BrainActive ? "waiting for the first decision" : "no brain running: start uo-brain run", PAD, y, INNER, GREY) + 4;
+                string idle = _agent.BrainActive || AgentHost.BrainConnected || AgentBrain.Running ? "waiting for the first fight decision"
+                    : _agent.Mode == AgentMode.Off ? "turn the agent on to start the brain" : "no brain running: start uo-brain run";
+
+                return AddWrapped(idle, PAD, y, INNER, GREY) + 4;
             }
 
             foreach ((string name, float p) in d.Intents)
@@ -627,9 +791,30 @@ namespace ClassicUO.Agent
             _strategyBox.SetText(string.Empty);
         }
 
+        private void SetGoal()
+        {
+            string text = _goalBox.Text?.Trim();
+
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            _agent.SetGoal(text);
+            _goalBox.SetText(string.Empty);
+            _agent.Print("goal: " + text);
+        }
+
         public override void OnKeyboardReturn(int textID, string text)
         {
-            AddStrategy();
+            if (UIManager.KeyboardFocusControl == _goalBox)
+            {
+                SetGoal();
+            }
+            else
+            {
+                AddStrategy();
+            }
         }
 
         protected override void OnDragEnd(int x, int y)

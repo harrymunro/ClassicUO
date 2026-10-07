@@ -30,36 +30,44 @@ namespace ClassicUO.Agent
             For == "any" || string.IsNullOrEmpty(archetype) || string.Equals(For, archetype, StringComparison.OrdinalIgnoreCase);
     }
 
+    // Goal templates (Agent/Goals/*.md, and an AgentGoals folder next to the client) use the
+    // same format: a goal for the planner in the player's words.
     internal static class AgentTemplates
     {
         private const string RESOURCE_PREFIX = "AgentTemplates.";
 
         public static string UserDirectory => Path.Combine(AppContext.BaseDirectory, "AgentTemplates");
 
+        public static List<AgentTemplate> All() => All(RESOURCE_PREFIX, UserDirectory);
+
+        public static List<AgentTemplate> Goals() => All("AgentGoals.", Path.Combine(AppContext.BaseDirectory, "AgentGoals"));
+
+        public static AgentTemplate FindGoal(string name) => Find(name, Goals());
+
         // Built-in templates, then the user's; read fresh each time so new files show up.
-        public static List<AgentTemplate> All()
+        private static List<AgentTemplate> All(string prefix, string userDirectory)
         {
             var byName = new Dictionary<string, AgentTemplate>(StringComparer.OrdinalIgnoreCase);
             var assembly = typeof(AgentTemplates).Assembly;
 
             foreach (string resource in assembly.GetManifestResourceNames())
             {
-                if (!resource.StartsWith(RESOURCE_PREFIX, StringComparison.Ordinal))
+                if (!resource.StartsWith(prefix, StringComparison.Ordinal))
                 {
                     continue;
                 }
 
                 using Stream stream = assembly.GetManifestResourceStream(resource);
                 using var reader = new StreamReader(stream);
-                string name = Path.GetFileNameWithoutExtension(resource.Substring(RESOURCE_PREFIX.Length));
+                string name = Path.GetFileNameWithoutExtension(resource.Substring(prefix.Length));
                 byName[name] = Parse(name, reader.ReadToEnd(), false);
             }
 
             try
             {
-                if (Directory.Exists(UserDirectory))
+                if (Directory.Exists(userDirectory))
                 {
-                    foreach (string file in Directory.GetFiles(UserDirectory, "*.md"))
+                    foreach (string file in Directory.GetFiles(userDirectory, "*.md"))
                     {
                         string name = Path.GetFileNameWithoutExtension(file);
                         byName[name] = Parse(name, File.ReadAllText(file), true);
@@ -68,7 +76,7 @@ namespace ClassicUO.Agent
             }
             catch (Exception ex)
             {
-                Log.Warn($"[agent] could not read templates in {UserDirectory}: {ex.Message}");
+                Log.Warn($"[agent] could not read templates in {userDirectory}: {ex.Message}");
             }
 
             var list = new List<AgentTemplate>(byName.Values);
@@ -78,7 +86,9 @@ namespace ClassicUO.Agent
         }
 
         // By file name or title, ignoring case.
-        public static AgentTemplate Find(string name)
+        public static AgentTemplate Find(string name) => Find(name, All());
+
+        private static AgentTemplate Find(string name, List<AgentTemplate> all)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -87,7 +97,7 @@ namespace ClassicUO.Agent
 
             name = name.Trim();
 
-            foreach (AgentTemplate t in All())
+            foreach (AgentTemplate t in all)
             {
                 if (string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase) || string.Equals(t.Title, name, StringComparison.OrdinalIgnoreCase))
                 {

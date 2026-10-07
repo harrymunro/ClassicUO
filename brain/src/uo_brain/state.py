@@ -31,6 +31,18 @@ BODY_KINDS = {
 }
 
 
+def threat_words(creature: dict[str, Any], your_hits: int) -> str:
+    """How a creature measures up to the character, in words, from its stats."""
+    hits, grade = creature["hits"], creature.get("difficulty") or ""
+    if grade in ("deadly", "strong") and hits >= 2 * max(your_hits, 1):
+        return "far stronger than you: do not fight it alone"
+    if grade in ("deadly", "strong") or hits >= 1.5 * max(your_hits, 1):
+        return "stronger than you: a hard fight"
+    if grade == "moderate":
+        return "a fair fight"
+    return "weak: an easy kill"
+
+
 def health_words(pct: int | None) -> str:
     if pct is None:
         return "unknown health"
@@ -71,6 +83,7 @@ class Candidate:
     hits_pct: int | None = None
     casts: int = 0  # spells this mage has cast at it
     allowed: bool = True  # combat assist: the engage setting lets the agent take it on
+    max_hits: int = 0     # from the bestiary: how much of a creature there is, for "strongest first"
 
 
 @dataclass
@@ -152,7 +165,9 @@ def archetype_of(snapshot: dict[str, Any]) -> str:
 
 
 def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_items: set[int] = frozenset(),
-          max_hostiles: int = 6, archetype: str | None = None, casts_at: dict[int, int] | None = None) -> Situation:
+          max_hostiles: int = 6, archetype: str | None = None, casts_at: dict[int, int] | None = None,
+          bestiary: dict[int, dict[str, Any]] | None = None) -> Situation:
+    """bestiary (World.bestiary): body -> creature stats, to say how strong each hostile is."""
     p = snapshot["player"]
     archetype = archetype or archetype_of(snapshot)
     mage = archetype == "mage"
@@ -189,6 +204,11 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 "your_current_target": bool(m.get("my_target")) or m["serial"] == engaged,
                 "aggressive": bool(m.get("war_mode")),
             }
+            known = (bestiary or {}).get(m.get("body", 0))
+            if known:
+                info["strength"] = threat_words(known, p.get("hits_max") or 100)
+                if known.get("caster"):
+                    info["casts_spells"] = "yes: it attacks with spells from a distance"
             allowed = not traveling or m["distance"] <= 3 or (bool(m.get("war_mode")) and m["distance"] <= 6)
             if mode == "assist":
                 info["the_players_target"] = bool(m.get("player_target"))
@@ -200,10 +220,16 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 n = casts_at.get(m["serial"], 0)
                 info["your_spells_at_it"] = "none yet" if n == 0 else f"{n} so far"
             hostiles.append(Candidate(cid, m["serial"], info["name"], m["distance"], info, m.get("hits_pct"),
-                                      casts_at.get(m["serial"], 0), allowed))
+                                      casts_at.get(m["serial"], 0), allowed, known["hits"] if known else 0))
         elif len(others) < 5:
+            # Other players go in by what they are, never by name.
+            if m.get("threat"):
+                kind = {"red": "a red player (a murderer)", "criminal": "a criminal player"}.get(m["threat"], "another player")
+                others.append({"name": kind, "kind": "player", "distance": distance_words(m["distance"])})
+                continue
             kind = "your pet" if m.get("pet") else "person" if m.get("human") else "creature"
-            others.append({"name": m.get("name") or "someone", "kind": kind, "distance": distance_words(m["distance"])})
+            others.append({"name": m.get("label") or m.get("name") or "someone", "kind": kind,
+                           "distance": distance_words(m["distance"])})
 
     corpses: list[Candidate] = []
     items: list[Candidate] = []
@@ -251,8 +277,16 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         "fighting": next((h.name for h in hostiles if h.info["your_current_target"]), "nobody"),
         "carrying": "nearly overloaded" if p.get("weight_max") and p["weight"] > 0.9 * p["weight_max"] else "light load",
     }
+    bandages, potions = supplies.get("bandages", 0), supplies.get("heal_potions", 0)
+    if bandages <= 10 and potions <= 1:
+        you["supplies"] = f"nearly gone: {bandages} bandages and {potions} heal potions left"
+    elif bandages <= 25 or potions == 0:
+        you["supplies"] = f"running low: {bandages} bandages and {potions} heal potions left"
+    else:
+        you["supplies"] = "plenty"
     if mage:
         del you["bandages_left"]
+        you["supplies"] = "plenty" if potions > 1 else f"{potions} heal potions left"
         you["weapon"] = "spells (weak in melee)"
         you["mana"] = f"{mana_words(mana_pct)} ({mana_pct}%)"
         you["casting_now"] = magic.get("casting") or "nothing"

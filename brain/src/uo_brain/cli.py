@@ -109,6 +109,11 @@ def main() -> None:
 
     add_world_args(sub)
 
+    ss = sub.add_parser("session", help="play towards a goal in words: the planner picks each goal, Jev fights")
+    ss.add_argument("goal", help='e.g. "hunt the undead at the Britain graveyard, keep supplied with bandages, bank gold"')
+    ss.add_argument("--hours", type=float, default=1.0)
+    add_run_args(ss)
+
     do = sub.add_parser("do", help="one session goal: travel, bank, buy, sell, hunt or rest (uses the world store)")
     do.add_argument("--shard", default="local")
     dsub = do.add_subparsers(dest="goal", required=True)
@@ -163,6 +168,8 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--log", type=Path, help="append decisions to this JSONL file")
     p.add_argument("--min-confidence", type=float, default=policy.PolicyConfig.min_intent_confidence)
     p.add_argument("--price-per-million", type=float, default=loop.LoopConfig.price_per_million)
+    p.add_argument("--shard", default="local", help="world store for the planner (run with a goal in auto mode)")
+    p.add_argument("--planner-model", help="default anthropic/claude-sonnet-5.5 (or PLANNER_MODEL)")
 
 
 def add_world_args(sub) -> None:
@@ -296,6 +303,8 @@ async def dispatch(args) -> None:
                 await bench(rpc, args)
             case "do":
                 await do_goal(rpc, args)
+            case "session":
+                await session_cmd(rpc, args)
     finally:
         await rpc.close()
 
@@ -383,10 +392,24 @@ async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
     asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop.set)
     lcfg = loop.LoopConfig(duration_s=args.duration, price_per_million=args.price_per_million)
     pcfg = policy.PolicyConfig(min_intent_confidence=args.min_confidence)
+    archetype = None if args.archetype == "auto" else args.archetype
     print(f"running with {judge.name}; Ctrl-C to stop")
     try:
-        stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop,
-                               archetype=None if args.archetype == "auto" else args.archetype)
+        if args.cmd == "run":
+            # Fights, and works towards the panel's goal in auto mode (autopilot.py).
+            from .autopilot import Autopilot
+            from .world import World
+
+            world = World.open(args.shard)
+            if args.duration:
+                asyncio.get_running_loop().call_later(args.duration, stop.set)
+            lcfg.duration_s = None
+            try:
+                await Autopilot(rpc, judge, world, lcfg, pcfg, args.log, archetype, args.planner_model).run(stop)
+            finally:
+                world.close()
+            return loop.RunStats()
+        stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop, archetype=archetype)
     finally:
         await judge.close()
     print(json.dumps(stats.summary(lcfg.price_per_million), indent=2))
@@ -412,6 +435,45 @@ async def scenario(rpc: AgentRpc, args) -> None:
     minutes = sum(r["minutes"] for r in results)
     print(json.dumps({"rounds": len(results), "kills": kills, "deaths": deaths, "minutes": round(minutes, 1),
                       "kills_per_hour": round(kills / max(minutes / 60, 1e-9), 1)}, indent=2))
+
+
+async def session_cmd(rpc: AgentRpc, args) -> None:
+    from .planner import Planner
+    from .session import Session
+    from .world import World
+
+    world = World.open(args.shard)
+    judge = make_judge(args)
+    log = args.log.open("a") if args.log else None
+
+    def write(rec: dict) -> None:
+        if log:
+            log.write(json.dumps(rec) + "\n")
+            log.flush()
+        if rec.get("type") in ("goal", "goal_result"):
+            print(json.dumps(rec))
+
+    async def show(goal: str, step: str, why: str) -> None:
+        await rpc.call("note", text=f"goal: {step}" + (f" ({why})" if why else ""))
+
+    archetype = None if args.archetype == "auto" else args.archetype
+    session = Session(rpc, world, judge, log=write, archetype=archetype,
+                      decisions_log=args.log.with_suffix(".decisions.jsonl") if args.log else None)
+    from .recorder import Recorder
+    session.recorder = Recorder(world, judge)
+    plan = Planner(session, args.goal, model=args.planner_model, log=write, on_goal=show)
+    stop = asyncio.Event()
+    asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop.set)
+    await rpc.call("mode", mode="auto")
+    try:
+        summary = await plan.run(hours=args.hours, stop=stop)
+    finally:
+        await judge.close()
+        world.close()
+    write({"type": "session_summary", "t": time.time(), **summary})
+    if log:
+        log.close()
+    print(json.dumps(summary, indent=2))
 
 
 async def do_goal(rpc: AgentRpc, args) -> None:

@@ -66,7 +66,8 @@ class RunStats:
 
 async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyConfig,
               log_path: Path | None, stop: asyncio.Event | None = None, archetype: str | None = None,
-              on_snapshot: Callable[[dict[str, Any]], None] | None = None) -> RunStats:
+              on_snapshot: Callable[[dict[str, Any]], None] | None = None,
+              bestiary: dict[int, dict[str, Any]] | None = None) -> RunStats:
     """archetype: "warrior" or "mage", or None to tell from the character's skills.
     on_snapshot sees every in-game snapshot (the benchmark records a trace with it)."""
     stats = RunStats()
@@ -141,9 +142,12 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
             casts_seen = casts
 
             mem.update(snap["agent"], now)
-            sit = state.build(snap, mem.looted, list(events), mem.skip_items, archetype=arch, casts_at=mem.casts_at)
+            sit = state.build(snap, mem.looted, list(events), mem.skip_items, archetype=arch, casts_at=mem.casts_at,
+                              bestiary=bestiary)
 
-            busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting")
+            # With the agent off there is nothing to decide: don't spend tokens asking.
+            busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting") \
+                or snap["agent"].get("mode") == "off"
             sig = sit.signature()
             if not busy and (now >= next_decide or sig != last_sig):
                 for action, res in await decide_once(rpc, judge, sit, mem, active, stats, log):

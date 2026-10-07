@@ -39,24 +39,6 @@ namespace ClassicUO.Agent
         private const int GRAB_TRIES = 4;
         private const uint LOOT_TIMEOUT_MS = 15000;
 
-        private static readonly string[] BandageEndMessages =
-        {
-            "finish applying the bandages",
-            "barely help",
-            "heal what little damage",
-            "have been cured",
-            "have cured",
-            "did not stay close enough",
-            "unable to",
-            "not damaged",
-            "stop applying",
-            "bandages are not",
-            "You cannot heal",
-            "failed to cure",
-            "be used on that",
-            "resurrect"
-        };
-
         private readonly World _world;
         private readonly AgentAuthority[] _authority = new AgentAuthority[AgentModes.AllBehaviors.Length];
         private readonly Queue<uint> _takeQueue = new Queue<uint>();
@@ -83,7 +65,7 @@ namespace ClassicUO.Agent
         private uint _lootStarted, _lootOpenedAt, _nextLootStep, _lootIdleSince;
         private uint _nextGrab;
 
-        private uint _fleeUntil;
+        private uint _fleeUntil, _kiteUntil;
         private bool _agentWalking;
 
         // A long walk (travel): the planned path, how far along it the player is, and when the
@@ -116,6 +98,64 @@ namespace ClassicUO.Agent
         private readonly Dictionary<uint, int> _peekFailures = new Dictionary<uint, int>();
         private bool _wasTargeting;
         private uint _cursorUpSince;
+
+        // Other players close enough to matter: red (murderers), criminals, and players the agent
+        // can't place (no NPC title, not in the party). Defensive only: the agent never attacks
+        // players, and their names stay out of the brain's model questions and the world store.
+        private readonly List<(uint Serial, string Kind, int Distance)> _threats = new List<(uint, string, int)>();
+        private readonly Dictionary<(uint, string), uint> _threatWarned = new Dictionary<(uint, string), uint>();
+        private uint _nextThreatLook;
+
+        // Names with titles ("Lucy the healer") learnt from single clicks, for shards that send
+        // no item properties (pre-AOS): the title is how townsfolk are told from players.
+        private readonly Dictionary<uint, string> _labels = new Dictionary<uint, string>();
+        private readonly HashSet<uint> _clicked = new HashSet<uint>();
+        private uint _clickedOne, _clickedAt, _nextNameClick;
+
+        public string LabelOf(Mobile m)
+        {
+            if (_world.OPL.TryGetNameAndData(m.Serial, out string name, out _) && !string.IsNullOrWhiteSpace(name))
+            {
+                return name.Trim();
+            }
+
+            return _labels.TryGetValue(m.Serial, out string learnt) ? learnt : null;
+        }
+
+        // The overhead name a single click brings back (AgentJournal routes Label messages here).
+        public void OnLabel(uint serial, string text)
+        {
+            if (serial != 0 && serial == _clickedOne && Time.Ticks - _clickedAt < 3000 && !string.IsNullOrWhiteSpace(text))
+            {
+                _labels[serial] = text.Trim();
+                _clickedOne = 0;
+            }
+        }
+
+        private void UpdateNames(uint now)
+        {
+            if (_world.ClientFeatures.TooltipsEnabled || Mode == AgentMode.Off || HumanActive || now < _nextNameClick
+                || _engaged != 0 || _castSpell != 0)
+            {
+                return;
+            }
+
+            _nextNameClick = now + 1500;
+
+            foreach (Mobile m in _world.Mobiles.Values)
+            {
+                if (m != _world.Player && m.IsHuman && !m.IsDead && m.Distance <= 12 && _clicked.Add(m.Serial))
+                {
+                    _clickedOne = m.Serial;
+                    _clickedAt = now;
+                    GameActions.SingleClick(_world, m.Serial);
+
+                    return;
+                }
+            }
+        }
+        public IReadOnlyList<(uint Serial, string Kind, int Distance)> Threats => _threats;
+        public const int THREAT_RANGE = 8;
 
         // Creatures seen dying, newest last, so a benchmark can tell what died in which order.
         private readonly List<(uint Serial, string Name, ushort Body, uint Time)> _deaths = new List<(uint, string, ushort, uint)>();
@@ -167,6 +207,16 @@ namespace ClassicUO.Agent
         // The brain reads it with every decision and turns it into policy settings.
         public string Strategy { get; private set; } = string.Empty;
         public int StrategyRevision { get; private set; }
+
+        // The session goal for auto mode, in the player's words ("hunt the Britain graveyard,
+        // keep stocked, bank gold"). The brain's planner works towards it and reports the step
+        // it is on and why. Paused, the goal is kept but nothing works on it.
+        public string Goal { get; private set; } = string.Empty;
+        public int GoalRevision { get; private set; }
+        public bool GoalPaused { get; private set; }
+        public string GoalStep { get; private set; } = string.Empty;
+        public string GoalWhy { get; private set; } = string.Empty;
+        public uint GoalStepTime { get; private set; }
 
         public uint Engaged => _engaged;
         public uint LootCorpse => _lootCorpse;
@@ -220,6 +270,12 @@ namespace ClassicUO.Agent
             {
                 ClearTasks();
                 Suggestion = null;
+            }
+            else if (mode != AgentMode.Auto)
+            {
+                // Handing over to the player: stop walking at once (the goal is kept).
+                StopTravel("stopped: you took over");
+                Errands.Cancel();
             }
 
             SaveToProfile();
@@ -375,68 +431,72 @@ namespace ClassicUO.Agent
             }
         }
 
-        public void OnMessage(string text)
+        // From the cliloc message packets (0xC1, 0xCC) for the player or the system, just before
+        // the same message arrives as text: the number wins, so the text is skipped.
+        public void OnCliloc(uint cliloc)
         {
-            if (string.IsNullOrEmpty(text))
+            AgentMessage m = AgentMessages.FromCliloc(cliloc);
+
+            if (m != AgentMessage.None)
             {
-                return;
-            }
-
-            // The spell never started, or was interrupted before its cursor: try again soon.
-            if (_castSpell != 0 && CastFailed(text))
-            {
-                _castSpell = 0;
-                _nextCastAt = Math.Min(_nextCastAt, Time.Ticks + 250);
-            }
-
-            if (text.Contains("not yet recovered from casting", StringComparison.OrdinalIgnoreCase))
-            {
-                _nextCastAt = Math.Max(_nextCastAt, Time.Ticks + 500);
-            }
-
-            if (text.Contains("begin applying the bandages", StringComparison.OrdinalIgnoreCase))
-            {
-                _bandagingUntil = Time.Ticks + 15000;
-
-                return;
-            }
-
-            if (_bandagingUntil != 0)
-            {
-                foreach (string end in BandageEndMessages)
-                {
-                    if (text.Contains(end, StringComparison.OrdinalIgnoreCase))
-                    {
-                        _bandagingUntil = 0;
-
-                        break;
-                    }
-                }
+                Apply(m);
+                Stats.ClilocMessages++;
+                _clilocHandledAt = Time.Ticks;
             }
         }
 
-        private static readonly string[] CastFailMessages =
-        {
-            "not yet recovered from casting",
-            "already casting a spell",
-            "Insufficient mana",
-            "More reagents are needed",
-            "can not cast a spell while frozen",
-            "cannot cast a spell",
-            "concentration is disturbed"
-        };
+        // The same packet's text follows within the same frame; anything later is a new message.
+        private uint _clilocHandledAt;
 
-        private static bool CastFailed(string text)
+        // Server text and the player's own lines (AgentJournal filters out everyone else's).
+        public void OnMessage(string text)
         {
-            foreach (string m in CastFailMessages)
+            if (_clilocHandledAt != 0 && _clilocHandledAt == Time.Ticks)
             {
-                if (text.Contains(m, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
+                _clilocHandledAt = 0;
+
+                return;
             }
 
-            return false;
+            AgentMessage m = AgentMessages.FromText(text);
+
+            if (m != AgentMessage.None)
+            {
+                Stats.TextMessages++;
+                Apply(m);
+            }
+        }
+
+        private void Apply(AgentMessage m)
+        {
+            switch (m)
+            {
+                // The spell never started, or was interrupted before its cursor: try again soon.
+                case AgentMessage.CastFailed:
+                case AgentMessage.CastNotRecovered:
+                    if (_castSpell != 0)
+                    {
+                        _castSpell = 0;
+                        _nextCastAt = Math.Min(_nextCastAt, Time.Ticks + 250);
+                    }
+
+                    if (m == AgentMessage.CastNotRecovered)
+                    {
+                        _nextCastAt = Math.Max(_nextCastAt, Time.Ticks + 500);
+                    }
+
+                    break;
+
+                case AgentMessage.BandageStarted:
+                    _bandagingUntil = Time.Ticks + 15000;
+
+                    break;
+
+                case AgentMessage.BandageEnded:
+                    _bandagingUntil = 0;
+
+                    break;
+            }
         }
 
         public void Update()
@@ -474,6 +534,9 @@ namespace ClassicUO.Agent
             }
 
             UpdateGump();
+            AgentBrain.Update(this);
+            UpdateThreats(now);
+            UpdateNames(now);
             UpdateCast(now);
 
             if (Mode == AgentMode.Off && _engaged == 0 && _lootCorpse == 0 && _takeQueue.Count == 0)
@@ -742,6 +805,9 @@ namespace ClassicUO.Agent
                 case "flee":
                     return Flee(a.Target, Math.Clamp(a.Tiles, 3, 15));
 
+                case "kite":
+                    return Kite(Math.Clamp(a.Tiles, 2, 8));
+
                 case "bank":
                     return Errands.StartBank(a.Deposit, a.Withdraw);
 
@@ -948,7 +1014,7 @@ namespace ClassicUO.Agent
             {
                 _queuedCast = null;
             }
-            else if (CastReady)
+            else if (CastReady && !Kiting)
             {
                 AgentAction a = _queuedCast;
                 _queuedCast = null;
@@ -1501,6 +1567,61 @@ namespace ClassicUO.Agent
             StartTravel(x, y, 1);
         }
 
+        // A caster stepping back from the creatures in melee reach, between spells, keeping its
+        // target: spells are interrupted by every hit. Casting roots the caster, so it only
+        // goes once the current spell is off; the next queued spell waits for the step.
+        private (string, string) Kite(int tiles)
+        {
+            PlayerMobile p = _world.Player;
+
+            if (_castSpell != 0 && Time.Ticks < _castUntil)
+            {
+                return ("failed", "casting");
+            }
+
+            Vector2 away = Vector2.Zero;
+            int near = 0;
+
+            foreach (Mobile m in _world.Mobiles.Values)
+            {
+                if (m != p && !m.IsDead && m.Distance <= 2 && IsMonsterTarget(m))
+                {
+                    away += new Vector2(p.X - m.X, p.Y - m.Y);
+                    near++;
+                }
+            }
+
+            if (near == 0)
+            {
+                return ("done", "nothing close");
+            }
+
+            if (away == Vector2.Zero)
+            {
+                away = new Vector2(0, -1);
+            }
+
+            away.Normalize();
+
+            foreach (float turn in new[] { 0f, 0.7f, -0.7f, 1.4f, -1.4f })
+            {
+                float cos = MathF.Cos(turn), sin = MathF.Sin(turn);
+                var dir = new Vector2(away.X * cos - away.Y * sin, away.X * sin + away.Y * cos);
+
+                if (WalkTo(p.X + (int) MathF.Round(dir.X * tiles), p.Y + (int) MathF.Round(dir.Y * tiles), p.Z, 0))
+                {
+                    _kiteUntil = Time.Ticks + 2500;
+                    Stats.Kites++;
+
+                    return ("done", string.Empty);
+                }
+            }
+
+            return ("failed", "no room to step back");
+        }
+
+        public bool Kiting => _kiteUntil > Time.Ticks && _agentWalking;
+
         private (string, string) Move(string dir, int tiles)
         {
             int dx = 0, dy = 0;
@@ -1617,6 +1738,67 @@ namespace ClassicUO.Agent
             {
                 _lastHintedReflex = action;
                 Suggest(a);
+            }
+        }
+
+        public static string ThreatKind(Mobile m, World world)
+        {
+            if (!m.IsHuman || m.IsDead || m == world.Player || world.Party.Contains(m.Serial))
+            {
+                return null;
+            }
+
+            switch (m.NotorietyFlag)
+            {
+                case NotorietyFlag.Murderer:
+                    return "red";
+
+                case NotorietyFlag.Criminal:
+                    return "criminal";
+
+                case NotorietyFlag.Innocent:
+                case NotorietyFlag.Gray:
+                case NotorietyFlag.Enemy:
+                    // Townsfolk carry a title in their name ("Lucy the healer"); a person without one
+                    // is a player. The name comes from item properties, or from a single click on
+                    // shards without them; until it is known, only red and criminal are flagged.
+                    string label = world.Agent.LabelOf(m);
+
+                    return !string.IsNullOrEmpty(label) && !label.Contains(" the ", StringComparison.OrdinalIgnoreCase) ? "unknown" : null;
+
+                default:
+                    return null;
+            }
+        }
+
+        private void UpdateThreats(uint now)
+        {
+            if (Mode == AgentMode.Off || now < _nextThreatLook)
+            {
+                return;
+            }
+
+            _nextThreatLook = now + 500;
+            _threats.Clear();
+
+            foreach (Mobile m in _world.Mobiles.Values)
+            {
+                if (m.Distance > THREAT_RANGE || ThreatKind(m, _world) is not string kind)
+                {
+                    continue;
+                }
+
+                _threats.Add((m.Serial, kind, m.Distance));
+
+                // Above their head and in the panel, once a minute per player (and again if they turn red).
+                if (!_threatWarned.TryGetValue((m.Serial, kind), out uint at) || now - at > 60_000)
+                {
+                    _threatWarned[(m.Serial, kind)] = now;
+                    string what = kind == "unknown" ? "an unknown player" : $"a {kind} player";
+                    m.AddMessage(MessageType.Regular, $"jev: {what}", 3, 0x0021, true, TextType.CLIENT);
+                    Journal.AddAgentEvent($"{what} is {m.Distance} tiles away");
+                    Stats.Threats++;
+                }
             }
         }
 
@@ -1744,7 +1926,7 @@ namespace ClassicUO.Agent
             }
 
             // Casting roots the caster, so do not walk until the cast delay is over.
-            if (Paused(AgentBehavior.Fight) || Fleeing || now < _nextPursuit || (_castSpell != 0 && now < _castUntil))
+            if (Paused(AgentBehavior.Fight) || Fleeing || Kiting || now < _nextPursuit || (_castSpell != 0 && now < _castUntil))
             {
                 return;
             }
@@ -1970,8 +2152,11 @@ namespace ClassicUO.Agent
 
             Reflexes.BandageBelowPercent = Math.Clamp(profile.AgentBandageBelowPercent, 1, 100);
             Reflexes.HealPotionBelowPercent = Math.Clamp(profile.AgentHealPotionBelowPercent, 1, 100);
-            Strategy = profile.AgentStrategy ?? string.Empty;
+            Strategy = ProfileText(profile.AgentStrategy);
             StrategyRevision++;
+            Goal = ProfileText(profile.AgentGoal);
+            GoalPaused = profile.AgentGoalPaused;
+            GoalRevision++;
 
             AgentModes.TryParse(profile.AgentMode, out AgentMode mode);
             Mode = mode;
@@ -2018,6 +2203,22 @@ namespace ClassicUO.Agent
             _world.Macros.Save();
         }
 
+        // ClassicUO's profile loader doubles single backslashes (for Windows paths), so the JSON
+        // escapes in saved text come back literally: a backslash and "n" for a line break,
+        // "'" spelt out for an apostrophe. Undo that for the agent's texts.
+        public static string ProfileText(string saved)
+        {
+            if (string.IsNullOrEmpty(saved) || saved.IndexOf('\\') < 0)
+            {
+                return saved ?? string.Empty;
+            }
+
+            string text = System.Text.RegularExpressions.Regex.Replace(saved, @"\\u([0-9a-fA-F]{4})",
+                m => ((char) Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
+
+            return text.Replace("\\n", "\n").Replace("\\t", "\t").Replace("\\\"", "\"").Replace("\\\\", "\\");
+        }
+
         private void SaveToProfile()
         {
             Profile profile = ProfileManager.CurrentProfile;
@@ -2032,6 +2233,8 @@ namespace ClassicUO.Agent
             profile.AgentBandageBelowPercent = Reflexes.BandageBelowPercent;
             profile.AgentHealPotionBelowPercent = Reflexes.HealPotionBelowPercent;
             profile.AgentStrategy = Strategy;
+            profile.AgentGoal = Goal;
+            profile.AgentGoalPaused = GoalPaused;
 
             var sb = new StringBuilder();
 
@@ -2055,6 +2258,92 @@ namespace ClassicUO.Agent
             Strategy = text.Length > MAX_STRATEGY_LENGTH ? text.Substring(0, MAX_STRATEGY_LENGTH) : text;
             StrategyRevision++;
             SaveToProfile();
+        }
+
+        public void SetGoal(string text)
+        {
+            EnsureProfileLoaded();
+            text = (text ?? string.Empty).Trim();
+            Goal = text.Length > MAX_STRATEGY_LENGTH ? text.Substring(0, MAX_STRATEGY_LENGTH) : text;
+            GoalRevision++;
+            GoalPaused = false;
+            GoalStep = GoalWhy = string.Empty;
+            SaveToProfile();
+        }
+
+        public void PauseGoal(bool paused)
+        {
+            EnsureProfileLoaded();
+            GoalPaused = paused;
+            GoalRevision++;
+            SaveToProfile();
+        }
+
+        // From the brain: the step it is on for the goal, and why.
+        public void SetGoalStatus(string step, string why)
+        {
+            GoalStep = step ?? string.Empty;
+            GoalWhy = why ?? string.Empty;
+            GoalStepTime = _lastBrainContact = Time.Ticks;
+            _decisionSeq++;
+        }
+
+        private void GoalCommand(string[] args)
+        {
+            string verb = args.Length > 2 ? args[2].ToLowerInvariant() : "show";
+            string rest = args.Length > 3 ? string.Join(" ", args, 3, args.Length - 3) : string.Empty;
+
+            switch (verb)
+            {
+                case "show":
+                    Print(Goal.Length == 0 ? "goal: (none)" : $"goal{(GoalPaused ? " (paused)" : "")}: {Goal}");
+
+                    if (GoalStep.Length != 0)
+                    {
+                        Print($"now: {GoalStep}{(GoalWhy.Length != 0 ? " (" + GoalWhy + ")" : "")}");
+                    }
+
+                    return;
+                case "clear":
+                    SetGoal(string.Empty);
+                    Print("goal cleared");
+
+                    return;
+                case "pause":
+                case "resume":
+                    PauseGoal(verb == "pause");
+                    Print(verb == "pause" ? "goal paused" : "goal resumed");
+
+                    return;
+                case "templates":
+                    foreach (AgentTemplate t in AgentTemplates.Goals())
+                    {
+                        Print($"{t.Name}: {t.Summary}");
+                    }
+
+                    Print("-agent goal template <name> sets one");
+
+                    return;
+                case "template":
+                    AgentTemplate found = AgentTemplates.FindGoal(rest);
+
+                    if (found == null)
+                    {
+                        Print($"no goal template '{rest}' (try -agent goal templates)");
+
+                        return;
+                    }
+
+                    SetGoal(found.Text);
+                    Print($"goal: {found.Title}");
+
+                    return;
+                default:
+                    SetGoal(string.Join(" ", args, 2, args.Length - 2));
+                    Print($"goal: {Goal}");
+
+                    return;
+            }
         }
 
         public void AddStrategy(string line)
@@ -2232,6 +2521,11 @@ namespace ClassicUO.Agent
 
                     break;
 
+                case "goal":
+                    GoalCommand(args);
+
+                    break;
+
                 case "strategy":
                     string verb = args.Length > 2 ? args[2].ToLowerInvariant() : "show";
                     string text = args.Length > 3 ? string.Join(" ", args, 3, args.Length - 3) : string.Empty;
@@ -2293,6 +2587,7 @@ namespace ClassicUO.Agent
     internal sealed class AgentStats
     {
         public int Kills, Deaths, Attacks, Bandages, HealPotions, CurePotions, Reflexes, Flees, Looted, ItemsTaken;
-        public int BrainActions, Suggestions, Accepted, Blocked, Deferred, Casts, SpellHeals;
+        public int BrainActions, Suggestions, Accepted, Blocked, Deferred, Casts, SpellHeals, Threats, Kites;
+        public int ClilocMessages, TextMessages; // server messages acted on, by number and by English text
     }
 }

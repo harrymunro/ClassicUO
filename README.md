@@ -28,11 +28,14 @@ The original ClassicUO README follows [further down](#classicuo).
 1. **The client snapshot** gives the player, the creatures and corpses within 18
    tiles, new journal lines and the agent's own state.
 2. **The brain describes the situation in words.** Jev reads "badly wounded,
-   adjacent, to the east" far more reliably than raw numbers and coordinates.
+   adjacent, to the east" far more reliably than raw numbers and coordinates. How
+   strong each creature is comes from its stats in the world store ("an ogre lord, far
+   stronger than you: do not fight it alone", "a spellcaster"), and supplies are worded
+   too ("running low: 12 bandages and 1 heal potion left").
    Candidates get short ids (`t1`, `c1`, `i1`) so the model can only pick things
    code has already checked. Other players' speech is never sent to the model.
 3. **One Jev request asks every question that could matter**:
-   - `intent`: fight, flee, loot, seek or rest
+   - `intent`: fight, flee (for a moment), leave (the area: run until nothing is in sight), loot, seek or rest
    - `in_danger`: will the character die soon if it keeps fighting?
    - `target`: which creature to attack
    - `spell` (mages): which attack spell to cast next
@@ -56,6 +59,9 @@ whenever the agent is on or a brain is connected. It shows:
 
 - **Play state buttons:** off, combat assist and auto, with the keys that switch between them and do Jev's next move.
 - **Combat assist settings:** what it engages (your target, also attackers, or anything near) and whether it fights on its own or waits for your next-move key.
+- **The goal** (auto mode): what you asked for, the step the planner is on and why, *pause*/*resume* and *clear*, an entry box, and the goal templates (see [Goals and the planner](#goals-and-the-planner)).
+- **The brain's state** in the title row ("brain starting", "brain running"), and a *paste key* link while there is no model key.
+- **Watch out:** a red, criminal or unknown player within 8 tiles.
 - **What the agent is doing:** for example "fighting Vorgak", "casting Explosion" or "bandaging", and "you're driving" or "you have the controls" while you're playing.
 - **Jev's judgment** for the latest decision:
   - a bar for each intent with Jev's probability, plus options the facts ruled out;
@@ -134,6 +140,7 @@ high as any weapon skill, or with `uo-brain run --archetype mage`.
 - **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; code picks the strongest castable spell when Jev isn't sure.
 - **Queued casts:** the brain queues the next spell and the client casts it the moment the current spell and its recovery allow. Healing reflexes go first.
 - **Protection:** with a monster in melee reach it casts Protection first, since every hit otherwise interrupts a spell.
+- **Kiting:** with two or more monsters in melee reach it steps back 5 tiles between spells, keeping its target; the next spell waits for the step, since casting roots the mage.
 - **Meditation:** it meditates while resting with mana below 80%.
 - **Seeing inside:** the server only says what's in a spellbook or a bag once it's opened, so the agent opens the spellbook and any unopened bags in the backpack once, and closes them again.
 - **Snapshot:** mana, reagent counts, every spell in the book with its cost and why it can't be cast ("mana", "reagents"), and the cast timing.
@@ -221,7 +228,20 @@ These are in code, whatever the model says:
 - Other players' speech goes to neither the model nor the reflexes.
 - Actions are a fixed list.
 - Gold, bandages and potions are always taken; anything else needs a "worth taking" judgment.
+- Other players are never attacked, never named to the model (they appear as "a red player", "a criminal player" or "another player") and never named in the world store.
 - The brain only loots corpses of creatures the client saw die as monsters. Taking from anything else (an animal, a townsperson, another player) can be a crime: in a test, looting a rabbit's corpse in Britain made the character a criminal and the guards killed him.
+
+### Other players
+
+The client watches for other players within 8 tiles: **red** (murderers), **criminals**,
+and **unknown** players, meaning people without an NPC title ("Lucy the healer"). Titles come
+from item properties, or, on shards without them (pre-AOS), from one single click per
+person; until a title is known, only red and criminal players are flagged.
+
+- **Combat assist:** a warning above their head, in the panel and in the journal, once a minute per player.
+- **Auto:** it leaves: a red or criminal player within range makes the character run 15 tiles away from them, and a hunt ends ("a red or criminal player came close") so the planner can choose somewhere else.
+- **Defensive only:** the agent never attacks a player, whatever the mode.
+- **The world store** notes "A red player was seen here." for the area, never who.
 
 ### Seeing what it does
 
@@ -289,8 +309,15 @@ and gates) for $0.033: 3,497 prompt and 2,557 completion tokens, 14 s. UOGuide g
 positions in sextant degrees, and the notes keep them as written rather than converting
 them to tile coordinates.
 
-Nothing yet records what the agent sees in game, so on a public shard the store holds only
-your notes and imported guides for now.
+**Recording what it sees** (`recorder.py`), on any shard, whenever the brain is connected,
+whether the agent is playing or you are driving: townsfolk with titles become places
+("Lucy the healer" is a healer), shop signs become places by their text ("The Healer's
+Hut"), creatures that keep turning up in an area become spawns,
+travel adds routes and the spots where the character got stuck, and hunts add outcomes
+(kills per hour, deaths). Jev keeps it clean: it says what an unfamiliar title means
+(a choice), whether a creature is a regular of the area rather than passing through (a
+yes/no), and whether a sighting shows a stored place has moved (a yes/no, which marks the
+old fact stale). So attended sessions on a public shard double as mapping runs.
 
 ```bash
 cd brain
@@ -301,6 +328,35 @@ uv run uo-brain world spawns "Britain Graveyard"
 uv run uo-brain world note "Wraiths here are too much for a new mage." --area "Britain Graveyard"
 uv run uo-brain world import-guide https://www.uoguide.com/Britain --area Britain
 ```
+
+### Goals and the planner
+
+In auto mode the agent can work towards a goal you give it in words, for example "hunt
+the undead at the Britain graveyard, keep yourself supplied with bandages, bank your
+gold". Type it into the panel's goal box, pick a goal template, or use `-agent goal`.
+
+- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `region_at`).
+- **No scripted loop:** the planner puts travel, hunting, banking and restocking together itself. Code carries out each goal ([below](#getting-around-travel-banking-and-shops)); Jev keeps the fighting.
+- **Cheap to call:** each step rebuilds a short prompt (a cached system prompt, the goal, the last 12 steps, the character now) instead of growing one long conversation. A call costs about $0.014.
+- **The panel** shows the step and why ("hunting at Britain Graveyard for up to 15 min: supplied with 80 bandages; time to hunt"). *pause* keeps the goal but stops work on it.
+- **Handing over:** switching to combat assist (Alt+A) stops the agent walking at once and pauses the planner, so it stops costing tokens. Switching back to auto tells the planner you drove for a while, and it resumes from wherever the character is, with whatever it carries.
+- **Finishing:** when the planner calls `finish`, or the character dies, the goal is paused with the reason.
+
+Goal templates (`-agent goal templates`, or the *goals* row in the panel):
+
+| template | goal |
+|---|---|
+| `graveyard` | hunt the undead at the Britain graveyard from the West Britain bank; restock and bank |
+| `earn-gold` | pick hunting spots near Britain that suit the character, keep supplied, bank the gold |
+| `guard` | stay where you are, fight what comes near, rest in between |
+| `restock` | bank gold and loot, buy supplies for a long hunt, then stop |
+
+Your own go in an `AgentGoals` folder next to the client, in the same format as strategy
+templates.
+
+From the command line, `uo-brain session "GOAL" --hours 1 --log logs/session.jsonl` runs
+the planner without the panel; `uo-brain run` does the same whenever the panel has a goal
+and the agent is in auto mode.
 
 ### Getting around: travel, banking and shops
 
@@ -356,11 +412,16 @@ python3 tools/uo-download/download_uo.py --out ~/Workspace/UOClassic
 ~/Workspace/ModernUO/start-agent-server.sh
 
 # 4. Model key, saved to brain/.env (gitignored). OpenRouter is used when present.
+#    Or skip this: copy the key and click "paste key" in the agent panel.
 brain/set-openrouter-key.sh          # prompts without echoing; or: pbpaste | brain/set-openrouter-key.sh
 
-# 5. Play
-(cd bin/osx-arm64 && ./cuo -agent_port 5577 &)   # run it from its folder: settings.json is read from the current directory
-cd brain && uv sync
+# 5. Play. Run the client from its folder: settings.json is read from the current directory.
+#    Turning the agent on (Alt+A or the panel) starts the brain for you.
+cd brain && uv sync && cd ..
+(cd bin/osx-arm64 && ./cuo -agent_port 5577 &)
+
+# Or drive it from a terminal, e.g. for the arena:
+cd brain
 uv run uo-brain login --account warrior --password warrior --create-warrior Brutus
 uv run uo-brain say "[AgentGo"; uv run uo-brain say "[AgentKit"; uv run uo-brain say "[AgentArena 6"
 uv run uo-brain run --mode auto --log logs/run.jsonl
@@ -371,6 +432,15 @@ uv run uo-brain scenario --kit mage --monsters 4 --log logs/mage.jsonl
 ```
 
 With no model key, `--judge heuristic` runs the same loop on fixed rules (the baseline).
+
+**The client starts the brain.** When the agent is turned on and nothing is connected to
+its port, the client runs `uv run uo-brain run` in the repository's `brain/` folder,
+restarts it if it exits (waiting longer each time), and stops it when the agent is turned
+off or the client closes. Its output goes to `brain/logs/client-brain.log`, its decisions
+to `brain/logs/auto-<date>.jsonl`. A brain you start in a terminal takes precedence. In
+settings.json, `agent_start_brain: false` turns this off (or `-agent_start_brain false`),
+and `agent_brain_dir` points at a brain folder elsewhere. The *paste key* link saves the
+clipboard to `brain/.env` (mode 600) and restarts the brain; the key is never shown.
 
 ### Test server commands
 
@@ -402,19 +472,21 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`-agent bandage <pct>`, `-agent potion <pct>`:** reflex thresholds.
 - **`-agent strategy [set|add|clear] <text>`:** edit the strategy.
 - **`-agent template [list|<name>|set <name>|remove <name>]`:** pull in, replace with or take out a strategy template.
+- **`-agent goal [<text>|clear|pause|resume|templates|template <name>]`:** set, show or change the auto-mode goal.
 - **Macros** (bindable in Options → Macros): *AgentOff*, *AgentAssist* (combat assist), *AgentAuto*, *AgentAccept*, *AgentSwitch* and *AgentNext*.
 
 **uo-brain**
-- **`run`:** play. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`.
+- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
 - **`do travel|bank|buy|sell|hunt|rest …`:** one session goal (above); uses the world store.
+- **`session "GOAL" [--hours]`:** the planner towards a goal, from the command line.
 - **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
 - **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`.
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
-- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around), `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
+- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around), `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `goal {text|clear|pause|template}`, `goal_status {step, why}` (from the planner, for the panel), `templates {kind: "goal"}`, `command`, `capture {path}`.
 - **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, `hint {text}` (text above your head, client-side only, never refused), `travel {x, y, distance}`, `bank {deposit, withdraw}`, `buy {target, items}` and `sell {target, items}` (`items` like `"bandage:50"` or `"loot"`).
 - **Cast authority:** healing spells count as `heal`, Cure as `cure`, attack spells as `fight`, anything else as `misc`.
 - **Authority:** an act request is subject to authority unless it has `"source": "manual"`. In combat assist, an attack or harmful cast at a creature the engage setting doesn't allow is refused ("not your target").
@@ -529,8 +601,8 @@ shards that allow it.
 
 Known limits:
 - Results above are single small runs.
-- Mages use Magery only, with single-target attack spells. A mage doesn't kite: it stands and casts, so a swarm of five or more melee monsters is hard for it.
-- Bandage timing and spell failures are read from English server messages.
+- Mages use Magery only, with single-target attack spells. A mage kites by stepping back from melee, but most monsters run as fast as a character, so a swarm of five or more is still hard for it.
+- Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does), and from the English text otherwise. They have not yet been checked against what UO Renaissance sends.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
 
 ---

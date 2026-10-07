@@ -59,14 +59,25 @@ class Session:
 
     def __init__(self, rpc: AgentRpc, world: World, judge: Judge | None = None,
                  log: Callable[[dict[str, Any]], None] | None = None,
-                 pcfg: policy.PolicyConfig | None = None, archetype: str | None = None):
+                 pcfg: policy.PolicyConfig | None = None, archetype: str | None = None,
+                 decisions_log: Path | None = None):
         self.rpc = rpc
+        self.decisions_log = decisions_log  # where hunts append Jev's decisions
         self.world = world
         self.judge = judge
         self.pcfg = pcfg or policy.PolicyConfig()
         self.archetype = archetype
         self._log = log or (lambda _: None)
         self.interrupt = asyncio.Event()  # set to cut the current goal short (handover, shutdown)
+        self._threat_noted: dict[str, float] = {}
+        self.recorder = None  # recorder.Recorder: what the character sees goes into the world store
+
+    def seen(self, snap: dict[str, Any]) -> None:
+        if self.recorder is None:
+            return
+        self.recorder.observe(snap)
+        if self.recorder.due():
+            asyncio.get_running_loop().create_task(self.recorder.flush())
 
     # ------------------------------------------------------------ helpers
 
@@ -118,6 +129,7 @@ class Session:
         while time.monotonic() - began < timeout_s and not self.interrupt.is_set():
             await asyncio.sleep(1.0)
             snap = await self.snap()
+            self.seen(snap)
             if snap["player"]["dead"]:
                 return Result(False, "died on the way", {"at": list(self.where(snap))})
             pos = list(self.where(snap))
@@ -318,6 +330,10 @@ class Session:
                 why.append("low on reagents")
             elif self.interrupt.is_set():
                 why.append("interrupted")
+            elif any(t["kind"] in ("red", "criminal") for t in snap["agent"].get("threats", [])):
+                why.append("a red or criminal player came close")
+            note_threats(self.world, snap, self._threat_noted)
+            self.seen(snap)
             hostile = any(m.get("monster") and not m.get("dead") for m in snap["mobiles"])
             busy = snap["agent"].get("engaged") or snap["agent"].get("looting")
             if hostile or busy:
@@ -335,8 +351,8 @@ class Session:
 
         lcfg = loop.LoopConfig(duration_s=minutes * 60)
         began = time.monotonic()
-        stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path, stop, archetype=self.archetype,
-                               on_snapshot=watch)
+        stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path or self.decisions_log, stop,
+                               archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary())
         s = stats.summary(lcfg.price_per_million)["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         p0, p1 = (first or last).get("player", {}), last.get("player", {})
@@ -361,6 +377,21 @@ class Session:
         return archetype_of(snap) == "mage"
 
 
+def note_threats(world: World, snap: dict[str, Any], noted: dict[str, float], every_s: float = 600) -> None:
+    """Record that a red or criminal player was seen here, once per area every ten minutes.
+    Who it was never goes in: only what they were and where."""
+    p = snap["player"]
+    for t in snap["agent"].get("threats", []):
+        if t["kind"] not in ("red", "criminal"):
+            continue
+        region = world.region_at(p["x"], p["y"])
+        area = region["name"] if region else f"near {p['x']},{p['y']}"
+        key = f"{area}:{t['kind']}"
+        if time.monotonic() - noted.get(key, -1e9) > every_s:
+            noted[key] = time.monotonic()
+            world.add_note(f"A {t['kind']} player was seen here.", area=area, tags=("pk", "danger"), source="seen")
+
+
 def describe(snap: dict[str, Any], world: World | None = None) -> dict[str, Any]:
     """The character's situation in words, for the planner."""
     p = snap["player"]
@@ -377,6 +408,9 @@ def describe(snap: dict[str, Any], world: World | None = None) -> dict[str, Any]
         "dead": p["dead"],
         "hostiles_in_sight": sum(1 for m in snap["mobiles"] if m.get("monster") and not m.get("dead")),
     }
+    threats = snap["agent"].get("threats") or []
+    if threats:
+        out["players_near"] = [f"a {t['kind']} player {t['distance']} tiles away" for t in threats]
     if p.get("mana_max"):
         out["mana"] = f"{p['mana']}/{p['mana_max']}"
     regs = s.get("reagents") or {}

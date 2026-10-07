@@ -275,6 +275,17 @@ def wilson(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 # ---------------------------------------------------------------- runner
 
+# Creature stats for the state's strength words, from the local world store when it exists.
+BESTIARY: dict[str, dict[int, dict[str, Any]]] = {}
+
+
+def load_bestiary(shard: str = "local") -> None:
+    from .world import WORLDS_DIR, World
+
+    if (WORLDS_DIR / shard / "world.sqlite").exists():
+        with World.open(shard) as w:
+            BESTIARY[shard] = w.bestiary()
+
 
 @dataclass
 class JudgeSpec:
@@ -348,7 +359,8 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     lcfg = loop.LoopConfig(duration_s=sc.seconds, price_per_million=price)
     pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence)
     try:
-        stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=sc.kit, on_snapshot=watch)
+        stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=sc.kit, on_snapshot=watch,
+                               bestiary=BESTIARY.get("local"))
     finally:
         await judge.close()
     await rpc.call("mode", mode="off")
@@ -369,8 +381,9 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
               progress: Callable[[str], None] = print) -> dict[str, Any]:
     """Plays every scenario for every judge, rounds times, interleaving the judges so a slow
     drift in the server or the client hits them alike. Writes the JSON after every round."""
+    load_bestiary()
     result: dict[str, Any] = {"started": time.strftime("%Y-%m-%dT%H:%M:%S"), "rounds": rounds, "lane": lane,
-                              "scenarios": {}}
+                              "bestiary": bool(BESTIARY.get("local")), "scenarios": {}}
     log_dir.mkdir(parents=True, exist_ok=True)
     out.parent.mkdir(parents=True, exist_ok=True)
     for name in names:

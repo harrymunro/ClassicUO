@@ -391,6 +391,40 @@ class World:
         self.db.commit()
         return rid
 
+    def bestiary(self) -> dict[int, dict[str, Any]]:
+        """What each body graphic is, for describing creatures in fights: body -> {name, hits,
+        damage, difficulty, caster}. Where several creature types share a body, the strongest."""
+        if getattr(self, "_bestiary", None) is not None:
+            return self._bestiary
+        out: dict[int, dict[str, Any]] = {}
+        self._bestiary = out
+        for r in self.db.execute("SELECT * FROM creatures WHERE body IS NOT NULL AND stale = 0"):
+            hits = r["hits_max"] or r["hits_min"]
+            if not hits:
+                continue
+            entry = {"type": r["type"], "name": r["name"], "hits": hits,
+                     "damage": f"{r['damage_min']}-{r['damage_max']}" if r["damage_min"] else None,
+                     "difficulty": r["difficulty"], "caster": "/Magic/" in (r["source"] or "")}
+            if r["body"] not in out or hits > out[r["body"]]["hits"]:
+                out[r["body"]] = entry
+        return out
+
+    def add_spawn_seen(self, area: str, creature: str, x: int, y: int, count: int, map: str = DEFAULT_MAP) -> int:
+        """A creature seen living somewhere (recorder.py): one row per area and creature,
+        keeping the most seen at once."""
+        same = self.db.execute("SELECT id, max_count FROM spawns WHERE map = ? AND area = ? AND creature = ? "
+                               "COLLATE NOCASE AND source = 'seen'", (map, area, creature)).fetchone()
+        if same:
+            self.db.execute("UPDATE spawns SET max_count = ?, last_seen = ?, stale = 0 WHERE id = ?",
+                            (max(same["max_count"] or 0, count), now(), same["id"]))
+            rid = same["id"]
+        else:
+            hit = self.region_at(x, y, map)
+            rid = self.insert("spawns", {"area": area, "region": hit["name"] if hit else None, "map": map, "x": x, "y": y,
+                                          "creature": creature, "max_count": count, "source": "seen"})
+        self.db.commit()
+        return rid
+
     def add_route(self, from_name: str, to_name: str, waypoints: list[list[int]], map: str = DEFAULT_MAP,
                   kind: str = "walk", outcome: str = "ok", stuck_at: list[int] | None = None,
                   duration_s: float | None = None, note: str | None = None, source: str = "seen") -> int:

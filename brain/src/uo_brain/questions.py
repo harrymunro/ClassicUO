@@ -39,6 +39,13 @@ INTENTS: dict[str, Any] = {
                 "(supplies in the pack do not help if they cannot be used in time).",
         "not_for": "Ordinary fights the warrior is winning, or being lightly or moderately wounded.",
     },
+    "leave": {
+        "what": "Get away from this place altogether: run until the hostile creatures are out of sight, and stay away "
+                "for now.",
+        "when": "A creature far stronger than the warrior is here or coming, or bandages and potions are nearly gone "
+                "while several creatures are still fighting, so the fight cannot be won.",
+        "not_for": "Fights the warrior is winning, or a single weak creature that is nearly dead.",
+    },
     "loot": {
         "what": "Go to a corpse that has not been looted yet and take what is in it.",
         "when": "No hostile creature is close and there is an unlooted corpse nearby.",
@@ -66,6 +73,13 @@ MAGE_INTENTS: dict[str, Any] = {
         "when": "Staying would probably get the mage killed: health is near death or falling fast while creatures "
                 "are attacking it, and heals cannot keep up (supplies do not help if they cannot be used in time).",
         "not_for": "Ordinary fights the mage is winning, or being lightly or moderately wounded.",
+    },
+    "leave": {
+        "what": "Get away from this place altogether: run until the hostile creatures are out of sight, and stay away "
+                "for now.",
+        "when": "A creature far stronger than the mage is here or coming, or mana, reagents and potions are nearly gone "
+                "while several creatures are still attacking, so the fight cannot be won.",
+        "not_for": "Fights the mage is winning, or a single weak creature that is nearly dead.",
     },
     "loot": INTENTS["loot"],
     "seek": {
@@ -116,7 +130,8 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             },
             "criteria": {
                 "true": "Health is near death or badly wounded while several hostile creatures are adjacent, "
-                        "or health is low and no heal potion can be drunk right now.",
+                        "or health is low and no heal potion can be drunk right now, or a creature far stronger "
+                        "than the character is close, or supplies are nearly gone with several creatures attacking.",
                 "false": "Health is fine or the warrior is clearly winning, or nothing is attacking.",
             },
         },
@@ -190,6 +205,10 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
 
 def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
     parts = [info["name"], info["health"], info["distance"]]
+    if info.get("strength"):
+        parts.append(info["strength"])
+    if info.get("casts_spells"):
+        parts.append("a spellcaster")
     if info.get("direction"):
         parts.append(f"to the {info['direction']}")
     if "in_spell_range" in info:

@@ -123,7 +123,7 @@ class HeuristicJudge:
         mana = int(you["mana"].split("(")[-1].rstrip("%)")) if mage else 100
 
         if danger and close:
-            intent = "flee"
+            intent = "flee"  # the rule baseline never leaves an area: it has no idea of a creature's strength
         elif close or (mage and in_range and mana >= 15):
             intent = "fight"
         elif state["corpses_not_yet_looted"]:

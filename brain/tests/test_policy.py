@@ -222,3 +222,71 @@ def test_next_move_is_the_combat_action(mage):
     ans = answers("fight", probs={"fight": 0.9, "rest": 0.1}, target="t1")
     dec = policy.decide(sit, ans, policy.Memory(), policy.PolicyConfig())
     assert dec.next_move is not None and dec.next_move["verb"] in ("attack", "cast")
+
+
+# ---------------------------------------------------------------- other players
+
+
+def test_other_players_reach_the_model_by_kind_never_by_name(snapshot):
+    snapshot["mobiles"].append({"serial": 0x600, "name": "Xx_Ganker_xX", "label": "Xx_Ganker_xX", "body": 400,
+                                "notoriety": "murderer", "human": True, "pet": False, "monster": False,
+                                "hits_pct": None, "dead": False, "poisoned": False, "war_mode": True,
+                                "distance": 5, "dx": 5, "dy": 0, "dir": "east", "my_target": False, "threat": "red"})
+    sit = state.build(snapshot, set(), [])
+    text = str(sit.state)
+    assert "Ganker" not in text and "a red player (a murderer)" in text
+
+
+def test_auto_mode_leaves_when_a_red_player_comes_close(snapshot):
+    snapshot["agent"]["threats"] = [{"serial": 0x600, "kind": "red", "distance": 5}]
+    dec = policy.decide(sit_of(snapshot), answers("fight"), policy.Memory(), CFG)
+    assert dec.intent == "flee" and dec.actions[0] == {"verb": "flee", "target": 0x600, "tiles": 15,
+                                                        "confidence": 1.0, "reason": "player"}
+
+
+def test_combat_assist_does_not_move_for_a_red_player(snapshot):
+    snap = assist_snapshot(snapshot)
+    snap["agent"]["threats"] = [{"serial": 0x600, "kind": "red", "distance": 5}]
+    dec = policy.decide(state.build(snap, set(), []), answers("fight"), policy.Memory(), CFG)
+    assert not any(a["verb"] == "flee" for a in dec.actions)
+
+
+# ---------------------------------------------------------------- leaving
+
+
+BESTIARY = {7: {"type": "OgreLord", "name": "an ogre lord", "hits": 552, "damage": "20-25", "difficulty": "deadly",
+                "caster": False},
+            17: {"type": "Orc", "name": None, "hits": 72, "damage": "5-7", "difficulty": "weak", "caster": False}}
+
+
+def test_strength_comes_from_the_bestiary(snapshot):
+    sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
+    assert sit.hostiles[0].info["strength"] == "weak: an easy kill"
+    assert sit.hostiles[1].info["strength"] == "far stronger than you: do not fight it alone"
+    assert "far stronger than you" in questions.build(sit)["target"]["criteria"]["t2"]
+
+
+def test_leave_runs_and_keeps_running_until_out_of_sight(snapshot):
+    sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
+    mem = policy.Memory()
+    dec = policy.decide(sit, answers("leave", probs={"leave": 0.9, "fight": 0.1}), mem, CFG, now=10.0)
+    assert dec.intent == "leave" and dec.actions[-1]["verb"] == "flee" and dec.actions[-1]["target"] == 0x101
+    # Still leaving on the next look, whatever Jev says, while something is in sight.
+    again = policy.decide(sit, answers("fight"), mem, CFG, now=12.0)
+    assert again.intent == "leave" and again.actions[0]["verb"] == "flee"
+    for m in snapshot["mobiles"]:
+        m["distance"] = 20
+    clear = policy.decide(state.build(snapshot, set(), []), answers("fight"), mem, CFG, now=14.0)
+    assert clear.intent == "leave" and clear.actions == []
+
+
+def test_leave_needs_a_reason(snapshot):
+    sit = state.build(snapshot, set(), [])  # no bestiary: nothing is known to be too strong
+    dec = policy.decide(sit, answers("leave", probs={"leave": 0.9, "fight": 0.1}, danger=0.1), policy.Memory(), CFG)
+    assert dec.intent == "fight"
+
+
+def test_champion_goes_for_the_creature_with_most_to_it(snapshot):
+    sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
+    cfg = policy.PolicyConfig(target_priority="strongest_first", min_target_confidence=2.0)
+    assert policy.pick_target(sit, answers("fight"), cfg)[0].serial == 0x101

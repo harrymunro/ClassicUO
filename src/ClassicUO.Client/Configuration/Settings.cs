@@ -95,6 +95,11 @@ namespace ClassicUO.Configuration
         // Loopback port for the agent RPC server (Agent/AgentServer.cs). 0 = off.
         [JsonPropertyName("agent_port")] public ushort AgentPort { get; set; }
 
+        // Start the Python brain (uv run uo-brain run) when the agent is turned on (Agent/AgentBrain.cs),
+        // from agent_brain_dir or the repository's brain/ folder found above the client.
+        [JsonPropertyName("agent_start_brain")] public bool AgentStartBrain { get; set; } = true;
+        [JsonPropertyName("agent_brain_dir")] public string AgentBrainDir { get; set; }
+
         public static string GetSettingsFilepath()
         {
             if (CustomSettingsFilepath != null)

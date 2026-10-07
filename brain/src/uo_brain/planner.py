@@ -112,6 +112,7 @@ class Planner:
         self.history: list[PlanStep] = []
         self.usage = llm.LlmUsage(calls=0)
         self.finished: str | None = None
+        self.started = time.monotonic()
         self.tools = goal_tools() + worlds.tool_schemas()
 
     def messages(self, situation: dict[str, Any]) -> list[dict[str, Any]]:
@@ -198,7 +199,8 @@ class Planner:
             await self.step()
         return self.summary(time.monotonic() - began)
 
-    def summary(self, seconds: float) -> dict[str, Any]:
+    def summary(self, seconds: float | None = None) -> dict[str, Any]:
+        seconds = time.monotonic() - self.started if seconds is None else seconds
         hours = max(seconds / 3600, 1e-9)
         hunts = [s for s in self.history if s.tool == "hunt"]
         return {

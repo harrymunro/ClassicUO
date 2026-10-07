@@ -43,7 +43,7 @@ def test_questions_fan_out_with_none_options(snapshot):
     qs = questions.build(build(snapshot))
     assert set(qs) == {"intent", "in_danger", "target", "corpse", "take_i1"}
     assert set(qs["target"]["criteria"]) == {"t1", "t2", "none"}
-    assert set(qs["intent"]["criteria"]) == {"fight", "flee", "loot", "seek", "rest"}
+    assert set(qs["intent"]["criteria"]) == {"fight", "flee", "leave", "loot", "seek", "rest"}
     assert "already fighting" in qs["target"]["criteria"]["t1"]
 
 
