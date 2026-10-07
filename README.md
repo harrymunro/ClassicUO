@@ -6,8 +6,12 @@ model, which answers typed questions (pick one of these options, yes or no, rate
 this) with probabilities in about 100 ms. Ordinary code does everything that has a
 right answer: healing thresholds, pathfinding, looting mechanics, safety rules.
 
-Status: works end to end against a local ModernUO server with a warrior or a mage, with Jev
-deciding through OpenRouter, and an in-game panel that shows what Jev is thinking.
+Status: works end to end against a local ModernUO server with Jev deciding through OpenRouter,
+for warriors, mages, archers, tamers, bards and two hybrids. It plays as combat assist next to
+you, or in auto mode towards a goal you give it, with a planner model (Claude Sonnet) choosing
+each step: travel, hunt, bank, buy, sell. An in-game panel shows what Jev is thinking. A judgment
+benchmark measures where Jev beats fixed rules ([results](#judgment-benchmark)). Not yet tried on
+a public shard.
 The original ClassicUO README follows [further down](#classicuo).
 
 ## How it works
