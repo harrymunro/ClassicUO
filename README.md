@@ -221,6 +221,7 @@ These are in code, whatever the model says:
 - Other players' speech goes to neither the model nor the reflexes.
 - Actions are a fixed list.
 - Gold, bandages and potions are always taken; anything else needs a "worth taking" judgment.
+- The brain only loots corpses of creatures the client saw die as monsters. Taking from anything else (an animal, a townsperson, another player) can be a crime: in a test, looting a rabbit's corpse in Britain made the character a criminal and the guards killed him.
 
 ### Seeing what it does
 
@@ -301,6 +302,44 @@ uv run uo-brain world note "Wraiths here are too much for a new mage." --area "B
 uv run uo-brain world import-guide https://www.uoguide.com/Britain --area Britain
 ```
 
+### Getting around: travel, banking and shops
+
+Real play is a loop of travelling, hunting, banking and restocking. Each step is one
+goal that code carries out, using the world store for places:
+
+- **Travel** walks to a named place or a tile across the map. The client's own pathfinder
+  only sees about a screen, so the walk is planned coarsely over the map and static tiles
+  (`AgentNav`), then walked a leg of up to 16 tiles at a time with that pathfinder, which
+  handles creatures, items and the exact movement rules. Roofs don't count as ground.
+  - **Doors** are items, not map tiles, so the plan treats a doorway as open; when a leg won't plan, the walker opens a closed door standing on the path.
+  - **Stuck:** no progress for 8 seconds counts as stuck. The walker tries a door, then blocks that stretch and plans again (up to 5 times), in a wider box when the way round leaves the first one. Impassable items seen on the way (barricades, blockers) stay blocked for the rest of the trip.
+  - **On the way** the brain fights only what comes close or attacks, and doesn't seek or loot.
+  - Each walk goes into the world store as a route, with the spots where it got stuck.
+- **Banking** (`bank`): says "bank" near a banker and moves items one at a time, checking each arrives (the server refuses moves that come too fast). Deposit `gold`, `loot` (anything that isn't kit or supplies) or named items (`bandage:150`); withdraw named items.
+- **Buying** (`buy`): walks up to the vendor (ModernUO answers "vendor buy" only next to it), reads its list and buys what's wanted and affordable. A vendor only stocks so many (Britain's healer has 20 bandages at a time), so it goes round the vendors in sight, then the next shop.
+- **Selling** (`sell`): the same, from the vendor's sell list: `loot`, or named items.
+- **Hunting** (`hunt`): walks to a spawn area and lets Jev fight there until time is up, bandages or reagents run low, the bag gets heavy, or nothing shows up for 4 minutes. When it's quiet it walks to another spot of the spawn.
+
+```bash
+cd brain
+uv run uo-brain do travel "Britain graveyard"
+uv run uo-brain do bank --deposit gold,loot --withdraw bandage:100
+uv run uo-brain do buy bandage 50
+uv run uo-brain do sell loot --vendor weaponsmith
+uv run uo-brain do hunt "Britain Graveyard" --minutes 10 --log logs/hunt.jsonl
+```
+
+On the local server, 2026-10-06, single runs with a warrior:
+
+| goal | result |
+|---|---|
+| West Britain bank to the Britain graveyard | arrived in 57 s (226 tiles); one stop at the bank door, opened |
+| and back | arrived in 63 s |
+| the same with an invisible wall across the route (`[AgentWall`) | stuck twice, planned round it, arrived in 42 s |
+| deposit gold, loot and 150 bandages, then withdraw 100 | done, the pack went from 200 bandages to 50 to 150 |
+| buy 50 bandages, starting at the bank | bought 50 from the Britain healer for 250 gold |
+| sell loot to a weaponsmith, gems to a jeweller | +54 and +426 gold; the junk stayed |
+
 ## Quick start
 
 ```bash
@@ -337,14 +376,16 @@ With no model key, `--judge heuristic` runs the same loop on fixed rules (the ba
 
 These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO and work for normal player characters:
 
-- **`[AgentGo [lane]`:** go to the test field in Felucca, Green Acres (5445, 1153). It has no guards and no spawns. Lanes 1–9 are copies 60 tiles apart, so several test characters can run at once.
+- **`[AgentGo [lane | x y]`:** go to the test field in Felucca, Green Acres (5445, 1153). It has no guards and no spawns. Lanes 1–9 are copies 60 tiles apart, so several test characters can run at once. With `x y`, go to that tile instead (for travel tests in town).
 - **`[AgentKit`:** warrior template. Swords, Tactics, Healing and Anatomy at 80, katana, ringmail, 200 bandages, 5 heal and 5 cure potions.
 - **`[AgentKit mage`:** mage template. Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60. A full spellbook, a bag of 100 of each reagent, leather armour, and 5 heal and 5 cure potions.
 - **`[AgentArena [count] [kind]`:** spawns monsters in a ring 6–10 tiles out (orc, ratman, headless one and mongbat by default).
 - **`[AgentReset`:** resurrects and heals you, cancels pending spawns, and removes the arena and the corpses around you.
 - **`[AgentSpawn <kind> [count] [distance] [direction] [delay]`:** spawns creatures of a kind (`orc`, `ratman`, or any ModernUO type such as `OgreLord` or `OrcishMage`) at a distance and compass direction, optionally after a delay. They belong to your arena.
-- **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N]`:** sets your supplies.
-- **`[AgentLoot [distance] [direction]`:** lays a corpse holding three valuables (diamonds, a gold ring, a magic longsword) and five pieces of junk (bones, a head, a shirt, kindling, raw ribs).
+- **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]`:** sets your supplies; `gold` and `loot` add coins and sets of the loot items below to your pack.
+- **`[AgentLoot [distance] [direction]`:** lays an orc's corpse holding three valuables (diamonds, a gold ring, a magic longsword) and five pieces of junk (bones, a head, a shirt, kindling, raw ribs).
+- **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall along a line, for stuck tests.
+- **`[AgentRestock [amount]`:** stocks the vendors within 12 tiles with at least that many of everything.
 
 Accounts are created on first login. `admin`/`admin` is the owner.
 
@@ -366,14 +407,15 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 **uo-brain**
 - **`run`:** play. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
+- **`do travel|bank|buy|sell|hunt|rest …`:** one session goal (above); uses the world store.
 - **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
 - **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`.
 
 **Client RPC:** newline-delimited JSON on 127.0.0.1, enabled by `-agent_port` or `agent_port` in settings.json.
-- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack), `act {verb, …}`, `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
-- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, and `hint {text}` (text above your head, client-side only, never refused).
+- **Methods:** `ping`, `status`, `login`, `snapshot {since, radius, pack}` (`pack: true` adds everything in the backpack; the snapshot also has recent deaths, `travel` and `errand` progress, each creature's full `label` with its title, and whether each corpse is a monster's), `act {verb, …}`, `nav {radius, goal_x, goal_y, reach}` and `items {radius}` (travel debugging: the planner's map with a planned path, and the items lying around), `mode`, `strategy {text|add|clear|template, replace|remove_template}`, `templates`, `accept`, `note`, `decision {…}` (what the brain decided, for the panel; `next` is the move for the next-move key), `brain_info {judge, archetype, strategy_reading}`, `command`, `capture {path}`.
+- **Act verbs:** `attack {target, range}`, `war_mode`, `stop`, `bandage_self`, `bandage`, `drink {kind}`, `cast {spell, target, queue}`, `skill {name}`, `loot`, `take`, `flee`, `walk_to`, `move`, `say`, `use`, `target`, `wait`, `hint {text}` (text above your head, client-side only, never refused), `travel {x, y, distance}`, `bank {deposit, withdraw}`, `buy {target, items}` and `sell {target, items}` (`items` like `"bandage:50"` or `"loot"`).
 - **Cast authority:** healing spells count as `heal`, Cure as `cure`, attack spells as `fight`, anything else as `misc`.
 - **Authority:** an act request is subject to authority unless it has `"source": "manual"`. In combat assist, an attack or harmful cast at a creature the engage setting doesn't allow is refused ("not your target").
 
@@ -478,8 +520,8 @@ shards that allow it.
 
 | | |
 |---|---|
-| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, strategy, templates)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |

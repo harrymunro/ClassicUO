@@ -347,6 +347,100 @@ namespace ClassicUO.Agent
 
                     break;
 
+                // The travel planner's view around the player, for debugging routes: '.' somewhere to
+                // stand, '#' nowhere, 'x' an impassable item, '@' the player. With goal_x/goal_y it
+                // plans the walk exactly as travel would and draws the path ('o').
+                case "nav":
+                    RequireInGame(world);
+                    int rad = Get(p, "radius", out JsonElement nr) ? Math.Clamp(nr.GetInt32(), 4, 60) : 20;
+                    int px = world.Player.X, py = world.Player.Y;
+                    int goalX = Get(p, "goal_x", out JsonElement gx) ? gx.GetInt32() : px;
+                    int goalY = Get(p, "goal_y", out JsonElement gy) ? gy.GetInt32() : py;
+                    NavGrid grid = world.Agent.TravelGrid(goalX, goalY) ?? throw new AgentRpcException(-32602, "too far for one plan");
+                    var route = goalX == px && goalY == py ? null : AgentNav.Plan(grid, px, py, world.Player.Z, goalX, goalY, 0);
+                    var onPath = new System.Collections.Generic.HashSet<(int, int)>();
+
+                    foreach ((int rx, int ry, sbyte _) in route ?? new System.Collections.Generic.List<(int, int, sbyte)>())
+                    {
+                        onPath.Add((rx, ry));
+                    }
+
+                    var reach = Get(p, "reach", out JsonElement rf) && rf.GetBoolean()
+                        ? AgentNav.Reachable(grid, px, py, world.Player.Z)
+                        : new System.Collections.Generic.HashSet<(int, int)>();
+                    var items = new System.Collections.Generic.HashSet<(int, int)>();
+
+                    foreach (Game.GameObjects.Item it in world.Items.Values)
+                    {
+                        if (it.OnGround && !it.IsMulti && it.ItemData.IsImpassable && !it.ItemData.IsDoor)
+                        {
+                            items.Add((it.X, it.Y));
+                        }
+                    }
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteNumber("x0", px - rad);
+                        w.WriteNumber("y0", py - rad);
+                        w.WriteNumber("path", route?.Count ?? -1);
+                        w.WriteStartArray("rows");
+
+                        for (int y = py - rad; y <= py + rad; y++)
+                        {
+                            var row = new char[2 * rad + 1];
+
+                            for (int x = px - rad; x <= px + rad; x++)
+                            {
+                                row[x - px + rad] = x == px && y == py ? '@' : onPath.Contains((x, y)) ? 'o'
+                                    : items.Contains((x, y)) ? 'x' : reach.Contains((x, y)) ? ',' : grid.Count(x, y) > 0 ? '.' : '#';
+                            }
+
+                            w.WriteStringValue(new string(row));
+                        }
+
+                        w.WriteEndArray();
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
+                // Items lying on the ground nearby with their tile flags: signs, doors, blockers.
+                case "items":
+                    RequireInGame(world);
+                    int ir = Get(p, "radius", out JsonElement irr) ? Math.Clamp(irr.GetInt32(), 1, 24) : 8;
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartArray();
+
+                        foreach (Game.GameObjects.Item it in world.Items.Values)
+                        {
+                            if (!it.OnGround || it.IsDestroyed || it.Distance > ir)
+                            {
+                                continue;
+                            }
+
+                            w.WriteStartObject();
+                            w.WriteNumber("serial", it.Serial);
+                            w.WriteNumber("graphic", it.Graphic);
+                            w.WriteString("name", AgentSnapshot.NameOf(world, it));
+                            w.WriteNumber("x", it.X);
+                            w.WriteNumber("y", it.Y);
+                            w.WriteNumber("z", it.Z);
+                            w.WriteNumber("height", it.ItemData.Height);
+                            w.WriteBoolean("impassable", it.ItemData.IsImpassable);
+                            w.WriteBoolean("surface", it.ItemData.IsSurface);
+                            w.WriteBoolean("door", it.ItemData.IsDoor);
+                            w.WriteBoolean("multi", it.IsMulti);
+                            w.WriteEndObject();
+                        }
+
+                        w.WriteEndArray();
+                    });
+
+                    break;
+
                 case "accept":
                     RequireInGame(world);
                     bool accepted = world.Agent.AcceptSuggestion();

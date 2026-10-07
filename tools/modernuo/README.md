@@ -32,6 +32,27 @@ start; stop the server, edit, start again):
 `Distribution/Configuration/expansion.json` uses Endless Journey (id 11), the newest,
 with all maps. The server reads the client version (7.0.117.1) from `client.exe`.
 
+## Populating Felucca
+
+A fresh ModernUO world is empty apart from the map's own buildings: no doors, signs,
+vendors or monsters. Travel, banking and shopping tests need the towns as players know
+them, so generate them once, as the owner (`admin`), from any character on that account:
+
+```
+[DoorGen
+[SignGen
+[TelGen
+[MoonGen
+[Decorate
+[ImportSpawners Data/Spawns/shared/felucca/*.json
+[ImportSpawners Data/Spawns/post-uoml/felucca/*.json
+[Save
+```
+
+On 2026-10-06 that gave 1,911 Felucca doors, 1,510 teleporters, 32 moongates, 55,253
+decoration items and 2,122 spawners, the Britain bankers, healers and shops included.
+Green Acres stays empty, so the arena tests are unaffected.
+
 ## Running
 
 ```bash
@@ -44,11 +65,16 @@ with all maps. The server reads the client version (7.0.117.1) from `client.exe`
 
 ## Commands (AgentTestKit.cs)
 
-- **`[AgentGo`:** teleports you to the test location.
 - **`[AgentKit [warrior|mage] [katana|broadsword|longsword|vikingsword]`:** test character templates.
   - Warrior (default): Swords, Tactics, Healing and Anatomy at 80; stats 90/70/15. Ringmail armour, 200 bandages.
   - Mage: Magery 90; Evaluating Intelligence, Meditation and Wrestling 80; Resisting Spells 60; stats 70/35/100. Leather armour (it allows meditation), a wizard's hat, a full spellbook and a bag of 100 of each reagent.
   - Both: stats locked, 5 greater heal and 5 greater cure potions. Removes Young status.
   - Wipes the old equipment and backpack first.
 - **`[AgentArena [count] [mix|orc|ratman|headless|mongbat|zombie|skeleton|<type>]`:** clears your last arena, then spawns monsters in a ring 6–10 tiles out.
-- **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, and removes your arena monsters.
+- **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, cancels pending spawns, and removes your arena monsters and the corpses around you.
+- **`[AgentGo [lane | x y]`:** lanes 1-9 are copies of the test spot 60 tiles east of each other; `x y` goes to any tile of the test map.
+- **`[AgentSpawn <kind> [count] [distance] [direction] [delay]`:** creatures at a bearing and distance, optionally after a delay.
+- **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]`:** sets supplies.
+- **`[AgentLoot [distance] [direction]`:** an orc's corpse with three valuables and five pieces of junk.
+- **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall of blockers, for stuck tests.
+- **`[AgentRestock [amount]`:** stocks nearby vendors.

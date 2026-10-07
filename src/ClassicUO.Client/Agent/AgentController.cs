@@ -86,6 +86,20 @@ namespace ClassicUO.Agent
         private uint _fleeUntil;
         private bool _agentWalking;
 
+        // A long walk (travel): the planned path, how far along it the player is, and when the
+        // distance to the goal last went down. Paused while fighting, looting or fleeing.
+        private List<(int X, int Y, sbyte Z)> _travelPath;
+        private int _travelIndex, _travelGoalX, _travelGoalY, _travelDistance, _travelBest, _travelReplans;
+        private uint _travelStarted, _travelProgressAt, _nextTravelStep;
+        private readonly List<(int X, int Y)> _travelStuck = new List<(int, int)>();
+        private readonly HashSet<(int, int)> _travelBlocked = new HashSet<(int, int)>(); // impassable items seen on this trip
+        public string TravelState { get; private set; } = string.Empty;
+        public (int X, int Y) TravelGoal => (_travelGoalX, _travelGoalY);
+        public int TravelReplans => _travelReplans;
+        public IReadOnlyList<(int X, int Y)> TravelStuckAt => _travelStuck;
+        public uint TravelElapsedMs => _travelStarted == 0 ? 0 : Time.Ticks - _travelStarted;
+        public int TravelLeft => _world.Player == null ? 0 : Math.Max(Math.Abs(_world.Player.X - _travelGoalX), Math.Abs(_world.Player.Y - _travelGoalY));
+
         // One spell at a time: the spell the agent started and whose target cursor it
         // will answer, when its cast delay ends, and when the next spell may start.
         private int _castSpell;
@@ -115,6 +129,7 @@ namespace ClassicUO.Agent
         {
             _world = world;
             Journal = new AgentJournal(world);
+            Errands = new AgentErrands(world, this);
             SetMode(AgentMode.Off);
         }
 
@@ -122,6 +137,7 @@ namespace ClassicUO.Agent
         public AgentEngage Engage { get; private set; } = AgentEngage.Defend;
         public ReflexSettings Reflexes { get; } = new ReflexSettings();
         public AgentJournal Journal { get; }
+        public AgentErrands Errands { get; }
         public AgentStats Stats { get; } = new AgentStats();
         public uint HumanPauseMs { get; set; } = 4000;
 
@@ -317,12 +333,29 @@ namespace ClassicUO.Agent
 
         public IReadOnlyList<(uint Serial, string Name, ushort Body, uint Time)> RecentDeaths => _deaths;
 
+        // Whose corpse is this: true for a creature the agent saw die as a monster, false for
+        // anything else it saw die (an animal, a townsperson, a player), null when it didn't see
+        // the death. Looting anything but a monster's corpse can be a crime (guards in town).
+        private readonly Dictionary<uint, bool> _corpseOfMonster = new Dictionary<uint, bool>();
+
+        public bool? CorpseOfMonster(uint corpse) => _corpseOfMonster.TryGetValue(corpse, out bool m) ? m : null;
+
         // Called by the 0xAF death packet before the mobile is turned into a corpse.
-        public void OnMobileDied(uint serial)
+        public void OnMobileDied(uint serial, uint corpse = 0)
         {
             if (_world.Mobiles.Get(serial) is Mobile dying)
             {
                 _deaths.Add((serial, dying.Name?.Trim() ?? string.Empty, dying.Graphic, Time.Ticks));
+
+                if (corpse != 0)
+                {
+                    if (_corpseOfMonster.Count > 500)
+                    {
+                        _corpseOfMonster.Clear();
+                    }
+
+                    _corpseOfMonster[corpse] = IsMonsterTarget(dying);
+                }
 
                 if (_deaths.Count > 32)
                 {
@@ -461,6 +494,8 @@ namespace ClassicUO.Agent
             UpdateEngagement(now);
             UpdateLoot(now);
             UpdateTakes(now);
+            UpdateTravel(now);
+            Errands.Update(now);
         }
 
         // ---------------------------------------------------------------- actions
@@ -662,6 +697,7 @@ namespace ClassicUO.Agent
 
                 case "stop":
                     ClearTasks();
+                    StopTravel("stopped");
                     player.Pathfinder.StopAutoWalk();
 
                     return ("done", string.Empty);
@@ -676,12 +712,27 @@ namespace ClassicUO.Agent
                     return Drink(a.Kind) ? ("done", string.Empty) : ("failed", $"no {a.Kind} potion");
 
                 case "loot":
+                    // The brain only loots monsters it saw die; the player may loot anything.
+                    if (!a.Manual && CorpseOfMonster(a.Target) != true)
+                    {
+                        Stats.Blocked++;
+
+                        return ("blocked", "not a monster's corpse");
+                    }
+
                     return StartLoot(a.Target);
 
                 case "take":
-                    if (_world.Items.Get(a.Target) == null)
+                    if (_world.Items.Get(a.Target) is not Item wanted)
                     {
                         return ("failed", "no such item");
+                    }
+
+                    if (!a.Manual && _world.Get(wanted.RootContainer) is Item root && root.IsCorpse && CorpseOfMonster(root.Serial) != true)
+                    {
+                        Stats.Blocked++;
+
+                        return ("blocked", "not a monster's corpse");
                     }
 
                     _takeQueue.Enqueue(a.Target);
@@ -690,6 +741,18 @@ namespace ClassicUO.Agent
 
                 case "flee":
                     return Flee(a.Target, Math.Clamp(a.Tiles, 3, 15));
+
+                case "bank":
+                    return Errands.StartBank(a.Deposit, a.Withdraw);
+
+                case "buy":
+                case "sell":
+                    return Errands.StartShop(a.Verb == "buy", a.Target, a.Items);
+
+                case "travel":
+                    _travelManual = a.Manual;
+
+                    return StartTravel(a.X, a.Y, Math.Max(0, a.Distance));
 
                 case "walk_to":
                     _engaged = 0;
@@ -979,15 +1042,25 @@ namespace ClassicUO.Agent
 
             _nextPeek = now + 1000;
             PlayerMobile p = _world.Player;
-            Item book = AgentSpells.FindSpellbook(p);
 
-            if (book == null || AgentSpells.MagerySkill(p) <= 0 || HumanActive)
+            if (HumanActive || Mode == AgentMode.Off)
             {
                 return;
             }
 
             bool Due(Item it) => !_peekAgainAt.TryGetValue(it.Serial, out uint at) || now >= at;
-            Item target = !AgentSpells.ContentKnown(book) && Due(book) ? book : null;
+
+            // Every character: supplies, loot and banking all need the backpack's contents.
+            Item pack = p.FindItemByLayer(Layer.Backpack);
+            Item target = pack != null && pack.Items == null && !pack.Opened && Due(pack) ? pack : null;
+            Item book = AgentSpells.FindSpellbook(p);
+
+            if (target == null && (book == null || AgentSpells.MagerySkill(p) <= 0))
+            {
+                return;
+            }
+
+            target ??= book != null && !AgentSpells.ContentKnown(book) && Due(book) ? book : null;
 
             for (LinkedObject i = p.FindItemByLayer(Layer.Backpack)?.Items; i != null && target == null; i = i.Next)
             {
@@ -1133,6 +1206,301 @@ namespace ClassicUO.Agent
             return ("failed", "no path away");
         }
 
+        // ---------------------------------------------------------------- travel
+
+        private const int TRAVEL_LEG = 16;           // tiles per leg handed to the client's pathfinder
+        private const uint TRAVEL_STUCK_MS = 8000;   // no progress for this long: stuck
+        private const int TRAVEL_MAX_REPLANS = 5;
+
+        private (string, string) StartTravel(int x, int y, int distance)
+        {
+            _travelGoalX = x;
+            _travelGoalY = y;
+            _travelDistance = distance;
+            _travelReplans = 0;
+            _travelStuck.Clear();
+            _travelBlocked.Clear();
+            _travelStarted = Time.Ticks;
+
+            if (!PlanTravel())
+            {
+                return ("failed", "no route");
+            }
+
+            Journal.AddAgentEvent($"travelling to {x},{y}");
+
+            return ("done", $"{_travelPath.Count} tiles");
+        }
+
+        // The planning grid for a walk from the player to (gx, gy): a box around both, with the
+        // impassable items in view (barricades, blockers; doors are opened instead) and the spots
+        // already found stuck blocked. Null when the walk is too long for one plan.
+        public NavGrid TravelGrid(int gx, int gy, HashSet<(int, int)> avoid = null, int widen = 1)
+        {
+            PlayerMobile p = _world.Player;
+            int dist = Math.Max(Math.Abs(p.X - gx), Math.Abs(p.Y - gy));
+            int margin = (24 + dist / 4) * widen;
+            int x0 = Math.Min(p.X, gx) - margin, y0 = Math.Min(p.Y, gy) - margin;
+            int w = Math.Abs(p.X - gx) + 2 * margin, h = Math.Abs(p.Y - gy) + 2 * margin;
+
+            if (w > 900 || h > 900)
+            {
+                return null;
+            }
+
+            NavGrid grid = AgentNav.Load(_world.MapIndex, x0, y0, w, h);
+
+            // The client forgets items out of view, so what was seen earlier on the trip is kept.
+            foreach (Item it in _world.Items.Values)
+            {
+                if (it.OnGround && !it.IsMulti && it.ItemData.IsImpassable && !it.ItemData.IsDoor)
+                {
+                    _travelBlocked.Add((it.X, it.Y));
+                }
+            }
+
+            foreach ((int bx, int by) in _travelBlocked)
+            {
+                grid.Block(bx, by);
+            }
+
+            foreach ((int bx, int by) in _travelStuck)
+            {
+                grid.Block(bx, by);
+            }
+
+            if (avoid != null)
+            {
+                foreach ((int bx, int by) in avoid)
+                {
+                    grid.Block(bx, by);
+                }
+            }
+
+            return grid;
+        }
+
+        // Plans from where the player stands, in a box around the start and the goal; when the
+        // way round something leaves that box, in a wider one.
+        private bool PlanTravel(HashSet<(int, int)> avoid = null)
+        {
+            PlayerMobile p = _world.Player;
+            int dist = Math.Max(Math.Abs(p.X - _travelGoalX), Math.Abs(p.Y - _travelGoalY));
+            _travelPath = null;
+
+            foreach (int widen in new[] { 1, 3, 6 })
+            {
+                NavGrid grid = TravelGrid(_travelGoalX, _travelGoalY, avoid, widen);
+
+                if (grid == null)
+                {
+                    break;
+                }
+
+                _travelPath = AgentNav.Plan(grid, p.X, p.Y, p.Z, _travelGoalX, _travelGoalY, _travelDistance, 1_500_000);
+
+                if (_travelPath != null)
+                {
+                    break;
+                }
+            }
+
+            if (_travelPath == null && TravelGrid(_travelGoalX, _travelGoalY, avoid) == null)
+            {
+                TravelState = "too far";
+
+                return false;
+            }
+
+            _travelIndex = 0;
+            _travelBest = dist;
+            _travelProgressAt = Time.Ticks;
+
+            if (_travelPath == null)
+            {
+                TravelState = "no route";
+
+                return false;
+            }
+
+            TravelState = "walking";
+
+            return true;
+        }
+
+        public void StopTravel(string state)
+        {
+            if (_travelPath != null)
+            {
+                TravelState = state;
+            }
+
+            _travelPath = null;
+        }
+
+        private void UpdateTravel(uint now)
+        {
+            if (_travelPath == null || now < _nextTravelStep)
+            {
+                return;
+            }
+
+            _nextTravelStep = now + 250;
+            PlayerMobile p = _world.Player;
+
+            // Fighting, looting, fleeing or the player's hands on the controls: wait, without
+            // counting it against progress.
+            if (p.IsDead || _engaged != 0 || _lootCorpse != 0 || Fleeing || _takeQueue.Count != 0 || Paused(AgentBehavior.Move)
+                || GetAuthority(AgentBehavior.Move) != AgentAuthority.Auto && !_travelManual)
+            {
+                _travelProgressAt = now;
+
+                return;
+            }
+
+            int left = TravelLeft;
+
+            if (left <= _travelDistance)
+            {
+                TravelState = "arrived";
+                _travelPath = null;
+                Journal.AddAgentEvent($"arrived at {_travelGoalX},{_travelGoalY}");
+
+                return;
+            }
+
+            if (left < _travelBest)
+            {
+                _travelBest = left;
+                _travelProgressAt = now;
+            }
+
+            // Where along the path the player is now.
+            int nearest = _travelIndex, nearestD = int.MaxValue;
+
+            for (int i = _travelIndex; i < _travelPath.Count && i < _travelIndex + 48; i++)
+            {
+                int d = Math.Max(Math.Abs(_travelPath[i].X - p.X), Math.Abs(_travelPath[i].Y - p.Y));
+
+                if (d < nearestD)
+                {
+                    nearest = i;
+                    nearestD = d;
+                }
+            }
+
+            _travelIndex = nearest;
+
+            if (now - _travelProgressAt > TRAVEL_STUCK_MS)
+            {
+                TravelStuck(p);
+
+                return;
+            }
+
+            if (p.Pathfinder.AutoWalking)
+            {
+                return;
+            }
+
+            // The furthest point of the path the client's pathfinder can reach from here; if it
+            // finds no way there, try nearer ones.
+            int leg = AgentNav.NextLeg(_travelPath, _travelIndex, p.X, p.Y, TRAVEL_LEG);
+
+            for (int i = leg; i > _travelIndex; i -= 3)
+            {
+                (int x, int y, sbyte z) = _travelPath[i];
+
+                // The path already ends within the distance asked of the goal, so every leg,
+                // the last too, walks to its tile.
+                if (WalkTo(x, y, z, 0))
+                {
+                    return;
+                }
+            }
+
+            // No leg plans: most often a closed door on the path, which the map files don't know.
+            if (now - _doorTriedAt > 2500)
+            {
+                OpenDoorAhead(p, now);
+            }
+        }
+
+        private uint _doorTriedAt;
+
+        private void OpenDoorAhead(PlayerMobile p, uint now)
+        {
+            for (int i = _travelIndex; i < _travelPath.Count && i <= _travelIndex + 4; i++)
+            {
+                (int x, int y, sbyte z) = _travelPath[i];
+
+                foreach (Item it in _world.Items.Values)
+                {
+                    // A closed door stands in the doorway, on the path; an open one has swung aside,
+                    // and clicking it would close it.
+                    if (it.OnGround && it.ItemData.IsDoor && it.X == x && it.Y == y && Math.Abs(it.Z - z) <= 20 && it.Distance <= 2)
+                    {
+                        _doorTriedAt = now;
+                        Journal.AddAgentEvent($"opening a door at {it.X},{it.Y}");
+                        GameActions.DoubleClick(_world, it.Serial);
+
+                        return;
+                    }
+                }
+            }
+        }
+
+        // No progress: try a door first; otherwise remember where, block the next stretch of the
+        // path and plan around it.
+        private void TravelStuck(PlayerMobile p)
+        {
+            uint now = Time.Ticks;
+
+            if (now - _doorTriedAt > 6000)
+            {
+                OpenDoorAhead(p, now);
+
+                if (_doorTriedAt == now)
+                {
+                    _travelProgressAt = now;
+
+                    return;
+                }
+            }
+
+            _travelStuck.Add((p.X, p.Y));
+            Journal.AddAgentEvent($"stuck at {p.X},{p.Y} on the way to {_travelGoalX},{_travelGoalY}");
+
+            if (++_travelReplans > TRAVEL_MAX_REPLANS)
+            {
+                StopTravel("stuck");
+
+                return;
+            }
+
+            var avoid = new HashSet<(int, int)>();
+
+            for (int i = _travelIndex + 1; i < _travelPath.Count && i <= _travelIndex + 4; i++)
+            {
+                avoid.Add((_travelPath[i].X, _travelPath[i].Y));
+            }
+
+            if (!PlanTravel(avoid))
+            {
+                StopTravel("stuck");
+            }
+        }
+
+        private bool _travelManual;
+
+        // An errand walking up to a vendor: travel without needing the move authority, since the
+        // errand itself was allowed.
+        public void TravelForErrand(int x, int y)
+        {
+            _travelManual = true;
+            StartTravel(x, y, 1);
+        }
+
         private (string, string) Move(string dir, int tiles)
         {
             int dx = 0, dy = 0;
@@ -1161,6 +1529,8 @@ namespace ClassicUO.Agent
 
         private void ClearTasks()
         {
+            StopTravel("stopped");
+            Errands.Cancel();
             _castSpell = 0;
             _queuedCast = null;
             _engaged = 0;

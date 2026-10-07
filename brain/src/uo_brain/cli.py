@@ -109,6 +109,29 @@ def main() -> None:
 
     add_world_args(sub)
 
+    do = sub.add_parser("do", help="one session goal: travel, bank, buy, sell, hunt or rest (uses the world store)")
+    do.add_argument("--shard", default="local")
+    dsub = do.add_subparsers(dest="goal", required=True)
+    t = dsub.add_parser("travel", help="walk to a named place or x,y")
+    t.add_argument("place")
+    t.add_argument("--distance", type=int, default=2)
+    b = dsub.add_parser("bank", help="at the nearest bank: deposit gold/loot, withdraw supplies")
+    b.add_argument("--deposit", default="gold,loot")
+    b.add_argument("--withdraw", default="", help='e.g. "bandage:100,heal potion:5"')
+    bu = dsub.add_parser("buy", help="buy an item from the nearest vendor that sells it")
+    bu.add_argument("item")
+    bu.add_argument("count", type=int)
+    bu.add_argument("--vendor", help="vendor kind, e.g. healer, mage_shop")
+    se = dsub.add_parser("sell", help="sell loot (or named items) to the nearest vendor of a kind")
+    se.add_argument("items", nargs="?", default="loot")
+    se.add_argument("--vendor", default="weaponsmith")
+    h = dsub.add_parser("hunt", help="hunt an area with Jev until time, supplies or weight say stop")
+    h.add_argument("area")
+    h.add_argument("--minutes", type=float, default=10)
+    add_run_args(h)
+    r = dsub.add_parser("rest")
+    r.add_argument("seconds", type=float, nargs="?", default=30)
+
     args = ap.parse_args()
     if args.cmd == "world":
         world_cmd(args)
@@ -271,6 +294,8 @@ async def dispatch(args) -> None:
                 await scenario(rpc, args)
             case "bench":
                 await bench(rpc, args)
+            case "do":
+                await do_goal(rpc, args)
     finally:
         await rpc.close()
 
@@ -387,6 +412,43 @@ async def scenario(rpc: AgentRpc, args) -> None:
     minutes = sum(r["minutes"] for r in results)
     print(json.dumps({"rounds": len(results), "kills": kills, "deaths": deaths, "minutes": round(minutes, 1),
                       "kills_per_hour": round(kills / max(minutes / 60, 1e-9), 1)}, indent=2))
+
+
+async def do_goal(rpc: AgentRpc, args) -> None:
+    from .session import Session
+    from .world import World
+
+    world = World.open(args.shard)
+    judge = make_judge(args) if args.goal == "hunt" else None
+    log = args.log.open("a") if getattr(args, "log", None) else None
+    session = Session(rpc, world, judge, log=lambda rec: print(json.dumps(rec)) if not log else
+                      log.write(json.dumps(rec) + "\n"))
+    await rpc.call("mode", mode="auto")  # a session goal is auto-mode play
+    try:
+        match args.goal:
+            case "travel":
+                xy = args.place.split(",")
+                if len(xy) == 2 and all(v.strip().lstrip("-").isdigit() for v in xy):
+                    res = await session.travel_to(x=int(xy[0]), y=int(xy[1]), distance=args.distance)
+                else:
+                    res = await session.travel_to(args.place, distance=args.distance)
+            case "bank":
+                res = await session.bank(args.deposit, args.withdraw)
+            case "buy":
+                res = await session.buy(args.item, args.count, args.vendor)
+            case "sell":
+                res = await session.sell(args.items, args.vendor)
+            case "hunt":
+                res = await session.hunt(args.area, args.minutes)
+            case _:
+                res = await session.rest(args.seconds)
+    finally:
+        if judge:
+            await judge.close()
+        if log:
+            log.close()
+        world.close()
+    print(json.dumps(res.to_tool(), indent=2))
 
 
 def bench_names(spec: str) -> list[str]:

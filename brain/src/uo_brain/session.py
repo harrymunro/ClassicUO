@@ -1,0 +1,389 @@
+"""Session skills: the goals the planner hands out, carried out by code.
+
+Real play is a loop of travelling, hunting, banking and restocking. The planner (a larger
+model, planner.py) chooses which goal comes next and with what arguments; each goal here
+runs until it is done, fails or is interrupted, and returns a short result in words and
+numbers that goes back to the planner. Code does what has a right answer (the route, which
+vendor sells bandages, moving items); Jev keeps the tactical decisions inside a hunt, and on
+the way when something attacks.
+
+Every skill reads the world store for places and writes back what it learned: the route it
+walked (or where it got stuck), and what happened in a hunt.
+"""
+
+import asyncio
+import json
+import math
+import random
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from . import loop, policy
+from .judge import Judge
+from .rpc import AgentRpc
+from .world import World, tiles
+
+# A vendor place's kind -> words its title carries in game ("Lucy the healer").
+VENDOR_TITLES: dict[str, tuple[str, ...]] = {
+    "healer": ("healer",),
+    "mage_shop": ("mage", "alchemist", "herbalist"),
+    "reagent_vendor": ("mage", "alchemist", "herbalist"),
+    "alchemist": ("alchemist",),
+    "herbalist": ("herbalist",),
+    "provisioner": ("provisioner",),
+    "weapon_vendor": ("weaponsmith", "blacksmith", "weapon"),
+    "armour_vendor": ("armourer", "armorer", "blacksmith", "armor"),
+    "blacksmith": ("blacksmith", "weaponsmith", "armourer", "armorer"),
+    "jeweller": ("jeweler", "jeweller"),
+    "bank": ("banker", "minter"),
+    "bowyer": ("bowyer",),
+    "tailor": ("tailor", "weaver"),
+}
+
+
+@dataclass
+class Result:
+    ok: bool
+    summary: str
+    data: dict[str, Any] = field(default_factory=dict)
+
+    def to_tool(self) -> dict[str, Any]:
+        return {"ok": self.ok, "result": self.summary, **self.data}
+
+
+class Session:
+    """The character's skills on one client. One goal at a time."""
+
+    def __init__(self, rpc: AgentRpc, world: World, judge: Judge | None = None,
+                 log: Callable[[dict[str, Any]], None] | None = None,
+                 pcfg: policy.PolicyConfig | None = None, archetype: str | None = None):
+        self.rpc = rpc
+        self.world = world
+        self.judge = judge
+        self.pcfg = pcfg or policy.PolicyConfig()
+        self.archetype = archetype
+        self._log = log or (lambda _: None)
+        self.interrupt = asyncio.Event()  # set to cut the current goal short (handover, shutdown)
+
+    # ------------------------------------------------------------ helpers
+
+    async def snap(self, **kw: Any) -> dict[str, Any]:
+        return await self.rpc.call("snapshot", since=0, **kw)
+
+    def log(self, kind: str, **data: Any) -> None:
+        self._log({"type": "session", "event": kind, "t": time.time(), **data})
+
+    async def act(self, verb: str, **params: Any) -> dict[str, Any]:
+        return await self.rpc.call("act", verb=verb, **params)
+
+    @staticmethod
+    def where(snap: dict[str, Any]) -> tuple[int, int]:
+        return snap["player"]["x"], snap["player"]["y"]
+
+    def resolve(self, place: str | None, x: int | None, y: int | None) -> tuple[int, int, str] | None:
+        if x is not None and y is not None:
+            return x, y, place or f"{x},{y}"
+        if not place:
+            return None
+        found = self.world.place(place, limit=1)
+        return (found[0]["x"], found[0]["y"], found[0]["name"]) if found else None
+
+    # ------------------------------------------------------------ travel
+
+    async def travel_to(self, place: str | None = None, x: int | None = None, y: int | None = None,
+                        distance: int = 2, timeout_s: float = 600) -> Result:
+        """Walk to a named place or a tile, fighting what attacks on the way."""
+        target = self.resolve(place, x, y)
+        if target is None:
+            return Result(False, f"no place called {place!r} in the world store")
+        tx, ty, name = target
+        snap = await self.snap()
+        start = self.where(snap)
+        if tiles(*start, tx, ty) <= distance:
+            return Result(True, f"already at {name}", {"x": tx, "y": ty})
+        here = self.world.region_at(*start)
+        from_name = here["name"] if here else f"{start[0]},{start[1]}"
+
+        res = await self.act("travel", x=tx, y=ty, distance=distance)
+        self.log("travel", to=name, x=tx, y=ty, status=res.get("status"), detail=res.get("detail"))
+        if res.get("status") != "done":
+            return Result(False, f"could not set off for {name}: {res.get('detail') or res.get('status')}")
+
+        began = time.monotonic()
+        trail: list[list[int]] = [list(start)]
+        travel: dict[str, Any] = {}
+        while time.monotonic() - began < timeout_s and not self.interrupt.is_set():
+            await asyncio.sleep(1.0)
+            snap = await self.snap()
+            if snap["player"]["dead"]:
+                return Result(False, "died on the way", {"at": list(self.where(snap))})
+            pos = list(self.where(snap))
+            if tiles(*pos, *trail[-1]) >= 8:
+                trail.append(pos)
+            travel = snap["agent"].get("travel") or {}
+            if travel.get("state") != "walking":
+                break
+        else:
+            await self.act("stop")
+            travel = {"state": "interrupted" if self.interrupt.is_set() else "timed out", **travel}
+
+        seconds = round(time.monotonic() - began)
+        state = travel.get("state", "?")
+        ok = state == "arrived"
+        stuck = travel.get("stuck_at") or []
+        trail.append(list(self.where(snap)))
+        self.world.add_route(from_name, name, trail, outcome="ok" if ok else "stuck",
+                             stuck_at=stuck or None, duration_s=seconds)
+        self.log("travelled", to=name, state=state, seconds=seconds, stuck_at=stuck)
+        if ok:
+            return Result(True, f"arrived at {name} in {seconds} s", {"seconds": seconds, "replans": travel.get("replans", 0)})
+        return Result(False, f"did not reach {name}: {state}, {travel.get('left', '?')} tiles short",
+                      {"seconds": seconds, "stuck_at": stuck, "position": list(self.where(snap))})
+
+    # ------------------------------------------------------------ errands
+
+    async def errand(self, verb: str, timeout_s: float = 60, **params: Any) -> dict[str, Any]:
+        res = await self.act(verb, **params)
+        if res.get("status") != "done":
+            return {"state": "failed", "detail": res.get("detail") or res.get("status")}
+        began = time.monotonic()
+        while time.monotonic() - began < timeout_s:
+            await asyncio.sleep(0.5)
+            e = (await self.snap())["agent"].get("errand") or {}
+            if e.get("state") in ("done", "failed"):
+                return e
+        return {"state": "failed", "detail": "timed out"}
+
+    async def go_near(self, kind: str, within: int, skip: set[str] = frozenset()) -> tuple[dict[str, Any] | None, Result | None]:
+        """The nearest place of a kind (or selling an item), walked to if further than `within`."""
+        snap = await self.snap()
+        found = [p for p in self.world.find_place(kind, near=list(self.where(snap)), limit=8) if p["name"] not in skip]
+        if not found:
+            return None, Result(False, f"the world store knows no {'other ' if skip else ''}{kind}")
+        place = found[0]
+        if tiles(*self.where(snap), place["x"], place["y"]) > within:
+            r = await self.travel_to(place["name"], place["x"], place["y"], distance=max(1, within - 2))
+            if not r.ok:
+                return place, Result(False, f"could not get to {place['name']}: {r.summary}", r.data)
+        return place, None
+
+    async def bank(self, deposit: str = "gold,loot", withdraw: str = "") -> Result:
+        """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank."""
+        place, failed = await self.go_near("bank", 10)
+        if failed:
+            return failed
+        before = (await self.snap())["player"]
+        e = await self.errand("bank", deposit=deposit, withdraw=withdraw)
+        after = (await self.snap())["player"]
+        ok = e.get("state") == "done"
+        data = {"gold_carried": after.get("gold"), "weight": f"{after.get('weight')}/{after.get('weight_max')}",
+                "bandages": after["supplies"].get("bandages"), "moved": e.get("moved", 0)}
+        self.log("bank", place=place["name"], ok=ok, detail=e.get("detail"), **data)
+        if ok:
+            self.world.add_place("bank", place["name"], place["x"], place["y"], z=place.get("z"), source="seen")
+        return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}", data | {"weight_before": before.get("weight")})
+
+    async def vendor(self, kind: str, words: tuple[str, ...], exclude: set[int] = frozenset(),
+                     skip: set[str] = frozenset()) -> tuple[dict[str, Any] | None, int, Result | None]:
+        place, failed = await self.go_near(kind, 8, skip)
+        if failed:
+            return place, 0, failed
+        snap = await self.snap()
+        titles = words or VENDOR_TITLES.get(place["kind"], (place["kind"],))
+        best = None
+        for m in snap["mobiles"]:
+            label = (m.get("label") or m.get("name") or "").lower()
+            if m.get("human") and not m.get("monster") and m["notoriety"] == "invulnerable" and \
+                    any(w in label for w in titles) and m["serial"] not in exclude and m["distance"] <= 14:
+                if best is None or m["distance"] < best["distance"]:
+                    best = m
+        if best is None:
+            return place, 0, Result(False, f"no {'/'.join(titles)} in sight at {place['name']}")
+        return place, best["serial"], None
+
+    async def held(self, item: str) -> int:
+        """How many of an item the backpack holds, by the client's supply counts or by name."""
+        snap = await self.snap(pack=True)
+        supplies = snap["player"].get("supplies", {})
+        key = {"bandage": "bandages", "bandages": "bandages", "heal potion": "heal_potions",
+               "cure potion": "cure_potions"}.get(item.lower())
+        if key:
+            return supplies.get(key, 0)
+        reg = item.lower().replace(" ", "_")
+        if reg in (supplies.get("reagents") or {}):
+            return supplies["reagents"][reg]
+        word = item.lower().rstrip("s")
+        return sum(i.get("amount", 1) for i in snap.get("pack", []) if word in i.get("name", "").lower())
+
+    async def buy(self, item: str, count: int, vendor_kind: str | None = None) -> Result:
+        """Buy `count` of an item ("bandage", "black pearl") from the nearest vendors that sell it.
+        A vendor only stocks so many (a healer has 20 bandages), so it goes round the vendors in
+        sight, each once, then on to the next shop, until it has enough."""
+        start = await self.held(item)
+        tried: set[int] = set()
+        done_places: set[str] = set()
+        spent, notes, place = 0, [], None
+        while await self.held(item) - start < count and len(tried) < 8 and len(done_places) < 3:
+            place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places)
+            if failed:
+                if place is None or "in sight" not in failed.summary:
+                    if not tried:
+                        return failed
+                    break
+                done_places.add(place["name"])  # nobody left to buy from here: next shop
+                continue
+            tried.add(serial)
+            want = count - (await self.held(item) - start)
+            e = await self.errand("buy", target=serial, items=f"{item}:{want}")
+            spent += -(e.get("gold_change") or 0)
+            notes.append(e.get("detail") or e.get("state", "?"))
+        got = await self.held(item) - start
+        ok = got >= count
+        self.log("buy", place=place["name"] if place else None, item=item, count=count, got=got, ok=ok,
+                 detail=notes, gold=-spent)
+        if got and place:
+            self.world.add_place(place["kind"], place["name"], place["x"], place["y"], z=place.get("z"),
+                                 sells=place.get("sells"), source="seen")
+        where = place["name"] if place else "no vendor"
+        return Result(ok, f"{where}: bought {got} of {count} {item} for {spent} gold"
+                          + ("" if ok else f" ({'; '.join(notes)})"), {"bought": got, "gold_spent": spent})
+
+    async def sell(self, items: str = "loot", vendor_kind: str = "weaponsmith") -> Result:
+        """Sell loot (or named items) to the nearest vendor of a kind."""
+        place, serial, failed = await self.vendor(vendor_kind, ())
+        if failed:
+            return failed
+        e = await self.errand("sell", target=serial, items=items)
+        ok = e.get("state") == "done"
+        self.log("sell", place=place["name"], items=items, ok=ok, detail=e.get("detail"), gold=e.get("gold_change"))
+        return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}", {"gold_change": e.get("gold_change")})
+
+    async def rest(self, seconds: float = 30) -> Result:
+        await self.rpc.call("mode", mode="auto")
+        began = time.monotonic()
+        while time.monotonic() - began < seconds and not self.interrupt.is_set():
+            await asyncio.sleep(1)
+        p = (await self.snap())["player"]
+        return Result(True, f"rested {round(time.monotonic() - began)} s",
+                      {"health": f"{p['hits']}/{p['hits_max']}", "mana": f"{p['mana']}/{p['mana_max']}"})
+
+    # ------------------------------------------------------------ hunting
+
+    async def hunt(self, area: str, minutes: float = 10, min_bandages: int = 10, max_weight_pct: int = 85,
+                   log_path: Path | None = None) -> Result:
+        """Go to a hunting area and let Jev fight there until time is up, supplies run low,
+        the bag gets heavy, or nothing shows up for a while. Walks around the spawn when it
+        is quiet."""
+        spawns = self.world.what_spawns(area=area, limit=1) or self.world.what_spawns(near=area, limit=1)
+        target = self.resolve(area, None, None)
+        if spawns:
+            cx, cy, name = spawns[0]["x"], spawns[0]["y"], spawns[0]["area"]
+            radius = min(int(spawns[0].get("range") or 10), 15)
+        elif target:
+            cx, cy, name = target
+            radius = 10
+        else:
+            return Result(False, f"no hunting area called {area!r} in the world store")
+
+        r = await self.travel_to(name, cx, cy, distance=3)
+        if not r.ok:
+            return Result(False, f"could not get to {name}: {r.summary}", r.data)
+        if self.judge is None:
+            return Result(False, "no judge to fight with")
+
+        await self.rpc.call("mode", mode="auto")
+        stop = asyncio.Event()
+        why: list[str] = []
+        quiet_since = [time.monotonic()]
+        patrol_at = [0.0]
+        first: dict[str, Any] = {}
+        last: dict[str, Any] = {}
+
+        def watch(snap: dict[str, Any]) -> None:
+            nonlocal first, last
+            first = first or snap
+            last = snap
+            p = snap["player"]
+            now = time.monotonic()
+            if p["dead"]:
+                why.append("died")
+            elif p.get("weight_max") and p["weight"] * 100 >= max_weight_pct * p["weight_max"]:
+                why.append("bag is heavy")
+            elif not self.mage(snap) and p["supplies"].get("bandages", 0) < min_bandages:
+                why.append("low on bandages")
+            elif self.mage(snap) and min(p["supplies"].get("reagents", {"x": 0}).values()) < 5:
+                why.append("low on reagents")
+            elif self.interrupt.is_set():
+                why.append("interrupted")
+            hostile = any(m.get("monster") and not m.get("dead") for m in snap["mobiles"])
+            busy = snap["agent"].get("engaged") or snap["agent"].get("looting")
+            if hostile or busy:
+                quiet_since[0] = now
+            elif now - quiet_since[0] > 240:
+                why.append("nothing to fight for 4 minutes")
+            elif now - quiet_since[0] > 20 and now > patrol_at[0] and not (snap["agent"].get("travel") or {}).get("state") == "walking":
+                # Quiet: wander to another spot of the spawn to find something.
+                patrol_at[0] = now + 25
+                a = random.uniform(0, 6.283)
+                tx, ty = cx + round(radius * 0.7 * math.cos(a)), cy + round(radius * 0.7 * math.sin(a))
+                asyncio.get_running_loop().create_task(self.act("travel", x=tx, y=ty, distance=1))
+            if why:
+                stop.set()
+
+        lcfg = loop.LoopConfig(duration_s=minutes * 60)
+        began = time.monotonic()
+        stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path, stop, archetype=self.archetype,
+                               on_snapshot=watch)
+        s = stats.summary(lcfg.price_per_million)["client_stats"]
+        mins = round((time.monotonic() - began) / 60, 1)
+        p0, p1 = (first or last).get("player", {}), last.get("player", {})
+        data = {
+            "minutes": mins, "kills": s.get("kills", 0), "deaths": s.get("deaths", 0),
+            "bandages_used": (p0.get("supplies", {}).get("bandages", 0) - p1.get("supplies", {}).get("bandages", 0)),
+            "gold_gained": p1.get("gold", 0) - p0.get("gold", 0),
+            "weight": f"{p1.get('weight')}/{p1.get('weight_max')}",
+            "health": f"{p1.get('hits')}/{p1.get('hits_max')}",
+            "stopped_because": why[0] if why else f"{minutes} minutes up",
+        }
+        kit = self.archetype or ("mage" if last and self.mage(last) else "warrior")
+        self.world.add_outcome(name, kit, "kills_per_hour", round(data["kills"] / max(mins / 60, 1e-6), 1))
+        self.world.add_outcome(name, kit, "deaths", data["deaths"])
+        self.log("hunted", area=name, **data)
+        return Result(data["deaths"] == 0, f"hunted {name} for {mins} min: {data['kills']} kills, "
+                                           f"stopped because {data['stopped_because']}", data)
+
+    @staticmethod
+    def mage(snap: dict[str, Any]) -> bool:
+        from .state import archetype_of
+        return archetype_of(snap) == "mage"
+
+
+def describe(snap: dict[str, Any], world: World | None = None) -> dict[str, Any]:
+    """The character's situation in words, for the planner."""
+    p = snap["player"]
+    s = p.get("supplies", {})
+    here = world.region_at(p["x"], p["y"]) if world else None
+    out = {
+        "position": {"x": p["x"], "y": p["y"], "area": here["name"] if here else "open country"},
+        "health": f"{p['hits']}/{p['hits_max']}",
+        "gold_carried": p.get("gold", 0),
+        "weight": f"{p.get('weight')}/{p.get('weight_max')} stones",
+        "bandages": s.get("bandages", 0),
+        "heal_potions": s.get("heal_potions", 0),
+        "cure_potions": s.get("cure_potions", 0),
+        "dead": p["dead"],
+        "hostiles_in_sight": sum(1 for m in snap["mobiles"] if m.get("monster") and not m.get("dead")),
+    }
+    if p.get("mana_max"):
+        out["mana"] = f"{p['mana']}/{p['mana_max']}"
+    regs = s.get("reagents") or {}
+    if regs and any(regs.values()):
+        out["reagents"] = {k.replace("_", " "): v for k, v in regs.items()}
+    return out
+
+
+def dumps(obj: Any) -> str:
+    return json.dumps(obj, separators=(",", ":"))

@@ -28,6 +28,7 @@ SNAPSHOT = {
     ],
     "corpses": [
         {"serial": 0x40000200, "name": "a corpse of a ratman", "distance": 2, "dir": "north", "opened": True,
+         "monster": True,
          "items": [
              {"serial": 0x40000300, "name": "gold coin", "amount": 40, "graphic": 0x0EED, "auto_loot": True},
              {"serial": 0x40000301, "name": "a long sword", "amount": 1, "graphic": 0x0F61,

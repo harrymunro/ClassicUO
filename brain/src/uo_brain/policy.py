@@ -90,8 +90,9 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
         "fight": bool(sit.targets),
         "flee": bool(close) and cfg.allow_flee and move,
         "loot": bool(sit.corpses or sit.items) and not close and cfg.looting != "nothing"
-                and sit.authority("loot") != "off" and (move or within_reach),
-        "seek": bool(sit.targets) and not any(h.distance <= reach for h in sit.hostiles) and move,
+                and sit.authority("loot") != "off" and (move or within_reach) and not sit.traveling,
+        "seek": bool(sit.targets) and not any(h.distance <= reach for h in sit.hostiles) and move
+                and not sit.traveling,
         "rest": True,
     }
     masked = [k for k, ok in valid.items() if not ok and k in answer.probabilities]

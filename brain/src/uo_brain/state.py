@@ -86,6 +86,7 @@ class Situation:
     spells: list[Candidate] = field(default_factory=list)  # attack spells castable right now
     mana_pct: int = 100
     mode: str = "auto"         # "assist" is combat assist: the player drives, the agent only fights
+    traveling: bool = False    # on a long walk (travel): no seeking or looting on the way
     engage: str = "defend"     # combat assist: follow (the player's target), defend (+ attackers), nearby
 
     @property
@@ -163,6 +164,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     supplies = p.get("supplies", {})
     mode = snapshot["agent"].get("mode", "auto")
     engage = snapshot["agent"].get("engage", "defend")
+    # On a long walk only what is close or coming for the character is worth stopping for.
+    traveling = (snapshot["agent"].get("travel") or {}).get("state") == "walking"
 
     hostiles: list[Candidate] = []
     others: list[dict[str, Any]] = []
@@ -186,7 +189,7 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 "your_current_target": bool(m.get("my_target")) or m["serial"] == engaged,
                 "aggressive": bool(m.get("war_mode")),
             }
-            allowed = True
+            allowed = not traveling or m["distance"] <= 3 or (bool(m.get("war_mode")) and m["distance"] <= 6)
             if mode == "assist":
                 info["the_players_target"] = bool(m.get("player_target"))
                 info["attacking_you"] = bool(m.get("attacking_me"))
@@ -205,6 +208,9 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     corpses: list[Candidate] = []
     items: list[Candidate] = []
     for c in snapshot.get("corpses", []):
+        # Only corpses of monsters the client saw die: looting anything else can be a crime.
+        if c.get("monster") is not True:
+            continue
         if c["serial"] not in looted and c["distance"] <= 10:
             cid = f"c{len(corpses) + 1}"
             info = {"id": cid, "name": c.get("name") or "a corpse", "distance": distance_words(c["distance"]),
@@ -272,7 +278,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                                   "It never walks on its own.")
     return Situation(snapshot, state, hostiles, corpses, items, hp_pct,
                      strategy=(snapshot["agent"].get("strategy") or "").strip(),
-                     archetype=archetype, spells=spells, mana_pct=mana_pct, mode=mode, engage=engage)
+                     archetype=archetype, spells=spells, mana_pct=mana_pct, mode=mode, engage=engage,
+                     traveling=traveling)
 
 
 def journal_events(entries: list[dict[str, Any]]) -> list[str]:

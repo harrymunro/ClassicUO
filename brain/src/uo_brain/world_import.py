@@ -30,8 +30,8 @@ VENDORS: dict[str, tuple[str, str, list[str]]] = {
     "minter": ("bank", "bank", ["bank box", "commodity deeds", "vendor contracts"]),
     "healer": ("healer", "healer", ["resurrection", "bandages", "lesser heal potions", "refresh potions",
                                     "ginseng", "garlic"]),
-    "wanderinghealer": ("healer", "wandering healer", ["resurrection", "bandages", "lesser heal potions",
-                                                       "refresh potions", "ginseng", "garlic"]),
+    # Wandering healers resurrect but sell nothing (BaseHealer.IsActiveVendor is false).
+    "wanderinghealer": ("healer", "wandering healer", ["resurrection"]),
     "mage": ("mage_shop", "mage shop", ["reagents", "black pearl", "bloodmoss", "garlic", "ginseng",
                                         "mandrake root", "nightshade", "spiders silk", "sulfurous ash",
                                         "spellbook", "spell scrolls", "blank scrolls", "recall runes", "scribes pen",

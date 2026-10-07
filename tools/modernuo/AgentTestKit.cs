@@ -39,6 +39,9 @@ public static class AgentTestKit
     // Spawns waiting for their delay ([AgentSpawn ... delay]); cancelled by a reset.
     private static readonly Dictionary<Mobile, List<TimerExecutionToken>> _pending = new();
 
+    // Invisible walls laid with [AgentWall, removed by [AgentWall clear.
+    private static readonly List<Item> _walls = [];
+
     // Every creature in _arenaSpawns, so the orphan sweep can tell live arenas from leftovers of a
     // previous boot (the tracking itself is not persisted).
     private static readonly HashSet<BaseCreature> _tracked = new();
@@ -66,6 +69,8 @@ public static class AgentTestKit
         CommandSystem.Register("AgentSpawn", _accessLevel, AgentSpawn_OnCommand);
         CommandSystem.Register("AgentSupplies", _accessLevel, AgentSupplies_OnCommand);
         CommandSystem.Register("AgentLoot", _accessLevel, AgentLoot_OnCommand);
+        CommandSystem.Register("AgentWall", _accessLevel, AgentWall_OnCommand);
+        CommandSystem.Register("AgentRestock", _accessLevel, AgentRestock_OnCommand);
     }
 
     // Runs before AccountPrompt.Initialize (default priority 50) so a headless first boot finds an
@@ -250,13 +255,23 @@ public static class AgentTestKit
         );
     }
 
-    [Usage("AgentGo [lane]")]
+    [Usage("AgentGo [lane | x y]")]
     [Description(
-        "Teleports you to the agent test location. Lanes 1-9 are copies of it 60 tiles apart (eastwards), so several test characters can run scenarios at once without meeting."
+        "Teleports you to the agent test location. Lanes 1-9 are copies of it 60 tiles apart (eastwards), so several test characters can run scenarios at once without meeting. With x y, teleports you to that tile on the test map (e.g. a town, for travel tests)."
     )]
     public static void AgentGo_OnCommand(CommandEventArgs e)
     {
         var from = e.Mobile;
+
+        if (e.Length >= 2)
+        {
+            int x = e.GetInt32(0), y = e.GetInt32(1);
+            var to = new Point3D(x, y, TestMap.GetAverageZ(x, y));
+            from.MoveToWorld(to, TestMap);
+            from.SendMessage($"Moved to {to} on {TestMap}.");
+            return;
+        }
+
         var lane = e.Length > 0 ? Math.Clamp(e.GetInt32(0), 0, MaxLane) : 0;
         var spot = LaneLocation(lane);
         from.MoveToWorld(spot, TestMap);
@@ -364,9 +379,9 @@ public static class AgentTestKit
         from.SendMessage($"Spawn: {count} {kind.Name} in {delay:0.#}s.");
     }
 
-    [Usage("AgentSupplies [bandages N] [heal N] [cure N] [reagents N]")]
+    [Usage("AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]")]
     [Description(
-        "Sets how many bandages, greater heal and greater cure potions and reagents (of each kind) are in your backpack, replacing what is there. Only the kinds named change."
+        "Sets how many bandages, greater heal and greater cure potions and reagents (of each kind) are in your backpack, replacing what is there. Only the kinds named change. gold N adds N gold coins; loot N adds N sets of the [AgentLoot items (valuables and junk) to the pack."
     )]
     public static void AgentSupplies_OnCommand(CommandEventArgs e)
     {
@@ -426,6 +441,27 @@ public static class AgentTestKit
 
                         break;
                     }
+                case "gold":
+                    {
+                        if (n > 0)
+                        {
+                            pack.DropItem(new Gold(n));
+                        }
+
+                        break;
+                    }
+                case "loot":
+                    {
+                        for (var k = 0; k < Math.Min(n, 5); k++)
+                        {
+                            foreach (var item in LootItems())
+                            {
+                                pack.DropItem(item);
+                            }
+                        }
+
+                        break;
+                    }
                 default:
                     from.SendMessage($"Unknown supply '{what}': use bandages, heal, cure or reagents.");
                     return;
@@ -433,6 +469,80 @@ public static class AgentTestKit
         }
 
         from.SendMessage("Supplies set.");
+    }
+
+    [Usage("AgentWall <x1> <y1> <x2> <y2> | clear")]
+    [Description(
+        "Lays an invisible wall (blockers) along the line between two tiles, to test getting stuck and finding another way. [AgentWall clear removes all of them."
+    )]
+    public static void AgentWall_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+
+        if (e.Length == 1 && e.GetString(0).InsensitiveEquals("clear"))
+        {
+            foreach (var wall in _walls)
+            {
+                wall.Delete();
+            }
+
+            from.SendMessage($"Wall: removed {_walls.Count} blockers.");
+            _walls.Clear();
+            return;
+        }
+
+        if (e.Length < 4 || from.Map == null || from.Map == Map.Internal)
+        {
+            from.SendMessage("Usage: [AgentWall <x1> <y1> <x2> <y2> | clear");
+            return;
+        }
+
+        int x1 = e.GetInt32(0), y1 = e.GetInt32(1), x2 = e.GetInt32(2), y2 = e.GetInt32(3);
+        var steps = Math.Max(Math.Abs(x2 - x1), Math.Abs(y2 - y1));
+
+        for (var i = 0; i <= steps && i <= 60; i++)
+        {
+            var x = x1 + (int)Math.Round((x2 - x1) * (double)i / Math.Max(steps, 1));
+            var y = y1 + (int)Math.Round((y2 - y1) * (double)i / Math.Max(steps, 1));
+            var z = from.Map.GetAverageZ(x, y);
+
+            // Two blockers high, so nothing steps over them.
+            for (var dz = 0; dz < 40; dz += 20)
+            {
+                var blocker = new Blocker();
+                blocker.MoveToWorld(new Point3D(x, y, z + dz), from.Map);
+                _walls.Add(blocker);
+            }
+        }
+
+        from.SendMessage($"Wall: {steps + 1} tiles from ({x1}, {y1}) to ({x2}, {y2}).");
+    }
+
+    [Usage("AgentRestock [amount]")]
+    [Description(
+        "Stocks every vendor within 12 tiles with at least amount (default 100) of each thing it sells, so buying tests aren't limited by what is left on the shelf."
+    )]
+    public static void AgentRestock_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var amount = e.Length > 0 ? Math.Clamp(e.GetInt32(0), 1, 999) : 100;
+        var vendors = 0;
+
+        foreach (var vendor in from.GetMobilesInRange<BaseVendor>(12))
+        {
+            foreach (var info in vendor.GetBuyInfo())
+            {
+                if (info is GenericBuyInfo buy)
+                {
+                    buy.MaxAmount = Math.Max(buy.MaxAmount, amount);
+                    buy.Amount = Math.Max(buy.Amount, amount);
+                }
+            }
+
+            vendors++;
+        }
+
+        from.SendMessage($"Restock: {vendors} vendors stocked with at least {amount} of everything.");
     }
 
     [Usage("AgentLoot [distance] [direction]")]
@@ -458,31 +568,62 @@ public static class AgentTestKit
             return;
         }
 
-        // A rabbit carries no loot of its own, so the corpse holds exactly these items. They go
-        // in after the death: a creature's pack is not carried over to its corpse here.
-        var carrier = new Rabbit();
+        // A monster's corpse, as the agent only loots those. The orc stands still for a moment so
+        // the client sees it before it dies, then its own loot is swapped for the test items.
+        var carrier = new Orc { Paralyzed = true, Frozen = true };
         carrier.MoveToWorld(spot, map);
-        carrier.Kill();
 
-        if (carrier.Corpse is not Container corpse)
+        if (!_pending.TryGetValue(from, out var tokens))
         {
-            from.SendMessage("The corpse did not appear.");
-            return;
+            tokens = [];
+            _pending[from] = tokens;
         }
 
-        Item[] items =
-        [
-            new Diamond(2), new GoldRing(), MagicLongsword(),
-            new Bone(3), new Head(), new Shirt(), new Kindling(5), new RawRibs(2)
-        ];
+        Timer.StartTimer(
+            TimeSpan.FromSeconds(1.5),
+            () =>
+            {
+                if (carrier.Deleted)
+                {
+                    return;
+                }
 
-        foreach (var item in items)
-        {
-            corpse.DropItem(item);
-        }
+                carrier.Kill();
 
-        from.SendMessage($"Loot: a corpse with 3 valuables and 5 junk items at {distance} tiles.");
+                if (carrier.Corpse is not Container corpse)
+                {
+                    from.SendMessage("The corpse did not appear.");
+                    return;
+                }
+
+                using var own = PooledRefQueue<Item>.Create();
+                foreach (var item in corpse.Items)
+                {
+                    own.Enqueue(item);
+                }
+
+                while (own.Count > 0)
+                {
+                    own.Dequeue().Delete();
+                }
+
+                foreach (var item in LootItems())
+                {
+                    corpse.DropItem(item);
+                }
+
+                from.SendMessage($"Loot: a corpse with 3 valuables and 5 junk items at {distance} tiles.");
+            },
+            out var token
+        );
+        tokens.Add(token);
     }
+
+    private static Item[] LootItems() =>
+    [
+        new Diamond(2), new GoldRing(), MagicLongsword(),
+        new Bone(3), new Head(), new Shirt(), new Kindling(5), new RawRibs(2)
+    ];
 
     private static Item MagicLongsword()
     {

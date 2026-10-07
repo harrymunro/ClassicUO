@@ -149,6 +149,14 @@ namespace ClassicUO.Agent
                 w.WriteStartObject();
                 w.WriteNumber("serial", m.Serial);
                 w.WriteString("name", m.Name?.Trim() ?? string.Empty);
+
+                // The full name a vendor or banker shows, title included ("Lucy the healer"),
+                // when the server sends item properties.
+                if (world.OPL.TryGetNameAndData(m.Serial, out string label, out _) && !string.IsNullOrWhiteSpace(label))
+                {
+                    w.WriteString("label", label.Trim());
+                }
+
                 w.WriteNumber("body", m.Graphic);
                 w.WriteString("notoriety", m.NotorietyFlag.ToString().ToLowerInvariant());
                 w.WriteBoolean("human", m.IsHuman);
@@ -205,6 +213,17 @@ namespace ClassicUO.Agent
                 w.WriteNumber("distance", c.Distance);
                 w.WriteString("dir", Compass(c.X - world.Player.X, c.Y - world.Player.Y));
                 w.WriteBoolean("opened", c.Opened || c.Items != null);
+
+                bool? monster = world.Agent.CorpseOfMonster(c.Serial);
+
+                if (monster.HasValue)
+                {
+                    w.WriteBoolean("monster", monster.Value);
+                }
+                else
+                {
+                    w.WriteNull("monster");
+                }
 
                 w.WriteStartArray("items");
 
@@ -381,6 +400,40 @@ namespace ClassicUO.Agent
             w.WriteString("casting", agent.CastingSpell);
             w.WriteNumber("cast_ready_ms", agent.CastReadyInMs);
             w.WriteNumber("looting", agent.LootCorpse);
+
+            if (agent.Errands.Kind.Length != 0)
+            {
+                w.WriteStartObject("errand");
+                w.WriteString("kind", agent.Errands.Kind);
+                w.WriteString("state", agent.Errands.State);
+                w.WriteString("detail", agent.Errands.Detail);
+                w.WriteNumber("moved", agent.Errands.Moved);
+                w.WriteNumber("gold_change", agent.Errands.GoldChange);
+                w.WriteEndObject();
+            }
+
+            if (agent.TravelState.Length != 0)
+            {
+                w.WriteStartObject("travel");
+                w.WriteString("state", agent.TravelState);
+                w.WriteNumber("x", agent.TravelGoal.X);
+                w.WriteNumber("y", agent.TravelGoal.Y);
+                w.WriteNumber("left", agent.TravelLeft);
+                w.WriteNumber("replans", agent.TravelReplans);
+                w.WriteNumber("elapsed_ms", agent.TravelElapsedMs);
+                w.WriteStartArray("stuck_at");
+
+                foreach ((int x, int y) in agent.TravelStuckAt)
+                {
+                    w.WriteStartArray();
+                    w.WriteNumberValue(x);
+                    w.WriteNumberValue(y);
+                    w.WriteEndArray();
+                }
+
+                w.WriteEndArray();
+                w.WriteEndObject();
+            }
             w.WriteBoolean("targeting", world.TargetManager.IsTargeting);
 
             if (agent.Suggestion != null)

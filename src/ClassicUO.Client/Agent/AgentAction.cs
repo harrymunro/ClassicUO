@@ -25,6 +25,7 @@ namespace ClassicUO.Agent
         public string Direction = string.Empty;
         public string Spell = string.Empty;
         public string Name = string.Empty;
+        public string Deposit = string.Empty, Withdraw = string.Empty, Items = string.Empty; // bank, buy, sell
         public float Confidence = -1;
         public string Reason = string.Empty;
 
@@ -65,6 +66,7 @@ namespace ClassicUO.Agent
                         return AgentBehavior.Loot;
 
                     case "walk_to":
+                    case "travel":
                     case "move":
                     case "flee":
                     case "stop":
@@ -102,6 +104,9 @@ namespace ClassicUO.Agent
                     case "dir": a.Direction = v.GetString() ?? string.Empty; break;
                     case "confidence": a.Confidence = v.GetSingle(); break;
                     case "reason": a.Reason = v.GetString() ?? string.Empty; break;
+                    case "deposit": a.Deposit = v.GetString() ?? string.Empty; break;
+                    case "withdraw": a.Withdraw = v.GetString() ?? string.Empty; break;
+                    case "items": a.Items = v.GetString() ?? string.Empty; break;
                     case "source": a.Manual = v.GetString() == "manual"; break;
                 }
             }
@@ -142,6 +147,7 @@ namespace ClassicUO.Agent
                 case "take": return $"take {target}";
                 case "flee": return Target != 0 ? $"flee from {target}" : "flee";
                 case "walk_to": return $"walk to {X},{Y}";
+                case "travel": return $"travel to {X},{Y}";
                 case "move": return $"move {Direction}";
                 case "war_mode": return On ? "war mode on" : "peace mode";
                 case "say": return $"say \"{Text}\"";
@@ -151,6 +157,9 @@ namespace ClassicUO.Agent
 
                     return Target == 0 ? $"cast {spell}" : Target == uint.MaxValue ? $"cast {spell} on self" : $"cast {spell} at {target}";
                 case "skill": return $"use {Name}";
+                case "bank": return "bank" + (Deposit.Length != 0 ? $": deposit {Deposit}" : "") + (Withdraw.Length != 0 ? $", withdraw {Withdraw}" : "");
+                case "buy": return $"buy {Items}";
+                case "sell": return $"sell {Items}";
                 case "hint": return Text;
                 default: return Verb;
             }

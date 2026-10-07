@@ -3712,7 +3712,7 @@ namespace ClassicUO.Network
                 return;
             }
 
-            world.Agent.OnMobileDied(serial);
+            world.Agent.OnMobileDied(serial, corpseSerial);
 
             serial |= 0x80000000;
 

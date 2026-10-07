@@ -360,6 +360,20 @@ namespace ClassicUO.Game.UI.Gumps
             _shopItems.Add(serial, shopItem);
         }
 
+        // What is on offer (buy) or wanted (sell), so the agent can answer the list without the
+        // mouse (Agent/AgentErrands.cs).
+        public List<(uint Serial, ushort Graphic, string Name, int Amount, uint Price)> Offers()
+        {
+            var list = new List<(uint, ushort, string, int, uint)>();
+
+            foreach (ShopItem s in _shopItems.Values)
+            {
+                list.Add((s.LocalSerial, s.Graphic, s.Name ?? string.Empty, s.Amount, s.Price));
+            }
+
+            return list;
+        }
+
         public void SetNameTo(Item item, string name)
         {
             if (!string.IsNullOrEmpty(name) && _shopItems.TryGetValue(item, out ShopItem shopItem))
