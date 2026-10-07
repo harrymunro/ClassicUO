@@ -1,0 +1,1279 @@
+{
+  "started": "2026-10-07T02:03:12",
+  "rounds": 10,
+  "lane": 1,
+  "bestiary": true,
+  "scenarios": {
+    "mismatch": {
+      "bead": "cuo-46e.2",
+      "right": "An ogre lord walks up while four weak monsters fight the warrior: leave, or at least don't engage it.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.5,
+              "player_died": false,
+              "kills": [
+                "Egharod (orc)",
+                "Tackik (ratman)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Egharod (orc)",
+                "Tackik (ratman)"
+              ],
+              "flees_at_hp": [
+                86,
+                88,
+                91,
+                93,
+                95,
+                96,
+                97,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 30,
+              "log": "logs/bench/20261007-020312/mismatch-jev-01.jsonl",
+              "input_tokens": 64675,
+              "est_cost_usd": 0.0027
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Chatuki (ratman)",
+                "a headless one",
+                "Vrograg (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Chatuki (ratman)",
+                "a headless one",
+                "Vrograg (orc)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 61,
+              "decisions": 35,
+              "log": "logs/bench/20261007-020312/mismatch-jev-02.jsonl",
+              "input_tokens": 66677,
+              "est_cost_usd": 0.0028
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Sarhbub (orc)",
+                "a mongbat",
+                "a headless one",
+                "Etik (ratman)"
+              ],
+              "engaged": [
+                "Sarhbub (orc)",
+                "a mongbat",
+                "a headless one",
+                "Etik (ratman)"
+              ],
+              "flees_at_hp": [
+                86,
+                88,
+                91,
+                93,
+                95,
+                97,
+                99
+              ],
+              "min_hp": 55,
+              "decisions": 35,
+              "log": "logs/bench/20261007-020312/mismatch-jev-03.jsonl",
+              "input_tokens": 67928,
+              "est_cost_usd": 0.0029
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Kugbu (orc)",
+                "a mongbat",
+                "Chitaviok (ratman)"
+              ],
+              "engaged": [
+                "Kugbu (orc)",
+                "a mongbat",
+                "Chitaviok (ratman)"
+              ],
+              "flees_at_hp": [
+                96,
+                93,
+                95,
+                97,
+                99,
+                100,
+                100
+              ],
+              "min_hp": 62,
+              "decisions": 36,
+              "log": "logs/bench/20261007-020312/mismatch-jev-04.jsonl",
+              "input_tokens": 69485,
+              "est_cost_usd": 0.0029
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Kilug (orc)",
+                "a mongbat",
+                "a headless one",
+                "Ectuk (ratman)"
+              ],
+              "engaged": [
+                "Kilug (orc)",
+                "a mongbat",
+                "a headless one",
+                "Ectuk (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 68,
+              "decisions": 37,
+              "log": "logs/bench/20261007-020312/mismatch-jev-05.jsonl",
+              "input_tokens": 71716,
+              "est_cost_usd": 0.003
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Deakgu (orc)",
+                "Chikchickeki (ratman)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Deakgu (orc)",
+                "Chikchickeki (ratman)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                79,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 78,
+              "decisions": 33,
+              "log": "logs/bench/20261007-020312/mismatch-jev-06.jsonl",
+              "input_tokens": 64538,
+              "est_cost_usd": 0.0027
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Xagu (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Xagu (orc)",
+                "a mongbat",
+                "Chickeki (ratman)"
+              ],
+              "flees_at_hp": [
+                85,
+                87,
+                89,
+                92,
+                94,
+                96,
+                98
+              ],
+              "min_hp": 58,
+              "decisions": 35,
+              "log": "logs/bench/20261007-020312/mismatch-jev-07.jsonl",
+              "input_tokens": 70325,
+              "est_cost_usd": 0.003
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "Rugbu (orc)",
+                "Ckikhiki (ratman)"
+              ],
+              "flees_at_hp": [
+                75,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 74,
+              "decisions": 35,
+              "log": "logs/bench/20261007-020312/mismatch-jev-08.jsonl",
+              "input_tokens": 71670,
+              "est_cost_usd": 0.003
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "Gnalurg (orc)",
+                "Fireki (ratman)"
+              ],
+              "flees_at_hp": [
+                89,
+                80,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 61,
+              "decisions": 35,
+              "log": "logs/bench/20261007-020312/mismatch-jev-09.jsonl",
+              "input_tokens": 73595,
+              "est_cost_usd": 0.0031
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Knorgh (orc)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Knorgh (orc)",
+                "a mongbat",
+                "a headless one",
+                "Tikickeki (ratman)"
+              ],
+              "flees_at_hp": [
+                94,
+                91,
+                93,
+                95,
+                96,
+                98,
+                100
+              ],
+              "min_hp": 69,
+              "decisions": 33,
+              "log": "logs/bench/20261007-020312/mismatch-jev-10.jsonl",
+              "input_tokens": 64888,
+              "est_cost_usd": 0.0027
+            }
+          ],
+          "n": 10,
+          "successes": 10,
+          "rate": 1.0,
+          "ci95": [
+            0.722,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0288,
+          "errors": 0
+        },
+        "jev+survivor": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Retchectik (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Retchectik (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Torug (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 36,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-01.jsonl",
+              "input_tokens": 76434,
+              "est_cost_usd": 0.0032
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Vevitavi (ratman)",
+                "Vultog (orc)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Vevitavi (ratman)",
+                "Vultog (orc)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                98
+              ],
+              "min_hp": 61,
+              "decisions": 37,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-02.jsonl",
+              "input_tokens": 78071,
+              "est_cost_usd": 0.0033
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Spoguk (orc)"
+              ],
+              "engaged": [
+                "Spoguk (orc)",
+                "Dicchok (ratman)"
+              ],
+              "flees_at_hp": [
+                43,
+                87,
+                88,
+                91,
+                93,
+                95,
+                97
+              ],
+              "min_hp": 42,
+              "decisions": 36,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-03.jsonl",
+              "input_tokens": 80797,
+              "est_cost_usd": 0.0034
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Sunodagh (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Sunodagh (orc)",
+                "a mongbat",
+                "Warek (ratman)"
+              ],
+              "flees_at_hp": [
+                67,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 37,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-04.jsonl",
+              "input_tokens": 82534,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Vechoki (ratman)",
+                "a mongbat",
+                "Karfu (orc)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Vechoki (ratman)",
+                "a mongbat",
+                "Karfu (orc)",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                100,
+                100
+              ],
+              "min_hp": 55,
+              "decisions": 54,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-05.jsonl",
+              "input_tokens": 119495,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Uggug (orc)"
+              ],
+              "engaged": [
+                "Uggug (orc)",
+                "Tituki (ratman)"
+              ],
+              "flees_at_hp": [
+                75,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 68,
+              "decisions": 35,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-06.jsonl",
+              "input_tokens": 80049,
+              "est_cost_usd": 0.0034
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Vitchak (ratman)",
+                "a mongbat",
+                "Krothu (orc)"
+              ],
+              "engaged": [
+                "Vitchak (ratman)",
+                "a mongbat",
+                "Krothu (orc)"
+              ],
+              "flees_at_hp": [
+                89,
+                92,
+                94,
+                96,
+                98,
+                100,
+                100
+              ],
+              "min_hp": 76,
+              "decisions": 36,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-07.jsonl",
+              "input_tokens": 77883,
+              "est_cost_usd": 0.0033
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Chitaviok (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Vlog (orc)"
+              ],
+              "engaged": [
+                "Chitaviok (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Vlog (orc)"
+              ],
+              "flees_at_hp": [
+                85,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 55,
+              "decisions": 39,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-08.jsonl",
+              "input_tokens": 85485,
+              "est_cost_usd": 0.0036
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Verthag (orc)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Verthag (orc)",
+                "a mongbat",
+                "a headless one",
+                "Tikickeki (ratman)"
+              ],
+              "flees_at_hp": [
+                89,
+                92,
+                94,
+                96,
+                98,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 88,
+              "decisions": 32,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-09.jsonl",
+              "input_tokens": 71008,
+              "est_cost_usd": 0.003
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "a headless one",
+                "Kitaki (ratman)",
+                "a mongbat",
+                "Tidgug (orc)"
+              ],
+              "engaged": [
+                "a headless one",
+                "Kitaki (ratman)",
+                "a mongbat",
+                "Tidgug (orc)"
+              ],
+              "flees_at_hp": [
+                95,
+                98,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 62,
+              "decisions": 41,
+              "log": "logs/bench/20261007-020312/mismatch-jev_survivor-10.jsonl",
+              "input_tokens": 86232,
+              "est_cost_usd": 0.0036
+            }
+          ],
+          "n": 10,
+          "successes": 10,
+          "rate": 1.0,
+          "ci95": [
+            0.722,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0353,
+          "errors": 0
+        }
+      }
+    },
+    "attrition": {
+      "bead": "cuo-46e.5",
+      "right": "A long fight on six bandages and one heal potion: disengage before the supplies are gone, unless the last monster is nearly dead.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "Sarod (orc)",
+                "Dabub (orc)",
+                "Fitcheki (ratman)"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "a mongbat",
+                "Sarod (orc)",
+                "Dabub (orc)",
+                "Fitcheki (ratman)",
+                "Chectik (ratman)"
+              ],
+              "flees_at_hp": [
+                78,
+                93,
+                95,
+                97,
+                98,
+                100,
+                75,
+                77,
+                79,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 35,
+              "decisions": 49,
+              "log": "logs/bench/20261007-020312/attrition-jev-01.jsonl",
+              "input_tokens": 113028,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Chokchak (ratman)",
+                "a mongbat",
+                "Ckukichek (ratman)",
+                "a headless one",
+                "a headless one"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Chokchak (ratman)",
+                "Ckukichek (ratman)",
+                "a headless one",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                71,
+                100,
+                89,
+                68,
+                100,
+                100,
+                86,
+                56,
+                82,
+                84,
+                86
+              ],
+              "min_hp": 45,
+              "decisions": 62,
+              "log": "logs/bench/20261007-020312/attrition-jev-02.jsonl",
+              "input_tokens": 153840,
+              "est_cost_usd": 0.0065
+            },
+            {
+              "success": false,
+              "fled": false,
+              "kills": [
+                "Ritiki (ratman)"
+              ],
+              "seconds": 60.0,
+              "player_died": true,
+              "engaged": [
+                "Ritiki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 56,
+              "log": "logs/bench/20261007-020312/attrition-jev-03.jsonl",
+              "input_tokens": 141621,
+              "est_cost_usd": 0.0059
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "Parhbub (orc)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Kik (ratman)",
+                "Parhbub (orc)",
+                "Kireki (ratman)"
+              ],
+              "flees_at_hp": [
+                58,
+                89,
+                91,
+                93,
+                95,
+                97,
+                100,
+                83,
+                80,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 58,
+              "decisions": 43,
+              "log": "logs/bench/20261007-020312/attrition-jev-04.jsonl",
+              "input_tokens": 95096,
+              "est_cost_usd": 0.004
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Okganit (orc)"
+              ],
+              "seconds": 120.5,
+              "player_died": false,
+              "engaged": [
+                "Teckak (ratman)",
+                "Okganit (orc)"
+              ],
+              "flees_at_hp": [
+                73,
+                68,
+                100,
+                100,
+                100,
+                95,
+                88
+              ],
+              "min_hp": 14,
+              "decisions": 78,
+              "log": "logs/bench/20261007-020312/attrition-jev-05.jsonl",
+              "input_tokens": 196283,
+              "est_cost_usd": 0.0082
+            },
+            {
+              "success": false,
+              "fled": true,
+              "kills": [
+                "Ctiktik (ratman)"
+              ],
+              "seconds": 39.6,
+              "player_died": true,
+              "engaged": [
+                "Ctiktik (ratman)"
+              ],
+              "flees_at_hp": [
+                75
+              ],
+              "min_hp": 0,
+              "decisions": 33,
+              "log": "logs/bench/20261007-020312/attrition-jev-06.jsonl",
+              "input_tokens": 83171,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": false,
+              "fled": true,
+              "kills": [],
+              "seconds": 53.5,
+              "player_died": true,
+              "engaged": [
+                "Dicchok (ratman)"
+              ],
+              "flees_at_hp": [
+                55
+              ],
+              "min_hp": 0,
+              "decisions": 46,
+              "log": "logs/bench/20261007-020312/attrition-jev-07.jsonl",
+              "input_tokens": 114530,
+              "est_cost_usd": 0.0048
+            },
+            {
+              "success": false,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "a mongbat",
+                "Etakheki (ratman)"
+              ],
+              "seconds": 119.1,
+              "player_died": true,
+              "engaged": [
+                "a mongbat",
+                "Etakheki (ratman)"
+              ],
+              "flees_at_hp": [
+                61,
+                54,
+                48,
+                51,
+                53,
+                85,
+                80,
+                77,
+                93,
+                89,
+                92,
+                94,
+                96
+              ],
+              "min_hp": 0,
+              "decisions": 39,
+              "log": "logs/bench/20261007-020312/attrition-jev-08.jsonl",
+              "input_tokens": 90332,
+              "est_cost_usd": 0.0038
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Taki (ratman)",
+                "a mongbat",
+                "Rektavi (ratman)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Taki (ratman)",
+                "a mongbat",
+                "Rektavi (ratman)",
+                "Taghig (orc)"
+              ],
+              "flees_at_hp": [
+                79,
+                81,
+                100,
+                100,
+                100,
+                65,
+                100,
+                100,
+                100,
+                100,
+                100,
+                95,
+                78,
+                100
+              ],
+              "min_hp": 64,
+              "decisions": 46,
+              "log": "logs/bench/20261007-020312/attrition-jev-09.jsonl",
+              "input_tokens": 107611,
+              "est_cost_usd": 0.0045
+            },
+            {
+              "success": false,
+              "fled": false,
+              "kills": [
+                "Detik (ratman)"
+              ],
+              "seconds": 66.9,
+              "player_died": true,
+              "engaged": [
+                "Detik (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 64,
+              "log": "logs/bench/20261007-020312/attrition-jev-10.jsonl",
+              "input_tokens": 162468,
+              "est_cost_usd": 0.0068
+            }
+          ],
+          "n": 10,
+          "successes": 5,
+          "rate": 0.5,
+          "ci95": [
+            0.237,
+            0.763
+          ],
+          "deaths": 5,
+          "cost_usd": 0.0527,
+          "errors": 0
+        },
+        "jev+survivor": {
+          "runs": [
+            {
+              "success": false,
+              "fled": true,
+              "kills": [
+                "Kitavi (ratman)"
+              ],
+              "seconds": 60.1,
+              "player_died": true,
+              "engaged": [
+                "Kitavi (ratman)"
+              ],
+              "flees_at_hp": [
+                87
+              ],
+              "min_hp": 0,
+              "decisions": 52,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-01.jsonl",
+              "input_tokens": 144404,
+              "est_cost_usd": 0.0061
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "Karguk (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Ckekckuki (ratman)",
+                "Karguk (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                78,
+                91,
+                84,
+                100,
+                100,
+                100,
+                88,
+                62,
+                100,
+                95,
+                91,
+                93,
+                95,
+                73,
+                100,
+                100
+              ],
+              "min_hp": 61,
+              "decisions": 28,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-02.jsonl",
+              "input_tokens": 74827,
+              "est_cost_usd": 0.0031
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a headless one",
+                "a mongbat",
+                "a mongbat",
+                "Tukituki (ratman)",
+                "a headless one"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "a headless one",
+                "a mongbat",
+                "Tuggug (orc)",
+                "Ikchaki (ratman)",
+                "Tukituki (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                85,
+                60,
+                100,
+                78,
+                100,
+                94,
+                83,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 60,
+              "decisions": 47,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-03.jsonl",
+              "input_tokens": 119301,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": false,
+              "fled": true,
+              "kills": [
+                "Fecckik (ratman)"
+              ],
+              "seconds": 25.9,
+              "player_died": true,
+              "engaged": [
+                "Fecckik (ratman)"
+              ],
+              "flees_at_hp": [
+                73
+              ],
+              "min_hp": 0,
+              "decisions": 15,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-04.jsonl",
+              "input_tokens": 40058,
+              "est_cost_usd": 0.0017
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Kikechokii (ratman)",
+                "a mongbat",
+                "Zahgigoth (orc)",
+                "Ratitchaki (ratman)"
+              ],
+              "flees_at_hp": [
+                89,
+                92,
+                94,
+                96,
+                98,
+                100,
+                100,
+                71,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                82,
+                67,
+                100
+              ],
+              "min_hp": 67,
+              "decisions": 33,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-05.jsonl",
+              "input_tokens": 80545,
+              "est_cost_usd": 0.0034
+            },
+            {
+              "success": false,
+              "fled": true,
+              "kills": [
+                "Tak (ratman)"
+              ],
+              "seconds": 50.8,
+              "player_died": true,
+              "engaged": [
+                "Tak (ratman)"
+              ],
+              "flees_at_hp": [
+                84,
+                55
+              ],
+              "min_hp": 0,
+              "decisions": 36,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-06.jsonl",
+              "input_tokens": 99434,
+              "est_cost_usd": 0.0042
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "a mongbat"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Kitak (ratman)",
+                "a mongbat",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                84,
+                79,
+                100,
+                85,
+                82,
+                68,
+                95,
+                51,
+                91,
+                93,
+                95,
+                97,
+                99,
+                91,
+                84,
+                100,
+                85
+              ],
+              "min_hp": 51,
+              "decisions": 31,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-07.jsonl",
+              "input_tokens": 81921,
+              "est_cost_usd": 0.0034
+            },
+            {
+              "success": false,
+              "fled": false,
+              "kills": [],
+              "seconds": 40.4,
+              "player_died": true,
+              "engaged": [
+                "Cheki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 38,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-08.jsonl",
+              "input_tokens": 104909,
+              "est_cost_usd": 0.0044
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "a headless one"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "a mongbat",
+                "a headless one",
+                "Diwarek (ratman)"
+              ],
+              "flees_at_hp": [
+                84,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                81,
+                100
+              ],
+              "min_hp": 63,
+              "decisions": 31,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-09.jsonl",
+              "input_tokens": 78549,
+              "est_cost_usd": 0.0033
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a headless one"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "a headless one",
+                "Tidgug (orc)"
+              ],
+              "flees_at_hp": [
+                65,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                85,
+                87,
+                89,
+                92,
+                94,
+                96,
+                98,
+                93,
+                88,
+                91
+              ],
+              "min_hp": 58,
+              "decisions": 27,
+              "log": "logs/bench/20261007-020312/attrition-jev_survivor-10.jsonl",
+              "input_tokens": 65299,
+              "est_cost_usd": 0.0027
+            }
+          ],
+          "n": 10,
+          "successes": 6,
+          "rate": 0.6,
+          "ci95": [
+            0.313,
+            0.832
+          ],
+          "deaths": 4,
+          "cost_usd": 0.0373,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

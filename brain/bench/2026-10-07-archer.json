@@ -1,0 +1,535 @@
+{
+  "started": "2026-10-07T01:04:22",
+  "rounds": 10,
+  "lane": 2,
+  "bestiary": true,
+  "scenarios": {
+    "archer-kite": {
+      "bead": "cuo-cvl.1",
+      "right": "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, and kill all four without dying.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Sumhug (orc)",
+                "Gnabadug (orc)",
+                "Suhgan (orc)",
+                "Gholug (orc)"
+              ],
+              "kites": 7,
+              "seconds": 63.2,
+              "player_died": false,
+              "engaged": [
+                "Sumhug (orc)",
+                "Gnabadug (orc)",
+                "Suhgan (orc)",
+                "Gholug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 61,
+              "decisions": 46,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-01.jsonl",
+              "input_tokens": 95111,
+              "est_cost_usd": 0.004
+            },
+            {
+              "success": true,
+              "kills": [
+                "Pughilug (orc)",
+                "Sugbu (orc)",
+                "Gutjja (orc)",
+                "Sarod (orc)"
+              ],
+              "kites": 14,
+              "seconds": 109.6,
+              "player_died": false,
+              "engaged": [
+                "Pughilug (orc)",
+                "Sugbu (orc)",
+                "Gutjja (orc)",
+                "Sarod (orc)"
+              ],
+              "flees_at_hp": [
+                23
+              ],
+              "min_hp": 23,
+              "decisions": 80,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-02.jsonl",
+              "input_tokens": 164583,
+              "est_cost_usd": 0.0069
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sudagog (orc)",
+                "Xurug (orc)",
+                "Urlgan (orc)",
+                "Woggha (orc)"
+              ],
+              "kites": 13,
+              "seconds": 92.6,
+              "player_died": false,
+              "engaged": [
+                "Sudagog (orc)",
+                "Xurug (orc)",
+                "Urlgan (orc)",
+                "Woggha (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 23,
+              "decisions": 75,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-03.jsonl",
+              "input_tokens": 152242,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": true,
+              "kills": [
+                "Slughig (orc)",
+                "Dugarod (orc)",
+                "Xarlug (orc)",
+                "Rilug (orc)"
+              ],
+              "kites": 14,
+              "seconds": 115.1,
+              "player_died": false,
+              "engaged": [
+                "Slughig (orc)",
+                "Dugarod (orc)",
+                "Xarlug (orc)",
+                "Rilug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 36,
+              "decisions": 92,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-04.jsonl",
+              "input_tokens": 188706,
+              "est_cost_usd": 0.0079
+            },
+            {
+              "success": true,
+              "kills": [
+                "Suhgan (orc)",
+                "Vubub (orc)",
+                "Dudagog (orc)",
+                "Arpigig (orc)"
+              ],
+              "kites": 11,
+              "seconds": 87.4,
+              "player_died": false,
+              "engaged": [
+                "Suhgan (orc)",
+                "Vubub (orc)",
+                "Dudagog (orc)",
+                "Arpigig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 46,
+              "decisions": 67,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-05.jsonl",
+              "input_tokens": 136177,
+              "est_cost_usd": 0.0057
+            },
+            {
+              "success": true,
+              "kills": [
+                "Laghed (orc)",
+                "Bilge (orc)",
+                "Vubub (orc)",
+                "Gug (orc)"
+              ],
+              "kites": 11,
+              "seconds": 78.5,
+              "player_died": false,
+              "engaged": [
+                "Laghed (orc)",
+                "Bilge (orc)",
+                "Vubub (orc)",
+                "Gug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 60,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-06.jsonl",
+              "input_tokens": 123252,
+              "est_cost_usd": 0.0052
+            },
+            {
+              "success": true,
+              "kills": [
+                "Nulgha (orc)",
+                "Knaraugh (orc)",
+                "Argug (orc)",
+                "Vakgar (orc)"
+              ],
+              "kites": 13,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Nulgha (orc)",
+                "Knaraugh (orc)",
+                "Argug (orc)",
+                "Vakgar (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 33,
+              "decisions": 76,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-07.jsonl",
+              "input_tokens": 154407,
+              "est_cost_usd": 0.0065
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zlapdud (orc)",
+                "Saghig (orc)",
+                "Rilug (orc)",
+                "Digdug (orc)"
+              ],
+              "kites": 11,
+              "seconds": 99.0,
+              "player_died": false,
+              "engaged": [
+                "Zlapdud (orc)",
+                "Saghig (orc)",
+                "Rilug (orc)",
+                "Digdug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 39,
+              "decisions": 75,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-08.jsonl",
+              "input_tokens": 155278,
+              "est_cost_usd": 0.0065
+            },
+            {
+              "success": false,
+              "kills": [
+                "Argigoth (orc)"
+              ],
+              "kites": 6,
+              "seconds": 37.4,
+              "player_died": true,
+              "engaged": [
+                "Argigoth (orc)",
+                "Cukgilug (orc)"
+              ],
+              "flees_at_hp": [
+                21
+              ],
+              "min_hp": 0,
+              "decisions": 30,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-09.jsonl",
+              "input_tokens": 65524,
+              "est_cost_usd": 0.0028
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sarfu (orc)",
+                "Tarfu (orc)",
+                "Yregh (orc)",
+                "Grug (orc)"
+              ],
+              "kites": 15,
+              "seconds": 91.8,
+              "player_died": false,
+              "engaged": [
+                "Sarfu (orc)",
+                "Tarfu (orc)",
+                "Yregh (orc)",
+                "Grug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 39,
+              "decisions": 72,
+              "log": "logs/bench/20261007-010422/archer-kite-jev-10.jsonl",
+              "input_tokens": 150870,
+              "est_cost_usd": 0.0063
+            }
+          ],
+          "n": 10,
+          "successes": 9,
+          "rate": 0.9,
+          "ci95": [
+            0.596,
+            0.982
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0582,
+          "errors": 0
+        },
+        "jev/nokite": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Ignorg (orc)",
+                "Slapdud (orc)",
+                "Mazhug (orc)",
+                "Kog (orc)"
+              ],
+              "kites": 0,
+              "seconds": 114.2,
+              "player_died": false,
+              "engaged": [
+                "Ignorg (orc)",
+                "Slapdud (orc)",
+                "Mazhug (orc)",
+                "Kog (orc)"
+              ],
+              "flees_at_hp": [
+                18
+              ],
+              "min_hp": 18,
+              "decisions": 81,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-01.jsonl",
+              "input_tokens": 171984,
+              "est_cost_usd": 0.0072
+            },
+            {
+              "success": false,
+              "kills": [
+                "Pughilug (orc)"
+              ],
+              "kites": 0,
+              "seconds": 35.0,
+              "player_died": true,
+              "engaged": [
+                "Pughilug (orc)"
+              ],
+              "flees_at_hp": [
+                22,
+                8
+              ],
+              "min_hp": 0,
+              "decisions": 21,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-02.jsonl",
+              "input_tokens": 47308,
+              "est_cost_usd": 0.002
+            },
+            {
+              "success": true,
+              "kills": [
+                "Nildud (orc)",
+                "Gomoku (orc)",
+                "Ekganit (orc)",
+                "Vubub (orc)"
+              ],
+              "kites": 0,
+              "seconds": 109.3,
+              "player_died": false,
+              "engaged": [
+                "Nildud (orc)",
+                "Gomoku (orc)",
+                "Ekganit (orc)",
+                "Vubub (orc)"
+              ],
+              "flees_at_hp": [
+                13,
+                24
+              ],
+              "min_hp": 13,
+              "decisions": 74,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-03.jsonl",
+              "input_tokens": 155819,
+              "est_cost_usd": 0.0065
+            },
+            {
+              "success": true,
+              "kills": [
+                "Vrograg (orc)",
+                "Zorfu (orc)",
+                "Vregu (orc)",
+                "Parfu (orc)"
+              ],
+              "kites": 0,
+              "seconds": 101.3,
+              "player_died": false,
+              "engaged": [
+                "Vrograg (orc)",
+                "Zorfu (orc)",
+                "Vregu (orc)",
+                "Parfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 34,
+              "decisions": 70,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-04.jsonl",
+              "input_tokens": 147044,
+              "est_cost_usd": 0.0062
+            },
+            {
+              "success": true,
+              "kills": [
+                "Kerghug (orc)",
+                "Rurigig (orc)",
+                "Xomath (orc)",
+                "Yokgu (orc)"
+              ],
+              "kites": 0,
+              "seconds": 112.3,
+              "player_died": false,
+              "engaged": [
+                "Kerghug (orc)",
+                "Rurigig (orc)",
+                "Xomath (orc)",
+                "Yokgu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 26,
+              "decisions": 76,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-05.jsonl",
+              "input_tokens": 162426,
+              "est_cost_usd": 0.0068
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gubdagog (orc)",
+                "Zguk (orc)",
+                "Tuggug (orc)",
+                "Gnarg (orc)"
+              ],
+              "kites": 0,
+              "seconds": 89.3,
+              "player_died": false,
+              "engaged": [
+                "Gubdagog (orc)",
+                "Zguk (orc)",
+                "Tuggug (orc)",
+                "Gnarg (orc)"
+              ],
+              "flees_at_hp": [
+                24
+              ],
+              "min_hp": 24,
+              "decisions": 56,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-06.jsonl",
+              "input_tokens": 118602,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "kills": [
+                "Naghig (orc)",
+                "Womrikug (orc)",
+                "Murbag (orc)",
+                "Bildud (orc)"
+              ],
+              "kites": 0,
+              "seconds": 118.8,
+              "player_died": false,
+              "engaged": [
+                "Naghig (orc)",
+                "Womrikug (orc)",
+                "Murbag (orc)",
+                "Bildud (orc)"
+              ],
+              "flees_at_hp": [
+                22
+              ],
+              "min_hp": 22,
+              "decisions": 78,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-07.jsonl",
+              "input_tokens": 166726,
+              "est_cost_usd": 0.007
+            },
+            {
+              "success": true,
+              "kills": [
+                "Opathu (orc)",
+                "Zilge (orc)",
+                "Taugh (orc)",
+                "Tarod (orc)"
+              ],
+              "kites": 0,
+              "seconds": 121.2,
+              "player_died": false,
+              "engaged": [
+                "Opathu (orc)",
+                "Zilge (orc)",
+                "Taugh (orc)",
+                "Tarod (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 34,
+              "decisions": 83,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-08.jsonl",
+              "input_tokens": 176607,
+              "est_cost_usd": 0.0074
+            },
+            {
+              "success": true,
+              "kills": [
+                "Dakgu (orc)",
+                "Bildud (orc)",
+                "Duiltag (orc)",
+                "Uggug (orc)"
+              ],
+              "kites": 0,
+              "seconds": 83.7,
+              "player_died": false,
+              "engaged": [
+                "Dakgu (orc)",
+                "Bildud (orc)",
+                "Duiltag (orc)",
+                "Uggug (orc)"
+              ],
+              "flees_at_hp": [
+                23,
+                10
+              ],
+              "min_hp": 10,
+              "decisions": 58,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-09.jsonl",
+              "input_tokens": 122039,
+              "est_cost_usd": 0.0051
+            },
+            {
+              "success": true,
+              "kills": [
+                "Tuggug (orc)",
+                "Gholug (orc)",
+                "Prigka (orc)",
+                "Wakgut (orc)"
+              ],
+              "kites": 0,
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Tuggug (orc)",
+                "Gholug (orc)",
+                "Prigka (orc)",
+                "Wakgut (orc)"
+              ],
+              "flees_at_hp": [
+                15,
+                16,
+                17,
+                22
+              ],
+              "min_hp": 7,
+              "decisions": 76,
+              "log": "logs/bench/20261007-010422/archer-kite-jev_nokite-10.jsonl",
+              "input_tokens": 161940,
+              "est_cost_usd": 0.0068
+            }
+          ],
+          "n": 10,
+          "successes": 9,
+          "rate": 0.9,
+          "ci95": [
+            0.596,
+            0.982
+          ],
+          "deaths": 1,
+          "cost_usd": 0.06,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1215 @@
+{
+  "started": "2026-10-07T00:59:18",
+  "rounds": 10,
+  "lane": 5,
+  "bestiary": true,
+  "scenarios": {
+    "wisp-leave-alone": {
+      "bead": "cuo-5of.7",
+      "right": "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit when attacked: kill the orcs, never attack the wisp.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 10.4,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 11,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 28.1,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                22,
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 18,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 21.3,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 23,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 16.0,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                26
+              ],
+              "min_hp": 0,
+              "decisions": 17,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 10.1,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 10,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 15.4,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 15,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-06.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 12.9,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 13,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-07.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 15.2,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 15,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-08.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 11.4,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 12,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-09.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 17.8,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 20,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-heuristic-10.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0,
+              "facts": "none"
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 10,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev@none": {
+          "runs": [
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 15.3,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                18
+              ],
+              "min_hp": 0,
+              "decisions": 11,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-01.jsonl",
+              "input_tokens": 20078,
+              "est_cost_usd": 0.0008,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 19.6,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 18,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-02.jsonl",
+              "input_tokens": 33459,
+              "est_cost_usd": 0.0014,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 14.2,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                20
+              ],
+              "min_hp": 0,
+              "decisions": 8,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-03.jsonl",
+              "input_tokens": 14275,
+              "est_cost_usd": 0.0006,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 16.1,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                21
+              ],
+              "min_hp": 0,
+              "decisions": 10,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-04.jsonl",
+              "input_tokens": 18339,
+              "est_cost_usd": 0.0008,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 11.3,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 9,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-05.jsonl",
+              "input_tokens": 16198,
+              "est_cost_usd": 0.0007,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 32.8,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                20
+              ],
+              "min_hp": 0,
+              "decisions": 25,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-06.jsonl",
+              "input_tokens": 46779,
+              "est_cost_usd": 0.002,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 19.8,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                22
+              ],
+              "min_hp": 0,
+              "decisions": 16,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-07.jsonl",
+              "input_tokens": 29391,
+              "est_cost_usd": 0.0012,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 12.7,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 11,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-08.jsonl",
+              "input_tokens": 20147,
+              "est_cost_usd": 0.0008,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 8.9,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 6,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-09.jsonl",
+              "input_tokens": 10789,
+              "est_cost_usd": 0.0005,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 21.1,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                20
+              ],
+              "min_hp": 0,
+              "decisions": 17,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_none-10.jsonl",
+              "input_tokens": 30856,
+              "est_cost_usd": 0.0013,
+              "facts": "none"
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 10,
+          "cost_usd": 0.0101,
+          "errors": 0
+        },
+        "jev@all": {
+          "runs": [
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 59.9,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                68,
+                71,
+                100,
+                91,
+                68,
+                51,
+                54
+              ],
+              "min_hp": 0,
+              "decisions": 14,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-01.jsonl",
+              "input_tokens": 37141,
+              "est_cost_usd": 0.0016,
+              "facts": "all",
+              "fact_selections": 3,
+              "fact_input_tokens": 0,
+              "facts_in_state": 14,
+              "facts_chosen": [
+                "Orc camps north of Yew hold up to 12 orcs and an orc captain.",
+                "Orc lords drop more gold than plain orcs.",
+                "Orcs are evil, so killing them never makes anyone a criminal.",
+                "Orcs carry clubs or axes and hit for 5 to 7; a warrior in ringmail takes little from them.",
+                "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 71.0,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                39,
+                32,
+                60,
+                66,
+                100,
+                74,
+                64,
+                100
+              ],
+              "min_hp": 0,
+              "decisions": 18,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-02.jsonl",
+              "input_tokens": 47930,
+              "est_cost_usd": 0.002,
+              "facts": "all",
+              "fact_selections": 3,
+              "fact_input_tokens": 0,
+              "facts_in_state": 14,
+              "facts_chosen": [
+                "Orc camps north of Yew hold up to 12 orcs and an orc captain.",
+                "Orc lords drop more gold than plain orcs.",
+                "Orcs are evil, so killing them never makes anyone a criminal.",
+                "Orcs carry clubs or axes and hit for 5 to 7; a warrior in ringmail takes little from them.",
+                "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.6,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                49,
+                100,
+                63,
+                64,
+                100,
+                85,
+                88,
+                45,
+                36,
+                25
+              ],
+              "min_hp": 25,
+              "decisions": 16,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-03.jsonl",
+              "input_tokens": 42035,
+              "est_cost_usd": 0.0018,
+              "facts": "all",
+              "fact_selections": 3,
+              "fact_input_tokens": 0,
+              "facts_in_state": 14,
+              "facts_chosen": [
+                "Orc camps north of Yew hold up to 12 orcs and an orc captain.",
+                "Orc lords drop more gold than plain orcs.",
+                "Orcs are evil, so killing them never makes anyone a criminal.",
+                "Orcs carry clubs or axes and hit for 5 to 7; a warrior in ringmail takes little from them.",
+                "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 48.3,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                69,
+                89,
+                72,
+                91,
+                26,
+                36
+              ],
+              "min_hp": 0,
+              "decisions": 9,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-04.jsonl",
+              "input_tokens": 23683,
+              "est_cost_usd": 0.001,
+              "facts": "all",
+              "fact_selections": 3,
+              "fact_input_tokens": 0,
+              "facts_in_state": 14,
+              "facts_chosen": [
+                "Orc camps north of Yew hold up to 12 orcs and an orc captain.",
+                "Orc lords drop more gold than plain orcs.",
+                "Orcs are evil, so killing them never makes anyone a criminal.",
+                "Orcs carry clubs or axes and hit for 5 to 7; a warrior in ringmail takes little from them.",
+                "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                65,
+                67,
+                100,
+                43,
+                45,
+                91,
+                58,
+                79,
+                60,
+                100
+              ],
+              "min_hp": 34,
+              "decisions": 14,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-05.jsonl",
+              "input_tokens": 38079,
+              "est_cost_usd": 0.0016,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                66,
+                67,
+                100,
+                94,
+                97,
+                99,
+                100,
+                100,
+                54,
+                100,
+                100
+              ],
+              "min_hp": 53,
+              "decisions": 17,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-06.jsonl",
+              "input_tokens": 47069,
+              "est_cost_usd": 0.002,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 29.7,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                67,
+                88,
+                35
+              ],
+              "min_hp": 0,
+              "decisions": 6,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-07.jsonl",
+              "input_tokens": 15442,
+              "est_cost_usd": 0.0006,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Hrolkug (orc)",
+                "Saraugug (orc)"
+              ],
+              "engaged": [
+                "a wisp",
+                "Hrolkug (orc)",
+                "Saraugug (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                84,
+                100,
+                100,
+                100,
+                100,
+                94
+              ],
+              "min_hp": 62,
+              "decisions": 28,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-08.jsonl",
+              "input_tokens": 68050,
+              "est_cost_usd": 0.0029,
+              "facts": "all",
+              "fact_selections": 3,
+              "fact_input_tokens": 0,
+              "facts_in_state": 10,
+              "facts_chosen": [
+                "Orc camps north of Yew hold up to 12 orcs and an orc captain.",
+                "Orc lords drop more gold than plain orcs.",
+                "Orcs are evil, so killing them never makes anyone a criminal.",
+                "Orcs carry clubs or axes and hit for 5 to 7; a warrior in ringmail takes little from them.",
+                "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 32.1,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                63,
+                46,
+                60
+              ],
+              "min_hp": 0,
+              "decisions": 11,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-09.jsonl",
+              "input_tokens": 29821,
+              "est_cost_usd": 0.0013,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 63.0,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp",
+                "Xaakt (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                77,
+                77,
+                59,
+                16,
+                44,
+                19,
+                59,
+                23
+              ],
+              "min_hp": 0,
+              "decisions": 17,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_all-10.jsonl",
+              "input_tokens": 46891,
+              "est_cost_usd": 0.002,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 6,
+          "cost_usd": 0.0168,
+          "errors": 0
+        },
+        "jev@jev": {
+          "runs": [
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.3,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                82,
+                12,
+                96,
+                98,
+                100,
+                64,
+                100,
+                85,
+                61,
+                61
+              ],
+              "min_hp": 0,
+              "decisions": 15,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-01.jsonl",
+              "input_tokens": 49410,
+              "est_cost_usd": 0.0021,
+              "facts": "jev",
+              "fact_selections": 3,
+              "fact_input_tokens": 15106,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                80,
+                46,
+                67,
+                34,
+                83,
+                100,
+                100,
+                91,
+                26,
+                23
+              ],
+              "min_hp": 7,
+              "decisions": 17,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-02.jsonl",
+              "input_tokens": 54119,
+              "est_cost_usd": 0.0023,
+              "facts": "jev",
+              "fact_selections": 3,
+              "fact_input_tokens": 15107,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 71.0,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                44,
+                49,
+                91,
+                47,
+                49,
+                94,
+                85,
+                48,
+                51
+              ],
+              "min_hp": 0,
+              "decisions": 17,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-03.jsonl",
+              "input_tokens": 50111,
+              "est_cost_usd": 0.0021,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11456,
+              "facts_in_state": 3,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "A wisp's corpse often holds gems and plenty of gold.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 10.6,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                63
+              ],
+              "min_hp": 0,
+              "decisions": 3,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-04.jsonl",
+              "input_tokens": 17409,
+              "est_cost_usd": 0.0007,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11470,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                77,
+                42,
+                39,
+                41,
+                43,
+                81,
+                60,
+                92,
+                40,
+                44
+              ],
+              "min_hp": 39,
+              "decisions": 15,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-05.jsonl",
+              "input_tokens": 53201,
+              "est_cost_usd": 0.0022,
+              "facts": "jev",
+              "fact_selections": 4,
+              "fact_input_tokens": 18807,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                66,
+                46,
+                46,
+                98,
+                82,
+                41,
+                43,
+                43,
+                83,
+                73,
+                96
+              ],
+              "min_hp": 17,
+              "decisions": 14,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-06.jsonl",
+              "input_tokens": 43092,
+              "est_cost_usd": 0.0018,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11470,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                76,
+                49,
+                96,
+                49,
+                92,
+                94,
+                44,
+                94,
+                100,
+                85,
+                46
+              ],
+              "min_hp": 43,
+              "decisions": 15,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-07.jsonl",
+              "input_tokens": 53893,
+              "est_cost_usd": 0.0023,
+              "facts": "jev",
+              "fact_selections": 4,
+              "fact_input_tokens": 18808,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 67.2,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                61,
+                100,
+                100,
+                100,
+                100,
+                100,
+                44,
+                44,
+                54
+              ],
+              "min_hp": 0,
+              "decisions": 14,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-08.jsonl",
+              "input_tokens": 47103,
+              "est_cost_usd": 0.002,
+              "facts": "jev",
+              "fact_selections": 3,
+              "fact_input_tokens": 15114,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 0,
+              "seconds": 19.5,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                35,
+                5
+              ],
+              "min_hp": 0,
+              "decisions": 6,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-09.jsonl",
+              "input_tokens": 24657,
+              "est_cost_usd": 0.001,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11463,
+              "facts_in_state": 3,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "A wisp's corpse often holds gems and plenty of gold."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 1,
+              "seconds": 47.0,
+              "player_died": true,
+              "kills": [
+                "Ertguth (orc)"
+              ],
+              "engaged": [
+                "Ertguth (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                62,
+                73,
+                15
+              ],
+              "min_hp": 0,
+              "decisions": 28,
+              "log": "logs/bench/20261007-005918/wisp-leave-alone-jev_jev-10.jsonl",
+              "input_tokens": 75764,
+              "est_cost_usd": 0.0032,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11459,
+              "facts_in_state": 3,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "A wisp's corpse often holds gems and plenty of gold.",
+                "Green Acres test field has no guards: anything can attack you here and nobody comes to help."
+              ]
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 6,
+          "cost_usd": 0.0197,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

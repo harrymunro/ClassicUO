@@ -469,6 +469,43 @@ From the command line, `uo-brain session "GOAL" --hours 1 --log logs/session.jso
 the planner without the panel; `uo-brain run` does the same whenever the panel has a goal
 and the agent is in auto mode.
 
+#### Unattended runs
+
+A warrior on the real Felucca map with nobody at the keyboard, given the `graveyard` goal
+(hunt the undead at the Britain graveyard from the Britain bank, keep supplied with bandages,
+bank the gold), starting at the bank with 30 bandages and 400 gold. A script applied disruptions
+from outside, quietly so the agent couldn't read about them (`[AgentDisrupt ... quiet`):
+- at 15 minutes, the graveyard's spawners were emptied and stopped for 12 minutes;
+- at 30 minutes, or once the character was away, a lich and two bone knights went in;
+- at 40 minutes, the Britain healers were sold out of bandages.
+
+Report: `uo-brain soak-report logs/soak-goal1d.jsonl --disruptions logs/soak-goal1d.disruptions.jsonl`.
+
+It took four runs on 2026-10-07 to get through the hour. Each of the first three found
+something, fixed before the next:
+
+| run | how it ended | what it found |
+|---|---|---|
+| 1 | died at 36 min | killed by the lich while resting at the graveyard: only hunts ran the fight loop, so rest, travel and errands had nothing but the healing reflexes. Also: an errand the session had given up on took over the next trip; wandering healers were tried for bandages; a purchase's cost was miscounted; the planner banked every coin and then tried to buy; Jev said "walk elsewhere in the spawn" round an emptied graveyard for 7 minutes |
+| 2 | died at 31 min | the new defend-only loop chased a harmless crossbill, and the walk waited 10 minutes; two bone knights took the warrior from 100% to 25% in 10 s while Jev's intent stayed on fighting |
+| 3 | died at 33 min | Jev said leave (0.43–0.45) as the bone knights came, but a fact check overruled it; the failed purchase message ("none of that on sale, or not enough gold") sent the planner back to a sold-out healer three times |
+| 4 | the full hour, no deaths | |
+
+Run 4: 62 minutes and 22 goals: 10 hunts, 5 rests, 4 trips, 2 bankings and a purchase. It
+had 2 kills, banked 332 gold and spent $0.58 on the planner (44 calls) and $0.07 on Jev. It
+waited out the emptied graveyard and moved between its spawners. The stronger undead went in
+while it was banking; on its return it saw 11 creatures and headed back to the bank, where the hour ran out on the way. Kills
+were few because earlier runs had thinned the graveyard's spawns, which come back over
+minutes. Most hunts ended on "Jev unsure twice running" after a minute with nothing in sight,
+which is why it called the planner so often.
+
+The open goal, `earn gold hunting near Britain` with no place named, the same character, no
+disruptions (`logs/soak-goal2b.jsonl`), 25 minutes:
+- **Where to hunt:** the planner asked `hunting_spots` and tried the Britain sewer first. It is underground and can't be walked to, so it tried the graveyard ("good past gold results") and, once that was empty, the open country north of the Britain suburbs.
+- **Results:** 19 kills, then the character died there to a group of black bears with a corpser nearby, before it banked anything. The gold it carried stayed on its corpse.
+- **Cost:** 18 planner calls ($0.58 an hour).
+- **What changed after it:** the run before it had died the same way at the graveyard, sent there while a lich was still about. So every goal's result now names the stronger creatures seen during it, as "danger" notes the planner's `hunting_spots` shows for the area.
+
 ### Getting around: travel, banking and shops
 
 Real play is a loop of travelling, hunting, banking and restocking. Each step is one
@@ -854,6 +891,8 @@ Known limits:
 - A tamer knows its pet only while it's in sight: a pet left behind out of sight is lost to the agent even if it lives. Taming new pets isn't done.
 - The client can't see whom a pet is actually fighting, only whom it was told to: a pet that switched to another attacker still shows its order.
 - Bards don't use peacemaking on themselves (calming everyone), and songs aren't scored for difficulty: Jev only knows a song "can fail, more often against strong creatures".
+- Underground areas such as the Britain sewer come up as hunting spots but can't be walked to; the planner learns that only by failing ("no route").
+- Unattended, a lone warrior still dies to packs of creatures stronger than it (black bears, bone knights): it leaves, but most run as fast as it does. Recall runes, or leaving earlier, would help.
 - Jev's routine hunt calls have run live only in the soak runs (four, 2026-10-07); the yes and no thresholds (0.65, 0.35) are as first set. In a thinly spawned area most hunts end on "unsure twice running" after about a minute, which hands back to the planner often.
 - World facts for fights are shortlisted by area and keyword: a fact stored under another area name, or that names a creature differently, can't be picked. Jev's picks trail putting every shortlisted fact in (8/10 against 10/10 in the wisp scenario).
 

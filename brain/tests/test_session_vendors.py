@@ -79,9 +79,9 @@ def test_stronger_creatures_seen_go_into_the_goals_result_and_the_world_store(tm
     s = Session(FakeRpc(snap), w, None)
     w.bestiary = lambda: {24: {"hits": 300, "difficulty": "deadly", "name": "a lich"}}
     s.note_dangers(snap)
-    assert s.danger_words({}) == "1 lich at 1005,1000"
+    assert s.danger_words({}) == "1 lich at near 1000,1000"
     s.record_dangers(s.danger_words({}))
-    assert w.notes(area="1005,1000")[0]["text"].startswith("Stronger than a new character, seen ")
+    assert w.notes(area="near 1000,1000")[0]["text"].startswith("Stronger than a new character, seen ")
 
     async def go():
         p = Planner(s, "hunt", log=lambda r: None)
@@ -96,5 +96,5 @@ def test_stronger_creatures_seen_go_into_the_goals_result_and_the_world_store(tm
         return await p.carry_out("rest", {"seconds": 5})
 
     step = asyncio.run(go())
-    assert step.result["result"] == "rested 5 s; stronger creatures seen: 1 lich at 1005,1000"
+    assert step.result["result"] == "rested 5 s; stronger creatures seen: 1 lich at near 1000,1000"
     w.close()

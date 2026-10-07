@@ -1,0 +1,129 @@
+{
+  "started": "2026-10-07T01:14:14",
+  "rounds": 3,
+  "lane": 3,
+  "bestiary": true,
+  "scenarios": {
+    "tamer-orcs": {
+      "bead": "cuo-cvl.2",
+      "right": "Three orcs come at a tamer with a grizzly bear: set the bear on them, bandage it between hits, and call it back if it is losing; kill all three without losing the bear.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Pomgulg (orc)",
+                "Snubub (orc)",
+                "Ertguth (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 53,
+              "pet_bandages": 3,
+              "pull_backs": 0,
+              "seconds": 103.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 44,
+              "decisions": 102,
+              "log": "logs/bench/20261007-011414/tamer-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 39,
+              "pet_bandages": 0,
+              "pull_backs": 1,
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                44,
+                26,
+                24,
+                71,
+                19,
+                25
+              ],
+              "min_hp": 13,
+              "decisions": 104,
+              "log": "logs/bench/20261007-011414/tamer-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 2,
+          "successes": 1,
+          "rate": 0.5,
+          "ci95": [
+            0.095,
+            0.905
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Olog (orc)",
+                "Yahigig (orc)",
+                "Woggugat (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 33,
+              "pet_bandages": 5,
+              "pull_backs": 0,
+              "seconds": 97.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 72,
+              "log": "logs/bench/20261007-011414/tamer-orcs-jev-01.jsonl",
+              "input_tokens": 151924,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": true,
+              "kills": [
+                "Wogharod (orc)",
+                "Urag (orc)",
+                "Gubdagog (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 49,
+              "pet_bandages": 5,
+              "pull_backs": 0,
+              "seconds": 88.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 67,
+              "log": "logs/bench/20261007-011414/tamer-orcs-jev-02.jsonl",
+              "input_tokens": 144608,
+              "est_cost_usd": 0.0061
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0125,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

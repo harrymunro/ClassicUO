@@ -1,0 +1,282 @@
+{
+  "started": "2026-10-07T00:46:59",
+  "rounds": 3,
+  "lane": 2,
+  "bestiary": true,
+  "scenarios": {
+    "archer-kite": {
+      "bead": "cuo-cvl.1",
+      "right": "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, and kill all four without dying.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Wurgoth (orc)",
+                "Numhug (orc)",
+                "Oilug (orc)",
+                "Klog (orc)"
+              ],
+              "kites": 13,
+              "seconds": 87.8,
+              "player_died": false,
+              "engaged": [
+                "Wurgoth (orc)",
+                "Numhug (orc)",
+                "Oilug (orc)",
+                "Klog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 82,
+              "log": "logs/bench/20261007-004659/archer-kite-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Kupgugh (orc)",
+                "Raghat (orc)",
+                "Urulg (orc)",
+                "Barfu (orc)"
+              ],
+              "kites": 13,
+              "seconds": 94.9,
+              "player_died": false,
+              "engaged": [
+                "Kupgugh (orc)",
+                "Raghat (orc)",
+                "Urulg (orc)",
+                "Barfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 84,
+              "log": "logs/bench/20261007-004659/archer-kite-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Yokgu (orc)",
+                "Gnorl (orc)",
+                "Oomigig (orc)",
+                "Wapkagut (orc)"
+              ],
+              "kites": 14,
+              "seconds": 111.6,
+              "player_died": false,
+              "engaged": [
+                "Yokgu (orc)",
+                "Gnorl (orc)",
+                "Oomigig (orc)",
+                "Wapkagut (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 46,
+              "decisions": 99,
+              "log": "logs/bench/20261007-004659/archer-kite-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 3,
+          "successes": 3,
+          "rate": 1.0,
+          "ci95": [
+            0.438,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Fubdagog (orc)",
+                "Bog (orc)",
+                "Hig (orc)",
+                "Zupaugh (orc)"
+              ],
+              "kites": 11,
+              "seconds": 101.1,
+              "player_died": false,
+              "engaged": [
+                "Fubdagog (orc)",
+                "Bog (orc)",
+                "Hig (orc)",
+                "Zupaugh (orc)"
+              ],
+              "flees_at_hp": [
+                9,
+                47
+              ],
+              "min_hp": 0,
+              "decisions": 71,
+              "log": "logs/bench/20261007-004659/archer-kite-jev-01.jsonl",
+              "input_tokens": 145034,
+              "est_cost_usd": 0.0061
+            },
+            {
+              "success": true,
+              "kills": [
+                "Golag (orc)",
+                "Jukha (orc)",
+                "Hrolkug (orc)",
+                "Bargulg (orc)"
+              ],
+              "kites": 13,
+              "seconds": 98.9,
+              "player_died": false,
+              "engaged": [
+                "Golag (orc)",
+                "Jukha (orc)",
+                "Hrolkug (orc)",
+                "Bargulg (orc)"
+              ],
+              "flees_at_hp": [
+                20,
+                22
+              ],
+              "min_hp": 20,
+              "decisions": 76,
+              "log": "logs/bench/20261007-004659/archer-kite-jev-02.jsonl",
+              "input_tokens": 157360,
+              "est_cost_usd": 0.0066
+            },
+            {
+              "success": true,
+              "kills": [
+                "Wudhagh (orc)",
+                "Sahgorim (orc)",
+                "Todagog (orc)",
+                "Quugug (orc)"
+              ],
+              "kites": 13,
+              "seconds": 92.2,
+              "player_died": false,
+              "engaged": [
+                "Wudhagh (orc)",
+                "Sahgorim (orc)",
+                "Todagog (orc)",
+                "Quugug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 34,
+              "decisions": 72,
+              "log": "logs/bench/20261007-004659/archer-kite-jev-03.jsonl",
+              "input_tokens": 149233,
+              "est_cost_usd": 0.0063
+            }
+          ],
+          "n": 3,
+          "successes": 3,
+          "rate": 1.0,
+          "ci95": [
+            0.438,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.019,
+          "errors": 0
+        },
+        "jev/nokite": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Grikug (orc)",
+                "Vuiltag (orc)",
+                "Slodagh (orc)",
+                "Opilge (orc)"
+              ],
+              "kites": 0,
+              "seconds": 106.1,
+              "player_died": false,
+              "engaged": [
+                "Grikug (orc)",
+                "Vuiltag (orc)",
+                "Slodagh (orc)",
+                "Opilge (orc)"
+              ],
+              "flees_at_hp": [
+                10,
+                18
+              ],
+              "min_hp": 2,
+              "decisions": 73,
+              "log": "logs/bench/20261007-004659/archer-kite-jev_nokite-01.jsonl",
+              "input_tokens": 151395,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": false,
+              "kills": [
+                "Murbag (orc)",
+                "Varbu (orc)"
+              ],
+              "kites": 0,
+              "seconds": 45.1,
+              "player_died": true,
+              "engaged": [
+                "Murbag (orc)",
+                "Varbu (orc)",
+                "Vurbag (orc)"
+              ],
+              "flees_at_hp": [
+                23,
+                16,
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 33,
+              "log": "logs/bench/20261007-004659/archer-kite-jev_nokite-02.jsonl",
+              "input_tokens": 71480,
+              "est_cost_usd": 0.003
+            },
+            {
+              "success": true,
+              "kills": [
+                "Quilge (orc)",
+                "Poogugh (orc)",
+                "Gug (orc)",
+                "Wrukaog (orc)"
+              ],
+              "kites": 0,
+              "seconds": 109.4,
+              "player_died": false,
+              "engaged": [
+                "Quilge (orc)",
+                "Poogugh (orc)",
+                "Gug (orc)",
+                "Wrukaog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 51,
+              "decisions": 76,
+              "log": "logs/bench/20261007-004659/archer-kite-jev_nokite-03.jsonl",
+              "input_tokens": 158625,
+              "est_cost_usd": 0.0067
+            }
+          ],
+          "n": 3,
+          "successes": 2,
+          "rate": 0.667,
+          "ci95": [
+            0.208,
+            0.939
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0161,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,913 @@
+{
+  "started": "2026-10-07T02:15:12",
+  "rounds": 10,
+  "lane": 2,
+  "bestiary": true,
+  "scenarios": {
+    "wisp-leave-alone": {
+      "bead": "cuo-5of.7",
+      "right": "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit when attacked: kill the orcs, never attack the wisp.",
+      "judges": {
+        "jev@none": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Sarod (orc)",
+                "Xomoku (orc)"
+              ],
+              "engaged": [
+                "Sarod (orc)",
+                "Xomoku (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 73,
+              "decisions": 56,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-01.jsonl",
+              "input_tokens": 107142,
+              "est_cost_usd": 0.0045,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 61.4,
+              "player_died": true,
+              "kills": [
+                "Zeakgu (orc)",
+                "Yugug (orc)"
+              ],
+              "engaged": [
+                "Zeakgu (orc)",
+                "Yugug (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 45,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-02.jsonl",
+              "input_tokens": 91092,
+              "est_cost_usd": 0.0038,
+              "facts": "none"
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Routhu (orc)",
+                "Slaugh (orc)"
+              ],
+              "engaged": [
+                "Routhu (orc)",
+                "Slaugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 66,
+              "decisions": 55,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-03.jsonl",
+              "input_tokens": 106725,
+              "est_cost_usd": 0.0045,
+              "facts": "none"
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Naghig (orc)",
+                "Darfu (orc)"
+              ],
+              "engaged": [
+                "Naghig (orc)",
+                "Darfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 74,
+              "decisions": 55,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-04.jsonl",
+              "input_tokens": 110653,
+              "est_cost_usd": 0.0046,
+              "facts": "none"
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Zabub (orc)",
+                "Zugorim (orc)"
+              ],
+              "engaged": [
+                "Zabub (orc)",
+                "Zugorim (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 55,
+              "decisions": 58,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-05.jsonl",
+              "input_tokens": 112097,
+              "est_cost_usd": 0.0047,
+              "facts": "none"
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.5,
+              "player_died": false,
+              "kills": [
+                "Sugbu (orc)",
+                "Xulgag (orc)"
+              ],
+              "engaged": [
+                "Sugbu (orc)",
+                "Xulgag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 75,
+              "decisions": 60,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-06.jsonl",
+              "input_tokens": 137515,
+              "est_cost_usd": 0.0058,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 59.2,
+              "player_died": true,
+              "kills": [
+                "Zoughat (orc)",
+                "Xugaa (orc)"
+              ],
+              "engaged": [
+                "Zoughat (orc)",
+                "Xugaa (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 45,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-07.jsonl",
+              "input_tokens": 89262,
+              "est_cost_usd": 0.0037,
+              "facts": "none"
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Gujjab (orc)",
+                "Zurgug (orc)"
+              ],
+              "engaged": [
+                "Gujjab (orc)",
+                "Zurgug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 53,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-08.jsonl",
+              "input_tokens": 96164,
+              "est_cost_usd": 0.004,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Bog (orc)",
+                "Yahigig (orc)"
+              ],
+              "engaged": [
+                "Bog (orc)",
+                "Yahigig (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                5
+              ],
+              "min_hp": 5,
+              "decisions": 58,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-09.jsonl",
+              "input_tokens": 104838,
+              "est_cost_usd": 0.0044,
+              "facts": "none"
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 56.1,
+              "player_died": true,
+              "kills": [
+                "Pergu (orc)",
+                "Sarod (orc)"
+              ],
+              "engaged": [
+                "Pergu (orc)",
+                "Sarod (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 43,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_none-10.jsonl",
+              "input_tokens": 86492,
+              "est_cost_usd": 0.0036,
+              "facts": "none"
+            }
+          ],
+          "n": 10,
+          "successes": 6,
+          "rate": 0.6,
+          "ci95": [
+            0.313,
+            0.832
+          ],
+          "deaths": 3,
+          "cost_usd": 0.0436,
+          "errors": 0
+        },
+        "jev@all": {
+          "runs": [
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Xomkug (orc)",
+                "Yakgnath (orc)"
+              ],
+              "engaged": [
+                "Xomkug (orc)",
+                "Yakgnath (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                52
+              ],
+              "min_hp": 28,
+              "decisions": 49,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-01.jsonl",
+              "input_tokens": 134898,
+              "est_cost_usd": 0.0057,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Ogharod (orc)",
+                "Dretkag (orc)"
+              ],
+              "engaged": [
+                "Ogharod (orc)",
+                "Dretkag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 57,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-02.jsonl",
+              "input_tokens": 184210,
+              "est_cost_usd": 0.0077,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.5,
+              "player_died": false,
+              "kills": [
+                "Soughat (orc)",
+                "Tandagh (orc)"
+              ],
+              "engaged": [
+                "Soughat (orc)",
+                "Tandagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 55,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-03.jsonl",
+              "input_tokens": 154794,
+              "est_cost_usd": 0.0065,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Mazhug (orc)",
+                "Xurug (orc)"
+              ],
+              "engaged": [
+                "Mazhug (orc)",
+                "Xurug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 54,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-04.jsonl",
+              "input_tokens": 156598,
+              "est_cost_usd": 0.0066,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 63.4,
+              "player_died": true,
+              "kills": [
+                "Eggha (orc)",
+                "Arpigig (orc)"
+              ],
+              "engaged": [
+                "Eggha (orc)",
+                "Arpigig (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                100,
+                96,
+                12,
+                39
+              ],
+              "min_hp": 0,
+              "decisions": 33,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-05.jsonl",
+              "input_tokens": 93413,
+              "est_cost_usd": 0.0039,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Pakgu (orc)",
+                "Nodagog (orc)"
+              ],
+              "engaged": [
+                "Pakgu (orc)",
+                "Nodagog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 57,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-06.jsonl",
+              "input_tokens": 159155,
+              "est_cost_usd": 0.0067,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Hagub (orc)",
+                "Xago (orc)"
+              ],
+              "engaged": [
+                "Hagub (orc)",
+                "Xago (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 63,
+              "decisions": 55,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-07.jsonl",
+              "input_tokens": 163669,
+              "est_cost_usd": 0.0069,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.4,
+              "player_died": false,
+              "kills": [
+                "Oghuglat (orc)",
+                "Verlgu (orc)"
+              ],
+              "engaged": [
+                "Oghuglat (orc)",
+                "Verlgu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 51,
+              "decisions": 56,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-08.jsonl",
+              "input_tokens": 159777,
+              "est_cost_usd": 0.0067,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Torug (orc)",
+                "Wholug (orc)"
+              ],
+              "engaged": [
+                "Torug (orc)",
+                "Wholug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 68,
+              "decisions": 56,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-09.jsonl",
+              "input_tokens": 153518,
+              "est_cost_usd": 0.0064,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Nakgu (orc)",
+                "Orgug (orc)"
+              ],
+              "engaged": [
+                "Nakgu (orc)",
+                "Orgug (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 79,
+              "decisions": 49,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_all-10.jsonl",
+              "input_tokens": 132866,
+              "est_cost_usd": 0.0056,
+              "facts": "all",
+              "fact_selections": 2,
+              "fact_input_tokens": 0,
+              "facts_in_state": 25,
+              "facts_chosen": [
+                "Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over 25 fights.",
+                "Headless ones sometimes wander into the test field from the east.",
+                "Gold dropped at the test field is worth picking up; bones and hides are not.",
+                "Ratmen at the test field carry a little gold and sometimes a ring.",
+                "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."
+              ]
+            }
+          ],
+          "n": 10,
+          "successes": 8,
+          "rate": 0.8,
+          "ci95": [
+            0.49,
+            0.943
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0627,
+          "errors": 0
+        },
+        "jev@jev": {
+          "runs": [
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 34.1,
+              "player_died": true,
+              "kills": [
+                "Xugarf (orc)",
+                "Feldgulg (orc)"
+              ],
+              "engaged": [
+                "Xugarf (orc)",
+                "Feldgulg (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                8
+              ],
+              "min_hp": 0,
+              "decisions": 30,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-01.jsonl",
+              "input_tokens": 66070,
+              "est_cost_usd": 0.0028,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11516,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": true,
+              "kills": [
+                "Borug (orc)",
+                "Apaugh (orc)"
+              ],
+              "engaged": [
+                "Borug (orc)",
+                "Apaugh (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 61,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-02.jsonl",
+              "input_tokens": 140369,
+              "est_cost_usd": 0.0059,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11510,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Quomaugh (orc)",
+                "Umragig (orc)"
+              ],
+              "engaged": [
+                "Quomaugh (orc)",
+                "Umragig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 40,
+              "decisions": 54,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-03.jsonl",
+              "input_tokens": 125613,
+              "est_cost_usd": 0.0053,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11513,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 56.4,
+              "player_died": true,
+              "kills": [
+                "Woggugat (orc)",
+                "Zarfu (orc)"
+              ],
+              "engaged": [
+                "Woggugat (orc)",
+                "Zarfu (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                23
+              ],
+              "min_hp": 0,
+              "decisions": 43,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-04.jsonl",
+              "input_tokens": 95266,
+              "est_cost_usd": 0.004,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11514,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Ulgan (orc)",
+                "Fodagog (orc)"
+              ],
+              "engaged": [
+                "Ulgan (orc)",
+                "Fodagog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 54,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-05.jsonl",
+              "input_tokens": 134728,
+              "est_cost_usd": 0.0057,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11515,
+              "facts_in_state": 1,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Zurghed (orc)",
+                "Yugug (orc)"
+              ],
+              "engaged": [
+                "Zurghed (orc)",
+                "Yugug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 65,
+              "decisions": 53,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-06.jsonl",
+              "input_tokens": 121406,
+              "est_cost_usd": 0.0051,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11515,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Xugaa (orc)",
+                "Karfu (orc)"
+              ],
+              "engaged": [
+                "Xugaa (orc)",
+                "Karfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 53,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-07.jsonl",
+              "input_tokens": 112019,
+              "est_cost_usd": 0.0047,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11511,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.4,
+              "player_died": false,
+              "kills": [
+                "Fogugh (orc)",
+                "Gunag (orc)"
+              ],
+              "engaged": [
+                "Fogugh (orc)",
+                "Gunag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 58,
+              "decisions": 57,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-08.jsonl",
+              "input_tokens": 116326,
+              "est_cost_usd": 0.0049,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11508,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Wudhagh (orc)",
+                "Ug (orc)"
+              ],
+              "engaged": [
+                "Wudhagh (orc)",
+                "Ug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 77,
+              "decisions": 54,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-09.jsonl",
+              "input_tokens": 133552,
+              "est_cost_usd": 0.0056,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11510,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Xunaakt (orc)",
+                "Womkug (orc)"
+              ],
+              "engaged": [
+                "Xunaakt (orc)",
+                "Womkug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 83,
+              "decisions": 52,
+              "log": "logs/bench/20261007-021512/wisp-leave-alone-jev_jev-10.jsonl",
+              "input_tokens": 121111,
+              "est_cost_usd": 0.0051,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11517,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            }
+          ],
+          "n": 10,
+          "successes": 7,
+          "rate": 0.7,
+          "ci95": [
+            0.397,
+            0.892
+          ],
+          "deaths": 3,
+          "cost_usd": 0.0491,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

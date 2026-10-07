@@ -1,0 +1,1418 @@
+{
+  "started": "2026-10-06T23:30:40",
+  "rounds": 10,
+  "lane": 5,
+  "bestiary": true,
+  "scenarios": {
+    "relentless-never-flees": {
+      "bead": "cuo-46e.7",
+      "right": "With the relentless template, never flee, even running out of supplies.",
+      "judges": {
+        "jev+relentless": {
+          "runs": [
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 25.0,
+              "player_died": true,
+              "kills": [
+                "Ecterek (ratman)",
+                "Cheki (ratman)"
+              ],
+              "engaged": [
+                "Ecterek (ratman)",
+                "Cheki (ratman)",
+                "Ewkbanok (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 26,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-01.jsonl",
+              "input_tokens": 69765,
+              "est_cost_usd": 0.0029
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 26.4,
+              "player_died": true,
+              "kills": [
+                "Feractav (ratman)"
+              ],
+              "engaged": [
+                "Feractav (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 28,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-02.jsonl",
+              "input_tokens": 73614,
+              "est_cost_usd": 0.0031
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 120.1,
+              "player_died": false,
+              "kills": [
+                "Vactak (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "a headless one",
+                "a headless one",
+                "Zogugh (orc)",
+                "Chikavi (ratman)",
+                "Zurgug (orc)"
+              ],
+              "engaged": [
+                "Vactak (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "a headless one",
+                "a headless one",
+                "Zogugh (orc)",
+                "Chikavi (ratman)",
+                "Zurgug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 36,
+              "decisions": 82,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-03.jsonl",
+              "input_tokens": 207045,
+              "est_cost_usd": 0.0087
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 116.5,
+              "player_died": false,
+              "kills": [
+                "Etakheki (ratman)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "a mongbat",
+                "Surgha (orc)",
+                "Kerghug (orc)",
+                "Techikickik (ratman)"
+              ],
+              "engaged": [
+                "Etakheki (ratman)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "a mongbat",
+                "Surgha (orc)",
+                "Kerghug (orc)",
+                "Techikickik (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 32,
+              "decisions": 76,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-04.jsonl",
+              "input_tokens": 183646,
+              "est_cost_usd": 0.0077
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 120.0,
+              "player_died": false,
+              "kills": [
+                "Dikfachok (ratman)",
+                "a headless one",
+                "a headless one",
+                "Zorfu (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Tidetckuki (ratman)",
+                "Rurigig (orc)"
+              ],
+              "engaged": [
+                "Dikfachok (ratman)",
+                "a headless one",
+                "a headless one",
+                "Zorfu (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Tidetckuki (ratman)",
+                "Rurigig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 5,
+              "decisions": 89,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-05.jsonl",
+              "input_tokens": 225999,
+              "est_cost_usd": 0.0095
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 120.1,
+              "player_died": false,
+              "kills": [
+                "Chatuki (ratman)",
+                "a headless one",
+                "a headless one",
+                "Xurukk (orc)",
+                "Vevitavi (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Zupgugh (orc)"
+              ],
+              "engaged": [
+                "Chatuki (ratman)",
+                "a headless one",
+                "a headless one",
+                "Xurukk (orc)",
+                "Vevitavi (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Zupgugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 33,
+              "decisions": 79,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-06.jsonl",
+              "input_tokens": 198085,
+              "est_cost_usd": 0.0083
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 117.2,
+              "player_died": false,
+              "kills": [
+                "Chiackukk (ratman)",
+                "a headless one",
+                "a headless one",
+                "Yagnar (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Cagan (orc)",
+                "Vechoki (ratman)"
+              ],
+              "engaged": [
+                "Chiackukk (ratman)",
+                "a headless one",
+                "a headless one",
+                "Yagnar (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Cagan (orc)",
+                "Vechoki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 43,
+              "decisions": 76,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-07.jsonl",
+              "input_tokens": 187881,
+              "est_cost_usd": 0.0079
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 120.0,
+              "player_died": false,
+              "kills": [
+                "Rackek (ratman)",
+                "a headless one",
+                "a headless one",
+                "Wurthu (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Dickiki (ratman)",
+                "Aghed (orc)"
+              ],
+              "engaged": [
+                "Rackek (ratman)",
+                "a headless one",
+                "a headless one",
+                "Wurthu (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Dickiki (ratman)",
+                "Aghed (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 26,
+              "decisions": 80,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-08.jsonl",
+              "input_tokens": 200420,
+              "est_cost_usd": 0.0084
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 120.7,
+              "player_died": false,
+              "kills": [
+                "a mongbat",
+                "Farod (orc)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "Ckekickuk (ratman)",
+                "Dackatuki (ratman)",
+                "Zurghed (orc)"
+              ],
+              "engaged": [
+                "a mongbat",
+                "Farod (orc)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "Ckekickuk (ratman)",
+                "Dackatuki (ratman)",
+                "Zurghed (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 38,
+              "decisions": 87,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-09.jsonl",
+              "input_tokens": 217162,
+              "est_cost_usd": 0.0091
+            },
+            {
+              "success": true,
+              "flee_actions": 0,
+              "seconds": 114.4,
+              "player_died": false,
+              "kills": [
+                "Wecckak (ratman)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "a mongbat",
+                "Krothu (orc)",
+                "Kitak (ratman)",
+                "Argha (orc)"
+              ],
+              "engaged": [
+                "Wecckak (ratman)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "a mongbat",
+                "Krothu (orc)",
+                "Kitak (ratman)",
+                "Argha (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 18,
+              "decisions": 80,
+              "log": "logs/bench/20261006-233040/relentless-never-flees-jev_relentless-10.jsonl",
+              "input_tokens": 196926,
+              "est_cost_usd": 0.0083
+            }
+          ],
+          "n": 10,
+          "successes": 10,
+          "rate": 1.0,
+          "ci95": [
+            0.722,
+            1.0
+          ],
+          "deaths": 2,
+          "cost_usd": 0.0739,
+          "errors": 0
+        }
+      }
+    },
+    "survivor-flees": {
+      "bead": "cuo-46e.7",
+      "right": "With the survivor template, flee earlier (at higher health) than relentless.",
+      "judges": {
+        "jev+survivor": {
+          "runs": [
+            {
+              "success": true,
+              "first_flee_hp": 43,
+              "fled": true,
+              "seconds": 120.0,
+              "player_died": false,
+              "kills": [
+                "a mongbat",
+                "Chikchickeki (ratman)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Chikchickeki (ratman)",
+                "a mongbat",
+                "Chikchickeki (ratman)",
+                "a mongbat",
+                "Xutjja (orc)"
+              ],
+              "flees_at_hp": [
+                43,
+                40,
+                87,
+                89,
+                92,
+                94,
+                95,
+                43,
+                93,
+                95,
+                97,
+                99,
+                100,
+                100
+              ],
+              "min_hp": 38,
+              "decisions": 48,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-01.jsonl",
+              "input_tokens": 120911,
+              "est_cost_usd": 0.0051
+            },
+            {
+              "success": false,
+              "first_flee_hp": null,
+              "fled": false,
+              "seconds": 52.5,
+              "player_died": true,
+              "kills": [
+                "Chiackukk (ratman)"
+              ],
+              "engaged": [
+                "Chiackukk (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 49,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-02.jsonl",
+              "input_tokens": 132193,
+              "est_cost_usd": 0.0056
+            },
+            {
+              "success": true,
+              "first_flee_hp": null,
+              "fled": false,
+              "seconds": 113.2,
+              "player_died": false,
+              "kills": [
+                "Xnaurl (orc)",
+                "Fackik (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Vitavi (ratman)",
+                "Sodagh (orc)",
+                "a headless one",
+                "a headless one"
+              ],
+              "engaged": [
+                "Fackik (ratman)",
+                "Xnaurl (orc)",
+                "Fackik (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Vitavi (ratman)",
+                "Sodagh (orc)",
+                "a headless one",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 53,
+              "decisions": 72,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-03.jsonl",
+              "input_tokens": 183516,
+              "est_cost_usd": 0.0077
+            },
+            {
+              "success": true,
+              "first_flee_hp": 43,
+              "fled": true,
+              "seconds": 120.2,
+              "player_died": false,
+              "kills": [
+                "Chickeki (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Zeakgu (orc)"
+              ],
+              "engaged": [
+                "Chickeki (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Chichoki (ratman)",
+                "Zeakgu (orc)"
+              ],
+              "flees_at_hp": [
+                43,
+                83,
+                85,
+                100,
+                100,
+                100,
+                100,
+                37,
+                52,
+                43,
+                32,
+                20
+              ],
+              "min_hp": 20,
+              "decisions": 64,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-04.jsonl",
+              "input_tokens": 161177,
+              "est_cost_usd": 0.0068
+            },
+            {
+              "success": true,
+              "first_flee_hp": 43,
+              "fled": true,
+              "seconds": 120.0,
+              "player_died": false,
+              "kills": [
+                "a headless one",
+                "Kadicchok (ratman)",
+                "Trougha (orc)",
+                "Nogugh (orc)",
+                "a mongbat",
+                "Titchaki (ratman)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "a headless one",
+                "Kadicchok (ratman)",
+                "Trougha (orc)",
+                "Nogugh (orc)",
+                "a mongbat",
+                "Titchaki (ratman)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                43,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 43,
+              "decisions": 72,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-05.jsonl",
+              "input_tokens": 181591,
+              "est_cost_usd": 0.0076
+            },
+            {
+              "success": false,
+              "first_flee_hp": 36,
+              "fled": true,
+              "seconds": 108.2,
+              "player_died": true,
+              "kills": [
+                "a mongbat",
+                "a headless one",
+                "a mongbat",
+                "Yaghed (orc)",
+                "Frecckeki (ratman)",
+                "a headless one"
+              ],
+              "engaged": [
+                "a mongbat",
+                "a headless one",
+                "a mongbat",
+                "Yaghed (orc)",
+                "Frecckeki (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [
+                36,
+                59,
+                91,
+                82,
+                79,
+                55,
+                41,
+                27,
+                21,
+                5,
+                7
+              ],
+              "min_hp": 0,
+              "decisions": 56,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-06.jsonl",
+              "input_tokens": 144810,
+              "est_cost_usd": 0.0061
+            },
+            {
+              "success": true,
+              "first_flee_hp": 26,
+              "fled": true,
+              "seconds": 120.5,
+              "player_died": false,
+              "kills": [
+                "Kicchiki (ratman)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Kicchiki (ratman)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                26,
+                58,
+                48,
+                82,
+                100,
+                95,
+                72,
+                94,
+                88,
+                77,
+                42,
+                34,
+                36,
+                38,
+                40
+              ],
+              "min_hp": 26,
+              "decisions": 42,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-07.jsonl",
+              "input_tokens": 111955,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": true,
+              "first_flee_hp": null,
+              "fled": false,
+              "seconds": 116.9,
+              "player_died": false,
+              "kills": [
+                "Detckiki (ratman)",
+                "a headless one",
+                "a headless one",
+                "Wingloug (orc)",
+                "Xago (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Karrekichoki (ratman)"
+              ],
+              "engaged": [
+                "Detckiki (ratman)",
+                "a headless one",
+                "a headless one",
+                "Wingloug (orc)",
+                "Xago (orc)",
+                "a mongbat",
+                "a mongbat",
+                "Karrekichoki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 78,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-08.jsonl",
+              "input_tokens": 193490,
+              "est_cost_usd": 0.0081
+            },
+            {
+              "success": true,
+              "first_flee_hp": 46,
+              "fled": true,
+              "seconds": 120.1,
+              "player_died": false,
+              "kills": [
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "Fachchekiok (ratman)",
+                "Taugh (orc)",
+                "Wurthu (orc)",
+                "a mongbat",
+                "Detckuki (ratman)"
+              ],
+              "engaged": [
+                "Taugh (orc)",
+                "a headless one",
+                "a headless one",
+                "a mongbat",
+                "Fachchekiok (ratman)",
+                "Taugh (orc)",
+                "Wurthu (orc)",
+                "a mongbat",
+                "Detckuki (ratman)"
+              ],
+              "flees_at_hp": [
+                46
+              ],
+              "min_hp": 41,
+              "decisions": 80,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-09.jsonl",
+              "input_tokens": 196878,
+              "est_cost_usd": 0.0083
+            },
+            {
+              "success": true,
+              "first_flee_hp": 43,
+              "fled": true,
+              "seconds": 120.4,
+              "player_died": false,
+              "kills": [
+                "Karrekichoki (ratman)",
+                "a mongbat",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Karrekichoki (ratman)",
+                "a mongbat",
+                "a mongbat",
+                "Narod (orc)"
+              ],
+              "flees_at_hp": [
+                43,
+                45,
+                47,
+                83,
+                100,
+                100,
+                100,
+                44,
+                86,
+                81,
+                83,
+                85,
+                87,
+                89
+              ],
+              "min_hp": 43,
+              "decisions": 51,
+              "log": "logs/bench/20261006-233040/survivor-flees-jev_survivor-10.jsonl",
+              "input_tokens": 124838,
+              "est_cost_usd": 0.0052
+            }
+          ],
+          "n": 10,
+          "successes": 8,
+          "rate": 0.8,
+          "ci95": [
+            0.49,
+            0.943
+          ],
+          "deaths": 2,
+          "cost_usd": 0.0652,
+          "errors": 0
+        }
+      }
+    },
+    "no-loot-never-loots": {
+      "bead": "cuo-46e.7",
+      "right": "With the no-loot template, never loot, even with valuables at hand.",
+      "judges": {
+        "jev+no-loot": {
+          "runs": [
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Surpigig (orc)",
+                "Sugigoth (orc)"
+              ],
+              "engaged": [
+                "Sugigoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 82,
+              "decisions": 27,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-01.jsonl",
+              "input_tokens": 49086,
+              "est_cost_usd": 0.0021
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Zupaugh (orc)",
+                "Vruhag (orc)"
+              ],
+              "engaged": [
+                "Vruhag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 75,
+              "decisions": 30,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-02.jsonl",
+              "input_tokens": 52626,
+              "est_cost_usd": 0.0022
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Vitgurat (orc)",
+                "Klog (orc)"
+              ],
+              "engaged": [
+                "Klog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 79,
+              "decisions": 31,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-03.jsonl",
+              "input_tokens": 53367,
+              "est_cost_usd": 0.0022
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Yerghug (orc)",
+                "Zildud (orc)"
+              ],
+              "engaged": [
+                "Zildud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 27,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-04.jsonl",
+              "input_tokens": 47268,
+              "est_cost_usd": 0.002
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.0,
+              "player_died": false,
+              "kills": [
+                "Vugub (orc)",
+                "Wutgarek (orc)"
+              ],
+              "engaged": [
+                "Wutgarek (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 93,
+              "decisions": 29,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-05.jsonl",
+              "input_tokens": 50221,
+              "est_cost_usd": 0.0021
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Omegugh (orc)",
+                "Hugolm (orc)"
+              ],
+              "engaged": [
+                "Hugolm (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 74,
+              "decisions": 31,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-06.jsonl",
+              "input_tokens": 54011,
+              "est_cost_usd": 0.0023
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.0,
+              "player_died": false,
+              "kills": [
+                "Vrutha (orc)",
+                "Tog (orc)"
+              ],
+              "engaged": [
+                "Tog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 33,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-07.jsonl",
+              "input_tokens": 57051,
+              "est_cost_usd": 0.0024
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Vabugbu (orc)",
+                "Rebub (orc)"
+              ],
+              "engaged": [
+                "Rebub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 81,
+              "decisions": 26,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-08.jsonl",
+              "input_tokens": 45497,
+              "est_cost_usd": 0.0019
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.0,
+              "player_died": false,
+              "kills": [
+                "Wurmha (orc)",
+                "Mergigoth (orc)"
+              ],
+              "engaged": [
+                "Mergigoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 67,
+              "decisions": 34,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-09.jsonl",
+              "input_tokens": 59714,
+              "est_cost_usd": 0.0025
+            },
+            {
+              "success": true,
+              "loot_actions": 0,
+              "take_actions": 0,
+              "taken": [],
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Alog (orc)",
+                "Gnoth (orc)"
+              ],
+              "engaged": [
+                "Gnoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 74,
+              "decisions": 28,
+              "log": "logs/bench/20261006-233040/no-loot-never-loots-jev_no-loot-10.jsonl",
+              "input_tokens": 48569,
+              "est_cost_usd": 0.002
+            }
+          ],
+          "n": 10,
+          "successes": 10,
+          "rate": 1.0,
+          "ci95": [
+            0.722,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0217,
+          "errors": 0
+        }
+      }
+    },
+    "nuker-opens-with-explosion": {
+      "bead": "cuo-46e.7",
+      "right": "With the nuker template, open on each creature with Explosion.",
+      "judges": {
+        "jev+nuker": {
+          "runs": [
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 58.9,
+              "player_died": false,
+              "kills": [
+                "Zorhgigoth (orc)",
+                "Dicchok (ratman)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Zorhgigoth (orc)",
+                "Dicchok (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 39,
+              "decisions": 43,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-01.jsonl",
+              "input_tokens": 118799,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 51.2,
+              "player_died": false,
+              "kills": [
+                "Kakiki (ratman)",
+                "a headless one",
+                "Zabub (orc)"
+              ],
+              "engaged": [
+                "Kakiki (ratman)",
+                "a headless one",
+                "Zabub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 55,
+              "decisions": 33,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-02.jsonl",
+              "input_tokens": 87752,
+              "est_cost_usd": 0.0037
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 60.4,
+              "player_died": false,
+              "kills": [
+                "Kireki (ratman)",
+                "Omegugh (orc)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Kireki (ratman)",
+                "Omegugh (orc)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 43,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-03.jsonl",
+              "input_tokens": 114103,
+              "est_cost_usd": 0.0048
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 50.8,
+              "player_died": false,
+              "kills": [
+                "Defetav (ratman)",
+                "a headless one",
+                "Xruul (orc)"
+              ],
+              "engaged": [
+                "Defetav (ratman)",
+                "a headless one",
+                "Xruul (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 62,
+              "decisions": 36,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-04.jsonl",
+              "input_tokens": 96957,
+              "est_cost_usd": 0.0041
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 47.2,
+              "player_died": false,
+              "kills": [
+                "Kirchik (ratman)",
+                "Bog (orc)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Kirchik (ratman)",
+                "Bog (orc)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 80,
+              "decisions": 31,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-05.jsonl",
+              "input_tokens": 83002,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 89.2,
+              "player_died": false,
+              "kills": [
+                "a headless one",
+                "Titchaki (ratman)",
+                "Yahg (orc)"
+              ],
+              "engaged": [
+                "a headless one",
+                "Titchaki (ratman)",
+                "Yahg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 38,
+              "decisions": 69,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-06.jsonl",
+              "input_tokens": 184997,
+              "est_cost_usd": 0.0078
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 47.8,
+              "player_died": false,
+              "kills": [
+                "Chichoki (ratman)",
+                "Golag (orc)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Chichoki (ratman)",
+                "Golag (orc)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 29,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-07.jsonl",
+              "input_tokens": 78081,
+              "est_cost_usd": 0.0033
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 57.8,
+              "player_died": false,
+              "kills": [
+                "Noogugh (orc)",
+                "a headless one",
+                "Eckechakiki (ratman)"
+              ],
+              "engaged": [
+                "Noogugh (orc)",
+                "a headless one",
+                "Eckechakiki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 28,
+              "decisions": 44,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-08.jsonl",
+              "input_tokens": 118404,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Explosion"
+              ],
+              "seconds": 53.5,
+              "player_died": false,
+              "kills": [
+                "Snubub (orc)",
+                "Kireki (ratman)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Snubub (orc)",
+                "Kireki (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 37,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-09.jsonl",
+              "input_tokens": 99273,
+              "est_cost_usd": 0.0042
+            },
+            {
+              "success": false,
+              "openers": [
+                "Explosion",
+                "Explosion",
+                "Magic Arrow"
+              ],
+              "seconds": 70.6,
+              "player_died": false,
+              "kills": [
+                "Sargulg (orc)",
+                "Ckikhiki (ratman)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Sargulg (orc)",
+                "Ckikhiki (ratman)",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 39,
+              "decisions": 55,
+              "log": "logs/bench/20261006-233040/nuker-opens-with-explosion-jev_nuker-10.jsonl",
+              "input_tokens": 144866,
+              "est_cost_usd": 0.0061
+            }
+          ],
+          "n": 10,
+          "successes": 9,
+          "rate": 0.9,
+          "ci95": [
+            0.596,
+            0.982
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0475,
+          "errors": 0
+        }
+      }
+    },
+    "champion-strongest-first": {
+      "bead": "cuo-46e.7",
+      "right": "With the champion template, go for the troll before the weaker ones.",
+      "judges": {
+        "jev+champion": {
+          "runs": [
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.1,
+              "player_died": false,
+              "kills": [
+                "a troll",
+                "Tuggug (orc)",
+                "a mongbat",
+                "a mongbat"
+              ],
+              "engaged": [
+                "a troll",
+                "Tuggug (orc)",
+                "a mongbat",
+                "a mongbat"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 51,
+              "decisions": 38,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-01.jsonl",
+              "input_tokens": 78919,
+              "est_cost_usd": 0.0033
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a troll"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 28,
+              "decisions": 39,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-02.jsonl",
+              "input_tokens": 82426,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 39.0,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a troll"
+              ],
+              "flees_at_hp": [
+                1
+              ],
+              "min_hp": 0,
+              "decisions": 26,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-03.jsonl",
+              "input_tokens": 55741,
+              "est_cost_usd": 0.0023
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 27.2,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a troll"
+              ],
+              "flees_at_hp": [
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 25,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-04.jsonl",
+              "input_tokens": 53609,
+              "est_cost_usd": 0.0023
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.1,
+              "player_died": false,
+              "kills": [
+                "a troll"
+              ],
+              "engaged": [
+                "a troll",
+                "Zahgorim (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 24,
+              "decisions": 47,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-05.jsonl",
+              "input_tokens": 99582,
+              "est_cost_usd": 0.0042
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.2,
+              "player_died": false,
+              "kills": [
+                "a troll"
+              ],
+              "engaged": [
+                "a troll",
+                "Ambilge (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 18,
+              "decisions": 44,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-06.jsonl",
+              "input_tokens": 92517,
+              "est_cost_usd": 0.0039
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.2,
+              "player_died": false,
+              "kills": [
+                "a troll"
+              ],
+              "engaged": [
+                "a troll",
+                "Fudhagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 42,
+              "decisions": 41,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-07.jsonl",
+              "input_tokens": 86412,
+              "est_cost_usd": 0.0036
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.5,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a troll"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 43,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-08.jsonl",
+              "input_tokens": 91669,
+              "est_cost_usd": 0.0039
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 45.2,
+              "player_died": false,
+              "kills": [
+                "a troll"
+              ],
+              "engaged": [
+                "a troll",
+                "Argigoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 42,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-09.jsonl",
+              "input_tokens": 89058,
+              "est_cost_usd": 0.0037
+            },
+            {
+              "success": true,
+              "first_engaged": "a troll",
+              "seconds": 30.7,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a troll"
+              ],
+              "flees_at_hp": [
+                23,
+                16
+              ],
+              "min_hp": 0,
+              "decisions": 24,
+              "log": "logs/bench/20261006-233040/champion-strongest-first-jev_champion-10.jsonl",
+              "input_tokens": 51177,
+              "est_cost_usd": 0.0021
+            }
+          ],
+          "n": 10,
+          "successes": 10,
+          "rate": 1.0,
+          "ci95": [
+            0.722,
+            1.0
+          ],
+          "deaths": 3,
+          "cost_usd": 0.0328,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

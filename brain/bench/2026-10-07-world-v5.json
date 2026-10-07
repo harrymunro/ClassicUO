@@ -1,0 +1,316 @@
+{
+  "started": "2026-10-07T03:54:19",
+  "rounds": 10,
+  "lane": 5,
+  "bestiary": true,
+  "scenarios": {
+    "wisp-leave-alone": {
+      "bead": "cuo-5of.7",
+      "right": "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit when attacked: kill the orcs, never attack the wisp.",
+      "judges": {
+        "jev@jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Zumhug (orc)",
+                "Dergu (orc)"
+              ],
+              "engaged": [
+                "Zumhug (orc)",
+                "Dergu (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 71,
+              "decisions": 53,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-01.jsonl",
+              "input_tokens": 128525,
+              "est_cost_usd": 0.0054,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11467,
+              "facts_in_state": 1,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Urgan (orc)",
+                "Vlog (orc)"
+              ],
+              "engaged": [
+                "Urgan (orc)",
+                "Vlog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 60,
+              "decisions": 60,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-02.jsonl",
+              "input_tokens": 140560,
+              "est_cost_usd": 0.0059,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11462,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Yugug (orc)",
+                "Xagu (orc)"
+              ],
+              "engaged": [
+                "Yugug (orc)",
+                "Xagu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 68,
+              "decisions": 59,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-03.jsonl",
+              "input_tokens": 146476,
+              "est_cost_usd": 0.0062,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11465,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Oomigig (orc)",
+                "Bahgigoth (orc)"
+              ],
+              "engaged": [
+                "Oomigig (orc)",
+                "Bahgigoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 44,
+              "decisions": 58,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-04.jsonl",
+              "input_tokens": 139800,
+              "est_cost_usd": 0.0059,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11470,
+              "facts_in_state": 1,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Sodagh (orc)",
+                "Cukgilug (orc)"
+              ],
+              "engaged": [
+                "Sodagh (orc)",
+                "Cukgilug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 34,
+              "decisions": 55,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-05.jsonl",
+              "input_tokens": 122835,
+              "est_cost_usd": 0.0052,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11468,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.4,
+              "player_died": false,
+              "kills": [
+                "Meakgu (orc)",
+                "Zodagh (orc)"
+              ],
+              "engaged": [
+                "Meakgu (orc)",
+                "Zodagh (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 55,
+              "decisions": 40,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-06.jsonl",
+              "input_tokens": 92427,
+              "est_cost_usd": 0.0039,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11468,
+              "facts_in_state": 1,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ]
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Zurpigig (orc)",
+                "Sinsbog (orc)"
+              ],
+              "engaged": [
+                "Zurpigig (orc)",
+                "Sinsbog (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [
+                16
+              ],
+              "min_hp": 15,
+              "decisions": 56,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-07.jsonl",
+              "input_tokens": 119391,
+              "est_cost_usd": 0.005,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11469,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.3,
+              "player_died": false,
+              "kills": [
+                "Builge (orc)",
+                "Urghat (orc)"
+              ],
+              "engaged": [
+                "Builge (orc)",
+                "Urghat (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 73,
+              "decisions": 37,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-08.jsonl",
+              "input_tokens": 87843,
+              "est_cost_usd": 0.0037,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11467,
+              "facts_in_state": 1,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Omegugh (orc)",
+                "Zilug (orc)"
+              ],
+              "engaged": [
+                "Omegugh (orc)",
+                "Zilug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 57,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-09.jsonl",
+              "input_tokens": 123836,
+              "est_cost_usd": 0.0052,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11467,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            },
+            {
+              "success": false,
+              "attacked_wisp": true,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 52.1,
+              "player_died": true,
+              "kills": [
+                "Zumhug (orc)",
+                "Krugbu (orc)"
+              ],
+              "engaged": [
+                "Zumhug (orc)",
+                "Krugbu (orc)",
+                "a wisp"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 41,
+              "log": "logs/bench/20261007-035419/wisp-leave-alone-jev_jev-10.jsonl",
+              "input_tokens": 99933,
+              "est_cost_usd": 0.0042,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11467,
+              "facts_in_state": 0,
+              "facts_chosen": []
+            }
+          ],
+          "n": 10,
+          "successes": 8,
+          "rate": 0.8,
+          "ci95": [
+            0.49,
+            0.943
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0506,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

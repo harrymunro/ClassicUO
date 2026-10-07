@@ -1,0 +1,354 @@
+{
+  "started": "2026-10-07T01:22:59",
+  "rounds": 3,
+  "lane": 3,
+  "bestiary": true,
+  "scenarios": {
+    "tamer-orcs": {
+      "bead": "cuo-cvl.2",
+      "right": "Three orcs come at a tamer with a grizzly bear: set the bear on them, bandage it between hits, and call it back if it is losing; kill all three without losing the bear.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Ougha (orc)",
+                "Buimghig (orc)",
+                "Vamugbu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 55,
+              "pet_bandages": 2,
+              "pull_backs": 0,
+              "seconds": 63.8,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 46,
+              "log": "logs/bench/20261007-012259/tamer-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Pahgigoth (orc)",
+                "Krothu (orc)",
+                "Oilug (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 63,
+              "pet_bandages": 1,
+              "pull_backs": 0,
+              "seconds": 54.9,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 36,
+              "log": "logs/bench/20261007-012259/tamer-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Kukgilug (orc)",
+                "Varkgorim (orc)",
+                "Zupgugh (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 68,
+              "pet_bandages": 0,
+              "pull_backs": 0,
+              "seconds": 53.6,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 35,
+              "log": "logs/bench/20261007-012259/tamer-orcs-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 3,
+          "successes": 3,
+          "rate": 1.0,
+          "ci95": [
+            0.438,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Fudhagh (orc)",
+                "Fozhug (orc)",
+                "Rugbu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 59,
+              "pet_bandages": 1,
+              "pull_backs": 0,
+              "seconds": 41.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 24,
+              "log": "logs/bench/20261007-012259/tamer-orcs-jev-01.jsonl",
+              "input_tokens": 51581,
+              "est_cost_usd": 0.0022
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 7,
+              "pet_bandages": 11,
+              "pull_backs": 0,
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 104,
+              "log": "logs/bench/20261007-012259/tamer-orcs-jev-02.jsonl",
+              "input_tokens": 247886,
+              "est_cost_usd": 0.0104
+            },
+            {
+              "success": true,
+              "kills": [
+                "Traugh (orc)",
+                "Vergu (orc)",
+                "Karrghed (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 32,
+              "pet_bandages": 0,
+              "pull_backs": 0,
+              "seconds": 51.4,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 30,
+              "log": "logs/bench/20261007-012259/tamer-orcs-jev-03.jsonl",
+              "input_tokens": 68103,
+              "est_cost_usd": 0.0029
+            }
+          ],
+          "n": 3,
+          "successes": 2,
+          "rate": 0.667,
+          "ci95": [
+            0.208,
+            0.939
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0155,
+          "errors": 0
+        }
+      }
+    },
+    "tamer-ogre-lord": {
+      "bead": "cuo-cvl.2",
+      "right": "An ogre lord walks up to a tamer with a grizzly bear, two orcs with it: the bear can't win against the ogre lord, so don't lose it: fight only what it can beat, call it back, leave.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 15,
+              "pull_backs": 0,
+              "sent_at": [
+                15853,
+                15852
+              ],
+              "seconds": 34.4,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 34,
+              "log": "logs/bench/20261007-012259/tamer-ogre-lord-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 1,
+              "pull_backs": 1,
+              "sent_at": [
+                15885
+              ],
+              "seconds": 27.6,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 0,
+              "decisions": 24,
+              "log": "logs/bench/20261007-012259/tamer-ogre-lord-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 2,
+              "pull_backs": 1,
+              "sent_at": [
+                15900
+              ],
+              "seconds": 20.8,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 0,
+              "decisions": 15,
+              "log": "logs/bench/20261007-012259/tamer-ogre-lord-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 3,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.562
+          ],
+          "deaths": 3,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 81,
+              "pull_backs": 1,
+              "sent_at": [
+                15867,
+                15866,
+                15866,
+                15866,
+                15866
+              ],
+              "seconds": 73.2,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                42,
+                1
+              ],
+              "min_hp": 0,
+              "decisions": 21,
+              "log": "logs/bench/20261007-012259/tamer-ogre-lord-jev-01.jsonl",
+              "input_tokens": 44950,
+              "est_cost_usd": 0.0019
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zorgulg (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 77,
+              "pull_backs": 1,
+              "sent_at": [
+                15895,
+                15895
+              ],
+              "seconds": 91.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 66,
+              "decisions": 43,
+              "log": "logs/bench/20261007-012259/tamer-ogre-lord-jev-02.jsonl",
+              "input_tokens": 86610,
+              "est_cost_usd": 0.0036
+            },
+            {
+              "success": true,
+              "kills": [
+                "Wingloug (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 60,
+              "pull_backs": 1,
+              "sent_at": [
+                15903,
+                15903,
+                15904
+              ],
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 43,
+              "log": "logs/bench/20261007-012259/tamer-ogre-lord-jev-03.jsonl",
+              "input_tokens": 91754,
+              "est_cost_usd": 0.0039
+            }
+          ],
+          "n": 3,
+          "successes": 2,
+          "rate": 0.667,
+          "ci95": [
+            0.208,
+            0.939
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0094,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

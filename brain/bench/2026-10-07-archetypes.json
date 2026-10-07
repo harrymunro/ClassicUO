@@ -1,0 +1,1299 @@
+{
+  "started": "2026-10-07T02:52:47",
+  "rounds": 5,
+  "lane": 3,
+  "bestiary": true,
+  "scenarios": {
+    "tamer-ogre-lord": {
+      "bead": "cuo-cvl.2",
+      "right": "An ogre lord walks up to a tamer with a grizzly bear, two orcs with it. Neither can beat it, and it runs as fast as the tamer: leave early, and if it catches up, let the bear hold it off. The tamer must survive; losing the bear is reported.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": false,
+              "pet_min_hp": 100,
+              "pull_backs": 0,
+              "sent_at": [
+                16238,
+                16239,
+                16238,
+                16239,
+                16238
+              ],
+              "seconds": 20.0,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 19,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 0,
+              "pull_backs": 1,
+              "sent_at": [
+                16247,
+                16246
+              ],
+              "seconds": 28.6,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 0,
+              "decisions": 23,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 8,
+              "pull_backs": 1,
+              "sent_at": [
+                16255
+              ],
+              "seconds": 24.8,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                26
+              ],
+              "min_hp": 0,
+              "decisions": 19,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 15,
+              "pull_backs": 1,
+              "sent_at": [
+                16262
+              ],
+              "seconds": 27.3,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                28
+              ],
+              "min_hp": 0,
+              "decisions": 19,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 9,
+              "pull_backs": 1,
+              "sent_at": [
+                16269,
+                16270,
+                16269,
+                16271,
+                16269
+              ],
+              "seconds": 30.2,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                69
+              ],
+              "min_hp": 0,
+              "decisions": 26,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.434
+          ],
+          "deaths": 5,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 7,
+              "pull_backs": 1,
+              "sent_at": [
+                16243
+              ],
+              "seconds": 37.7,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                27
+              ],
+              "min_hp": 0,
+              "decisions": 8,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-jev-01.jsonl",
+              "input_tokens": 20458,
+              "est_cost_usd": 0.0009
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 11,
+              "pull_backs": 1,
+              "sent_at": [
+                16250
+              ],
+              "seconds": 44.0,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                69,
+                41
+              ],
+              "min_hp": 0,
+              "decisions": 10,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-jev-02.jsonl",
+              "input_tokens": 25632,
+              "est_cost_usd": 0.0011
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 3,
+              "pull_backs": 1,
+              "sent_at": [
+                16258
+              ],
+              "seconds": 27.3,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 8,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-jev-03.jsonl",
+              "input_tokens": 20708,
+              "est_cost_usd": 0.0009
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 1,
+              "pull_backs": 1,
+              "sent_at": [
+                16266
+              ],
+              "seconds": 24.1,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                88
+              ],
+              "min_hp": 0,
+              "decisions": 6,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-jev-04.jsonl",
+              "input_tokens": 15563,
+              "est_cost_usd": 0.0007
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 26,
+              "pull_backs": 1,
+              "sent_at": [
+                16274
+              ],
+              "seconds": 31.7,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 0,
+              "decisions": 7,
+              "log": "logs/bench/20261007-025247/tamer-ogre-lord-jev-05.jsonl",
+              "input_tokens": 18045,
+              "est_cost_usd": 0.0008
+            }
+          ],
+          "n": 5,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.434
+          ],
+          "deaths": 5,
+          "cost_usd": 0.0044,
+          "errors": 0
+        }
+      }
+    },
+    "warrior-mage-opener": {
+      "bead": "cuo-cvl.3",
+      "right": "Two orcs come at a warrior-mage from 8 tiles: open on one with a spell while it comes, fight in melee, and have the sword back in hand after every cast; kill both.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Kogan (orc)",
+                "Sudagog (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 53.1,
+              "player_died": false,
+              "engaged": [
+                "Kogan (orc)",
+                "Sudagog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 44,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Pahgorim (orc)",
+                "Farfu (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 41.1,
+              "player_died": false,
+              "engaged": [
+                "Pahgorim (orc)",
+                "Farfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 28,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Nodagog (orc)",
+                "Yukha (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 47.0,
+              "player_died": false,
+              "engaged": [
+                "Nodagog (orc)",
+                "Yukha (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 36,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Viggu (orc)",
+                "Soughat (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 52.9,
+              "player_died": false,
+              "engaged": [
+                "Viggu (orc)",
+                "Soughat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 58,
+              "decisions": 46,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Yargug (orc)",
+                "Viguka (orc)"
+              ],
+              "openers": 0,
+              "weapon_at_end": "Katana",
+              "seconds": 48.8,
+              "player_died": false,
+              "engaged": [
+                "Yargug (orc)",
+                "Viguka (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 68,
+              "decisions": 36,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Gutjja (orc)",
+                "Fudhagh (orc)"
+              ],
+              "openers": 2,
+              "weapon_at_end": "Katana",
+              "seconds": 50.2,
+              "player_died": false,
+              "engaged": [
+                "Gutjja (orc)",
+                "Fudhagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 73,
+              "decisions": 35,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-jev-01.jsonl",
+              "input_tokens": 84231,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "kills": [
+                "Omogulg (orc)",
+                "Tagdud (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 33.9,
+              "player_died": false,
+              "engaged": [
+                "Omogulg (orc)",
+                "Tagdud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 73,
+              "decisions": 23,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-jev-02.jsonl",
+              "input_tokens": 53698,
+              "est_cost_usd": 0.0023
+            },
+            {
+              "success": true,
+              "kills": [
+                "Targigoth (orc)",
+                "Karrhig (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 39.3,
+              "player_died": false,
+              "engaged": [
+                "Targigoth (orc)",
+                "Karrhig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 53,
+              "decisions": 26,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-jev-03.jsonl",
+              "input_tokens": 61842,
+              "est_cost_usd": 0.0026
+            },
+            {
+              "success": true,
+              "kills": [
+                "Nildud (orc)",
+                "Spathu (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 59.5,
+              "player_died": false,
+              "engaged": [
+                "Nildud (orc)",
+                "Spathu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 68,
+              "decisions": 43,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-jev-04.jsonl",
+              "input_tokens": 104596,
+              "est_cost_usd": 0.0044
+            },
+            {
+              "success": false,
+              "kills": [
+                "Tidgug (orc)",
+                "Xomkug (orc)"
+              ],
+              "openers": 0,
+              "weapon_at_end": "Katana",
+              "seconds": 35.2,
+              "player_died": false,
+              "engaged": [
+                "Tidgug (orc)",
+                "Xomkug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 85,
+              "decisions": 22,
+              "log": "logs/bench/20261007-025247/warrior-mage-opener-jev-05.jsonl",
+              "input_tokens": 49841,
+              "est_cost_usd": 0.0021
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0149,
+          "errors": 0
+        }
+      }
+    },
+    "bard-provoke": {
+      "bead": "cuo-cvl.3",
+      "right": "An ogre and two orcs come at a bard: set them on each other and calm whatever reaches the bard; survive while at least two of them die.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Auhgan (orc)",
+                "Alog (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Provocation": 3
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 38,
+              "decisions": 116,
+              "log": "logs/bench/20261007-025247/bard-provoke-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Vigdug (orc)"
+              ],
+              "songs": {
+                "Provocation": 2
+              },
+              "seconds": 37.2,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                18,
+                11
+              ],
+              "min_hp": 0,
+              "decisions": 30,
+              "log": "logs/bench/20261007-025247/bard-provoke-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Narod (orc)",
+                "Xothkug (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 6
+              },
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                28
+              ],
+              "min_hp": 26,
+              "decisions": 124,
+              "log": "logs/bench/20261007-025247/bard-provoke-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "an ogre",
+                "Furbog (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 7
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 50,
+              "decisions": 117,
+              "log": "logs/bench/20261007-025247/bard-provoke-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Smogulg (orc)",
+                "Xorakk (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Discordance": 1,
+                "Provocation": 4
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                65
+              ],
+              "min_hp": 18,
+              "decisions": 110,
+              "log": "logs/bench/20261007-025247/bard-provoke-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Wraog (orc)"
+              ],
+              "songs": {
+                "Provocation": 2
+              },
+              "seconds": 35.0,
+              "player_died": true,
+              "engaged": [],
+              "flees_at_hp": [
+                24
+              ],
+              "min_hp": 0,
+              "decisions": 26,
+              "log": "logs/bench/20261007-025247/bard-provoke-jev-01.jsonl",
+              "input_tokens": 67056,
+              "est_cost_usd": 0.0028
+            },
+            {
+              "success": true,
+              "kills": [
+                "Ougigoth (orc)",
+                "Cubub (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Discordance": 2,
+                "Provocation": 3
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 46,
+              "decisions": 95,
+              "log": "logs/bench/20261007-025247/bard-provoke-jev-02.jsonl",
+              "input_tokens": 230690,
+              "est_cost_usd": 0.0097
+            },
+            {
+              "success": true,
+              "kills": [
+                "Baghig (orc)",
+                "Wubdagog (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Provocation": 3
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "log": "logs/bench/20261007-025247/bard-provoke-jev-03.jsonl",
+              "input_tokens": 227059,
+              "est_cost_usd": 0.0095
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zunuguk (orc)",
+                "an ogre"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Discordance": 1,
+                "Provocation": 8
+              },
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                21
+              ],
+              "min_hp": 5,
+              "decisions": 96,
+              "log": "logs/bench/20261007-025247/bard-provoke-jev-04.jsonl",
+              "input_tokens": 248873,
+              "est_cost_usd": 0.0105
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gunug (orc)",
+                "Nugbu (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Discordance": 1,
+                "Provocation": 3
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 91,
+              "decisions": 93,
+              "log": "logs/bench/20261007-025247/bard-provoke-jev-05.jsonl",
+              "input_tokens": 235215,
+              "est_cost_usd": 0.0099
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0424,
+          "errors": 0
+        }
+      }
+    },
+    "tamer-orcs": {
+      "bead": "cuo-cvl.2",
+      "right": "Three orcs come at a tamer with a grizzly bear: set the bear on them, bandage it between hits, and call it back if it is losing; kill all three without losing the bear.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Ulgan (orc)",
+                "Dudagog (orc)",
+                "Zombilge (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 24,
+              "pet_bandages": 2,
+              "pull_backs": 0,
+              "seconds": 109.6,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 55,
+              "decisions": 104,
+              "log": "logs/bench/20261007-025247/tamer-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Diggu (orc)",
+                "Piggu (orc)",
+                "Wrug (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 40,
+              "pet_bandages": 1,
+              "pull_backs": 1,
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                28
+              ],
+              "min_hp": 27,
+              "decisions": 120,
+              "log": "logs/bench/20261007-025247/tamer-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Bilge (orc)",
+                "Xugagug (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 29,
+              "pet_bandages": 3,
+              "pull_backs": 0,
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 131,
+              "log": "logs/bench/20261007-025247/tamer-orcs-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 1,
+              "pet_bandages": 1,
+              "pull_backs": 1,
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                22,
+                29,
+                21,
+                28,
+                27,
+                27
+              ],
+              "min_hp": 13,
+              "decisions": 96,
+              "log": "logs/bench/20261007-025247/tamer-orcs-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Owkbanok (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 60,
+              "pet_bandages": 2,
+              "pull_backs": 3,
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                24,
+                27,
+                58
+              ],
+              "min_hp": 24,
+              "decisions": 111,
+              "log": "logs/bench/20261007-025247/tamer-orcs-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 2,
+          "rate": 0.4,
+          "ci95": [
+            0.118,
+            0.769
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Rugorim (orc)",
+                "Surbag (orc)",
+                "Fozhug (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 50,
+              "pet_bandages": 5,
+              "pull_backs": 0,
+              "seconds": 97.3,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 71,
+              "log": "logs/bench/20261007-025247/tamer-orcs-jev-01.jsonl",
+              "input_tokens": 152285,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": false,
+              "kills": [],
+              "pet_lost": false,
+              "pet_min_hp": 23,
+              "pet_bandages": 14,
+              "pull_backs": 1,
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 107,
+              "log": "logs/bench/20261007-025247/tamer-orcs-jev-02.jsonl",
+              "input_tokens": 253299,
+              "est_cost_usd": 0.0106
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sakgu (orc)",
+                "Togugh (orc)",
+                "Valthurg (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 50,
+              "pet_bandages": 2,
+              "pull_backs": 0,
+              "seconds": 59.6,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 39,
+              "log": "logs/bench/20261007-025247/tamer-orcs-jev-03.jsonl",
+              "input_tokens": 83786,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "kills": [
+                "Xokuk (orc)",
+                "Grukag (orc)",
+                "Vorgak (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 44,
+              "pet_bandages": 5,
+              "pull_backs": 0,
+              "seconds": 100.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 73,
+              "log": "logs/bench/20261007-025247/tamer-orcs-jev-04.jsonl",
+              "input_tokens": 157265,
+              "est_cost_usd": 0.0066
+            },
+            {
+              "success": true,
+              "kills": [
+                "Vakgar (orc)",
+                "Nargulg (orc)",
+                "Xutjja (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 43,
+              "pet_bandages": 7,
+              "pull_backs": 0,
+              "seconds": 97.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 76,
+              "log": "logs/bench/20261007-025247/tamer-orcs-jev-05.jsonl",
+              "input_tokens": 161686,
+              "est_cost_usd": 0.0068
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0339,
+          "errors": 0
+        }
+      }
+    },
+    "mage-tamer-orcs": {
+      "bead": "cuo-cvl.3",
+      "right": "Three orcs come at a mage-tamer with a grizzly bear: set the bear on them, cast at what it fights, heal it with spells; kill all three without losing the bear.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Oogugbu (orc)",
+                "Zinsbog (orc)",
+                "Pomgulg (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 55,
+              "pet_spell_heals": 3,
+              "seconds": 53.4,
+              "player_died": false,
+              "engaged": [
+                "Oogugbu (orc)",
+                "Zinsbog (orc)",
+                "Pomgulg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 37,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Xugag (orc)",
+                "Ombilge (orc)",
+                "Vamugbu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 9,
+              "pet_spell_heals": 7,
+              "seconds": 77.2,
+              "player_died": false,
+              "engaged": [
+                "Xugag (orc)",
+                "Ombilge (orc)",
+                "Vamugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 64,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Perthag (orc)",
+                "Xokuk (orc)",
+                "Gubdagog (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 44,
+              "pet_spell_heals": 5,
+              "seconds": 59.7,
+              "player_died": false,
+              "engaged": [
+                "Perthag (orc)",
+                "Xokuk (orc)",
+                "Gubdagog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 49,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Suhgan (orc)",
+                "Nurghed (orc)",
+                "Ouhgan (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 3,
+              "pet_spell_heals": 7,
+              "seconds": 67.6,
+              "player_died": false,
+              "engaged": [
+                "Suhgan (orc)",
+                "Nurghed (orc)",
+                "Ouhgan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 61,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Pomgulg (orc)",
+                "Xoknath (orc)",
+                "Slapdud (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 8,
+              "pet_spell_heals": 6,
+              "seconds": 69.2,
+              "player_died": false,
+              "engaged": [
+                "Pomgulg (orc)",
+                "Xoknath (orc)",
+                "Slapdud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 57,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Hoknath (orc)",
+                "Xurek (orc)",
+                "Golub (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 40,
+              "pet_spell_heals": 4,
+              "seconds": 54.5,
+              "player_died": false,
+              "engaged": [
+                "Hoknath (orc)",
+                "Xurek (orc)",
+                "Golub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 38,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-jev-01.jsonl",
+              "input_tokens": 110326,
+              "est_cost_usd": 0.0046
+            },
+            {
+              "success": true,
+              "kills": [
+                "Yulakgh (orc)",
+                "Bildud (orc)",
+                "Hokulk (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 51,
+              "pet_spell_heals": 2,
+              "seconds": 56.6,
+              "player_died": false,
+              "engaged": [
+                "Yulakgh (orc)",
+                "Bildud (orc)",
+                "Hokulk (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 36,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-jev-02.jsonl",
+              "input_tokens": 110442,
+              "est_cost_usd": 0.0046
+            },
+            {
+              "success": true,
+              "kills": [
+                "Oakgu (orc)",
+                "Sakgu (orc)",
+                "Baugh (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 18,
+              "pet_spell_heals": 5,
+              "seconds": 63.5,
+              "player_died": false,
+              "engaged": [
+                "Oakgu (orc)",
+                "Sakgu (orc)",
+                "Baugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 44,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-jev-03.jsonl",
+              "input_tokens": 129583,
+              "est_cost_usd": 0.0054
+            },
+            {
+              "success": true,
+              "kills": [
+                "Taghig (orc)",
+                "Woggugat (orc)",
+                "Opeghat (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 40,
+              "pet_spell_heals": 6,
+              "seconds": 52.8,
+              "player_died": false,
+              "engaged": [
+                "Taghig (orc)",
+                "Woggugat (orc)",
+                "Opeghat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 34,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-jev-04.jsonl",
+              "input_tokens": 103678,
+              "est_cost_usd": 0.0044
+            },
+            {
+              "success": false,
+              "kills": [
+                "Cukgilug (orc)",
+                "Zogugbu (orc)"
+              ],
+              "pet_lost": true,
+              "pet_min_hp": 6,
+              "pet_spell_heals": 5,
+              "seconds": 89.6,
+              "player_died": true,
+              "engaged": [
+                "Cukgilug (orc)",
+                "Zogugbu (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                88,
+                91,
+                93,
+                69,
+                59,
+                49,
+                24,
+                2,
+                5
+              ],
+              "min_hp": 0,
+              "decisions": 35,
+              "log": "logs/bench/20261007-025247/mage-tamer-orcs-jev-05.jsonl",
+              "input_tokens": 106008,
+              "est_cost_usd": 0.0045
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0235,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

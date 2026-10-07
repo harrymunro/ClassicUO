@@ -1,0 +1,824 @@
+{
+  "started": "2026-10-07T00:30:31",
+  "rounds": 10,
+  "lane": 1,
+  "bestiary": true,
+  "scenarios": {
+    "priority": {
+      "bead": "cuo-46e.3",
+      "right": "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 8.3,
+              "player_died": true,
+              "kills": [],
+              "engaged": [],
+              "flees_at_hp": [
+                20
+              ],
+              "min_hp": 0,
+              "decisions": 1,
+              "log": "logs/bench/20261007-003031/priority-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 83.2,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 66,
+              "log": "logs/bench/20261007-003031/priority-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 98.0,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 44,
+              "decisions": 81,
+              "log": "logs/bench/20261007-003031/priority-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 71.1,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 41,
+              "log": "logs/bench/20261007-003031/priority-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 71.9,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 53,
+              "log": "logs/bench/20261007-003031/priority-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 79.9,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 36,
+              "decisions": 55,
+              "log": "logs/bench/20261007-003031/priority-heuristic-06.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 97.6,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 44,
+              "decisions": 67,
+              "log": "logs/bench/20261007-003031/priority-heuristic-07.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 64.5,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 47,
+              "log": "logs/bench/20261007-003031/priority-heuristic-08.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 61.9,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 44,
+              "log": "logs/bench/20261007-003031/priority-heuristic-09.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 83.2,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 52,
+              "log": "logs/bench/20261007-003031/priority-heuristic-10.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 84.6,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 61,
+              "decisions": 59,
+              "log": "logs/bench/20261007-003031/priority-jev-01.jsonl",
+              "input_tokens": 112806,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 18.6,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                18
+              ],
+              "min_hp": 0,
+              "decisions": 13,
+              "log": "logs/bench/20261007-003031/priority-jev-02.jsonl",
+              "input_tokens": 25879,
+              "est_cost_usd": 0.0011
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 76.5,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 42,
+              "log": "logs/bench/20261007-003031/priority-jev-03.jsonl",
+              "input_tokens": 83645,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 66.4,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 33,
+              "decisions": 39,
+              "log": "logs/bench/20261007-003031/priority-jev-04.jsonl",
+              "input_tokens": 73492,
+              "est_cost_usd": 0.0031
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 69.2,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 66,
+              "decisions": 41,
+              "log": "logs/bench/20261007-003031/priority-jev-05.jsonl",
+              "input_tokens": 76356,
+              "est_cost_usd": 0.0032
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 63.4,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 78,
+              "decisions": 35,
+              "log": "logs/bench/20261007-003031/priority-jev-06.jsonl",
+              "input_tokens": 65846,
+              "est_cost_usd": 0.0028
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 56.2,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 53,
+              "decisions": 34,
+              "log": "logs/bench/20261007-003031/priority-jev-07.jsonl",
+              "input_tokens": 63814,
+              "est_cost_usd": 0.0027
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 71.1,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 54,
+              "decisions": 46,
+              "log": "logs/bench/20261007-003031/priority-jev-08.jsonl",
+              "input_tokens": 86546,
+              "est_cost_usd": 0.0036
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 62.5,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 63,
+              "decisions": 37,
+              "log": "logs/bench/20261007-003031/priority-jev-09.jsonl",
+              "input_tokens": 69057,
+              "est_cost_usd": 0.0029
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 65.7,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 42,
+              "log": "logs/bench/20261007-003031/priority-jev-10.jsonl",
+              "input_tokens": 78528,
+              "est_cost_usd": 0.0033
+            }
+          ],
+          "n": 10,
+          "successes": 9,
+          "rate": 0.9,
+          "ci95": [
+            0.596,
+            0.982
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0309,
+          "errors": 0
+        },
+        "jev+survivor": {
+          "runs": [
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 57.9,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 81,
+              "decisions": 31,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-01.jsonl",
+              "input_tokens": 64310,
+              "est_cost_usd": 0.0027
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 58.9,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 63,
+              "decisions": 33,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-02.jsonl",
+              "input_tokens": 67699,
+              "est_cost_usd": 0.0028
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 112.5,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                44,
+                46,
+                60,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 44,
+              "decisions": 54,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-03.jsonl",
+              "input_tokens": 111486,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 62.3,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 52,
+              "decisions": 37,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-04.jsonl",
+              "input_tokens": 77734,
+              "est_cost_usd": 0.0033
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": false,
+              "seconds": 52.8,
+              "player_died": false,
+              "kills": [
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                34,
+                39,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 29,
+              "decisions": 20,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-05.jsonl",
+              "input_tokens": 42548,
+              "est_cost_usd": 0.0018
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 96.6,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                44,
+                46,
+                98,
+                99,
+                63,
+                100,
+                100
+              ],
+              "min_hp": 44,
+              "decisions": 46,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-06.jsonl",
+              "input_tokens": 91653,
+              "est_cost_usd": 0.0038
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 66.9,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 41,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-07.jsonl",
+              "input_tokens": 85047,
+              "est_cost_usd": 0.0036
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 62.8,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 35,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-08.jsonl",
+              "input_tokens": 72654,
+              "est_cost_usd": 0.0031
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 96.3,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                36,
+                31,
+                67,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 28,
+              "decisions": 42,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-09.jsonl",
+              "input_tokens": 83039,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": false,
+              "seconds": 54.0,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                43,
+                85,
+                87,
+                89,
+                93,
+                95
+              ],
+              "min_hp": 43,
+              "decisions": 21,
+              "log": "logs/bench/20261007-003031/priority-jev_survivor-10.jsonl",
+              "input_tokens": 43893,
+              "est_cost_usd": 0.0018
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0311,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

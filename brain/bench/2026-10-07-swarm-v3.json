@@ -1,0 +1,506 @@
+{
+  "started": "2026-10-07T02:45:18",
+  "rounds": 10,
+  "lane": 5,
+  "bestiary": true,
+  "scenarios": {
+    "swarm": {
+      "bead": "cuo-46e.6",
+      "right": "Six melee monsters on a mage: survive and kill at least four.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Fackak (ratman)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Fackak (ratman)",
+                "Fubdagog (orc)"
+              ],
+              "flees_at_hp": [
+                79,
+                81,
+                84,
+                86,
+                87,
+                89,
+                92,
+                66,
+                89
+              ],
+              "min_hp": 14,
+              "decisions": 93,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Factavi (ratman)",
+                "a headless one",
+                "a mongbat"
+              ],
+              "seconds": 112.2,
+              "player_died": true,
+              "engaged": [
+                "Factavi (ratman)",
+                "a headless one",
+                "a mongbat",
+                "Tandagh (orc)"
+              ],
+              "flees_at_hp": [
+                72,
+                62,
+                59,
+                59,
+                59,
+                49,
+                26,
+                14
+              ],
+              "min_hp": 0,
+              "decisions": 88,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 27.9,
+              "player_died": true,
+              "engaged": [
+                "Factavi (ratman)"
+              ],
+              "flees_at_hp": [
+                21
+              ],
+              "min_hp": 0,
+              "decisions": 26,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Vactak (ratman)",
+                "Tak (ratman)",
+                "a mongbat"
+              ],
+              "seconds": 104.4,
+              "player_died": true,
+              "engaged": [
+                "Vactak (ratman)",
+                "Tak (ratman)",
+                "a mongbat",
+                "Kugbu (orc)"
+              ],
+              "flees_at_hp": [
+                51,
+                25
+              ],
+              "min_hp": 0,
+              "decisions": 119,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 28.9,
+              "player_died": true,
+              "engaged": [
+                "Etik (ratman)"
+              ],
+              "flees_at_hp": [
+                26
+              ],
+              "min_hp": 0,
+              "decisions": 27,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-05.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 98.1,
+              "player_died": true,
+              "engaged": [
+                "Kik (ratman)",
+                "Jreghug (orc)"
+              ],
+              "flees_at_hp": [
+                47,
+                41,
+                100,
+                91,
+                92,
+                76,
+                75,
+                18
+              ],
+              "min_hp": 0,
+              "decisions": 66,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-06.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 64.0,
+              "player_died": true,
+              "engaged": [
+                "Tekactiki (ratman)"
+              ],
+              "flees_at_hp": [
+                18
+              ],
+              "min_hp": 0,
+              "decisions": 68,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-07.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Dickiki (ratman)"
+              ],
+              "seconds": 89.2,
+              "player_died": true,
+              "engaged": [
+                "Dickiki (ratman)",
+                "Speghat (orc)"
+              ],
+              "flees_at_hp": [
+                72,
+                58,
+                61,
+                56,
+                59,
+                60,
+                46
+              ],
+              "min_hp": 0,
+              "decisions": 64,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-08.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 29.7,
+              "player_died": true,
+              "engaged": [
+                "Ecterek (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 35,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-09.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 34.5,
+              "player_died": true,
+              "engaged": [
+                "Chickek (ratman)"
+              ],
+              "flees_at_hp": [
+                22
+              ],
+              "min_hp": 0,
+              "decisions": 33,
+              "log": "logs/bench/20261007-024518/swarm-heuristic-10.jsonl",
+              "input_tokens": 0,
+              "est_cost_usd": 0.0
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 9,
+          "cost_usd": 0.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Fechaki (ratman)",
+                "Tadectuk (ratman)"
+              ],
+              "seconds": 120.5,
+              "player_died": false,
+              "engaged": [
+                "Fechaki (ratman)",
+                "Tadectuk (ratman)",
+                "Surghed (orc)"
+              ],
+              "flees_at_hp": [
+                55,
+                59,
+                21,
+                66,
+                68,
+                71,
+                73,
+                42,
+                85,
+                87,
+                89,
+                92,
+                94
+              ],
+              "min_hp": 11,
+              "decisions": 49,
+              "log": "logs/bench/20261007-024518/swarm-jev-01.jsonl",
+              "input_tokens": 151444,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 60.3,
+              "player_died": true,
+              "engaged": [
+                "Wedachek (ratman)"
+              ],
+              "flees_at_hp": [
+                68,
+                66,
+                68,
+                66,
+                29,
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 26,
+              "log": "logs/bench/20261007-024518/swarm-jev-02.jsonl",
+              "input_tokens": 83032,
+              "est_cost_usd": 0.0035
+            },
+            {
+              "success": false,
+              "kills": [
+                "Kietik (ratman)"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Kietik (ratman)",
+                "Igmut (orc)"
+              ],
+              "flees_at_hp": [
+                56,
+                58,
+                86,
+                88,
+                91,
+                93,
+                95,
+                46,
+                59,
+                58,
+                49,
+                84,
+                72
+              ],
+              "min_hp": 42,
+              "decisions": 55,
+              "log": "logs/bench/20261007-024518/swarm-jev-03.jsonl",
+              "input_tokens": 174796,
+              "est_cost_usd": 0.0073
+            },
+            {
+              "success": false,
+              "kills": [
+                "a headless one",
+                "Eckechakiki (ratman)",
+                "a mongbat"
+              ],
+              "seconds": 100.3,
+              "player_died": true,
+              "engaged": [
+                "a headless one",
+                "Eckechakiki (ratman)",
+                "a mongbat",
+                "Chokchak (ratman)"
+              ],
+              "flees_at_hp": [
+                78,
+                55,
+                81,
+                66,
+                58,
+                58
+              ],
+              "min_hp": 0,
+              "decisions": 63,
+              "log": "logs/bench/20261007-024518/swarm-jev-04.jsonl",
+              "input_tokens": 176737,
+              "est_cost_usd": 0.0074
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 34.8,
+              "player_died": true,
+              "engaged": [
+                "Snubub (orc)"
+              ],
+              "flees_at_hp": [
+                65,
+                54,
+                41
+              ],
+              "min_hp": 0,
+              "decisions": 15,
+              "log": "logs/bench/20261007-024518/swarm-jev-05.jsonl",
+              "input_tokens": 47583,
+              "est_cost_usd": 0.002
+            },
+            {
+              "success": false,
+              "kills": [
+                "a headless one"
+              ],
+              "seconds": 99.6,
+              "player_died": true,
+              "engaged": [
+                "a headless one",
+                "Kitavi (ratman)"
+              ],
+              "flees_at_hp": [
+                73,
+                36,
+                76,
+                100,
+                78,
+                80,
+                53,
+                89,
+                75,
+                64,
+                36
+              ],
+              "min_hp": 0,
+              "decisions": 40,
+              "log": "logs/bench/20261007-024518/swarm-jev-06.jsonl",
+              "input_tokens": 126388,
+              "est_cost_usd": 0.0053
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 21.5,
+              "player_died": true,
+              "engaged": [
+                "Kichak (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 14,
+              "log": "logs/bench/20261007-024518/swarm-jev-07.jsonl",
+              "input_tokens": 45671,
+              "est_cost_usd": 0.0019
+            },
+            {
+              "success": false,
+              "kills": [
+                "Cheki (ratman)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Cheki (ratman)",
+                "Kikiaki (ratman)"
+              ],
+              "flees_at_hp": [
+                67,
+                54,
+                60,
+                100,
+                68,
+                71,
+                68,
+                66,
+                62,
+                96,
+                99,
+                64
+              ],
+              "min_hp": 16,
+              "decisions": 58,
+              "log": "logs/bench/20261007-024518/swarm-jev-08.jsonl",
+              "input_tokens": 185714,
+              "est_cost_usd": 0.0078
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 25.2,
+              "player_died": true,
+              "engaged": [
+                "Fachchekiok (ratman)"
+              ],
+              "flees_at_hp": [
+                0
+              ],
+              "min_hp": 0,
+              "decisions": 23,
+              "log": "logs/bench/20261007-024518/swarm-jev-09.jsonl",
+              "input_tokens": 72783,
+              "est_cost_usd": 0.0031
+            },
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 18.0,
+              "player_died": true,
+              "engaged": [
+                "Wochickeki (ratman)"
+              ],
+              "flees_at_hp": [
+                66
+              ],
+              "min_hp": 0,
+              "decisions": 11,
+              "log": "logs/bench/20261007-024518/swarm-jev-10.jsonl",
+              "input_tokens": 34881,
+              "est_cost_usd": 0.0015
+            }
+          ],
+          "n": 10,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.278
+          ],
+          "deaths": 7,
+          "cost_usd": 0.0462,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

@@ -100,8 +100,10 @@ class Session:
             if not known or not threat_words(known, p.get("hits_max") or 100).startswith(("stronger", "far stronger")):
                 continue
             kind = BODY_KINDS.get(m.get("body", 0)) or str(known.get("name") or m.get("name") or "a creature")
-            region = self.world.region_at(p["x"] + m.get("dx", 0), p["y"] + m.get("dy", 0))
-            area = region["name"] if region else f"{p['x'] + m.get('dx', 0)},{p['y'] + m.get('dy', 0)}"
+            x, y = p["x"] + m.get("dx", 0), p["y"] + m.get("dy", 0)
+            region = self.world.region_at(x, y)
+            # Out in the wilds there is no region name: one place per 50 tiles, not one per creature.
+            area = region["name"] if region else f"near {round(x, -1) // 50 * 50},{round(y, -1) // 50 * 50}"
             self.dangers.setdefault(area, {})[m["serial"]] = kind.removeprefix("a ").removeprefix("an ")
 
     def danger_words(self, since: dict[str, dict[int, str]]) -> str:
