@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from . import loop, policy
+from .facts import FactPicker
 from .judge import Judge
 from .logs import session_name
 from .routine import HuntWatch, RoutineConfig
@@ -74,6 +75,7 @@ class Session:
         self._threat_noted: dict[str, float] = {}
         self.recorder = None  # recorder.Recorder: what the character sees goes into the world store
         self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}  # all hunts
+        self.facts_mode = "jev"  # which world facts reach the fights: jev (Jev picks), all, none (facts.py)
 
     def seen(self, snap: dict[str, Any]) -> None:
         if self.recorder is None:
@@ -397,8 +399,10 @@ class Session:
 
         lcfg = loop.LoopConfig(duration_s=minutes * 60)
         began = time.monotonic()
+        facts = FactPicker(self.world, self.judge, mode=self.facts_mode, focus=name)
         stats = await loop.run(self.rpc, self.judge, lcfg, self.pcfg, log_path or self.decisions_log, stop,
-                               archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary())
+                               archetype=self.archetype, on_snapshot=watch, bestiary=self.world.bestiary(),
+                               facts=facts)
         for task in asking:
             task.cancel()  # a question still out when the hunt ends has nothing left to decide
         s = stats.summary(lcfg.price_per_million)["client_stats"]

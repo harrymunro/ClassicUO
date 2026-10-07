@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from . import llm, world as worlds
+from .facts import Ranker
 from .session import Result, Session, describe
 
 SYSTEM = """You plan a character's session in the game Ultima Online. The player gave you a goal in
@@ -41,6 +42,8 @@ Rules:
 - Use the world tools (place, find_place, hunting_spots, what_spawns, route, notes, outcomes)
   when you need a fact, rather than guessing coordinates. Places can be named loosely ("Britain
   bank"). outcomes says how earlier hunts in an area went for this character.
+- Give notes, hunting_spots and what_spawns a `question` (what you want to find out): their
+  results then come back best answer first.
 - A hunt is time-boxed (`minutes`, at most 20) and also ends early when supplies run low,
   the bag gets heavy, the character is in danger, or nothing has shown up for a while. Its
   result says why it ended; plan the next goal from that.
@@ -116,6 +119,8 @@ class Planner:
         self.finished: str | None = None
         self.started = time.monotonic()
         self.tools = goal_tools() + worlds.tool_schemas()
+        # Jev re-ranks list answers against the planner's question (facts.py); the rule judge doesn't.
+        self.ranker = Ranker(getattr(session, "judge", None), log=self.log)
 
     def messages(self, situation: dict[str, Any]) -> list[dict[str, Any]]:
         recent = self.history[-12:]
@@ -144,7 +149,8 @@ class Planner:
                 continue
             call = res.tool_calls[0]
             if call.name not in GOALS:
-                answer = self.session.world.call_tool(call.name, call.arguments)
+                answer = await self.ranker.call_tool(self.session.world, call.name, call.arguments, goal=self.goal,
+                                                     context=res.content or "")
                 msgs += [{**res.message, "tool_calls": res.message.get("tool_calls", [])[:1]},
                          llm.tool_result(call, answer)]
                 continue
@@ -216,6 +222,8 @@ class Planner:
             "planner_calls": self.usage.calls,
             "planner_cost_usd": round(self.usage.cost or 0.0, 4),
             "planner_cost_per_hour": round((self.usage.cost or 0.0) / hours, 4),
+            "reranked_queries": self.ranker.calls,
+            "rerank_cost_usd": round(self.ranker.cost, 5),
         }
 
 

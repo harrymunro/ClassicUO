@@ -101,6 +101,7 @@ class Situation:
     mode: str = "auto"         # "assist" is combat assist: the player drives, the agent only fights
     traveling: bool = False    # on a long walk (travel): no seeking or looting on the way
     engage: str = "defend"     # combat assist: follow (the player's target), defend (+ attackers), nearby
+    known: list[str] = field(default_factory=list)  # world facts picked for this situation (facts.py)
 
     @property
     def assisting(self) -> bool:

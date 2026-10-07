@@ -6,7 +6,10 @@ joins weak ones, a caster stands behind melee fodder, a corpse holds valuables a
 junk while a monster walks up, supplies run out mid-fight, a mage is swarmed.
 
 A scenario declares its setup (AgentTestKit commands on the local server) and what
-counts as right. The runner plays it many times per judge, records a trace of what
+counts as right. A world-fact scenario (cuo-5of.7) also seeds a throwaway world store with
+the facts that decide it, among many that don't, and is played under three conditions per
+judge: no world facts (`@none`), every shortlisted fact dumped into the state (`@all`), and
+the few Jev picks (`@jev`, facts.py). The runner plays it many times per judge, records a trace of what
 happened from the snapshots and the decision log, and reports success rates with
 95% Wilson intervals, written to JSON so runs can be compared.
 """
@@ -22,8 +25,10 @@ from typing import Any
 
 from . import judge as judges
 from . import loop, policy
+from .facts import FactPicker
 from .rpc import AgentRpc
 from .state import BODY_KINDS
+from .world import World
 
 # ---------------------------------------------------------------- trace
 
@@ -140,6 +145,7 @@ class Scenario:
     check: Callable[[Trace], tuple[bool, dict[str, Any]]]
     quiet_after: float | None = None  # end early once no hostile is left after this many seconds
     template: str | None = None       # a fixed strategy template (adherence scenarios)
+    seed: Callable[[World], None] | None = None  # world facts, for a throwaway store (world-fact scenarios)
 
 
 def check_mismatch(tr: Trace) -> tuple[bool, dict[str, Any]]:
@@ -209,6 +215,70 @@ def check_strongest_first(tr: Trace) -> tuple[bool, dict[str, Any]]:
     return first in strongest, {"first_engaged": tr.names.get(first) if first else None}
 
 
+def check_wisp_left_alone(tr: Trace) -> tuple[bool, dict[str, Any]]:
+    wisps = tr.serials_named("wisp")
+    attacked = tr.engaged_any(wisps)
+    return (not tr.player_died and not attacked), {"attacked_wisp": attacked, "wisp_seen": bool(wisps),
+                                                   "orcs_killed": sum(1 for s in tr.kills() if s not in wisps)}
+
+
+# ---------------------------------------------------------------- world facts (cuo-5of.7)
+
+TEST_FIELD = "Green Acres test field"
+
+
+def seed_test_field(w: World, decisive: list[tuple[str | None, str]]) -> None:
+    """The test field as a region (lanes 0-9), notes about it and its usual creatures that don't
+    decide anything, and the scenario's decisive notes in among them."""
+    w.replace_source("regions", "bench", [{"name": TEST_FIELD, "map": "Felucca", "kind": "area", "guarded": 0,
+                                           "rects": json.dumps([[5400, 1100, 6050, 1210]]), "go_x": 5445,
+                                           "go_y": 1153, "go_z": 0}])
+    w.refresh()
+    filler = [
+        (TEST_FIELD, "Green Acres test field has no guards: anything can attack you here and nobody comes to help."),
+        (TEST_FIELD, "The test field is flat open grass with nothing to hide behind."),
+        (TEST_FIELD, "There is no bank or healer within walking distance of the test field; recall to town."),
+        (TEST_FIELD, "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."),
+        (TEST_FIELD, "Mongbats at the test field die in one or two hits."),
+        (TEST_FIELD, "Creatures at the test field come from the test kit's commands, not from spawners."),
+        (TEST_FIELD, "Green Acres was farmland before it became the test field; the fences in the north are decoration."),
+        (TEST_FIELD, "Night and rain make no difference to fighting at the test field."),
+        (TEST_FIELD, "The test field's lanes are 60 tiles apart, so test characters in other lanes never meet."),
+        (TEST_FIELD, "Ratmen at the test field carry a little gold and sometimes a ring."),
+        (TEST_FIELD, "Gold dropped at the test field is worth picking up; bones and hides are not."),
+        (TEST_FIELD, "Headless ones sometimes wander into the test field from the east."),
+        (None, "Wisps glow, so they are easy to spot at night."),
+        (None, "A wisp's corpse often holds gems and plenty of gold."),
+        (None, "Orcs are evil, so killing them never makes anyone a criminal."),
+        (None, "Orcs carry clubs or axes and hit for 5 to 7; a warrior in ringmail takes little from them."),
+        (None, "Orc camps north of Yew hold up to 12 orcs and an orc captain."),
+        (None, "Orc lords drop more gold than plain orcs."),
+        (None, "A warrior should carry at least 50 bandages before going hunting."),
+        (None, "A warrior's bandages take about 5 seconds; Healing and Anatomy make them heal more."),
+        (None, "Warriors in ringmail can't meditate, which doesn't matter to a warrior."),
+        (None, "Warriors do well against skeletons with a mace."),
+        ("Britain Graveyard", "Spectres and wraiths at the Britain graveyard cost a new warrior 3 to 4 bandages a fight."),
+        ("Britain", "The Britain healer stocks 20 bandages at a time."),
+        ("Covetous", "Liches on the lower levels of Covetous are far too strong for a new character."),
+        (None, "A mage should carry at least 30 of each reagent before hunting."),
+    ]
+    rows = filler[:6] + decisive + filler[6:]
+    w.replace_source("notes", "bench", [{"area": a, "text": t, "source": "bench"} for a, t in rows])
+    w.add_note("Green Acres test field: 5.1 kills a loop for the warrior kit over 18 loops of about 1.4 min, 4 deaths "
+               "in 18 loops, 0.8 bandages and 0.2 heal potions a kill; orcs cost the most bandages, 1 a fight over "
+               "25 fights.", area=TEST_FIELD, source="outcomes")
+
+
+def seed_wisp(w: World) -> None:
+    seed_test_field(w, [
+        (TEST_FIELD, "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, "
+                     "a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in "
+                     "3 of 3 fights here."),
+        (None, "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder "
+               "than an ogre and heals itself with magic."),
+    ])
+
+
 def check_flees(tr: Trace) -> tuple[bool, dict[str, Any]]:
     """For comparing templates: when (at what health) the first flee came, if any."""
     first = tr.flees[0][1] if tr.flees else None
@@ -266,11 +336,19 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "champion-strongest-first", "cuo-46e.7", "With the champion template, go for the troll before the weaker ones.",
         "warrior", ["[AgentSpawn Mongbat 2 6 e", "[AgentSpawn Orc 1 6 w", "[AgentSpawn Troll 1 7 n"], 45,
         check_strongest_first, quiet_after=15, template="champion"),
+    # World facts (cuo-5of.7): a stored fact decides the right move.
+    Scenario(
+        "wisp-leave-alone", "cuo-5of.7",
+        "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit "
+        "when attacked: kill the orcs, never attack the wisp.",
+        "warrior", ["[AgentSpawn Wisp 1 7 n", "[AgentSpawn Orc 2 4 s 3"], 75, check_wisp_left_alone, seed=seed_wisp),
 ]}
 
 # The core set that compares judges; adherence scenarios fix their own template.
 CORE = ["mismatch", "priority", "loot", "attrition", "swarm"]
 ARCHETYPES = ["archer-kite"]
+WORLD = [n for n, s in SCENARIOS.items() if s.seed]  # world-fact scenarios
+FACT_MODES = ["none", "all", "jev"]
 
 
 # ---------------------------------------------------------------- statistics
@@ -304,22 +382,31 @@ def load_bestiary(shard: str = "local") -> None:
 @dataclass
 class JudgeSpec:
     """"heuristic", "jev", or "jev+<template>" (Jev with that strategy template), each with an
-    optional "/nokite" (no stepping back from melee), to measure what kiting is worth."""
+    optional "/nokite" (no stepping back from melee), to measure what kiting is worth, and for
+    world-fact scenarios "@none", "@all" or "@jev" after it: which world facts reach Jev."""
 
     label: str
 
     @property
+    def base(self) -> str:
+        return self.label.split("@", 1)[0]
+
+    @property
     def kind(self) -> str:
-        return self.label.split("/", 1)[0].split("+", 1)[0]
+        return self.base.split("/", 1)[0].split("+", 1)[0]
 
     @property
     def template(self) -> str | None:
-        judge = self.label.split("/", 1)[0]
+        judge = self.base.split("/", 1)[0]
         return judge.split("+", 1)[1] if "+" in judge else None
 
     @property
     def kite(self) -> bool:
-        return "/nokite" not in self.label
+        return "/nokite" not in self.base
+
+    @property
+    def facts(self) -> str:
+        return self.label.split("@", 1)[1] if "@" in self.label else "none"
 
 
 async def say(rpc: AgentRpc, text: str, pause: float = 0.6) -> None:
@@ -353,7 +440,7 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
 
 
 async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, log_path: Path,
-                     price: float, min_confidence: float) -> dict[str, Any]:
+                     price: float, min_confidence: float, world: World | None = None) -> dict[str, Any]:
     template = sc.template or spec.template
     await prepare(rpc, sc, template, lane)
     tr = Trace()
@@ -382,9 +469,11 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     judge = judges.make(spec.kind)
     lcfg = loop.LoopConfig(duration_s=sc.seconds, price_per_million=price)
     pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite)
+    facts = FactPicker(world, judge, mode=spec.facts, price_per_million=price) \
+        if world is not None and spec.facts != "none" else None
     try:
         stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=sc.kit, on_snapshot=watch,
-                               bestiary=BESTIARY.get("local"))
+                               bestiary=BESTIARY.get("local"), facts=facts)
     finally:
         await judge.close()
     await rpc.call("mode", mode="off")
@@ -395,16 +484,24 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     tr.decisions = [d for d in map(json.loads, lines) if d.get("type") == "decision"]
     ok, details = sc.check(tr)
     summary = stats.summary(price)
-    return {"success": ok, **details, **tr.summary(), "log": str(log_path),
-            "input_tokens": summary["input_tokens"], "est_cost_usd": summary["est_cost_usd"]}
+    out = {"success": ok, **details, **tr.summary(), "log": str(log_path),
+           "input_tokens": summary["input_tokens"], "est_cost_usd": summary["est_cost_usd"]}
+    if world is not None:
+        out["facts"] = spec.facts
+        if facts is not None:
+            out.update(fact_selections=facts.selections, fact_input_tokens=facts.input_tokens,
+                       facts_in_state=len(facts.chosen), facts_chosen=[f.text for f, _ in facts.chosen][:5])
+    return out
 
 
 async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: int, lane: int,
               out: Path, log_dir: Path, price: float = loop.LoopConfig.price_per_million,
               min_confidence: float = policy.PolicyConfig.min_intent_confidence,
-              progress: Callable[[str], None] = print) -> dict[str, Any]:
+              progress: Callable[[str], None] = print, fact_modes: list[str] | None = None) -> dict[str, Any]:
     """Plays every scenario for every judge, rounds times, interleaving the judges so a slow
-    drift in the server or the client hits them alike. Writes the JSON after every round."""
+    drift in the server or the client hits them alike. Writes the JSON after every round.
+    A world-fact scenario plays each model judge once per fact mode (default none, all, jev),
+    against its own store under log_dir/worlds/<scenario>/."""
     load_bestiary()
     result: dict[str, Any] = {"started": time.strftime("%Y-%m-%dT%H:%M:%S"), "rounds": rounds, "lane": lane,
                               "bestiary": bool(BESTIARY.get("local")), "scenarios": {}}
@@ -413,14 +510,22 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
     for name in names:
         sc = SCENARIOS[name]
         labels = [f"jev+{sc.template}"] if sc.template else judge_labels
+        world = None
+        if sc.seed:
+            labels = [label if JudgeSpec(label).kind == "heuristic" else f"{label}@{mode}"
+                      for label in labels for mode in fact_modes or FACT_MODES]
+            store = log_dir / "worlds" / name / "world.sqlite"
+            store.unlink(missing_ok=True)
+            world = World(store)
+            sc.seed(world)
         entry = result["scenarios"].setdefault(name, {"bead": sc.bead, "right": sc.right, "judges": {}})
         for n in range(1, rounds + 1):
-            for label in labels:
+            for label in dict.fromkeys(labels):
                 spec = JudgeSpec(label)
-                log_path = log_dir / f"{name}-{label.replace('+', '_').replace('/', '_')}-{n:02d}.jsonl"
+                log_path = log_dir / f"{name}-{label.replace('+', '_').replace('/', '_').replace('@', '_')}-{n:02d}.jsonl"
                 log_path.unlink(missing_ok=True)
                 try:
-                    r = await play_round(rpc, sc, spec, lane, log_path, price, min_confidence)
+                    r = await play_round(rpc, sc, spec, lane, log_path, price, min_confidence, world)
                 except Exception as e:  # a round that could not be played is not a failure of the judge
                     r = {"error": f"{type(e).__name__}: {e}"[:300]}
                 j = entry["judges"].setdefault(label, {"runs": []})
@@ -430,6 +535,8 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
                          f"{'error ' + r['error'] if 'error' in r else ('right' if r['success'] else 'wrong')}"
                          f"  ({j['successes']}/{j['n']})")
                 out.write_text(json.dumps(result, indent=2))
+        if world is not None:
+            world.close()
     await say(rpc, "[AgentReset")
     return result
 

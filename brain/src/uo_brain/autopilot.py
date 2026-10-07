@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from . import loop, policy
+from .facts import FactPicker
 from .judge import Judge
 from .planner import Planner, PlanStep
 from .recorder import Recorder
@@ -36,7 +37,7 @@ def wants_planner(snap: dict[str, Any]) -> bool:
 class Autopilot:
     def __init__(self, rpc: AgentRpc, judge: Judge, world: World | None, lcfg: loop.LoopConfig,
                  pcfg: policy.PolicyConfig, log_path: Path | None, archetype: str | None = None,
-                 planner_model: str | None = None):
+                 planner_model: str | None = None, facts_mode: str = "jev"):
         self.rpc = rpc
         self.judge = judge
         self.world = world
@@ -44,6 +45,7 @@ class Autopilot:
         self.pcfg = pcfg
         self.archetype = archetype
         self.planner_model = planner_model
+        self.facts_mode = facts_mode  # which world facts reach the fights (facts.py)
         self.log_path = log_path
         self.log_file = log_path.open("a") if log_path else None
         self.planners: dict[str, Planner] = {}  # goal text -> its planner, so a handover keeps history
@@ -96,7 +98,8 @@ class Autopilot:
             self.log_file.flush()
         await loop.run(self.rpc, self.judge, self.lcfg, self.pcfg, self.log_path, inner,
                        archetype=self.archetype, on_snapshot=watch,
-                       bestiary=self.world.bestiary() if self.world is not None else None)
+                       bestiary=self.world.bestiary() if self.world is not None else None,
+                       facts=FactPicker(self.world, self.judge, mode=self.facts_mode) if self.world is not None else None)
 
     async def work_on_goal(self, snap: dict[str, Any], stop: asyncio.Event) -> None:
         goal = snap["agent"]["goal"]
@@ -104,6 +107,7 @@ class Autopilot:
         session = Session(self.rpc, self.world, self.judge, log=self.log, pcfg=self.pcfg, archetype=self.archetype,
                           decisions_log=self.log_path)
         session.recorder = self.recorder
+        session.facts_mode = self.facts_mode
 
         async def show(_goal: str, step: str, why: str) -> None:
             await self.rpc.call("goal_status", step=step, why=why)

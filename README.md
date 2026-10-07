@@ -34,10 +34,12 @@ The original ClassicUO README follows [further down](#classicuo).
    too ("running low: 12 bandages and 1 heal potion left").
    Candidates get short ids (`t1`, `c1`, `i1`) so the model can only pick things
    code has already checked. Other players' speech is never sent to the model.
+   Up to three facts from the world store that Jev picked for this place go in as
+   `what_you_know_about_this_place` ([below](#which-facts-reach-the-decisions)).
 3. **One Jev request asks every question that could matter**:
    - `intent`: fight, flee (for a moment), leave (the area: run until nothing is in sight), loot, seek or rest
    - `in_danger`: will the character die soon if it keeps fighting?
-   - `leave_now`, only when there's a reason to (a far stronger creature within 12 tiles, or supplies nearly gone with two or more creatures close): should it leave now? Jev judges this better as its own yes/no than as one of six intents: with an ogre lord adjacent it still gave fight 80%.
+   - `leave_now`, only when there's a reason to (a far stronger creature within 12 tiles, supplies nearly gone with two or more creatures close, or picked world facts with a creature in view): should it leave now? Jev judges this better as its own yes/no than as one of six intents: with an ogre lord adjacent it still gave fight 80%.
    - `target`: which creature to attack
    - `spell` (mages): which attack spell to cast next
    - `corpse`: which corpse to loot first
@@ -300,6 +302,24 @@ graveyard"), `find_place` (the nearest bank or healer, or a vendor that sells ba
 `region_at`. `world.tool_schemas()` gives them as tool definitions for a model
 and `World.call_tool` runs them. Distances are in tiles, counted as max(|dx|, |dy|).
 
+#### Which facts reach the decisions
+
+The store holds far more than any one decision needs, so Jev chooses (`facts.py`, after
+TypeSafe's [re-ranking cookbook](https://docs.typesafe.ai/cookbooks/rerank_typesafe.md)):
+code shortlists generously, Jev answers one yes/no per candidate, and only the best are
+used. Jev can only pick what code hands it, so the shortlist is wide on purpose.
+
+- **In fights:** when the situation changes (a new area, a new kind of creature in view, a new goal), and never more than every 5 seconds, code shortlists up to 50 facts: notes about the region and the areas around it (outcome notes included), notes naming the creatures in view, what spawns within 40 tiles, and notes matching the goal and the archetype. Jev is asked of each one "would knowing this change what the character should do in the next minute?", all in one request (25 questions a request; more go out in parallel). The best three above 0.6 go into every decision's state as `what_you_know_about_this_place`, until the situation changes again; moving to another area drops them at once. The request runs beside the decision loop, which never waits for it. A picked fact also lets Jev's `leave_now` yes/no take the character away, as a far stronger creature does.
+- **For the planner:** `notes`, `hunting_spots` and `what_spawns` take an optional `question`. The store is asked for three times the results wanted (at least 15, at most 30), Jev scores each one against the question and the player's goal, and the best come back first with a `relevance` from 0 to 1. Without a question, the query itself is the question.
+- **Without Jev** (the rule judge, or an error): no facts in fights, and the store's own order for the planner.
+- **Logged:** each choice is a `facts` record in the decision log (the trigger, every shortlisted fact with its score, what was kept, tokens and cost), and each planner re-ranking a `rerank` record. `uo-brain run --facts all` puts every shortlisted fact in instead, and `--facts none` leaves them out.
+
+Single smoke run on 2026-10-07 with real Jev, on the world-fact benchmark's store (below),
+a warrior at the test field with two orcs adjacent:
+- **A wisp also in view:** a 25-fact shortlist. The two notes saying wisps never attack first and kill this kit scored 0.74 and 0.73, and the third pick was "A wisp's corpse often holds gems and plenty of gold." at 0.66: a tempting fact, not a misleading one. Nothing else reached 0.6. The request took 504 ms for 6,086 input tokens ($0.00026).
+- **Only the orcs:** 22 facts, none above 0.50, so nothing went in; the wisp note scored 0.13. 362 ms, 5,399 tokens ($0.00023).
+- **A planner query,** `notes` for Britain with the question "Where can a new warrior buy bandages near Britain?", over 15 hand-written notes: the healer's bandages came first at 0.96, then the provisioner who sells none (0.73), tailors' cloth (0.70) and the healer running out (0.69). The store's own order (newest first) started with bards' instruments. 325 ms, 3,228 tokens ($0.00014).
+
 Every row records its source (`modernuo:<file>`, `seen`, `note`, `guide:<url>`,
 `model:unverified`, or `outcomes` for the notes that sum up an area's outcomes) and when it was last seen. When something seen in game contradicts a
 stored fact, the old row is marked stale instead of deleted, and queries skip it. Other
@@ -384,7 +404,7 @@ In auto mode the agent can work towards a goal you give it in words, for example
 the undead at the Britain graveyard, keep yourself supplied with bandages, bank your
 gold". Type it into the panel's goal box, pick a goal template, or use `-agent goal`.
 
-- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `outcomes`, `region_at`).
+- **The planner** is a larger model (Claude Sonnet 5.5 through OpenRouter, the same key as Jev). Each time a goal ends, it sees the character's situation in words, your goal and what has happened so far, and answers with one tool call: a goal for code to carry out (`travel_to`, `hunt`, `bank`, `buy`, `sell`, `rest`, `set_strategy`, `finish`) or a world-store query first (`place`, `find_place`, `hunting_spots`, `what_spawns`, `route`, `notes`, `outcomes`, `region_at`). Jev re-ranks the list answers against the planner's question ([above](#which-facts-reach-the-decisions)); the session summary counts those calls and their cost.
 - **No scripted loop:** the planner puts travel, hunting, banking and restocking together itself. Code carries out each goal ([below](#getting-around-travel-banking-and-shops)); Jev keeps the fighting.
 - **Routine calls are Jev's:** inside a hunt, whether to head back, stay or walk elsewhere in the spawn are quick Jev questions, not fixed thresholds and not planner calls ([Hunting](#getting-around-travel-banking-and-shops)). The planner is called when a goal ends, including when Jev is unsure twice running, so open-ended choices (where next, what to buy) stay with it.
 - **Cheap to call:** each step rebuilds a short prompt (a cached system prompt, the goal, the last 12 steps, the character now) instead of growing one long conversation. A call costs about $0.014.
@@ -549,11 +569,11 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **Macros** (bindable in Options → Macros): *AgentOff*, *AgentAssist* (combat assist), *AgentAuto*, *AgentAccept*, *AgentSwitch* and *AgentNext*.
 
 **uo-brain**
-- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`.
+- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`, `--facts jev|all|none` (which world facts reach the fights; `do hunt` and `session` take it too).
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`.
 - **`do travel|bank|buy|sell|hunt|rest …`:** one session goal (above); uses the world store.
 - **`session "GOAL" [--hours]`:** the planner towards a goal, from the command line.
-- **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
+- **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|world|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
 - **`review LOG [--accept N…] [--again] [--digest] [--planner-model M]`:** the planner model proposes strategy lines from a log, with the evidence ([above](#after-action-review)); `--accept` adds saved ones to the character's strategy, the only part that connects to the game.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
@@ -668,10 +688,21 @@ never flees, `survivor` flees (at what health is recorded, to compare with relen
 `no-loot` never loots, `nuker` opens on every creature with Explosion, and `champion`
 attacks the troll before the mongbats and the orc.
 
+The world-fact scenario checks that a stored fact changes the move. `wisp-leave-alone`:
+a wisp floats 7 tiles away while two orcs attack. In ModernUO a wisp only fights when
+attacked, and then it hits for 17 to 18, casts spells and has about 130 hits, so the right
+move is to kill the orcs and leave the wisp alone. The round seeds a throwaway store
+(`logs/bench/<time>/worlds/wisp-leave-alone/`, never `brain/worlds/local`) with two notes
+that say so, among 27 about the test field, orcs, warriors and other places that don't
+decide anything, one of them a tempting "a wisp's corpse often holds gems". Each model judge
+plays it three ways: `@none` (no world facts), `@all` (every shortlisted fact in the state)
+and `@jev` (the few Jev picks). The rule judge, which can't read facts, plays it once.
+
 ```bash
 uv run uo-brain bench list
 uv run uo-brain bench --scenarios core --judges heuristic,jev,jev+survivor --rounds 10 --lane 1
 uv run uo-brain bench --scenarios adherence --rounds 10
+uv run uo-brain bench --scenarios world --judges heuristic,jev --rounds 10 --lane 2
 ```
 
 ## Playing on public shards
@@ -708,7 +739,7 @@ Not yet tried on UO Renaissance itself, which needs a real account.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`routine.py` (Jev's routine calls inside a hunt: head back, stay, walk elsewhere)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`routine.py` (Jev's routine calls inside a hunt: head back, stay, walk elsewhere)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`facts.py` (Jev picks the world facts for fights and re-ranks the planner's queries)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
@@ -721,6 +752,7 @@ Known limits:
 - On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
 - Jev's routine hunt calls have only been checked offline, on 10 hand-made situations; the yes and no thresholds (0.65, 0.35) aren't tuned on live hunts yet.
+- World facts for fights are shortlisted by area and keyword: a fact stored under another area name, or that names a creature differently, can't be picked. The fact picker has unit tests and one smoke run, not yet a live benchmark.
 
 ---
 

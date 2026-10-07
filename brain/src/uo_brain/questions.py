@@ -150,6 +150,9 @@ def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
         out["player_strategy"] = sit.strategy
         out["using_the_strategy"] = (f"These are the player's own instructions for how their {character(sit)} should "
                                      "play. Follow them wherever they bear on this question.")
+    if sit.known:
+        out["what_you_know"] = ("`what_you_know_about_this_place` holds facts from earlier play and guides about "
+                                "this place and these creatures. Use them wherever they bear on this question.")
     out["question"] = question
     out.update(extra)
     return out
@@ -189,8 +192,9 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
                 sit, f"Should the {who} leave this place now, running until nothing hostile is in sight?",
                 reason=leave_reason(sit)),
             "criteria": {
-                "true": f"Staying means dying: a creature far stronger than the {who} is close or coming for it, or "
-                        "supplies are nearly gone with several creatures still attacking.",
+                "true": f"Staying means dying: a creature far stronger than the {who} is close or coming for it, "
+                        "supplies are nearly gone with several creatures still attacking, or what is known about "
+                        f"this place says the {who} can't win against what is here.",
                 "false": f"The {who} can win here: the strong creature is still far off and not coming, or only weak or "
                          "nearly dead creatures are left.",
             },
@@ -272,6 +276,9 @@ def leave_reason(sit: Situation) -> str:
     close = [h for h in sit.hostiles if h.distance <= CLOSE_TILES]
     if str(sit.state["you"].get("supplies", "")).startswith("nearly gone") and len(close) >= 2:
         return f"Supplies are {sit.state['you']['supplies']}, with {len(close)} creatures close."
+    if sit.known and sit.hostiles:
+        return "Facts from earlier play and guides about this place and these creatures are in " \
+               "`what_you_know_about_this_place`."
     return ""
 
 

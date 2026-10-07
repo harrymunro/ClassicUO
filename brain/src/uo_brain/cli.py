@@ -93,7 +93,10 @@ def main() -> None:
     bn.add_argument("what", nargs="?", default="run", choices=["run", "list", "report"])
     bn.add_argument("files", nargs="*", type=Path, help="for report: results JSON files to compare")
     bn.add_argument("--scenarios", default="core",
-                    help="comma-separated names, 'core' (judge comparison), 'adherence', 'archetypes' or 'all'")
+                    help="comma-separated names, 'core' (judge comparison), 'adherence', 'archetypes', "
+                         "'world' (world facts) or 'all'")
+    bn.add_argument("--facts", default="none,all,jev",
+                    help="world-fact scenarios: which conditions to play per judge (none, all, jev; default all three)")
     bn.add_argument("--judges", default="heuristic,jev",
                     help="comma-separated: heuristic, jev, jev+<template>, each optionally /nokite (no stepping back)")
     bn.add_argument("--rounds", type=int, default=10)
@@ -186,6 +189,8 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--price-per-million", type=float, default=loop.LoopConfig.price_per_million)
     p.add_argument("--shard", default="local", help="world store for the planner (run with a goal in auto mode)")
     p.add_argument("--planner-model", help="default anthropic/claude-sonnet-5.5 (or PLANNER_MODEL)")
+    p.add_argument("--facts", choices=["jev", "all", "none"], default="jev",
+                   help="world facts in the fight decisions: the few Jev picks (default), every shortlisted one, or none")
 
 
 def add_world_args(sub) -> None:
@@ -434,7 +439,8 @@ async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
                 asyncio.get_running_loop().call_later(args.duration, stop.set)
             lcfg.duration_s = None
             try:
-                await Autopilot(rpc, judge, world, lcfg, pcfg, args.log, archetype, args.planner_model).run(stop)
+                await Autopilot(rpc, judge, world, lcfg, pcfg, args.log, archetype, args.planner_model,
+                                facts_mode=args.facts).run(stop)
             finally:
                 world.close()
             return loop.RunStats()
@@ -488,6 +494,7 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     archetype = None if args.archetype == "auto" else args.archetype
     session = Session(rpc, world, judge, log=write, archetype=archetype,
                       decisions_log=args.log.with_suffix(".decisions.jsonl") if args.log else None)
+    session.facts_mode = args.facts
     from .recorder import Recorder
     session.recorder = Recorder(world, judge)
     plan = Planner(session, args.goal, model=args.planner_model, log=write, on_goal=show)
@@ -531,6 +538,7 @@ async def do_goal(rpc: AgentRpc, args) -> None:
             case "sell":
                 res = await session.sell(args.items, args.vendor)
             case "hunt":
+                session.facts_mode = args.facts
                 res = await session.hunt(args.area, args.minutes)
             case _:
                 res = await session.rest(args.seconds)
@@ -552,6 +560,8 @@ def bench_names(spec: str) -> list[str]:
             return adherence
         case "archetypes":
             return list(benchmark.ARCHETYPES)
+        case "world":
+            return list(benchmark.WORLD)
         case "all":
             return list(benchmark.SCENARIOS)
     names = [n.strip() for n in spec.split(",") if n.strip()]
@@ -565,7 +575,8 @@ async def bench(rpc: AgentRpc, args) -> None:
     out = args.out or Path("bench") / f"{stamp}.json"
     result = await benchmark.run(rpc, bench_names(args.scenarios), [j.strip() for j in args.judges.split(",")],
                                  args.rounds, args.lane, out, Path("logs") / "bench" / stamp,
-                                 min_confidence=args.min_confidence)
+                                 min_confidence=args.min_confidence,
+                                 fact_modes=[m.strip() for m in args.facts.split(",") if m.strip()])
     print(benchmark.table([result]))
     print(f"results: {out}")
 
@@ -573,7 +584,7 @@ async def bench(rpc: AgentRpc, args) -> None:
 def bench_offline(args) -> None:
     if args.what == "list":
         for name, sc in benchmark.SCENARIOS.items():
-            fixed = f" [template {sc.template}]" if sc.template else ""
+            fixed = f" [template {sc.template}]" if sc.template else " [world facts: none, all, jev]" if sc.seed else ""
             print(f"{name:<28} {sc.kit:<8} {sc.bead}{fixed}\n    {sc.right}")
         return
     if not args.files:
