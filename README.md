@@ -251,6 +251,32 @@ person; until a title is known, only red and criminal players are flagged.
 - **`uo-brain replay`** re-asks a log's questions to another judge offline, e.g. Jev against the rule baseline, and reports how often they agree.
 - **Assist agreement:** with fight set to suggest, the brain records whether you attacked the creature it suggested.
 
+### After-action review
+
+`uo-brain review LOG` has the planner model read a log and propose lines for your strategy,
+each with its evidence. Code builds a small digest for it first: totals, each death with the
+five decisions before it, flees, looting while a monster was within 3 tiles, low-health
+moments, supplies used, judge errors, how sure Jev was of each intent, and the strategy in
+use. The game logs no message when the character dies, so deaths are placed from the health
+trail: a decision at 25% health or less, then the end of the run, or no decision for 10 s and
+health back above 60%. The model answers by calling a `propose` tool.
+
+Nothing changes until you accept. The proposals are printed numbered and saved to
+`<log>.review.json`, with the digest and the model's reply. `uo-brain review LOG --accept 2 3`
+adds lines 2 and 3 to the character's strategy through the client, from the saved file,
+without asking the model again; a line already in the strategy isn't added twice. Running
+`review` again shows the saved review: `--again` asks the model again, and `--digest` prints
+what it would read.
+
+Single smoke run on 2026-10-07: `uo-brain review logs/arena-jev.jsonl` (the first Jev arena
+run under Results, with the round-3 death) read a 4 KB digest and cost $0.0136 (3,466 prompt
+and 603 completion tokens, 6 s). It proposed four lines. The first was "When badly wounded or
+worse with three or more enemies adjacent, flee or leave the area instead of fighting on,
+even if the target is nearly dead.", with the evidence "Died at 18:00:01 surrounded by 6
+adjacent hostiles. Jev chose fight on 5 straight decisions from 39% to 9% health". One line
+asked for positioning ("fight from a spot where fewer can reach me"), which Jev can't
+choose. All four came back at confidence 0.50.
+
 ### World knowledge
 
 The brain keeps what it knows about each shard in a SQLite file,
@@ -504,6 +530,7 @@ Accounts are created on first login. `admin`/`admin` is the owner.
 - **`session "GOAL" [--hours]`:** the planner towards a goal, from the command line.
 - **`bench [list|report FILES]`:** the judgment benchmark (below). Options: `--scenarios core|adherence|all|NAME,…`, `--judges heuristic,jev,jev+<template>`, `--rounds`, `--lane`, `--out`.
 - **`strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** list, pull in or take out templates.
+- **`review LOG [--accept N…] [--again] [--digest] [--planner-model M]`:** the planner model proposes strategy lines from a log, with the evidence ([above](#after-action-review)); `--accept` adds saved ones to the character's strategy, the only part that connects to the game.
 - **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `strategy …`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
 - **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`, `outcomes LOG… [--area A]` (record what each hunt in the logs gave, per area and kit; importing a log again replaces its rows).
 
@@ -634,7 +661,7 @@ shards that allow it.
 | | |
 |---|---|
 | `src/ClassicUO.Client/Agent/` | `AgentHost` (RPC, login, screenshots)<br>`AgentController` (modes, reflexes, actions, casting, human pause, travel, strategy, templates)<br>`AgentNav` (long-walk planning over the map files)<br>`AgentErrands` (bank, buy, sell)<br>`ReflexPolicy` (pure)<br>`AgentSpells` (magery costs, reagents, spellbook)<br>`AgentSnapshot`<br>`AgentJournal`<br>`AgentLogin`<br>`AgentGump` (the panel)<br>`AgentDecision`<br>`AgentTemplates` + `Templates/*.md` |
-| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`llm.py` (OpenRouter chat client for the planner model) |
+| `brain/src/uo_brain/` | `state.py` (snapshot to words)<br>`questions.py` (the Jev request)<br>`policy.py` (decisions to actions)<br>`spells.py` (attack spells)<br>`strategy.py` (your strategy to settings)<br>`judge.py` (Jev or rules)<br>`loop.py`<br>`cli.py`<br>`bench.py` (judgment benchmark)<br>`session.py` (travel, bank, buy, sell, hunt)<br>`planner.py` (the slow planner)<br>`world.py` (world store and the planner's query tools)<br>`world_import.py` (fills the local store from ModernUO)<br>`guides.py` (guide pages and model knowledge to notes)<br>`outcomes.py` (session logs to outcomes per area and kit)<br>`logs.py` (reads the brain's logs back)<br>`review.py` (after-action review: strategy lines from a log)<br>`llm.py` (OpenRouter chat client for the planner model) |
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |

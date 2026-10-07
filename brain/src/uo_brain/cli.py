@@ -7,6 +7,7 @@
   uo-brain strategy templates | strategy template relentless [--replace] | strategy drop relentless
   uo-brain status | snapshot [--semantic] | act attack target=0x1234 | say "[AgentKit" | shot out.png
   uo-brain report logs/run.jsonl
+  uo-brain review logs/run.jsonl   (the planner model proposes strategy lines; then: review ... --accept 2)
   uo-brain bench --scenarios core --judges heuristic,jev --rounds 10   (bench report bench/*.json)
   uo-brain world find bank --near-place "Britain graveyard" | world hunt warrior new | world note "..." --area Britain
   uo-brain world outcomes logs/session.jsonl   (what each hunt gave, per area and kit)
@@ -23,7 +24,8 @@ from pathlib import Path
 from . import bench as benchmark
 from . import guides
 from . import judge as judges
-from . import llm, loop, outcomes, policy, state
+from . import llm, logs, loop, outcomes, policy, state
+from . import review as reviews
 from . import strategy as strategies
 from . import world as worlds
 from . import world_import
@@ -101,6 +103,15 @@ def main() -> None:
     rp = sub.add_parser("report", help="summarise a decision log")
     rp.add_argument("log")
 
+    rv = sub.add_parser("review", help="after-action review: the planner model proposes strategy lines from a log")
+    rv.add_argument("log", type=Path)
+    rv.add_argument("--accept", type=int, nargs="+", metavar="N",
+                    help="add saved proposal N (or several) to the character's strategy; connects to the game, "
+                         "doesn't ask the model again")
+    rv.add_argument("--again", action="store_true", help="ask the model again although a review is saved")
+    rv.add_argument("--digest", action="store_true", help="only print the digest the model would read")
+    rv.add_argument("--planner-model", help=f"OpenRouter model (default $PLANNER_MODEL or {llm.PLANNER_MODEL})")
+
     rpl = sub.add_parser("replay", help="re-ask a log's questions to another judge and compare answers")
     rpl.add_argument("log")
     rpl.add_argument("--judge", choices=["jev", "heuristic"], default="jev")
@@ -144,6 +155,9 @@ def main() -> None:
         return
     if args.cmd == "report":
         report(Path(args.log))
+        return
+    if args.cmd == "review" and not args.accept:
+        review_cmd(args)
         return
     if args.cmd == "replay":
         asyncio.run(replay(args))
@@ -312,6 +326,13 @@ async def dispatch(args) -> None:
                 await do_goal(rpc, args)
             case "session":
                 await session_cmd(rpc, args)
+            case "review":
+                try:
+                    said, now = await reviews.accept(rpc, args.log, args.accept)
+                except ValueError as e:
+                    sys.exit(f"review: {e}")
+                print("\n".join(said))
+                print(f"\nThe strategy now:\n{now or '(none)'}")
     finally:
         await rpc.close()
 
@@ -588,6 +609,24 @@ async def replay(args) -> None:
         "intent_logged_to_new": dict(sorted(confusion.items(), key=lambda kv: -kv[1])),
         "latency_ms_avg": round(sum(latencies) / len(latencies), 1) if latencies else None,
     }, indent=2))
+
+
+def review_cmd(args) -> None:
+    """The review without the game: a saved one is shown again unless --again."""
+    if not args.log.exists():
+        sys.exit(f"review: no log at {args.log}")
+    if args.digest:
+        print(json.dumps(reviews.digest(logs.read_session(args.log), logs.session_name(args.log)), indent=2))
+        return
+    saved = reviews.review_path(args.log)
+    if saved.exists() and not args.again:
+        print(reviews.show(reviews.load(saved), saved=True))
+        return
+    try:
+        rv = asyncio.run(reviews.review(args.log, model=args.planner_model))
+    except (llm.LlmError, ValueError) as e:
+        sys.exit(f"review: {e}")
+    print(reviews.show(rv))
 
 
 def report(path: Path) -> None:
