@@ -37,8 +37,9 @@ it is enough.
 
 Rules:
 - Answer with one tool call. Give `why` in a short sentence; the player sees it.
-- Use the world tools (place, find_place, hunting_spots, what_spawns, route, notes) when you
-  need a fact, rather than guessing coordinates. Places can be named loosely ("Britain bank").
+- Use the world tools (place, find_place, hunting_spots, what_spawns, route, notes, outcomes)
+  when you need a fact, rather than guessing coordinates. Places can be named loosely ("Britain
+  bank"). outcomes says how earlier hunts in an area went for this character.
 - A hunt is time-boxed (`minutes`, at most 20) and also ends early when supplies run low,
   the bag gets heavy, the character is in danger, or nothing has shown up for a while. Its
   result says why it ended; plan the next goal from that.

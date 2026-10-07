@@ -23,6 +23,7 @@ from typing import Any
 
 from . import loop, policy
 from .judge import Judge
+from .logs import session_name
 from .rpc import AgentRpc
 from .world import World, name_score, tiles
 
@@ -407,18 +408,22 @@ class Session:
         s = stats.summary(lcfg.price_per_million)["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         p0, p1 = (first or last).get("player", {}), last.get("player", {})
+        s0, s1 = p0.get("supplies", {}), p1.get("supplies", {})
         data = {
             "minutes": mins, "kills": s.get("kills", 0), "deaths": s.get("deaths", 0),
-            "bandages_used": (p0.get("supplies", {}).get("bandages", 0) - p1.get("supplies", {}).get("bandages", 0)),
+            "bandages_used": s0.get("bandages", 0) - s1.get("bandages", 0),
+            "heal_potions_used": s0.get("heal_potions", 0) - s1.get("heal_potions", 0),
             "gold_gained": p1.get("gold", 0) - p0.get("gold", 0),
             "weight": f"{p1.get('weight')}/{p1.get('weight_max')}",
             "health": f"{p1.get('hits')}/{p1.get('hits_max')}",
             "stopped_because": why[0] if why else f"{minutes} minutes up",
         }
         kit = self.archetype or ("mage" if last and self.mage(last) else "warrior")
-        self.world.add_outcome(name, kit, "kills_per_hour", round(data["kills"] / max(mins / 60, 1e-6), 1))
-        self.world.add_outcome(name, kit, "deaths", data["deaths"])
-        self.log("hunted", area=name, **data)
+        # Named after the log, so importing the log later (outcomes.py) replaces these rows.
+        session = session_name(self.decisions_log) if self.decisions_log else None
+        self.world.add_outcome(name, kit, "kills_per_hour", round(data["kills"] / max(mins / 60, 1e-6), 1), session=session)
+        self.world.add_outcome(name, kit, "deaths", data["deaths"], session=session)
+        self.log("hunted", area=name, kit=kit, **data)
         return Result(data["deaths"] == 0, f"hunted {name} for {mins} min: {data['kills']} kills, "
                                            f"stopped because {data['stopped_because']}", data)
 
