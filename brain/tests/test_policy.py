@@ -1,3 +1,4 @@
+import pytest
 import asyncio
 
 from uo_brain import policy, questions, state
@@ -304,3 +305,14 @@ def test_leaving_is_asked_on_its_own_when_there_is_a_reason(snapshot):
     # A relentless strategy never leaves.
     never = policy.PolicyConfig(allow_flee=False)
     assert policy.decide(sit, answers("fight", leave_now=0.95), policy.Memory(), never).intent == "fight"
+
+
+def test_jev_leaving_decides_below_the_danger_threshold(snapshot):
+    # Jev's "leave now" rarely goes past 0.6 even when staying kills the character, so it decides
+    # at 0.2 under the strategy's danger threshold (0.425 with no strategy), and never under 0.4.
+    sit = state.build(snapshot, set(), [], bestiary=BESTIARY)
+    default = policy.PolicyConfig(flee_danger=0.625)
+    assert policy.leave_cut(default) == pytest.approx(0.425)
+    assert policy.decide(sit, answers("fight", leave_now=0.45), policy.Memory(), default).intent == "leave"
+    assert policy.decide(sit, answers("fight", leave_now=0.3), policy.Memory(), default).intent == "fight"
+    assert policy.leave_cut(policy.PolicyConfig(flee_danger=0.33)) == 0.4

@@ -295,12 +295,16 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
             "instructions": instructions(
                 sit, f"Should the {who} leave this place now, running until nothing hostile is in sight?",
                 reason=leave_reason(sit)),
+            # Asked as "supplies are nearly gone with several creatures still attacking", Jev put
+            # 0.24-0.30 on leaving in attrition rounds that went on to die (2026-10-07); worded as not
+            # enough healing to outlast them, 0.40-0.60, with 0.2 where staying won.
             "criteria": {
-                "true": f"Staying means dying: a creature far stronger than the {who} is close or coming for it, "
-                        "supplies are nearly gone with several creatures still attacking, or what is known about "
-                        f"this place says the {who} can't win against what is here.",
-                "false": f"The {who} can win here: the strong creature is still far off and not coming, or only weak or "
-                         "nearly dead creatures are left.",
+                "true": f"Staying means dying: there isn't enough healing left to outlast the creatures attacking "
+                        f"(supplies nearly gone with three or more close), a creature far stronger than the {who} is "
+                        f"close or coming for it, or what is known about this place says the {who} can't win against "
+                        "what is here.",
+                "false": f"The {who} can win here: only one or two weak or nearly dead creatures are left, or supplies "
+                         "are plentiful, or the strong creature is far off and not coming.",
             },
         }
 

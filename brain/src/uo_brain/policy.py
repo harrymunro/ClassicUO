@@ -194,13 +194,13 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         intent, conf = "leave", 1.0
     # Jev's yes/no on leaving, asked when there is a reason to: it decides, not the intent vote.
     # A cautious strategy leaves on weaker signals; relentless ones never (allow_flee off).
-    if ans.nouls.get("leave_now", 0.0) >= max(0.5, cfg.flee_danger) and cfg.allow_flee \
+    if ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg) and cfg.allow_flee \
             and sit.authority("move") == "auto" and not sit.assisting:
         intent, conf = "leave", ans.nouls["leave_now"]
     # Leaving needs a reason the facts back up, as fleeing needs the danger judgment. A stored
     # fact Jev picked for this place counts when Jev's own yes/no on leaving agrees, and so does
     # having nothing to fight with (no pet in sight, no arrows, no instrument).
-    known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= max(0.5, cfg.flee_danger)
+    known = bool(sit.known) and ans.nouls.get("leave_now", 0.0) >= leave_cut(cfg)
     cannot_fight = bool(sit.targets) and "fight" in masked
     if intent == "leave" and not (danger >= cfg.flee_danger or outmatched or low and len(close) >= 2 or known
                                   or cannot_fight):
@@ -378,6 +378,13 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             dec.note = f"meditate ({conf:.2f})"
 
     return dec
+
+
+def leave_cut(cfg: PolicyConfig) -> float:
+    """Where Jev's yes/no on leaving decides: 0.2 below the strategy's danger threshold, never
+    under 0.4. Jev rarely goes past 0.6 on it even when staying kills the character, while a
+    fight it can win stays near 0.2, so the cut sits between (0.425 with no strategy)."""
+    return max(0.4, cfg.flee_danger - 0.2)
 
 
 PET_REACH = 8   # tiles: a tamer sets its pet on what is this close, and seeks what is further

@@ -668,15 +668,24 @@ public static class AgentTestKit
     private static readonly List<BaseSpawner> _stoppedSpawners = [];
     private static readonly List<BaseVendor> _soldOut = [];
 
-    [Usage("AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore")]
+    [Usage("AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore [quiet]")]
     [Description(
-        "Disruptions for unattended runs, at a place rather than around you. despawn: removes what the spawners within radius of x y have spawned and stops them (for minutes, default 20). strong: spawns count creatures of kind around x y. sellout: empties the stock of item (by name) at the vendors within radius of x y. restore: restarts the stopped spawners and restocks the sold-out vendors."
+        "Disruptions for unattended runs, at a place rather than around you. despawn: removes what the spawners within radius of x y have spawned and stops them (for minutes, default 20). strong: spawns count creatures of kind around x y. sellout: empties the stock of item (by name) at the vendors within radius of x y. restore: restarts the stopped spawners and restocks the sold-out vendors. quiet (last) leaves the caller's journal alone, so an agent under test can't read about it."
     )]
     public static void AgentDisrupt_OnCommand(CommandEventArgs e)
     {
         var from = e.Mobile;
         var what = e.Length > 0 ? e.GetString(0).ToLowerInvariant() : "";
         var map = TestMap;
+        // "quiet" last: nothing in the caller's journal, so an agent under test can't read it.
+        var quiet = e.Length > 0 && e.GetString(e.Length - 1).InsensitiveEquals("quiet");
+        void Say(string text)
+        {
+            if (!quiet)
+            {
+                from.SendMessage(text);
+            }
+        }
 
         switch (what)
         {
@@ -713,7 +722,7 @@ public static class AgentTestKit
                             }
                         }
                     );
-                    from.SendMessage($"Disrupt: {stopped.Count} spawners near {at.X},{at.Y} emptied and stopped for {minutes} min.");
+                    Say($"Disrupt: {stopped.Count} spawners near {at.X},{at.Y} emptied and stopped for {minutes} min.");
                     logger.Information("AgentDisrupt: despawned {Count} spawners near {At} for {Minutes} min", stopped.Count, at, minutes);
                     return;
                 }
@@ -736,7 +745,7 @@ public static class AgentTestKit
                         }
                     }
 
-                    from.SendMessage($"Disrupt: {made} {e.GetString(3)} near {center.X},{center.Y}.");
+                    Say($"Disrupt: {made} {e.GetString(3)} near {center.X},{center.Y}.");
                     logger.Information("AgentDisrupt: {Made} {Kind} near {At}", made, e.GetString(3), center);
                     return;
                 }
@@ -764,7 +773,7 @@ public static class AgentTestKit
                         }
                     }
 
-                    from.SendMessage($"Disrupt: {emptied} stocks of {word} emptied near {at.X},{at.Y}.");
+                    Say($"Disrupt: {emptied} stocks of {word} emptied near {at.X},{at.Y}.");
                     logger.Information("AgentDisrupt: sold out {Count} stocks of {Item} near {At}", emptied, word, at);
                     return;
                 }
@@ -789,13 +798,13 @@ public static class AgentTestKit
                         }
                     }
 
-                    from.SendMessage($"Disrupt: {_stoppedSpawners.Count} spawners restarted, {_soldOut.Count} vendors restocked.");
+                    Say($"Disrupt: {_stoppedSpawners.Count} spawners restarted, {_soldOut.Count} vendors restocked.");
                     _stoppedSpawners.Clear();
                     _soldOut.Clear();
                     return;
                 }
             default:
-                from.SendMessage("Usage: [AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore");
+                Say("Usage: [AgentDisrupt despawn x y radius [minutes] | strong x y kind count | sellout x y radius item | restore");
                 return;
         }
     }
