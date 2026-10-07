@@ -7,6 +7,7 @@
   uo-brain strategy templates | strategy template relentless [--replace] | strategy drop relentless
   uo-brain status | snapshot [--semantic] | act attack target=0x1234 | say "[AgentKit" | shot out.png
   uo-brain report logs/run.jsonl
+  uo-brain world find bank --near-place "Britain graveyard" | world hunt warrior new | world note "..." --area Britain
 """
 
 import argparse
@@ -20,6 +21,7 @@ from pathlib import Path
 from . import judge as judges
 from . import loop, policy, state
 from . import strategy as strategies
+from . import world as worlds
 from .rpc import AgentRpc
 
 WARRIOR_SKILLS = {"Swordsmanship": 30, "Tactics": 30, "Healing": 30, "Anatomy": 30}
@@ -90,7 +92,12 @@ def main() -> None:
     rpl.add_argument("--model")
     rpl.add_argument("--limit", type=int, default=200)
 
+    add_world_args(sub)
+
     args = ap.parse_args()
+    if args.cmd == "world":
+        world_cmd(args)
+        return
     if args.cmd == "report":
         report(Path(args.log))
         return
@@ -115,6 +122,76 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--log", type=Path, help="append decisions to this JSONL file")
     p.add_argument("--min-confidence", type=float, default=policy.PolicyConfig.min_intent_confidence)
     p.add_argument("--price-per-million", type=float, default=loop.LoopConfig.price_per_million)
+
+
+def add_world_args(sub) -> None:
+    w = sub.add_parser("world", help="query or fill the shard's world store (does not connect to the game)")
+    w.add_argument("--shard", default="local", help="which store: brain/worlds/<shard>/world.sqlite (default local)")
+    w.add_argument("--root", type=Path, help="folder that holds the shard stores (default brain/worlds)")
+    w.add_argument("--map", default=worlds.DEFAULT_MAP, help="facet for map queries (default Felucca)")
+    ws = w.add_subparsers(dest="world_cmd", required=True)
+
+    n = ws.add_parser("note", help="add a note in your own words (never other players' names)")
+    n.add_argument("text")
+    n.add_argument("--area", help="the area it applies to, e.g. Britain")
+    n.add_argument("--tag", action="append", default=[], help="repeatable")
+
+    f = ws.add_parser("find", help="nearest places of a kind (bank, healer, moongate, ...) or vendors of an item")
+    f.add_argument("kind")
+    f.add_argument("--near", help='"x,y" or a place name')
+    f.add_argument("--near-place", metavar="NAME", help="a place name to measure from")
+
+    sp = ws.add_parser("spawns", help="what spawns in an area, or near a point")
+    sp.add_argument("area", nargs="?")
+    sp.add_argument("--near", help='"x,y" or a place name')
+    sp.add_argument("--radius", type=int, default=60)
+
+    h = ws.add_parser("hunt", help="hunting spots for an archetype and level")
+    h.add_argument("archetype", help="warrior or mage")
+    h.add_argument("level", help=", ".join(worlds.LEVELS))
+    h.add_argument("--near", help='rank closer spots higher: "x,y" or a place name')
+
+    pl = ws.add_parser("place", help="resolve a place name to coordinates")
+    pl.add_argument("name")
+
+    rt = ws.add_parser("route", help="stored routes, teleporters and distance between two places")
+    rt.add_argument("start")
+    rt.add_argument("end")
+
+    nt = ws.add_parser("notes", help="search notes by keyword and/or area")
+    nt.add_argument("keywords", nargs="*")
+    nt.add_argument("--area")
+
+    ws.add_parser("stats", help="row counts by table and source")
+
+    for p in (f, sp, h, pl, rt, nt):
+        p.add_argument("--limit", type=int, default=5)
+
+
+def world_cmd(args) -> None:
+    """World commands read and write the store only, so they work without the client."""
+    try:
+        with worlds.World.open(args.shard, args.root) as w:
+            match args.world_cmd:
+                case "note":
+                    out = {"id": w.add_note(args.text, args.area, args.tag), "area": args.area, "source": "note"}
+                case "find":
+                    out = w.find_place(args.kind, near=args.near_place or args.near, map=args.map, limit=args.limit)
+                case "spawns":
+                    out = w.what_spawns(args.area, near=args.near, map=args.map, radius=args.radius, limit=args.limit)
+                case "hunt":
+                    out = w.hunting_spots(args.archetype, args.level, near=args.near, map=args.map, limit=args.limit)
+                case "place":
+                    out = w.place(args.name, map=args.map, limit=args.limit)
+                case "route":
+                    out = w.route(args.start, args.end, map=args.map, limit=args.limit)
+                case "notes":
+                    out = w.notes(args.area, " ".join(args.keywords) or None, limit=args.limit)
+                case _:
+                    out = w.stats()
+    except worlds.WorldError as e:
+        sys.exit(f"world: {e}")
+    print(json.dumps(out, indent=2))
 
 
 async def dispatch(args) -> None:
