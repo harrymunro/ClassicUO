@@ -70,7 +70,7 @@ namespace ClassicUO.Agent
                             : spell.ID == AgentSpells.HEAL || spell.ID == AgentSpells.GREATER_HEAL || spell.ID == AgentSpells.CLOSE_WOUNDS
                                 ? AgentBehavior.Heal
                             : spell.ID == AgentSpells.CURE || spell.ID == AgentSpells.CLEANSE_BY_FIRE ? AgentBehavior.Cure
-                            : spell.TargetType == TargetType.Harmful || AgentSpells.FightBlessings.Contains(spell.ID) ? AgentBehavior.Fight
+                            : spell.TargetType == TargetType.Harmful || AgentSpells.FightSpells.Contains(spell.ID) ? AgentBehavior.Fight
                             : AgentBehavior.Misc;
 
                     case "loot":

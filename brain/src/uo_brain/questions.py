@@ -13,6 +13,7 @@ from .spells import BLESSINGS
 from .state import PACK_FAR, Situation
 
 CLOSE_TILES = 3  # matches policy.PolicyConfig.close_tiles
+FAST_FALL_WORDS = 30  # matches policy.FAST_FALL: health points lost in a few seconds that count as falling fast
 
 ROLE = (
     "You are deciding for a warrior in the game Ultima Online. The warrior fights monsters "
@@ -300,7 +301,18 @@ def instructions(sit: Situation, question: str, **extra: str) -> dict[str, Any]:
     return out
 
 
-def build(sit: Situation) -> dict[str, dict[str, Any]]:
+def ward_options(sit: Situation) -> list[Any]:
+    """The walls and summons worth offering a mage before a crowd arrives (cuo-ev9): three or more
+    coming at it, fewer than two on it yet, and those of its fields and summons that can be cast now
+    and work at least half the time. Empty for anyone else."""
+    if not sit.is_mage or sit.is_necromancer or len(sit.pack) < 3 or sum(h.distance <= 1 for h in sit.pack) >= 2:
+        return []
+    return [c for c in sit.spells if c.info.get("aim") in ("ground", "summon") and c.info.get("chance", 1.0) >= 0.5]
+
+
+def build(sit: Situation, ward: bool = False) -> dict[str, dict[str, Any]]:
+    """Every question of a fight decision. With `ward`, a mage with a crowd coming is also asked
+    whether to wall it off or summon something first (cuo-ev9)."""
     who = character(sit)
     qs: dict[str, dict[str, Any]] = {
         "intent": {
@@ -397,15 +409,14 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
     # Which spell, asked alongside the target so a cast needs no second round trip. The
     # question says where the fight stands, so "open with ..." strategies have a hook.
     if sit.casts and sit.targets and sit.spells:
-        focus = next((h for h in sit.targets if h.info["your_current_target"]), None) \
-            or min(sit.targets, key=lambda h: h.distance)
+        focus = sit.focus
         if focus.casts == 0:
             question = (f"The {who} is about to open the fight against {focus.name} ({focus.info['health']}): no spell "
-                        "has been cast at it yet. Which spell from `you.attack_spells_available` should open the fight?")
+                        "has been cast at it yet. Which spell from `you.spells_available` should open the fight?")
         else:
             question = (f"The {who} has already cast {focus.casts} spell{'s' if focus.casts > 1 else ''} at "
                         f"{focus.name}, which is now {focus.info['health']}. Which spell from "
-                        "`you.attack_spells_available` should it cast at it next?")
+                        "`you.spells_available` should it cast next?")
         criteria = {c.id: f"{c.name}: {c.info['effect']} ({c.info['mana']} mana)" for c in sit.spells}
         criteria["none"] = "Cast nothing right now, for example to save mana for later."
         qs["spell"] = {
@@ -415,9 +426,31 @@ def build(sit: Situation) -> dict[str, dict[str, Any]]:
                 guidance="Unless the player's strategy says otherwise: use strong spells while mana is plentiful and "
                          "cheaper ones when mana runs low; finish a nearly dead creature with a quick, cheap spell. "
                          "With three or more creatures close together, an area spell hurts them all for less mana "
-                         "a creature than casting at each in turn.",
+                         "a creature than casting at each in turn. The spells that do no damage help a fight instead: "
+                         "a curse weakens a strong creature, a field or wall keeps creatures on foot off while the "
+                         "caster casts, a summoned creature takes blows meant for it, and a blessing on the caster "
+                         "lasts a while. Each costs a cast that could have done damage, so use them where the fight "
+                         "needs more than damage.",
             ),
             "criteria": criteria,
+        }
+
+    # Walls and summons hardly ever won the spell answer above, even with six creatures on a mage
+    # (cuo-ev9): with a crowd still coming, ask apart, offering only those that fit the moment.
+    if ward and sit.targets and (wards := ward_options(sit)):
+        here = sum(h.distance <= 1 for h in sit.pack)
+        options = {c.id: f"{c.name}: {c.info['effect']} ({c.info['mana']} mana)" for c in wards}
+        options["none"] = "Attack instead: they are few or weak enough for damage spells, or nearly on the caster already."
+        qs["ward"] = {
+            "type": "choice",
+            "instructions": instructions(
+                sit, f"{len(sit.pack)} creatures are coming at the {who}, and {here} of them "
+                     f"{'has' if here == 1 else 'have'} reached it. Before the rest arrive, should it cast one of these "
+                     "to hold them off or give them something else to fight, or attack them instead?",
+                guidance="A field across the way keeps creatures on foot off while the caster casts; a summoned "
+                         "creature takes blows meant for the caster. Each costs a cast that could have done damage, "
+                         "and a crowd on a caster breaks its spells."),
+            "criteria": options,
         }
 
     # A paladin's blessing for the fight at hand, asked alongside the target (cuo-cvl.5).
@@ -499,6 +532,11 @@ def leave_reason(sit: Situation) -> str:
     if sit.known and sit.hostiles:
         return "Facts from earlier play and guides about this place and these creatures are in " \
                "`what_you_know_about_this_place`."
+    # Losing fast to what is on it, whatever its strength words say: one gargoyle, "a fair fight",
+    # took a warrior from full health to dead in 20 s and leaving was never asked (cuo-8vk).
+    if sit.hp_drop >= FAST_FALL_WORDS and sit.hp_pct < 70 and close:
+        return f"The {character(sit)}'s health fell {sit.hp_drop} points in the last few seconds, to {sit.hp_pct}%, " \
+               f"fighting {close[0].name}."
     return ""
 
 

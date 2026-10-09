@@ -287,8 +287,12 @@ class World:
         self.path = Path(path)
         if str(path) != ":memory:":
             self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(str(path))
+        self.db = sqlite3.connect(str(path), timeout=15.0)
         self.db.row_factory = sqlite3.Row
+        if str(path) != ":memory:":
+            # Several brains on one machine share a shard's store (a fleet, cuo-m70.4): readers don't
+            # wait for a writer.
+            self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
         try:
             self.db.executescript(FTS_SCHEMA)

@@ -149,7 +149,7 @@ flowchart LR
    - `intent`: fight, flee (for a moment), leave (the area: run until nothing is in sight), loot, seek or rest
    - `in_danger`: will the character die soon if it keeps fighting?
    - `leave_now`, only when there's a reason to (a far stronger creature within 12 tiles, a pack coming at it that together outweighs it, supplies nearly gone with two or more creatures close, or picked world facts with a creature in view): should it leave now? Jev judges this better as its own yes/no than as one of six intents: with an ogre lord adjacent it still gave fight 80%.
-   - `target`: which creature to attack
+   - `target`: which creature to attack, or none of these. A "none" at 0.5 or more is taken as an answer (unless something is on the character): the character doesn't fight, and doesn't go looking for a creature either, however sure the intent is of seeking
    - `spell` (mages): which attack spell to cast next
    - `corpse`: which corpse to loot first
    - `take_iN`: is this item worth picking up?
@@ -244,6 +244,8 @@ whenever the agent is on or a brain is connected. It shows:
   - the danger judgment;
   - the target and spell it picked, with confidence, or "your strategy" when your strategy chose the spell;
   - what was done, and the latency.
+
+  While the calls window (below) is open it has all of this, question by question, so the panel keeps one line for the decision ("fight a gargoyle with Explosion (0.83)") instead of showing the same bars twice.
 - **A pending suggestion** with an *accept* link.
 - **Your strategy and how Jev read it**, an entry box to add a line, and the template links (see [Templates](#templates)).
 - **Earlier decisions**, with repeats collapsed ("fight an orc x5").
@@ -256,16 +258,16 @@ collapses the panel to a few lines; its position and whether it is collapsed are
 window beside it that shows every model call as it happens, not just the latest intent:
 
 - **The latest fight decision, question by question:** what next, which creature, which spell or blessing, and so on, each option as a bar with Jev's probability, its pick marked *jev* in green and, where code went with something else (a code rule, your strategy's spell, an unsure answer), that marked *code* in gold. A yes/no (in danger?, leave now?, a [plan](#plans-for-fights)'s next step?) is one bar with the cut that decides it in red, and the verdict.
-- **What was done about it:** each action of that decision in words, with the way a move went: "run 15 tiles northwest from the pack", "step back 4 tiles south", "walk 12 tiles east", "attack a gargoyle", "cast Explosion at a lich", and the result when it didn't simply go through (refused, out of reach).
+- **What was done about it:** each action of that decision in words, with the way a move went: "run 15 tiles northwest from all in sight", "step back 4 tiles south", "walk 12 tiles east", "attack a gargoyle", "cast Explosion at a lich", and the result when it didn't simply go through (refused, out of reach).
 - **The latest of each other kind of call:** Jev's routine questions inside a hunt with its verdict, its pick of world facts (each fact with its score, the kept ones in green), a strategy read, and the planner's goals and world queries with their reason and cost.
-- **How many calls of each kind** there have been.
+- **How many calls of each kind** there have been, and what they have cost: the total, the rate an hour, the dearest kinds of call, and the budget if one is set (in red once it's over). Each call's header gives its own cost.
 
 <p align="center">
-  <img src="docs/images/jev-calls.png" width="650" alt="The calls window beside the agent panel during an unattended hunt at the Britain graveyard. Counts at the top (strategy 1, fight 29, planner 2, facts 1, hunt). The fight decision: what next, seek at 83% picked by Jev; in danger at 3% under its red cut; which creature, where Jev picked none at 58% and code went with a wraith, marked in gold. A hunt question: head back to town at 5%, no; spot still worth it at 90%, yes. A pick of world facts with each fact's score, none kept at 0.6.">
+  <img src="docs/images/jev-calls.png" width="660" alt="The calls window beside the agent panel while a test mage fights six monsters. The fight decision: what next, fight at 99% picked by Jev; in danger at 21% and leave now at 23%, both under their red cuts; which creature, a ratman at 99%; which spell, Mass Curse at 44% picked by Jev over Explosion at 40%. Under actions: attack the ratman, and cast Mass Curse at another ratman in the middle of the crowd. The panel says now: casting Mass Curse, and gives Jev's judgment as one line, with the details in the calls window.">
 </p>
 
 <p align="center">
-  <img src="docs/images/jev-calls-actions.png" width="658" alt="The calls window during a pack round, beside the agent panel, which says now: fleeing. What next: seek at 90% picked by Jev, leave at 3% marked code in gold, and the line 'jev picked seek; code went with leave'. In danger at 4%, no. Which creature: a gargoyle at 65%, picked by Jev. Under actions: run 15 tiles north from a gargoyle. Then: so: leaving, away from a gargoyle.">
+  <img src="docs/images/jev-calls-actions.png" width="660" alt="The calls window during a pack round, beside the agent panel, which says now: fleeing. What next: fight at 81% picked by Jev, leave at 6% marked code in gold, and the line 'jev picked fight; code went with leave'. In danger at 26%, no; leave now at 50%, over its red cut, yes. Which creature: an orc at 78%, picked by Jev. Under actions: run 15 tiles southeast from all in sight. Then: so: leave, away from all 4 in sight. The panel gives Jev's judgment as that one line.">
 </p>
 
 ### Reflexes
@@ -305,8 +307,9 @@ walked back into the gargoyles.
 - **No idle gap.** A flee counts as running only while the character is moving: held for a fixed 6 seconds, a 3-second run left it standing for the rest, with nothing deciding and whatever followed hitting it.
 - **Packs.** The state says what is coming at the character together (fighting, within 12 tiles, or already on it), weighed against it: a creature far stronger than it counts 4, stronger 2, weak 0.4, a fair fight 1 scaled by its hits against the character's (between 0.5 and 1.5, so two spectres don't weigh as two gargoyles), a spellcaster half as much again (it hurts from a distance, running or not), and each by its health (`coming_at_you`: "2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: too many to fight at once"). From 2.5 on, Jev's `leave_now` is asked; and at that weight with two or more coming, code leaves while they are still coming (2.5 with no strategy, less for a cautious one, more for an aggressive one; never under a never-flee strategy, never in combat assist). The open-goal soak runs died to two gargoyles and a reaper while Jev's leave stayed at 0.39–0.44, and to a troll, a harpy and a ratman (2.5) when the cut was 3.
 - **Not back too soon.** In a session, a hunt that ended in a leave from creatures stops the planner sending the character within 30 tiles of there for 30 minutes; the refusal says why and how long is left. With 15 minutes, the planner sent it back as soon as they were up, and it died there.
-- **Away from all of them.** Leaving a pack runs away from every creature in view taken together, nearer ones counting more, not from one of them. It used to count only those within 10 tiles, so a pack still further off gave no direction and the run went north, whatever was there. A blocked way out is now tried turned up to about 100 degrees either side (it was 70), then at half the distance: in a round on another lane of the test field, the warrior ran into a corner, where nine runs in a row failed and three gargoyles caught it.
-- **Cornered:** when two runs in a row fail ("no path away"), it stops trying to leave for 15 seconds and fights what is close, whether code or Jev wanted to leave.
+- **Away from all of them.** Any leave with two or more creatures in sight runs away from every creature in view taken together, each counting the same whatever its distance, not from one of them; with one in sight, from it. Only code's pack rule used to do this: in a pack round with that rule off, Jev's own leave with an orc adjacent ran from the orc alone, 15 tiles north into three gargoyles, and the warrior died there. It used to count only those within 10 tiles, so a pack still further off gave no direction and the run went north, whatever was there. A blocked way out is now tried turned up to about 100 degrees either side (it was 70), then at half the distance: in a round on another lane of the test field, the warrior ran into a corner, where nine runs in a row failed and three gargoyles caught it.
+- **Cornered:** when two runs in a row fail ("no path away") with something within 3 tiles, or four in a row whatever the distance, it stops trying to leave for 15 seconds and fights what is close, whether code or Jev wanted to leave. With nothing close yet it keeps leaving, straight away from the nearest creature instead of from them all, which is another heading: in a soak run a warrior that had left three gargoyles three times found no path twice by the graveyard wall while they were still far off, was held in the fight for 15 s while Jev said leave at 0.8-0.9, and died (cuo-y4l).
+- **Losing fast to one creature:** the state says when health has fallen 20 points or more in the last 6 seconds (`health_falling`), and a fall of 30 with a creature close and health under 70% is a reason to ask Jev's `leave_now`, whatever the creature's strength words. Near death the emergency flee then needs danger 0.8 rather than 0.9. A lone gargoyle, "a fair fight", took a soak run's warrior from 58% to 20% in a second and killed it with leaving never asked and danger at 0.86 (cuo-8vk).
 - **Told apart by name.** Several kinds share a body graphic, and the strongest used to stand for all: a black bear read as "far stronger" because a named boss bear shares its graphic. Creatures are now matched by name among the kinds with their graphic.
 
 In a session hunt, leaving ends the hunt (see [hunting](#travel-banking-shops-and-hunting)).
@@ -342,8 +345,20 @@ this order, or you name it with `uo-brain run --archetype warrior|mage|archer|ta
 
 ### Mages
 
-- **Range:** it engages from up to 7 tiles away and casts Jev's pick from the attack spells it can cast right now: Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze, and the area spells below.
-- **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; code picks the strongest castable spell when Jev isn't sure.
+- **Range:** it engages from up to 7 tiles away and casts Jev's pick from the spells it can cast right now: the attack spells (Flamestrike, Energy Bolt, Explosion, Lightning, Mind Blast, Fireball, Harm, Magic Arrow, Poison and Paralyze), the area spells below, and the rest of the book a fight can use.
+- **The rest of the book:** Jev is offered every spell in the book that can help a fight, each described in words with its mana, and only where it can do something:
+  - curses (Curse, Weaken, Clumsy), once on a creature while they last, and the spells on mana (Feeblemind, Mana Drain, Mana Vampire) only with a spellcaster in sight; Mass Curse with a crowd, like the area spells;
+  - fields (Wall of Stone, Energy Field, Paralyze Field, Fire Field, Poison Field) with the creature 3 or more tiles off, so there is a tile between for them; never for a warrior-mage, who would wall itself off;
+  - summons: Blade Spirits and Energy Vortex beside the creature, the elementals, Summon Daemon and Summon Creature beside the mage, while it has the follower slots for them;
+  - blessings on itself (Bless, Strength, Agility, Cunning, Reactive Armor, Magic Reflection) while their buff icon is down;
+  - Earthquake, which hits everything around the mage, with three or more monsters within 4 tiles and nobody else within 6.
+
+  A spell that fizzles often at the character's Magery says how often it works. ModernUO casts from a book at a chance that climbs from nothing to certain over 40 skill points, from 80 for the eighth circle under Mondain's Legacy rules (70 before them), so a Magery 90 mage casts an eighth-circle spell 1 time in 4 and a seventh-circle one (Flamestrike, Chain Lightning, Energy Field) 6 times in 10; a fizzle costs the reagents and the time but not the mana. The attack spells get these words too.
+
+  **Walls and summons first** (opt-in: `PolicyConfig.ward`, `jev/ward` in the bench): with three or more creatures coming at a mage and fewer than two on it, Jev is also asked whether to cast one of its fields or summons first, offered only those that work at least half the time, or "none". The options are alike, so its yes is spread over them: a swarm round put 0.77 on four fields against 0.16 on attacking, none above 0.3. So code takes it as yes when everything but "none" adds up to 0.5, casts the likeliest, and waits 15 s before the next, one wall a crowd. It isn't on by default: walls and summons didn't win swarm rounds ([results](#walls-and-summons-in-a-swarm)).
+
+  Code aims each: a curse at the creature, a blessing at the mage, a summon with no target, and a field or Blade Spirits on the free tile beside the creature nearest the mage (the client answers the tile cursor). ModernUO shows a summoned monster red, as it would a murderer, so the client takes any creature that appears within 3 tiles of where a summon was cast, in the few seconds after, as the agent's own: it's never a target, and the state calls it "your summon". Each is held back for a while after it's cast: a curse 60 seconds for that creature, a blessing 90 (10 where the server shows buff icons, so a cast that failed is offered again), a field 12 and a summon 10. When Jev isn't sure, code still falls back on the strongest damage spell, and the rules judge only ever picks attack spells. Left out: healing and curing (the reflexes), Protection (code raises it), travel and escape (Recall, Gate Travel, Teleport, Invisibility), Dispel and Mass Dispel (nothing says which creatures are summoned), and spells that do nothing in a fight.
+- **Your spell plan comes first:** the opener on a fresh creature, then the main spell. Jev picks when your strategy names none; when Jev isn't sure, code picks the strongest castable damage spell that works 9 casts in 10 at the character's Magery (an area spell for three or more together, unless it mostly fizzles).
 - **Queued casts:** the brain queues the next spell and the client casts it the moment the current spell and its recovery allow. Healing reflexes go first.
 - **Protection:** as soon as melee monsters come at it (in war mode within 10 tiles), it casts Protection first, since every hit otherwise interrupts a spell; cast once they were adjacent, it was broken too. It's asked for again until its buff icon shows, at most three times in 20 seconds, since it is a toggle and a server that sends no icon would see it turned off again. A queued Protection or heal isn't pushed out of the client's one-spell queue by an attack spell from the next decision. That's AOS: on older shards Protection only adds armour, so it's skipped (see [Older rules](#older-rules-pre-aos-shards-such-as-uo-renaissance)).
 - **Crowds:** with three or more monsters within 2 tiles of one of them, and nobody else (a player, a pet, a townsperson) within a tile of the blast, Chain Lightning and Meteor Swarm are offered too, aimed at the creature that has the most others around it. Under AOS rules their damage is shared once more than two are hit, but twice over, so three creatures each take about two thirds of a single hit for 40 mana. Code casts one when Jev isn't sure, doesn't step back while it can, and with three or more on it goes for the creature with least health left: every kill is one fewer hitting it.
@@ -385,7 +400,7 @@ A bard fights with songs.
 Necromancy and Chivalry only exist on shards with the Age of Shadows rules, such as the local
 ModernUO server; UO Renaissance has neither.
 
-- **Necromancer:** plays as a mage does, from up to 7 tiles, with its own attack spells: Poison Strike (and some damage to whatever is next to the target), Strangle (damage over time) and Pain Spike (quick and cheap). With three or more monsters within 3 tiles and nobody else within 5, Wither (everything around the necromancer) is offered too. It counts its own reagents (bat wing, grave dust, daemon blood, nox crystal, pig iron), and with no healing spell it bandages and drinks potions. It meditates while resting.
+- **Necromancer:** plays as a mage does, from up to 7 tiles, with its own attack spells: Poison Strike (and some damage to whatever is next to the target), Strangle (damage over time) and Pain Spike (quick and cheap). With three or more monsters within 3 tiles and nobody else within 5, Wither (everything around the necromancer) is offered too. Its curses (Evil Omen, Corpse Skin, Blood Oath, and Mind Rot against a spellcaster) and Vengeful Spirit, a revenant that hunts the creature, are offered as a mage's curses and summons are. Curse Weapon isn't: it only works on weapon hits. It counts its own reagents (bat wing, grave dust, daemon blood, nox crystal, pig iron), and with no healing spell it bandages and drinks potions. It meditates while resting.
 - **Paladin:** fights as a warrior, and blesses its fighting: Jev picks the blessing for the fight at hand, from those it can cast and that aren't already in effect. When Jev isn't sure: Holy Light with three or more within 3 tiles (and nobody else near), Divine Fury against several or a stronger creature, Enemy of One against a stronger one, otherwise Consecrate Weapon, renewed for each new creature or after 20 seconds (it lasts 3 to 11 and shows no icon). Divine Fury and Enemy of One wait for a quarter of the mana, which also pays for Close Wounds. One blessing every 2 seconds at most.
 - **What the client reads:** each book is opened once, as a spellbook is; the snapshot lists every spell of each book with its school, mana and tithing cost and what's missing ("mana", "reagents", "tithing"), the character's tithing points, and a necromancer's reagents apart from a mage's.
 - **Hands:** chivalry and necromancy keep the weapon in hand (only magery drops it), so a paladin's weapon isn't re-armed after a blessing.
@@ -538,7 +553,7 @@ and code's rules on top. A plan gives the fights a shape for the place and the c
 instead, as a small state machine (`machine.py`). The planner model designs it, or it comes
 from a file, and Jev runs it:
 
-- **Steps** (states), each with what the character does there in plain words, which intents it may choose (`fight`, `flee`, `leave`, `loot`, `seek`, `rest`), and optionally who to target first, how much to loot, whether to step back from melee and which spell to keep casting. A step can have a time limit and where to go after it.
+- **Steps** (states), each with what the character does there in plain words, which intents it may choose (`fight`, `flee`, `leave`, `loot`, `seek`, `rest`), and optionally who to target first, how much to loot, whether to step back from melee and which spell to keep casting: any spell a fight can use, a wall, curse or summon too, cast again once it has worn off, with Jev picking in between. A step can have a time limit and where to go after it.
 - **Moves** (transitions) between steps, each a yes/no question with the planner's own criteria ("health is falling faster than the bandages bring it back"), answered by Jev in the same request as the fight questions. Only the current step's moves are asked, so a plan costs a few yes/no answers a decision and no extra round trip. A move can require conditions code checks first (`3+ close`, `2+ coming`, `pack`, `health below 60`, `mana above 50`, `none in sight`, `supplies low`, `corpse near`, `area spell ready`, ...), so it's only asked when it can matter, and needs Jev's yes at 0.6 (or its own `at`).
 - **The plan reaches every choice:** each question's instructions carry the plan and the current step, so Jev's intent, target and spell follow it; the factual danger question doesn't see it, as it doesn't see the strategy.
 - **Floors no plan can remove:** the client's healing reflexes, never attacking players, leaving from red or criminal players, the emergency flee near death, leaving from a pack, and fighting back when hit with no way out allowed.
@@ -549,7 +564,7 @@ from a file, and Jev runs it:
 
 ```bash
 cd brain
-uv run uo-brain machine list                     # brain/machines: pull-one, mage-swarm, and the planner's own
+uv run uo-brain machine list                     # brain/machines: pull-one, mage-swarm, three wall and summon tests, the planner's own
 uv run uo-brain machine show pull-one
 uv run uo-brain machine design "A mage hunting alone in open ground, rushed by groups of melee monsters" --archetype mage
 uv run uo-brain run --machine pull-one           # also session, do hunt; the planner may replace it
@@ -674,6 +689,106 @@ as a loop there. The planner sees the note in `hunting_spots` and the figures th
 - **`uo-brain replay`** re-asks a log's questions to another judge offline, e.g. Jev against the rule baseline, and reports how often they agree.
 - **`uo-brain soak-report`** reports on an unattended `session` run ([Reference](#uo-brain)).
 - **Assist agreement:** with fight set to suggest, the brain records whether you attacked the creature it suggested.
+- **`uo-brain costs`** says what the AI calls in a log cost ([below](#what-it-costs)).
+
+### What it costs
+
+Every model call is recorded with its cost: Jev's typed questions (system one: fight decisions,
+routine hunt calls, picks of world facts, re-ranking the planner's queries, reading the strategy,
+naming what the recorder saw) and the planner model's chat (system two: goals, after-action
+review, guide import, plan design).
+
+- **Recorded per call:** its kind and role, the model, input, output and cached tokens, latency,
+  and the cost in dollars. The cost is the provider's own figure when it reports one: OpenRouter
+  does, for Jev and the planner alike. Otherwise (TypeSafe direct, or a model OpenRouter doesn't
+  price) it's estimated from a price table and marked `estimated`. `uo-brain costs --prices` fetches
+  OpenRouter's list prices into `brain/prices.json` for that table.
+- **In the logs:** one `ai_cost` record per call, in the log the call belongs to. Every run's
+  `summary` record (and a session's `session_summary`) has a `costs` block: the total, cost an hour,
+  a decision and a kill, split by role, kind of call and model.
+- **Where people look:** the [calls window](#the-agent-panel) shows each call's cost and the
+  running total; `uo-brain costs LOG` and `uo-brain report LOG` give the totals of a log;
+  `soak-report` splits a session's cost between system one and system two, an hour and a kill;
+  bench results give each round's cost (`cost_usd`, `cost_by_kind`, the models used, the average
+  latency), each judge's cost a round, and the whole run's `costs`.
+- **Checked against OpenRouter:** `run`, `session` and `bench` write what the OpenRouter key has
+  spent in all (its own count, from `/api/v1/key`) at the start and the end of the log. Another
+  run on the same key at the same time counts in it too, and the key's count trails the calls, by
+  2-3 minutes one evening and over half an hour one afternoon, so read it again once it has stopped
+  moving (`uo-brain costs --key`). One bench run with nothing else on the key: $0.1002 recorded in
+  1,305 calls, $0.1003 by OpenRouter's count once settled (2026-10-08, `bench/2026-10-08-fight-fixes.json`).
+- **A budget:** `--budget-per-hour USD` caps what the AI calls cost an hour, judged over the last
+  ten minutes (never measured over less than five, so one early planner call isn't a trend).
+  `--over-budget` says what happens over the cap: `slow` (the default) decides a quarter as often
+  and only on the clock, and the planner rests a minute instead of thinking; `cheaper` switches to
+  the profile's cheaper models; `stop` ends the session. The panel says when it goes over and back
+  under.
+
+### Which model answers
+
+Each kind of call can have its own model, named in one place: a profile in `brain/profiles/`.
+
+```toml
+[models]
+system1 = "jev"                            # fight, routine, facts, rerank, strategy, recorder
+routine = "anthropic/claude-haiku-5.5"     # one kind's own line beats its system's
+system2 = "anthropic/claude-sonnet-5.5"    # planner, review, guide, design
+
+[cheaper]                                  # while over a budget whose `over` is "cheaper"
+system2 = "anthropic/claude-haiku-5.5"
+
+[budget]
+per_hour = 0.60
+over = "cheaper"                           # slow, cheaper or stop
+
+[aliases]                                  # short names for --use and bench labels
+qwen = "qwen/qwen3.7-flash"
+```
+
+- **Profiles:** `default` (Jev and Sonnet, Haiku for the planner over a `cheaper` budget) and
+  `npc` (Jev and Haiku, capped at $0.15 an hour). `--profile NAME|FILE` picks one for `run`,
+  `session`, `scenario`, `do hunt` and `bench`.
+- **Order:** the built-in default, then `JEV_MODEL` / `PLANNER_MODEL` in the environment, then the
+  profile, then the command line: `--use KIND=MODEL` (repeatable; a kind, `system1` or `system2`),
+  `--model` (system one) and `--planner-model` (system two).
+- **Any model in system one:** "jev" (or a `typesafe/jev` id) is Jev. Any other OpenRouter model
+  is asked the same questions through a chat adapter (`models.ChatJudge`): it's told what each
+  question type means and asked for a probability for every option, as JSON (with a schema where
+  the model takes structured outputs), and its answer becomes the same probabilities Jev gives, so
+  the policy, the panel and the logs don't change. A question left unanswered gets an even spread.
+  Thinking is left off, except for models that always reason (gpt-oss, gpt-5), which are asked
+  for as little as they allow.
+- **Named in the logs:** each decision's `answers.model`, each `ai_cost` record's `model`, the
+  bench results' `profile` and `aliases`, and each round's `models`.
+- **Zero data retention:** this OpenRouter account only allows endpoints that keep no data, so a
+  model without one is refused ("ZDR violation"); OpenRouter's `/api/v1/endpoints/zdr` lists those
+  that have one.
+- **The planner offline:** each planner call's log record keeps the messages it was sent (after
+  the fixed system prompt), so `uo-brain replay-planner LOG --planner-model M` can put the same
+  moments to another model without the game: how often it answers with a usable tool call, how
+  often it picks the same tool, and what that costs and how long it takes.
+
+### Several agents on one server
+
+The aim is a server with smart NPCs playing beside people, each on its own models. A fleet file
+in `brain/fleets/` names the characters, each with its own client (agent port), account, profile
+and goal, and the test-server commands that prepare it:
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/graveyard-three.toml [--hours 0.5]   # the player's warrior and two NPCs
+uv run uo-brain fleet-report logs/fleet/<time>-graveyard-three
+```
+
+- **What it does:** starts a client for each agent that hasn't one running (from
+  `bin/osx-arm64`), logs it in (creating a warrior if the character doesn't exist), runs its prep
+  commands, then runs `uo-brain session` for it as its own process, so each brain has its own
+  ledger. While they play it samples the CPU and memory of every client, brain and the server.
+- **The report:** per character, its profile, minutes, kills, deaths, gold banked, cost an hour
+  and the models it used; together, the cost, the cost an hour and a kill, judge errors (where
+  rate limits show) and the load per process.
+- **Shared knowledge:** the agents share the shard's world store; it runs in SQLite's WAL mode so
+  one brain's writes don't hold up the others' reads.
 
 ### After-action review
 
@@ -724,7 +839,8 @@ Both are fixed, and the state now says when the next potion can be drunk.
 **Jev's cost:**
 - **Latency:** 253 ms median, 362 ms at the 95th percentile, through OpenRouter.
 - **Tokens:** about 150k input tokens per 90-second round.
-- **Price:** about $0.25 an hour at Jev's $0.042 per million list price. Check your OpenRouter bill for the actual rate.
+- **Price:** about $0.25 an hour at Jev's $0.042 per million list price.
+- **Recorded since 2026-10-08** ([what it costs](#what-it-costs)): two rounds each of the `priority` and `loot` scenarios cost $0.0106 in 148 fight decisions, $0.000072 a decision, 277 ms on average (`uo-brain bench --scenarios priority,loot --judges jev --rounds 2`, single run, `brain/bench/2026-10-08-costs-check.json`). OpenRouter reports Jev's cost as exactly its input tokens at $0.042 per million; output tokens are free.
 
 After the mage, panel and template work, a regression run of the same warrior arena
 with Jev scored 17 / 18 kills and 0 deaths.
@@ -854,7 +970,13 @@ pack in words. 2026-10-07, 5 rounds each on two lanes of the test field
 | rounds under 20% health | 1 (15%) | none | 2 (the death, and 13%) |
 
 - **Everyone got away:** every round of every judge left the fight. With the pack rule, code left while the pack was still coming ("3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you"). Without it, Jev's own `leave_now` left too, on the pack words against the gargoyles and on "2 creatures stronger than the character are near" against the bone knights.
-- **The death without the pack rule:** Jev's leave ran from the nearest creature, an orc beside the warrior, which took it straight towards the gargoyles; a leave the pack rule chooses runs from them all (cuo-d28.11).
+- **The death without the pack rule:** Jev's leave ran from the nearest creature, an orc beside the warrior, which took it straight towards the gargoyles; a leave the pack rule chose ran from them all. Now every leave with two or more in sight does (cuo-d28.11).
+- **Rerun after that change**, 2026-10-08, 5 rounds each on lane 3 (`bench/2026-10-08-packs-leave-all.json`, `--scenarios packs --judges jev,jev/nopack --rounds 5 --lane 3`): Jev without the pack rule 10/10 with no deaths (median lowest health 61.5%), Jev 9/10 (median 54.5%). All 190 leave runs with two or more creatures in sight ran from all of them. Jev's one death wasn't a leave: the warrior got away from the orc and the gargoyles untouched, then a gargoyle that came on its own a minute later took it from full health to 18% in 8 seconds. Five rounds a scenario is too few to call that a difference between the judges. The two warrior scenarios that end in leaving, `attrition` and `mismatch`, went 5/5 each for Jev the same day (`bench/2026-10-08-core-leave-all.json`, `--scenarios attrition,mismatch --judges jev --rounds 5 --lane 1`).
+- **After the cornered and losing-fast fixes** (cuo-y4l, cuo-8vk), 2026-10-08, lane 0, one client
+  (`--scenarios pack-gargoyles,pack-bone-knights,attrition,mismatch --judges jev --rounds 5`,
+  `bench/2026-10-08-fight-fixes.json`): 20/20, no deaths (packs 10/10, lowest health 36-79%;
+  attrition and mismatch 5/5 each). The state said health was falling in 100 decisions, and the fast
+  fall was the reason `leave_now` was asked 31 times.
 - **Earlier the same day:** with the cut at 3 (`packs-v2.json`), Jev died in one round of five against the gargoyles and the rules in one against the bone knights. With the final cut but before the changes to running and to fleeing near death (`packs-v3.json`, lane 3) all 30 rounds survived; a run between those changes (`packs-v4.json`) lost a Jev round to turning back near death and a rules round to looting with a gargoyle nearby, and a single round on lane 0 died cornered.
 - **Cost:** Jev about $0.0045 a round.
 
@@ -868,6 +990,23 @@ pack in words. 2026-10-07, 5 rounds each on two lanes of the test field
 
 - **Necromancers:** the first run had the rules at 0/5. They skipped any spell whose name started with "Poison" (meant for magery's Poison) and so never cast Poison Strike; and every caster began its rounds with no reagents, because the bench waited for the kit with the agent off and the client only opens a new reagent bag while it is on. Both fixed for the rerun.
 - **Paladins:** Jev used Holy Light against the four orcs in every round and Divine Fury in three; the rule of thumb added Consecrate Weapon. Close Wounds is a reflex for both.
+
+**The rest of the book** (cuo-ryt): every spell a fight can use offered to Jev, with the fizzle
+odds in words ([Mages](#mages)). 2026-10-08, lane 1, one client running; "before" is the code just
+before the change, with the change to leaving already in. `--scenarios swarm --judges jev --rounds 10 --lane 1`
+and `--scenarios necro-orcs,mage-tamer-orcs,warrior-mage-opener --judges jev --rounds 5 --lane 1`
+(`bench/2026-10-08-ryt-before-*.json` and `ryt-after-*.json`):
+
+| scenario | before | after |
+|---|---|---|
+| `swarm` | 1/10, 3 deaths, median 2.5 kills | 3/10, 3 deaths, median 3 kills |
+| `necro-orcs` | 5/5 | 5/5 |
+| `mage-tamer-orcs` | 4/5 | 5/5 |
+| `warrior-mage-opener` | 5/5 | 5/5 |
+
+- **Jev hardly uses the new spells.** On average 6 to 10% of its spell answer went to them. In the swarm it picked Earthquake 11 times and Mass Curse 10 times in 918 spell questions, and never a field, a summon or a blessing; the necromancer and the hybrids cast none of them. So the wider choice didn't make its picks worse, and the swarm's 1 to 3 is within that scenario's swing (it went 4/10 on 2026-10-07).
+- **The fizzle odds moved it.** The mage-tamer's top pick was Flamestrike 24 times before and once after (6 casts in 10 work at Magery 90), while code's fallback, used when Jev isn't sure, still cast it 40 times. The fallback now takes the strongest damage spell that works 9 times in 10 (cuo-x2x). Rerun the same day (`bench/2026-10-08-fallback-swarm.json`, `fallback-magetamer.json`, same commands): Flamestrike cast 0 times against 40, Energy Bolt in its place; `swarm` 2/10 with 4 deaths (median 3 kills, as before), `mage-tamer-orcs` 4/5 (the bear lost in one round). Neither is a measurable change at these sizes.
+- **Live check** on the test field, by hand: Wall of Stone and Energy Field went up between the mage and an orc; Blade Spirits landed beside the orc and killed it; the client took the blade spirit (shown red) and a summoned pig as the mage's own. Every eighth-circle cast fizzled at Magery 90, as the odds say they mostly will. ModernUO casts Blade Spirits three times as slowly as other fifth-circle spells and Summon Creature five times, which the client now waits for.
 
 **World facts.** `wisp-leave-alone` checks that a stored fact changes the move: a wisp floats
 7 tiles away while two orcs attack. In ModernUO a wisp only fights when attacked, and then it
@@ -892,6 +1031,124 @@ Results, 2026-10-07, 10 rounds each (`--scenarios world --judges jev`; `world-v4
 - **Caster priority:** the spellcaster-first target guidance from `priority` sent Jev at the idle wisp. Only a caster that is fighting now comes first, idle creatures are described as "not fighting", and Jev's "attack none of these" is respected.
 - **Picking facts:** asked whether a fact "bears on a choice the character faces", Jev scored every fact about the place alike (0.41–0.58) and never picked the two decisive notes. Asked whether a fact "says what to do about a creature in view", they came first, and Jev picked one in 4 of 10 selections. Picking still trails putting every fact in, at this shortlist size (25).
 
+### Models for each role
+
+Which model to put in each role (cuo-m70.3), measured with [the chat adapter](#which-model-answers)
+on the local server, one client, lane 0, 2026-10-08.
+
+**System one on the core scenarios**, 3 rounds each of the five, all models interleaved
+(`uv run uo-brain bench --scenarios core --judges jev,haiku,sonnet,llama,nemo --alias llama=meta-llama/llama-3.3-70b-instruct --alias nemo=mistralai/mistral-nemo --rounds 3`,
+`bench/2026-10-08-models-core.json`):
+
+| model | right | deaths | a round | a decision | an hour of fighting | latency | decisions a round |
+|---|---|---|---|---|---|---|---|
+| Jev | 12/15 [55-93%] | 1 | $0.0060 | $0.00010 | $0.26 | 279 ms | 60 |
+| Claude Sonnet 5.5 | 9/15 [36-80%] | 3 | $0.162 | $0.0075 | $7.76 | 2.7 s | 22 |
+| Claude Haiku 5.5 | 8/15 [30-75%] | 3 | $0.0085 | $0.00044 | $0.42 | 2.9 s | 20 |
+| Llama 3.3 70B | 6/15 [20-64%] | 6 | $0.0032 | $0.00031 | $0.16 | 6.9 s | 11 |
+| Mistral Nemo | 0/15 [0-20%] | 9 | $0.0003 | $0.00006 | $0.02 | 11 s | 6 |
+
+| scenario | Jev | Sonnet | Haiku | Llama | Nemo |
+|---|---|---|---|---|---|
+| `mismatch` | 3/3 | 3/3 | 3/3 | 0/3, 3 deaths | 0/3, 3 deaths |
+| `priority` | 3/3 | 0/3 | 0/3 | 0/3 | 0/3 |
+| `loot` | 3/3 | 3/3 | 3/3 | 3/3 | 0/3 |
+| `attrition` | 3/3 | 3/3 | 2/3, 1 death | 3/3 | 0/3, 3 deaths |
+| `swarm` | 0/3, 1 death | 0/3, 3 deaths | 0/3, 2 deaths | 0/3, 3 deaths | 0/3, 3 deaths |
+
+- **Jev is the cheapest per decision and the best:** a tenth of a cent per decision at 0.28 s, so it
+  decides about three times as often in a round as the fastest chat model. Llama and Nemo cost
+  less per round only because they decide so rarely; at 7 to 25 s a decision (25 s for Nemo in
+  the swarm) the fight is over before they answer, and they died in most rounds.
+- **Not only speed:** every chat model, Sonnet too, chose to fight a zombie before the orcish mage
+  in `priority`, from the first decision (Sonnet 12% on the mage, Haiku 2%, Jev 64%). The
+  questions and their wording were tuned with Jev; a chat model might do better with its own.
+- **Answering the format:** every model answered every question with probabilities; none needed
+  the plain-JSON fallback. Thinking is off: DeepSeek V4 Flash, which always thinks, took 100 s a
+  decision offline and wasn't benchmarked.
+- **Beyond the core:** Jev against Haiku, the best chat model per dollar, on the packs and the world-fact
+  scenario (2 rounds each, Jev picking the facts; `--scenarios pack-gargoyles,pack-bone-knights,wisp-leave-alone --facts jev --judges jev,haiku --rounds 2`,
+  `bench/2026-10-08-models-packs-world.json`) and the eight archetype scenarios (1 round each;
+  `--scenarios archer-kite,tamer-orcs,tamer-ogre-lord,bard-provoke,warrior-mage-opener,mage-tamer-orcs,necro-orcs,paladin-orcs --judges jev,haiku --rounds 1`,
+  `bench/2026-10-08-models-archetypes.json`): Jev 14/14 with no deaths; Haiku 10/14 with 3 deaths
+  (one gargoyle pack, the archer and the necromancer), failing the tamer against orcs too, at about
+  twice Jev's cost a round and 1.7-4.5 s a decision.
+- **For system one, Jev for both the player and the NPCs:** no chat model kept the player's
+  results, and the cheapest that came close (Haiku) costs over four times as much per decision.
+
+**System two, the planner**, one 30-minute soak run each, one after another on the same client:
+the graveyard goal with three gargoyles sent at the character at 8 minutes and a lich with two
+bone knights at 25, prepared the same way each time
+(`SOAK_PORT=5577 scripts/planner_compare.sh planners 0.5 anthropic/claude-sonnet-5.5 anthropic/claude-haiku-5.5 openai/gpt-oss-120b`,
+`brain/logs/planners-1..3.jsonl`; single runs). Then the Sonnet run's 24 planner moments put to the
+other two offline (`uo-brain replay-planner logs/planners-1.jsonl --planner-model M`):
+
+| planner | how the run went | planner calls | a call | planner an hour | latency | offline: usable tool call / same tool as Sonnet |
+|---|---|---|---|---|---|---|
+| Claude Sonnet 5.5 | 34.7 min, 10 kills, no deaths, 520 gold banked | 24 | $0.0096 | $0.40 | 2.9 s | |
+| Claude Haiku 5.5 | died at 8.4 min, 6 kills | 4 | $0.00044 | about $0.02 | 1.4 s | 96% / 33% |
+| gpt-oss-120b | died at 8.7 min, no kills | 10 | $0.00015 | about $0.01 | 8.5 s | 92% / 42% |
+
+- **Both deaths were in fights, not plans:** with Haiku planning, one of the three gargoyles came
+  on alone, "a fair fight", and killed the warrior with no leave asked (cuo-8vk); with gpt-oss-120b
+  it left the gargoyles three times, then two runs in a row found no path, and the cornered rule
+  held it in the fight for 15 s while Jev said leave at 0.8-0.9 (cuo-y4l). Sonnet's run left the
+  same gargoyles at once. One run each can't tell the planners apart on survival.
+- **What the planners did differently:** Haiku's first goal was the East Yew healer, which has no
+  route from Britain; gpt-oss-120b travelled to the bank it was standing at, then to a spot and
+  back. Sonnet bought at the Britain healer, hunted, banked, waited out the graveyard's refusal and
+  hunted the open country meanwhile.
+- **Again after the fight fixes** (cuo-08x), 2026-10-08, two runs each: one on the main server and
+  one on the soak copy, side by side, the models in turn
+  (`SOAK_PORT=5577 scripts/planner_compare.sh planners-a 0.5 <sonnet> <haiku> <gpt-oss>` and
+  `SOAK_PORT=5580 scripts/planner_compare.sh planners-b 0.5 <haiku> <gpt-oss> <sonnet>` against the copy on
+  port 2595; `brain/logs/planners-a-*`, `planners-b-*`). On the copy a lich and two zombies were at
+  the graveyard from the start, so every run there left in the first minutes and the rest was
+  what the planner did next.
+
+  | planner | main server | the copy | planner an hour | a call | latency |
+  |---|---|---|---|---|---|
+  | Claude Sonnet 5.5 | 31.6 min, 3 kills, 381 gold banked | 31.1 min, 1 kill (tried 9 spots in the open country, then waited out the refusal) | $0.55-0.68 | $0.0083-0.0088 | 3.0 s |
+  | Claude Haiku 5.5 | 33.8 min, 12 kills, 923 gold gained, none banked | 34.0 min, 2 kills (rested out the refusal) | $0.012-0.014 | $0.00044 | 2.1-2.8 s |
+  | gpt-oss-120b | 45.1 min, 22 kills, none banked; bought reagents for a warrior, 24 stuck spots on the way | 30.5 min, 1 kill, 250 banked (rested out the refusal) | $0.005-0.012 | $0.00016-0.0002 | 10-11 s |
+
+  No deaths in the six runs (two of the three runs before the fixes died). Sonnet costs 40-70 times as
+  much to plan with and made fewer kills here; it followed more of the goal (banking, restocking)
+  and searched harder for somewhere else to hunt. Six runs are still few.
+- **Verdict:** Haiku for NPCs (the `npc` profile): about a twentieth of Sonnet's cost a call,
+  fast, and no worse at keeping a character alive and fighting in these runs. gpt-oss-120b is
+  cheaper still but slow and made odd choices. Sonnet stays the player's planner for now; whether
+  Haiku could plan for the player too, saving about $0.50 an hour, is open.
+
+### Several agents on one server
+
+The player's warrior on the `default` profile (Jev, Sonnet) and NPC warriors on the `npc` profile
+(Jev, Haiku, a budget), each with its own client and brain, on the local server, 2026-10-08:
+
+| run | agents | minutes | kills | deaths | together | an hour | player's character | each NPC |
+|---|---|---|---|---|---|---|---|---|
+| `uo-brain fleet fleets/graveyard-three.toml --hours 0.5` | 2 (the third refused) | 31-33 | 7 | 0 | $0.479 | $0.88 | $0.78/h | $0.108/h |
+| `uo-brain fleet fleets/britain-five.toml` (0.33 h) | 5 | 20-24 | 20 | 0 | $0.306 | $0.78 | $0.41/h | $0.09-0.15/h |
+
+Logs in `brain/logs/fleet/2026-10-08-*`; report: `uv run uo-brain fleet-report DIR`. Single runs.
+
+- **What a character costs:** an NPC $0.09-0.15 an hour, three quarters of it Jev's fight decisions
+  ($0.0001 each, 400-500 in 20 minutes) and most of the rest Haiku's planning ($0.0005 a call). The
+  player's character costs three to seven times as much, almost all of it Sonnet's planning ($0.007
+  to $0.008 a call, 14 to 42 calls in a run).
+- **The budget holds:** in the first run the `npc` cap was $0.10 an hour; the NPC sat just over it
+  and spent most of the half hour resting "over budget", since Jev alone costs an active warrior
+  about $0.08 an hour. The cap is now $0.15, and in the second run the NPCs spent $0.09-0.15.
+- **The machine:** a client takes 13-20% of one core and about 400 MB, a brain under 1% and 60-75 MB,
+  the server about 1% and 300-400 MB, on a 12-core Mac with 24 GB. By those figures one machine
+  could run several dozen agents before CPU or memory runs out; that hasn't been tried.
+- **No rate limits:** no judge errors in either run, with five brains on one OpenRouter key.
+- **Limits found:** ModernUO allows 10 accounts per address by default here; the third agent of the
+  first run was refused ("ip already has 10 accounts") until `accountHandler.maxAccountsPerIP` was
+  raised to 50 (`tools/modernuo/README.md`). Several NPCs at one spot share its spawns: in the first
+  run the two at the graveyard made 7 kills in half an hour. The Haiku planner kept choosing the
+  Britain sewer, which can't be walked to.
+
 ### Plans for fights
 
 Plans against the fixed policy where the rules lost (cuo-6om), 5 rounds each, 2026-10-07
@@ -908,6 +1165,32 @@ $0.018 and $0.015); `mage-swarm` and `pull-one` are the hand-written ones.
 - **No plan beat the fixed policy:** on `attrition` every judge got out alive once leaving packs and running were fixed, and on `swarm` the plans did worse. The planner's plan went from "blast" to "escape" early in every round and spent 12–68 s of its 120 escaping or recovering: four of five rounds survived, with 2–4 kills, short of the four needed. The hand-written plan left for 30 s whenever mana fell below 25%; of its two deaths, one came in its "blast" step and one in its first step after coming back.
 - **The moves between steps work as written:** every round logged its moves with Jev's yes ("open -> blast (0.68)", "blast -> out (0.74)", "out -> open (after 30 s)").
 - **What it costs:** a plan adds one to four yes/no questions to each fight request, about 300 input tokens.
+
+### Walls and summons in a swarm
+
+Jev put 6-10% of its spell answer on the spells that do no damage and never picked a field or a
+summon, even with six monsters on the mage (cuo-ev9). Does a wall or a summon win swarm rounds?
+Plans that keep one going whenever it can be cast (`brain/machines/mage-blades.json`,
+`mage-paralyze-field.json`, `mage-energy-field.json`; Jev picks between casts) and the ward
+question above, against plain Jev, 5 rounds each, lane 0, one client, 2026-10-08
+(`uv run uo-brain bench --scenarios swarm --judges "jev,jev/ward,jev#mage-blades,jev#mage-paralyze-field,jev#mage-energy-field" --rounds 5`,
+`bench/2026-10-08-ev9-swarm.json`; kills counted without the mage's own summons, which the
+check counted then and doesn't now):
+
+| | right | deaths | kills a round | walls and summons cast |
+|---|---|---|---|---|
+| Jev | 2/5 | 2 | 4, 1, 3, 0, 5 | none |
+| Jev + keep Paralyze Field up | 1/5 | 2 | 3, 6, 1, 1, 2 | 1-14 a round |
+| Jev + keep Energy Field up | 1/5 | 4 | 4, 6, 0, 1, 3 | 1-9 a round |
+| Jev + keep Blade Spirits up | 1/5 | 4 | 6, 0, 2, 2, 5 | 4-7 a round |
+| Jev + the ward question | 0/5 | 3 | 3, 3, 1, 1, 2 | 0-5 a round |
+
+- **No wall or summon won rounds:** each cast is one that does no damage while six creatures hit
+  the mage, and the crowd comes round a short wall. Jev rarely picking them looks right on this
+  server. Energy Vortex wasn't tried: at Magery 90 an eighth-circle spell fizzles 3 times in 4.
+- **The ward question** cast several fields of different kinds in a row in one round (each has its
+  own recast timer); it now waits 15 s between them, which hasn't been measured. Five rounds is
+  too few to tell small differences apart, but nothing here points to walls helping; it stays off.
 
 ### Real input
 
@@ -1144,15 +1427,26 @@ properties on means AOS) and reports it as `era` in the snapshot ("aos" or "pre-
 - **Runebooks** look like a spellbook with hue 0x461 on older servers, rather than the AOS runebook graphic; both are recognised.
 
 A rehearsal on the local server under Renaissance rules passed ([results](#renaissance-rules-rehearsal)). Not
-yet tried on UO Renaissance itself, which needs a real account.
+yet tried on UO Renaissance itself.
+
+### Connecting to UO Renaissance
+
+What the shard needs, from its own pages and its launcher (checked 2026-10-08, when its website was
+down and the game server up; the page quotes are from the Wayback Machine):
+
+- **Server:** `login.uorenaissance.com`, port 2593, no encryption.
+- **Client data:** client version 5.0.8.3 with the shard's own patched files (art, gumps, maps and statics, `tiledata.mul`, `cliloc.enu`; its maps add islands and towns). The 7.0.117.1 data from EA's patch servers won't do, and the shard's launcher, installer and patch are only on its website.
+- **Accounts** are made on first login with a name and password of your choosing. The shard allows two or three per person (its pages disagree).
+- **Profile:** `tools/uor/settings.uor.json` has the settings, with the agent off. Copy it next to `cuo`, fill in `ultimaonlinedirectory` with the folder holding the shard's files, and start `./cuo -settings settings.uor.json` from `bin/osx-arm64`.
+- **Rules:** the shard's own launcher installs ClassicUO and staff recommend it, but its Code of Conduct still lists "Non Electronic Arts (EA) or Origin Systems (OSI) Clients" as not allowed, names Razor as the only approved third-party program, says no software other than Razor may be used for repetitive tasks, and that "you may not kill monsters unattended using any means". Ask staff before connecting with the agent on.
 
 ## Known limits
 
 - Results are single small runs, apart from the benchmark's 5 or 10 rounds.
-- Against six melee monsters at once a mage now wins 4 rounds in 10 (`swarm`), up from none, but on the final code with 5 deaths in 10, and none won with three other benchmark clients running; the rules win at most one. Summons (Blade Spirits, Energy Vortex) and fields aren't used.
+- Against six melee monsters at once a mage now wins 4 rounds in 10 (`swarm`), up from none, but on the final code with 5 deaths in 10, and none won with three other benchmark clients running; the rules win at most one. Jev is offered summons, fields and curses but hardly ever picks them.
 - Necromancy and chivalry are tested only under the local server's AOS rules. ClassicUO's chivalry table has OSI's mana costs (Divine Fury 10 where ModernUO asks 15), used only for the client's own check before casting. The agent can't restock tithing points.
 - Plans for fights didn't beat the fixed policy on the two scenarios tried, and haven't been soak-tested in sessions.
-- A pack's weight comes from the store's creature stats; a creature it doesn't know counts 0.5. When Jev says "attack none of these" but its intent is to seek, code still walks to the nearest creature (cuo-8ga).
+- A pack's weight comes from the store's creature stats; a creature it doesn't know counts 0.5.
 - Bandage timing and spell failures are read by cliloc number where the server sends one (ModernUO does, under both rule sets), and from the English text otherwise. They have not yet been checked against what UO Renaissance itself sends.
 - On pre-AOS shards, item names take a few seconds to learn (one single click each), so the first loot judgment on a corpse can see tile names.
 - To read a spellbook or a bag, the agent opens it once, so its gump flashes briefly.
@@ -1188,17 +1482,20 @@ yet tried on UO Renaissance itself, which needs a real account.
 
 Run from `brain/` as `uv run uo-brain …`; `--port` (before the command) picks the client's agent port, 5577 by default.
 
-- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage|archer|tamer|bard|necromancer|paladin`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`, `--shard`, `--planner-model`, `--facts jev|all|none` (which world facts reach the fights), `--machine NAME|FILE` (follow a [plan](#plans-for-fights) in fights), `--no-machines` (the planner can't set plans). `session` and `do hunt` take the same options.
+- **`run`:** play: fights, and in auto mode works towards the panel's goal. Options: `--mode`, `--judge jev|heuristic`, `--provider auto|openrouter|typesafe`, `--model`, `--archetype auto|warrior|mage|archer|tamer|bard|necromancer|paladin`, `--strategy FILE`, `--template NAME` (repeatable), `--duration`, `--log`, `--min-confidence`, `--shard`, `--planner-model`, `--facts jev|all|none` (which world facts reach the fights), `--machine NAME|FILE` (follow a [plan](#plans-for-fights) in fights), `--no-machines` (the planner can't set plans), `--budget-per-hour USD` and `--over-budget slow|cheaper|stop` ([a budget](#what-it-costs)), `--profile NAME|FILE` and `--use KIND=MODEL` ([the model for each kind of call](#which-model-answers)). `session` and `do hunt` take the same options.
 - **`machine list|show NAME|design "SITUATION" [--archetype A] [--out FILE] [--planner-model M]`:** plans for fights ([above](#plans-for-fights)); doesn't connect to the game.
 - **`scenario`:** arena rounds with metrics; `--kit warrior|mage`, `--rounds`, `--round-seconds`, `--monsters`, `--kind`, and the `run` options.
 - **`do travel|bank|buy|sell|hunt|rest …`:** one session goal ([above](#travel-banking-shops-and-hunting)); uses the world store.
 - **`session "GOAL" [--hours]`:** the planner towards a goal, from the command line.
-- **`bench [list|report FILES]`:** the judgment benchmark ([Results](#judgment-benchmark)). Options: `--scenarios core|adherence|archetypes|world|packs|all|NAME,…`, `--judges heuristic,jev,jev+<template>` (each optionally `/nokite`, for no stepping back, `/nopack`, for code not leaving from packs, or `#<machine>`, to follow that plan), `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
+- **`bench [list|report FILES]`:** the judgment benchmark ([Results](#judgment-benchmark)). Options: `--scenarios core|adherence|archetypes|world|packs|all|NAME,…`, `--judges heuristic,jev,jev+<template>` (each optionally `/nokite`, for no stepping back, `/nopack`, for code not leaving from packs, or `#<machine>`, to follow that plan; instead of `jev`, a model alias plays system one: `haiku`, `sonnet`, or one named with `--alias NAME=MODEL` or in the profile), `--alias NAME=MODEL` (repeatable), `--profile`, `--use KIND=MODEL`, `--facts none,all,jev` (world-fact scenarios: the conditions per judge), `--rounds`, `--lane`, `--out`.
 - **`strategy [show|set|add|clear|load|explain]`, `strategy templates`, `strategy template NAME [--replace]`, `strategy drop NAME`:** show or change the strategy, see how Jev read it, and list, pull in or take out templates.
-- **`soak-report LOG [--disruptions FILE] [--json]`:** a report on an unattended `session` run from its log: the goals the planner chose and why, hunts, kills and deaths, where the time went, what was bought and banked, and what Jev and the planner cost an hour. With `--disruptions` (JSONL of `{t, what}`), the goals that followed each disruption.
+- **`costs [LOG…] [--json] [--prices] [--key]`:** what the AI calls in the logs cost ([above](#what-it-costs)): the total, an hour, a decision, by kind of call and model, and OpenRouter's own count for the key over the same run. `--prices` updates `brain/prices.json` from OpenRouter's list prices; `--key` shows what the key has spent in all.
+- **`fleet FILE [--hours H] [--out DIR]`, `fleet-report DIR [--json]`:** several agents on one server ([above](#several-agents-on-one-server)).
+- **`replay-planner LOG --planner-model M [--limit N]`:** a session's planner moments put to another model, offline ([above](#which-model-answers)).
+- **`soak-report LOG [--disruptions FILE] [--json]`:** a report on an unattended `session` run from its log: the goals the planner chose and why, hunts, kills and deaths, where the time went, what was bought and banked, and what system one (Jev) and system two (the planner) cost, an hour and a kill. With `--disruptions` (JSONL of `{t, what}`), the goals that followed each disruption.
 - **`review LOG [--accept N…] [--again] [--digest] [--planner-model M]`:** the planner model proposes strategy lines from a log, with the evidence ([above](#after-action-review)); `--accept` adds saved ones to the character's strategy, the only part that connects to the game.
 - **`world [--shard local] [--map Felucca] …`** (the world store; doesn't connect to the game): `note TEXT [--area A] [--tag T]`, `notes [KEYWORDS] [--area A]`, `place NAME`, `find KIND [--near X,Y | --near-place NAME]`, `spawns [AREA] [--near …] [--radius N]`, `hunt ARCHETYPE LEVEL [--near …]`, `route FROM TO`, `stats`, `import-modernuo [--modernuo-dir DIR] [--maps Felucca]`, `import-guide URL|FILE [--area A] [--planner-model M]`, `fill-gaps AREA [--planner-model M]`, `outcomes LOG… [--area A]` (record what each hunt in the logs gave, per area and kit; importing a log again replaces its rows).
-- **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG`.**
+- **`login`, `status`, `snapshot [--semantic]`, `act <verb> k=v`, `accept`, `mode`, `cmd "-agent …"`, `say`, `shot FILE`, `report LOG`, `replay LOG [--model M] [--limit N]` (a log's questions asked again of Jev or any OpenRouter model: agreement with the logged answers, latency, cost).**
 
 ### Client RPC
 
@@ -1218,9 +1515,9 @@ be open at once (the brain and one-off CLI calls).
 | `templates` | `kind: "goal"` for goal templates | list strategy or goal templates |
 | `goal` | `text \| clear \| pause \| template` | set or change the auto-mode goal |
 | `goal_status` | `step, why` | the planner's current step, for the panel |
-| `decision` | `{…}` | what the brain decided, for the panel; `next` is the move for the next-move key, `machine` the plan and its current step |
+| `decision` | `{…}` | what the brain decided, for the panel; `next` is the move for the next-move key, `machine` the plan and its current step, `cost` what the call cost and `spent` the running totals |
 | `brain_info` | `judge, archetype, strategy_reading` | what the brain is running, for the panel |
-| `ai_call` | `kind, title, model, latency_ms, cost, questions, note` | a model call other than a fight decision (routine, facts, strategy, planner), for the live view of calls; fight decisions carry their `questions` in `decision` |
+| `ai_call` | `kind, title, model, latency_ms, cost, spent, questions, note` | a model call other than a fight decision (routine, facts, strategy, planner), for the live view of calls; fight decisions carry their `questions` in `decision`. `spent` is the brain's running cost: `total`, `per_hour`, `calls`, `by_kind`, and `budget_per_hour`, `over_budget` with a budget |
 | `note` | `text` | a line from the brain, shown in the panel for 10 s |
 | `command` | `text` | run a client command as if typed, e.g. `agent status` |
 | `nav` | `radius, goal_x, goal_y, reach` | travel debugging: the planner's map, with the path it would walk |
@@ -1236,13 +1533,13 @@ whether each corpse is a monster's, `player.ranged` (kind, ammunition and range 
 crossbow in hand), arrows, bolts and whether an instrument is in the pack under
 `player.supplies`, `pets` (the character's pets in sight, with health), `agent.pet_order` and
 `pet_target`, `travel_items` (marked runes and runebook entries) and `era` (`aos` or
-`pre-aos`). `magic` covers every book carried (magery, necromancy, chivalry): `schools`, each
+`pre-aos`), and `player.followers` and `followers_max` (follower slots, which pets and summons take). `magic` covers every book carried (magery, necromancy, chivalry): `schools`, each
 spell with its `school`, mana, tithing cost and what is missing, and `tithing` points; a
 necromancer's reagents are under `player.supplies.pagan_reagents`.
 
 #### Act verbs
 
-- **Fighting:** `attack {target, range}`, `war_mode`, `stop`, `cast {spell, target, queue}`, `skill {name, targets}` (with `targets`, a bard's song: the client answers each target cursor in turn, and the instrument prompt), `pet {kind: kill|follow|guard|stay, target}`, `flee {target, tiles}`, `kite {tiles}` (step back from melee, 2 to 8 tiles).
+- **Fighting:** `attack {target, range}`, `war_mode`, `stop`, `cast {spell, target, queue}` (a field or a placed summon aimed at a creature goes on the free tile beside it nearest the character), `skill {name, targets}` (with `targets`, a bard's song: the client answers each target cursor in turn, and the instrument prompt), `pet {kind: kill|follow|guard|stay, target}`, `flee {target, tiles}`, `kite {tiles}` (step back from melee, 2 to 8 tiles).
 - **Healing:** `bandage_self`, `bandage`, `drink {kind}`.
 - **Loot and items:** `loot`, `take`, `use`, `target`.
 - **Moving:** `walk_to`, `move`, `travel {x, y, distance}`, `recall {target: rune or runebook, distance: entry, kind: spell|charge|gate}`.
@@ -1341,6 +1638,9 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 | `logs.py` | reads the brain's logs back |
 | `review.py` | after-action review: strategy lines from a log |
 | `llm.py` | OpenRouter chat client for the planner model |
+| `costs.py` | what every AI call costs: the ledger, its log records, totals and the budget |
+| `fleet.py` | several agents on one server: clients, logins, sessions, load and the report |
+| `models.py` | which model answers each kind of call (profiles), and the adapter that puts Jev's questions to any chat model |
 
 </details>
 
@@ -1348,9 +1648,12 @@ These come from `Projects/UOContent/Custom/AgentTestKit.cs` in ModernUO (the cop
 |---|---|
 | `brain/worlds/<shard>/` | the world store, `world.sqlite` (gitignored) |
 | `brain/machines/` | plans for fights: two written by hand, and the planner's |
-| `brain/scripts/` | soak runs: preparing the character (`soak_prep.py`), sending packs at it (`soak_packs.py`), and both with a session (`soak_run.sh`) |
+| `brain/profiles/` | which model answers each kind of call, and budgets: `default`, `npc` |
+| `brain/fleets/` | several agents on one server: `graveyard-three` (the player's warrior and two NPCs) |
+| `brain/scripts/` | soak runs: preparing the character (`soak_prep.py`), sending packs at it (`soak_packs.py`), both with a session (`soak_run.sh`), and the planner on several models one after another (`planner_compare.sh`) |
 | `tools/uo-download/` | official client downloader (EA patch protocol, UOP rebuild) |
 | `tools/modernuo/` | test server commands (`AgentTestKit.cs`), start script, setup and config notes |
+| `tools/uor/` | the settings profile for UO Renaissance ([connecting](#connecting-to-uo-renaissance)) |
 | `docs/` | upstream ClassicUO's README, and the images for this one |
 | `tests/ClassicUO.UnitTests/Agent/`, `brain/tests/` | `dotnet test tests/ClassicUO.UnitTests --filter "FullyQualifiedName~Agent"`, `cd brain && uv run pytest` |
 

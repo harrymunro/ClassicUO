@@ -25,7 +25,7 @@ class FakeJev:
 
     async def ask(self, state, qs):
         self.asked.append((state, qs))
-        a = Answers(model="fake", input_tokens=900)
+        a = Answers(model="fake", input_tokens=900, cost=900 / 1e6 * 0.042)
         for q in qs:
             a.nouls[q] = self.nouls[q]
         return a

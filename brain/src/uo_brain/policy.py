@@ -6,7 +6,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .judge import Answers, ChoiceResult
-from .spells import BLESSING_SPELLS, GREATER_HEAL, MEDITATION, PROTECTION
+from .spells import (BLESSING_SPELLS, GREATER_HEAL, MEDITATION, PROTECTION, RECAST_AFTER, RECAST_AFTER_WITH_ICON,
+                     is_damage)
 from .questions import leave_reason
 from .state import PACK_FAR, SPELL_RANGE, Candidate, Situation, around_target
 
@@ -16,6 +17,9 @@ class PolicyConfig:
     min_intent_confidence: float = 0.35
     min_target_confidence: float = 0.25
     min_spell_confidence: float = 0.3
+    ward: bool = False  # a mage with a crowd coming is asked about walls and summons first (cuo-ev9)
+    ward_at: float = 0.5  # ...and casts the likeliest when Jev's answers other than "none" add up to this
+    ward_every: float = 15.0  # seconds after one before another: one wall a crowd, not one of each kind
     flee_danger: float = 0.5        # flee needs the intent *and* the danger judgment to agree
     panic_danger: float = 0.9       # ...unless danger is this sure and health is critical
     take_item: float = 0.6
@@ -45,6 +49,10 @@ class PolicyConfig:
     main_spell: str = ""
 
 
+HP_WINDOW_S = 6.0   # how far back a fall in health is measured
+FAST_FALL = 30      # points of health lost in that time that count as falling fast (cuo-8vk)
+
+
 @dataclass
 class Memory:
     looted: set[int] = field(default_factory=set)
@@ -71,6 +79,15 @@ class Memory:
     flee_failed: int = 0            # flee actions in a row the client couldn't do ("no path away")
     cornered_until: float = 0.0     # surrounded: code doesn't try to leave again until then
     blessing_action: dict[str, Any] = field(default_factory=dict)  # the last blessing cast, for the decision
+    # (creature, or 0, spell) -> when it may be offered again: a curse, field, summon or blessing on
+    # the caster lasts a while, and a cast nothing confirms isn't repeated at once (cuo-ryt).
+    recast: dict[tuple[int, str], float] = field(default_factory=dict)
+    last_ward: float = -1e9  # when a wall or summon was last cast on Jev's ward answer (cuo-ev9)
+    hp_trail: list[tuple[float, int]] = field(default_factory=list)  # (when, health %) over the last seconds
+
+    def cooling(self, now: float) -> set[tuple[int, str]]:
+        """The (creature or 0, spell) pairs state.build shouldn't offer now."""
+        return {k for k, until in self.recast.items() if until > now}
 
     def hint_due(self, key: str, now: float, every: float = 12.0) -> bool:
         if now - self.hinted.get(key, -1e9) < every:
@@ -81,6 +98,12 @@ class Memory:
     @property
     def skip_items(self) -> set[int]:
         return self.taken | self.declined
+
+    def health_drop(self, hp: int, now: float, window: float = HP_WINDOW_S) -> int:
+        """Health (percent) lost over the last `window` seconds: the highest it was since, less now.
+        Healing in between doesn't hide a fall that came after it."""
+        self.hp_trail = [(t, h) for t, h in self.hp_trail if now - t <= window] + [(now, hp)]
+        return max(0, max(h for _, h in self.hp_trail) - hp)
 
     def update(self, agent: dict[str, Any], now: float) -> None:
         """A corpse counts as looted once the client has finished with it.
@@ -211,7 +234,10 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     potion_soon = sit.player.get("supplies", {}).get("heal_potions", 0) > 0 \
         and sit.agent.get("heal_potion_ready_ms", 0) <= 2000
     chasing = chasers(sit, cfg)
-    if cfg.allow_flee and intent != "flee" and chasing and danger >= cfg.panic_danger and sit.hp_pct < 25 \
+    # Falling fast, a little less sureness will do: a lone gargoyle took a warrior from 58% to 20% in a
+    # second, and it died at danger 0.86-0.87, under the 0.9 (cuo-8vk).
+    panic = danger >= cfg.panic_danger or danger >= cfg.panic_danger - 0.1 and sit.hp_drop >= FAST_FALL
+    if cfg.allow_flee and intent != "flee" and chasing and panic and sit.hp_pct < 25 \
             and not potion_soon and sit.authority("move") != "off":
         intent, conf = "flee", danger
 
@@ -228,7 +254,12 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # left out of sight is lost.
     # Cornered: every way out is blocked (in swarm rounds a mage kept "leaving" for 40 s, each flee
     # failing, while six monsters hit it). Fight instead, and don't try to leave for a while.
-    if mem.flee_failed >= 2:
+    # Only once something has reached it, though: in a soak run a warrior that had left three gargoyles
+    # three times found no path twice by the graveyard wall with them still far off, was held in the
+    # fight for 15 s while Jev said leave at 0.8-0.9, and died (cuo-y4l). With nothing close it keeps
+    # leaving, straight away from the nearest instead of from them all, which is another heading;
+    # four failures in a row count as cornered all the same.
+    if mem.flee_failed >= 2 and (any(h.distance <= cfg.close_tiles for h in sit.hostiles) or mem.flee_failed >= 4):
         mem.flee_failed, mem.leaving_until, mem.cornered_until = 0, 0.0, now + 15
     if mem.leaving_until > now and sit.authority("move") == "auto":
         near = [h for h in sit.hostiles if h.distance <= 14]
@@ -256,10 +287,12 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         if keep_travelling(sit):
             return Decision("leave", 1.0, call, "leaving by the road: the trip goes on", masked, target=nearest)
         tiles = 8 if sit.is_tamer else 15
-        away = 0 if len(sit.pack) >= 2 else nearest.serial  # from the whole pack, weighed by the client
+        # From them all, weighed by the client, when there are two or more; after runs that found no
+        # path, from the nearest alone, which points another way.
+        away = nearest.serial if mem.flee_failed >= 2 else flee_from(sit, nearest)
         return Decision("leave", 1.0, call + [{"verb": "flee", "target": away, "tiles": tiles, "confidence": 1.0,
                                                "reason": "leave"}],
-                        f"leaving, away from {'the pack' if away == 0 else nearest.name}", masked, target=nearest)
+                        f"leaving, away from {away_words(sit, nearest)}", masked, target=nearest)
 
     # A cautious strategy gets out early: badly hurt with several creatures on the character.
     outmatched = any(str(h.info.get("strength", "")).startswith("far stronger") for h in sit.hostiles)
@@ -343,11 +376,16 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                 actions.append({"verb": "flee", "target": foe.serial, "tiles": 8, "confidence": 1.0, "reason": "pull back"})
             return Decision("flee", 1.0, hints + actions, f"call the pet back ({why})", masked, target=foe)
 
+    note_rest = ""
     if intent == "seek" and now < mem.no_seek_until:
         intent, conf = "rest", 1.0
         note_rest = "not going back after leaving"
-    else:
-        note_rest = ""
+    # Seek only what Jev would attack: with its target answer "none of these", seeking the nearest
+    # anyway walked a warrior to the wraith it had said to leave (cuo-8ga).
+    seek_target, seek_conf = pick_target(sit, ans, cfg) if intent == "seek" else (None, None)
+    if intent == "seek" and seek_target is None:
+        intent = "rest"
+        note_rest = f"not seeking: Jev would attack none of these ({seek_conf or 0:.2f})"
 
     if conf < cfg.min_intent_confidence:
         dec = Decision(intent, conf, hints, f"unsure ({conf:.2f}), keeping course", masked, gated=True)
@@ -358,9 +396,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             dec.target = current
             dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, current)
             if dec.spell:
-                at = sit.area_center if dec.spell.info.get("area") and sit.area_center else current
-                dec.actions.append({"verb": "cast", "spell": dec.spell.name, "target": at.serial, "queue": True,
-                                    "confidence": round(conf, 3), "reason": "keep course"})
+                dec.actions.append(cast_action(sit, mem, dec.spell, current, now, confidence=round(conf, 3),
+                                               reason="keep course"))
         return dec
 
     actions: list[dict[str, Any]] = hints
@@ -419,20 +456,22 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                                 **meta, "reason": "protection"})
                 dec.note = f"fight {target.name}, Protection first ({conf:.2f})"
                 return dec
-            # Queued: the client casts it the moment the current spell and recovery allow.
-            if target.distance <= SPELL_RANGE:
+            # Queued: the client casts it the moment the current spell and recovery allow. A wall or a
+            # summon first when Jev says so with a crowd still coming (cuo-ev9).
+            if now - mem.last_ward >= cfg.ward_every and (w := pick_ward(sit, ans, cfg)) is not None:
+                mem.last_ward = now
+                dec.spell, dec.spell_confidence, dec.spell_why = w, 1.0 - ans.choices["ward"].probabilities.get(
+                    "none", 0.0), "ward"
+            elif target.distance <= SPELL_RANGE:
                 dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, target)
             elif sit.assisting and mem.hint_due(f"range{target.serial}", now, 8):
                 actions.append({"verb": "hint", "text": f"{target.name} is out of spell range", "reason": "range"})
             if dec.spell:
-                # An area spell goes where it hits the most of them, which may not be the target.
-                at = sit.area_center if dec.spell.info.get("area") and sit.area_center else target
-                actions.append({"verb": "cast", "spell": dec.spell.name, "target": at.serial, "queue": True, **meta,
-                                **({"reason": f"area {sit.area_count}"} if at is not target or dec.spell.info.get("area")
-                                   else {})})
+                actions.append(cast_action(sit, mem, dec.spell, target, now, **meta))
             dec.note = (f"{pet_note}, " if pet_note else "") + f"fight {target.name}" \
                 + (f" with {dec.spell.name}" if dec.spell else "") \
-                + (f" on {sit.area_count}" if dec.spell and dec.spell.info.get("area") else "") + f" ({conf:.2f})"
+                + (f" on {dec.spell.info.get('hits', sit.area_count)}" if dec.spell and dec.spell.info.get("area") else "") \
+                + f" ({conf:.2f})"
         elif sit.is_bard:
             sing(sit, ans, mem, cfg, target, dec, meta, now)
         elif sit.is_tamer:
@@ -458,8 +497,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             if sit.is_warrior_mage and target.casts == 0 and 2 <= target.distance <= SPELL_RANGE:
                 dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, target)
                 if dec.spell:
-                    actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True,
-                                    **meta, "reason": "opener"})
+                    actions.append(cast_action(sit, mem, dec.spell, target, now, **meta, opener=True))
             if target.serial != engaged:
                 actions.append({"verb": "attack", "target": target.serial, **meta})
             blessed = bless(sit, ans, mem, cfg, target, meta, now) if sit.is_paladin else ""
@@ -484,10 +522,12 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         if keep_travelling(sit):
             dec.note = f"leave by the road: the trip goes on ({conf:.2f})"
         else:
-            # Away from the whole pack (the client weighs every creature in view), else the threat.
-            actions.append({"verb": "flee", "target": 0 if pack else threat.serial, "tiles": 8 if sit.is_tamer else 15,
+            # Away from all of them (the client weighs every creature in view), whichever rule chose
+            # to leave: Jev's leave_now with an orc adjacent ran from the orc alone, 15 tiles north
+            # into three gargoyles, and the warrior died there (cuo-d28.11).
+            actions.append({"verb": "flee", "target": flee_from(sit, threat), "tiles": 8 if sit.is_tamer else 15,
                             **meta})
-            dec.note = f"leave, away from {'the pack' if pack else threat.name} ({conf:.2f})"
+            dec.note = f"leave, away from {away_words(sit, threat)} ({conf:.2f})"
 
     elif intent == "flee":
         # From what is after the character: a timber wolf a few steps off that wasn't once took the
@@ -508,8 +548,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         dec.note = f"loot {corpse.name if corpse else 'items'} ({conf:.2f})"
 
     elif intent == "seek":
-        target, dec.target_confidence = pick_target(sit, ans, cfg)
-        target = target or min(sit.hostiles, key=lambda h: h.distance)
+        target, dec.target_confidence = seek_target, seek_conf
         dec.target = target
         # A warrior-mage within spell range opens with a spell and lets the creature come: in a
         # calibration run it walked up to orcs 5 tiles off and never cast its opener.
@@ -517,8 +556,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             dec.spell, dec.spell_confidence, dec.spell_why = pick_spell(sit, ans, cfg, target)
             if dec.spell:
                 actions.append({"verb": "attack", "target": target.serial, **meta})
-                actions.append({"verb": "cast", "spell": dec.spell.name, "target": target.serial, "queue": True,
-                                **meta, "reason": "opener"})
+                actions.append(cast_action(sit, mem, dec.spell, target, now, **meta, opener=True))
                 dec.note = f"open on {target.name} with {dec.spell.name} ({conf:.2f})"
                 return dec
         raw = next(m for m in sit.raw["mobiles"] if m["serial"] == target.serial)
@@ -538,6 +576,16 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             dec.note = f"meditate ({conf:.2f})"
 
     return dec
+
+
+def flee_from(sit: Situation, one: Candidate) -> int:
+    """What a leave runs from: 0, every creature in view (the client weighs them), when there are two
+    or more; else the one."""
+    return 0 if len(sit.hostiles) >= 2 else one.serial
+
+
+def away_words(sit: Situation, one: Candidate) -> str:
+    return f"all {len(sit.hostiles)} in sight" if flee_from(sit, one) == 0 else one.name
 
 
 def keep_travelling(sit: Situation) -> bool:
@@ -785,11 +833,47 @@ def pick_spell(sit: Situation, ans: Answers, cfg: PolicyConfig,
             return None, choice.confidence, "jev"
         if (c := sit.spell(choice.choice)) is not None:
             return c, choice.confidence, "jev"
-    # Three or more close together: an area spell hits them all for less mana a creature.
-    if sit.area_spells and sit.area_count >= 3:
-        return sit.area_spells[0], None, "fallback"
-    damage = [c for c in sit.spells if c.name not in ("Poison", "Paralyze") and not c.info.get("area")]
-    return (damage[0] if damage else None), None, "fallback"
+    # Three or more close together: an area spell hits them all for less mana a creature, unless it
+    # mostly fizzles (an eighth-circle one at Magery 90).
+    area = [c for c in sit.area_spells if c.info.get("chance", 1.0) >= 0.5]
+    if area and sit.area_count >= 3:
+        return area[0], None, "fallback"
+    # The strongest damage spell that works 9 times in 10: Flamestrike works 6 in 10 at Magery 90,
+    # and Jev, told so, stopped picking it while this fallback still cast it (cuo-x2x).
+    damage = [c for c in sit.spells if is_damage(c.name)]
+    sure = [c for c in damage if c.info.get("chance", 1.0) >= 0.9]
+    return ((sure or damage)[0] if damage else None), None, "fallback"
+
+
+def pick_ward(sit: Situation, ans: Answers, cfg: PolicyConfig) -> Candidate | None:
+    """The wall or summon to cast first, or None (cuo-ev9). The options are alike, so Jev's yes is
+    spread over them: in a swarm round it put 0.77 on four fields against 0.16 on attacking, none
+    of them above 0.3. So it is yes when all but "none" add up to `ward_at`, then the likeliest."""
+    ward = ans.choices.get("ward")
+    if not ward:
+        return None
+    options = {k: p for k, p in ward.probabilities.items() if k != "none"}
+    if not options or sum(options.values()) < cfg.ward_at:
+        return None
+    return sit.spell(max(options, key=options.get))
+
+
+def cast_action(sit: Situation, mem: Memory, spell: Candidate, target: Candidate, now: float, opener: bool = False,
+                **meta: Any) -> dict[str, Any]:
+    """The cast, aimed as the spell needs (spells.fight_spells): at the creature (a field or a placed
+    summon too: the client puts it on the tile beside it, between it and the caster), where an area
+    spell hits the most of them, or at the caster. Notes when it may be offered again."""
+    aim = spell.info.get("aim", "creature")
+    at: int | str = "self" if aim in ("self", "summon") \
+        else (sit.area_center or target).serial if aim == "area" or spell.info.get("area") else target.serial
+    # How many an area spell hits: Earthquake counts those around the caster, not Chain Lightning's crowd.
+    reason = "opener" if opener else f"area {spell.info.get('hits', sit.area_count)}" if spell.info.get("area") \
+        else meta.get("reason", "")
+    if not is_damage(spell.name) and not spell.info.get("area") and aim in RECAST_AFTER:
+        wait = RECAST_AFTER_WITH_ICON if aim == "self" and sit.raw.get("era", "aos") == "aos" else RECAST_AFTER[aim]
+        mem.recast[(at if isinstance(at, int) and aim in ("creature", "area") else 0, spell.name)] = now + wait
+    return {"verb": "cast", "spell": spell.name, "target": at, "queue": True, **meta,
+            **({"reason": reason} if reason else {})}
 
 
 def pick_corpse(sit: Situation, ans: Answers) -> Candidate | None:

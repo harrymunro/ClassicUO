@@ -14,6 +14,7 @@ never flee, fight to the death"). It is used two ways:
 from dataclasses import dataclass, replace
 from typing import Any
 
+from . import costs
 from .judge import Answers, Judge
 from .policy import PolicyConfig
 from .spells import ATTACK_SPELLS
@@ -107,7 +108,8 @@ DEFAULT = Knobs()
 async def compile_strategy(judge: Judge, text: str) -> tuple[Knobs, Answers | None]:
     if not text.strip():
         return DEFAULT, None
-    ans = await judge.ask({"strategy": text}, QUESTIONS)
+    with costs.kind("strategy"):
+        ans = await judge.ask({"strategy": text}, QUESTIONS)
     target = ans.choices["target_priority"].choice
     looting = ans.choices["looting"].choice
     knobs = Knobs(

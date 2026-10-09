@@ -1,6 +1,7 @@
 """Who answers the questions: Jev (via OpenRouter or TypeSafe directly), or a
 rule-based stand-in for running the loop without a model or credits."""
 
+import json
 import os
 import re
 import time
@@ -8,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
-from . import spells
+from . import costs, spells
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api"
 OPENROUTER_MODEL = "~typesafe/jev-latest"
@@ -29,12 +30,16 @@ class Answers:
     model: str = ""
     input_tokens: int = 0
     latency_ms: float = 0.0
+    output_tokens: int = 0
+    cost: float = 0.0  # US dollars: the provider's figure, else an estimate (costs.py)
 
     def to_log(self) -> dict[str, Any]:
         return {
             "model": self.model,
             "latency_ms": round(self.latency_ms, 1),
             "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "cost": round(self.cost, 7),
             "choices": {k: {"choice": v.choice, "confidence": round(v.confidence, 3),
                             "probabilities": {o: round(p, 3) for o, p in v.probabilities.items()}}
                         for k, v in self.choices.items()},
@@ -87,8 +92,12 @@ class JevJudge:
     async def ask(self, state, questions) -> Answers:
         t = time.perf_counter()
         r = await self.client.system_one(state=state, questions=questions)
-        out = Answers(model=r.model, input_tokens=r.usage.input_tokens or 0,
-                      latency_ms=(time.perf_counter() - t) * 1000)
+        latency = (time.perf_counter() - t) * 1000
+        call = costs.ledger.record(costs.make_call(
+            costs.current_kind("other"), r.model, r.usage.input_tokens or 0, r.usage.output_tokens or 0,
+            latency_ms=latency, reported=reported_cost(r)))
+        out = Answers(model=r.model, input_tokens=call.input_tokens, latency_ms=latency,
+                      output_tokens=call.output_tokens, cost=call.cost)
         for k, a in r.choices.items():
             out.choices[k] = ChoiceResult(a.choice, dict(a.probabilities), a.confidence)
         for k, a in r.nouls.items():
@@ -101,6 +110,16 @@ class JevJudge:
 
     async def close(self) -> None:
         await self.client.aclose()
+
+
+def reported_cost(response: Any) -> float | None:
+    """The call's cost as OpenRouter reports it in the body's usage (TypeSafe's own API doesn't;
+    the SDK's Usage drops fields it doesn't know, so it is read from the raw body)."""
+    try:
+        cost = (json.loads(response.raw_http_response.content).get("usage") or {}).get("cost")
+    except (AttributeError, ValueError, TypeError):
+        return None
+    return float(cost) if isinstance(cost, (int, float)) else None
 
 
 class HeuristicJudge:
@@ -145,8 +164,10 @@ class HeuristicJudge:
             out.choices["corpse"] = one_hot(state["corpses_not_yet_looted"][0]["id"], questions["corpse"]["criteria"])
         if "spell" in questions:
             # Strongest damage spell on offer (the options come strongest first); cheap ones when mana is low.
+            # Only the attack spells, area ones included: the rules know nothing of the rest of the book.
+            attack = {*spells.ATTACK_SPELLS, *spells.AREA_SPELLS, *spells.NECRO_ATTACK_SPELLS, *spells.NECRO_AREA_SPELLS}
             options = [k for k, v in questions["spell"]["criteria"].items()
-                       if k != "none" and v.split(":", 1)[0] not in ("Poison", "Paralyze")]
+                       if k != "none" and (name := v.split(":", 1)[0]) in attack and name not in ("Poison", "Paralyze")]
             pick = (options[-1] if mana < 35 else options[0]) if options else "none"
             out.choices["spell"] = one_hot(pick, questions["spell"]["criteria"])
         for name in questions:
@@ -193,7 +214,11 @@ def one_hot(choice: str, options: dict[str, Any]) -> ChoiceResult:
 
 
 def make(kind: str, provider: str = "auto", model: str | None = None) -> Judge:
+    """The rule judge, Jev, or (for a model that isn't Jev) any chat model asked Jev's questions."""
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
     if kind == "heuristic":
         return HeuristicJudge()
+    from . import models
+    if model and not models.is_jev(model):
+        return models.ChatJudge(models.active.resolve(model))
     return JevJudge(provider, model)

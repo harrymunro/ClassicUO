@@ -27,8 +27,12 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from . import costs
 from .policy import PolicyConfig
-from .spells import AREA_SPELLS, ATTACK_SPELLS
+from .spells import fight_spells
+
+# Any spell a fight can use (spells.fight_spells): a plan may keep a wall or a summon going too (cuo-ev9).
+PLAN_SPELLS = list(dict.fromkeys(name for necro in (False, True) for name, _, _ in fight_spells(necro)))
 from .state import PACK_FAR, Situation
 
 INTENTS = ("fight", "flee", "leave", "loot", "seek", "rest")
@@ -144,7 +148,7 @@ def parse(data: dict[str, Any] | str) -> Machine:
             errors.append(f"{name}: target must be one of {', '.join(TARGETS)}")
         if s.get("loot") not in (None, *LOOTING):
             errors.append(f"{name}: loot must be one of {', '.join(LOOTING)}")
-        if s.get("spell") not in (None, *ATTACK_SPELLS, *AREA_SPELLS):
+        if s.get("spell") not in (None, *PLAN_SPELLS):
             errors.append(f"{name}: unknown spell {s.get('spell')!r}")
         if not str(s.get("says") or "").strip():
             errors.append(f"{name}: 'says' (what the character does here) is missing")
@@ -342,8 +346,10 @@ def schema() -> dict[str, Any]:
                         "target": {"type": "string", "enum": list(TARGETS)},
                         "loot": {"type": "string", "enum": list(LOOTING)},
                         "kite": {"type": "boolean", "description": "Casters and archers step back from melee."},
-                        "spell": {"type": "string", "enum": [*ATTACK_SPELLS, *AREA_SPELLS],
-                                  "description": "Casters: the spell to keep casting here."},
+                        "spell": {"type": "string", "enum": PLAN_SPELLS,
+                                  "description": "Casters: the spell to keep casting here, whenever it can be "
+                                                 "cast (a wall, curse or summon is cast again once it has worn "
+                                                 "off); between casts, Jev picks."},
                         "max_s": {"type": "number", "description": "Time limit in seconds, then go to 'then'."},
                         "then": s,
                         "transitions": {
@@ -409,8 +415,9 @@ async def design(situation: str, archetype: str = "warrior", chat_fn: Any = None
                                     "Design the machine by calling the machine tool."}]
     usage = llm.LlmUsage(calls=0)
     for _ in range(3):
-        res = await chat_fn(msgs, tools=[design_tool()], tool_choice="auto", model=llm.planner_model(model),
-                            max_tokens=3000)
+        with costs.kind("design"):
+            res = await chat_fn(msgs, tools=[design_tool()], tool_choice="auto", model=llm.planner_model(model),
+                                max_tokens=3000)
         usage = usage + res.usage
         if log:
             log({"type": "machine_design", "t": time.time(), "usage": res.usage.to_log(),

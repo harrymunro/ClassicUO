@@ -1,0 +1,35 @@
+# Three warriors on the local test server (cuo-m70.4): the player's character on the default
+# profile (Jev and Sonnet) and two smart NPCs on the npc profile (Jev and Haiku, capped at $0.15/h).
+# Run from brain/ with the server up: uv run uo-brain fleet fleets/graveyard-three.toml
+name = "graveyard-three"
+server_port = 2593
+hours = 0.5
+
+[[agent]]
+name = "Brutus"
+account = "warrior"
+password = "warrior"
+port = 5577
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied with bandages. Bank your gold and loot when the bag gets heavy."
+# The first agent also restocks the Britain healer and shops, so no run starts against an earlier one's purchases.
+prep = ["[AgentReset", "[AgentGo 1471 1609", "[AgentRestock 60", "[AgentGo 1425 1690", "[AgentKit warrior",
+        "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Hale"
+account = "npc1"
+password = "npc1"
+port = 5581
+profile = "npc"
+goal = "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Wren"
+account = "npc2"
+password = "npc2"
+port = 5582
+profile = "npc"
+goal = "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied with bandages. Bank your gold and loot when the bag gets heavy."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]

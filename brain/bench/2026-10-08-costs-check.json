@@ -1,0 +1,212 @@
+{
+  "started": "2026-10-08T16:14:38",
+  "rounds": 2,
+  "lane": 0,
+  "bestiary": true,
+  "scenarios": {
+    "priority": {
+      "bead": "cuo-46e.3",
+      "right": "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 77.4,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                80,
+                81,
+                100,
+                100,
+                100,
+                100,
+                100,
+                58,
+                59
+              ],
+              "min_hp": 53,
+              "decisions": 43,
+              "log": "logs/bench/20261008-161438/priority-jev-01.jsonl",
+              "input_tokens": 73509,
+              "cost_usd": 0.003087,
+              "cost_by_kind": {
+                "fight": 0.003087
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 298.8
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 62.6,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 40,
+              "decisions": 40,
+              "log": "logs/bench/20261008-161438/priority-jev-02.jsonl",
+              "input_tokens": 76015,
+              "cost_usd": 0.003193,
+              "cost_by_kind": {
+                "fight": 0.003193
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 260.5
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00628,
+          "cost_per_round_usd": 0.00314,
+          "latency_ms_avg": 279.6,
+          "errors": 0
+        }
+      }
+    },
+    "loot": {
+      "bead": "cuo-46e.4",
+      "right": "A corpse holds valuables and junk while an orc walks up: take the valuables, skip the junk, stop looting when the orc arrives.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.0,
+              "player_died": false,
+              "kills": [
+                "Xepug (orc)",
+                "Gunag (orc)"
+              ],
+              "engaged": [
+                "Gunag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 84,
+              "decisions": 33,
+              "log": "logs/bench/20261008-161438/loot-jev-01.jsonl",
+              "input_tokens": 53077,
+              "cost_usd": 0.002229,
+              "cost_by_kind": {
+                "fight": 0.002229
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 270.5
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Pahgorim (orc)",
+                "Kagan (orc)"
+              ],
+              "engaged": [
+                "Kagan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 76,
+              "decisions": 32,
+              "log": "logs/bench/20261008-161438/loot-jev-02.jsonl",
+              "input_tokens": 50409,
+              "cost_usd": 0.002117,
+              "cost_by_kind": {
+                "fight": 0.002117
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 273.2
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00435,
+          "cost_per_round_usd": 0.00217,
+          "latency_ms_avg": 271.9,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.010626,
+    "cost_per_hour_usd": 0.1382,
+    "calls": 148,
+    "by_role": {
+      "system1": 0.010626
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 148,
+        "input_tokens": 253010,
+        "output_tokens": 16296,
+        "cost_usd": 0.010626,
+        "latency_ms_avg": 276.6
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 148,
+        "input_tokens": 253010,
+        "output_tokens": 16296,
+        "cost_usd": 0.010626,
+        "latency_ms_avg": 276.6
+      }
+    },
+    "cost_per_decision_usd": 7.18e-05
+  },
+  "openrouter_key_spent_usd": 0.0
+}

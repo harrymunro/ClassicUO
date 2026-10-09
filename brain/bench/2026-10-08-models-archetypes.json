@@ -1,0 +1,891 @@
+{
+  "started": "2026-10-08T19:18:30",
+  "rounds": 1,
+  "lane": 0,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "planner": "anthropic/claude-sonnet-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-sonnet-5.5"
+    }
+  },
+  "aliases": {
+    "haiku": "anthropic/claude-haiku-5.5"
+  },
+  "scenarios": {
+    "archer-kite": {
+      "bead": "cuo-cvl.1",
+      "right": "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, and kill all four without dying.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Pigdug (orc)",
+                "Naghig (orc)",
+                "Haguk (orc)",
+                "Sabub (orc)"
+              ],
+              "kites": 11,
+              "seconds": 79.1,
+              "player_died": false,
+              "engaged": [
+                "Pigdug (orc)",
+                "Naghig (orc)",
+                "Haguk (orc)",
+                "Sabub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 28,
+              "decisions": 65,
+              "log": "logs/bench/20261008-191830/archer-kite-jev-01.jsonl",
+              "input_tokens": 136497,
+              "cost_usd": 0.005733,
+              "cost_by_kind": {
+                "fight": 0.005733
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 267.3
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00573,
+          "cost_per_round_usd": 0.00573,
+          "latency_ms_avg": 267.3,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "kites": 4,
+              "seconds": 30.6,
+              "player_died": true,
+              "engaged": [
+                "Urmug (orc)",
+                "Wingloug (orc)",
+                "Urmug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 13,
+              "log": "logs/bench/20261008-191830/archer-kite-haiku-01.jsonl",
+              "input_tokens": 45049,
+              "cost_usd": 0.0056,
+              "cost_by_kind": {
+                "fight": 0.0056
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1707.4
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 1,
+          "cost_usd": 0.0056,
+          "cost_per_round_usd": 0.0056,
+          "latency_ms_avg": 1707.4,
+          "errors": 0
+        }
+      }
+    },
+    "tamer-orcs": {
+      "bead": "cuo-cvl.2",
+      "right": "Three orcs come at a tamer with a grizzly bear: set the bear on them, bandage it between hits, and call it back if it is losing; kill all three without losing the bear.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Tagdud (orc)",
+                "Spathu (orc)",
+                "Sugorim (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 48,
+              "pet_bandages": 4,
+              "pull_backs": 0,
+              "seconds": 80.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 60,
+              "log": "logs/bench/20261008-191830/tamer-orcs-jev-01.jsonl",
+              "input_tokens": 128197,
+              "cost_usd": 0.005384,
+              "cost_by_kind": {
+                "fight": 0.005384
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 283.5
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00538,
+          "cost_per_round_usd": 0.00538,
+          "latency_ms_avg": 283.5,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Sguk (orc)"
+              ],
+              "pet_lost": true,
+              "pet_min_hp": 2,
+              "pet_bandages": 0,
+              "pull_backs": 1,
+              "seconds": 121.4,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                92,
+                65,
+                58,
+                48,
+                99,
+                76,
+                67,
+                100,
+                79,
+                62,
+                81,
+                61,
+                76,
+                65,
+                72,
+                73,
+                80,
+                73,
+                88,
+                58,
+                65
+              ],
+              "min_hp": 48,
+              "decisions": 29,
+              "log": "logs/bench/20261008-191830/tamer-orcs-haiku-01.jsonl",
+              "input_tokens": 89057,
+              "cost_usd": 0.01351,
+              "cost_by_kind": {
+                "fight": 0.01351
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 2734.4
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01351,
+          "cost_per_round_usd": 0.01351,
+          "latency_ms_avg": 2734.4,
+          "errors": 0
+        }
+      }
+    },
+    "tamer-ogre-lord": {
+      "bead": "cuo-cvl.2",
+      "right": "An ogre lord walks up to a tamer with a grizzly bear, two orcs with it. Neither can beat it, and it runs as fast as the tamer: leave early, and if it catches up, let the bear hold it off. The tamer must survive; losing the bear is reported.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Curbag (orc)",
+                "Karfu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 56,
+              "pull_backs": 1,
+              "sent_at": [
+                22493,
+                22493,
+                22494
+              ],
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 67,
+              "log": "logs/bench/20261008-191830/tamer-ogre-lord-jev-01.jsonl",
+              "input_tokens": 135737,
+              "cost_usd": 0.005701,
+              "cost_by_kind": {
+                "fight": 0.005701
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 287.0
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0057,
+          "cost_per_round_usd": 0.0057,
+          "latency_ms_avg": 287.0,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [],
+              "pet_lost": true,
+              "pet_min_hp": 86,
+              "pull_backs": 1,
+              "sent_at": [
+                22498
+              ],
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                88,
+                89,
+                91,
+                84,
+                74,
+                64,
+                54,
+                81,
+                69,
+                61,
+                54,
+                89
+              ],
+              "min_hp": 54,
+              "decisions": 25,
+              "log": "logs/bench/20261008-191830/tamer-ogre-lord-haiku-01.jsonl",
+              "input_tokens": 78528,
+              "cost_usd": 0.010838,
+              "cost_by_kind": {
+                "fight": 0.010838
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 2107.8
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01084,
+          "cost_per_round_usd": 0.01084,
+          "latency_ms_avg": 2107.8,
+          "errors": 0
+        }
+      }
+    },
+    "bard-provoke": {
+      "bead": "cuo-cvl.3",
+      "right": "An ogre and two orcs come at a bard: set them on each other and calm whatever reaches the bard; survive while at least two of them die.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Xug (orc)",
+                "Magdud (orc)"
+              ],
+              "songs": {
+                "Provocation": 3,
+                "Peacemaking": 1
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 97,
+              "log": "logs/bench/20261008-191830/bard-provoke-jev-01.jsonl",
+              "input_tokens": 234719,
+              "cost_usd": 0.009858,
+              "cost_by_kind": {
+                "fight": 0.009858
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 284.7
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00986,
+          "cost_per_round_usd": 0.00986,
+          "latency_ms_avg": 284.7,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Prikdarok (orc)",
+                "Kupgugh (orc)"
+              ],
+              "songs": {
+                "Provocation": 5,
+                "Discordance": 2,
+                "Peacemaking": 1
+              },
+              "seconds": 120.6,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [],
+              "min_hp": 25,
+              "decisions": 40,
+              "log": "logs/bench/20261008-191830/bard-provoke-haiku-01.jsonl",
+              "input_tokens": 140052,
+              "cost_usd": 0.017091,
+              "cost_by_kind": {
+                "fight": 0.017091
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 2410.9
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01709,
+          "cost_per_round_usd": 0.01709,
+          "latency_ms_avg": 2410.9,
+          "errors": 0
+        }
+      }
+    },
+    "warrior-mage-opener": {
+      "bead": "cuo-cvl.3",
+      "right": "Two orcs come at a warrior-mage from 8 tiles: open on one with a spell while it comes, fight in melee, and have the sword back in hand after every cast; kill both.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Gujarek (orc)",
+                "Murbag (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 43.2,
+              "player_died": false,
+              "engaged": [
+                "Gujarek (orc)",
+                "Murbag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 73,
+              "decisions": 30,
+              "log": "logs/bench/20261008-191830/warrior-mage-opener-jev-01.jsonl",
+              "input_tokens": 91503,
+              "cost_usd": 0.003843,
+              "cost_by_kind": {
+                "fight": 0.003843
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 276.3
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00384,
+          "cost_per_round_usd": 0.00384,
+          "latency_ms_avg": 276.3,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Wumkbanok (orc)",
+                "Xugar (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 58.6,
+              "player_died": false,
+              "engaged": [
+                "Wumkbanok (orc)",
+                "Xugar (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 51,
+              "decisions": 12,
+              "log": "logs/bench/20261008-191830/warrior-mage-opener-haiku-01.jsonl",
+              "input_tokens": 52698,
+              "cost_usd": 0.006989,
+              "cost_by_kind": {
+                "fight": 0.006989
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 3585.5
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00699,
+          "cost_per_round_usd": 0.00699,
+          "latency_ms_avg": 3585.5,
+          "errors": 0
+        }
+      }
+    },
+    "mage-tamer-orcs": {
+      "bead": "cuo-cvl.3",
+      "right": "Three orcs come at a mage-tamer with a grizzly bear: set the bear on them, cast at what it fights, heal it with spells; kill all three without losing the bear.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Naguk (orc)",
+                "Oogugbu (orc)",
+                "Rogan (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 14,
+              "pet_spell_heals": 5,
+              "seconds": 61.7,
+              "player_died": false,
+              "engaged": [
+                "Naguk (orc)",
+                "Oogugbu (orc)",
+                "Rogan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 46,
+              "log": "logs/bench/20261008-191830/mage-tamer-orcs-jev-01.jsonl",
+              "input_tokens": 182743,
+              "cost_usd": 0.007675,
+              "cost_by_kind": {
+                "fight": 0.007675
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 288.0
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00768,
+          "cost_per_round_usd": 0.00768,
+          "latency_ms_avg": 288.0,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Guthakug (orc)",
+                "Zabub (orc)",
+                "Oakgu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 45,
+              "pet_spell_heals": 3,
+              "seconds": 73.9,
+              "player_died": false,
+              "engaged": [
+                "Guthakug (orc)",
+                "Oakgu (orc)",
+                "Zabub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 44,
+              "decisions": 11,
+              "log": "logs/bench/20261008-191830/mage-tamer-orcs-haiku-01.jsonl",
+              "input_tokens": 56144,
+              "cost_usd": 0.007801,
+              "cost_by_kind": {
+                "fight": 0.007801
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 4490.5
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0078,
+          "cost_per_round_usd": 0.0078,
+          "latency_ms_avg": 4490.5,
+          "errors": 0
+        }
+      }
+    },
+    "necro-orcs": {
+      "bead": "cuo-cvl.5",
+      "right": "Three orcs come at a necromancer from 8 tiles: kill them with necromancy without dying.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Oogorim (orc)",
+                "Woggha (orc)",
+                "Gulm (orc)"
+              ],
+              "spells": {
+                "Pain Spike": 19,
+                "Poison Strike": 11
+              },
+              "seconds": 47.9,
+              "player_died": false,
+              "engaged": [
+                "Oogorim (orc)",
+                "Woggha (orc)",
+                "Gulm (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 35,
+              "log": "logs/bench/20261008-191830/necro-orcs-jev-01.jsonl",
+              "input_tokens": 92648,
+              "cost_usd": 0.003891,
+              "cost_by_kind": {
+                "fight": 0.003891
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 314.0
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00389,
+          "cost_per_round_usd": 0.00389,
+          "latency_ms_avg": 314.0,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "spells": {
+                "Pain Spike": 12
+              },
+              "seconds": 40.8,
+              "player_died": true,
+              "engaged": [
+                "Hugolm (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 12,
+              "log": "logs/bench/20261008-191830/necro-orcs-haiku-01.jsonl",
+              "input_tokens": 51297,
+              "cost_usd": 0.006584,
+              "cost_by_kind": {
+                "fight": 0.006584
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 2762.7
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 1,
+          "cost_usd": 0.00658,
+          "cost_per_round_usd": 0.00658,
+          "latency_ms_avg": 2762.7,
+          "errors": 0
+        }
+      }
+    },
+    "paladin-orcs": {
+      "bead": "cuo-cvl.5",
+      "right": "Four orcs come at a paladin: fight them in melee with its blessings (at least one cast) and kill all four without dying.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Xaguk (orc)",
+                "Womrikug (orc)",
+                "Opeghat (orc)",
+                "Ignorg (orc)"
+              ],
+              "blessings": {
+                "Consecrate Weapon": 2,
+                "Holy Light": 5,
+                "Divine Fury": 1
+              },
+              "seconds": 104.4,
+              "player_died": false,
+              "engaged": [
+                "Xaguk (orc)",
+                "Womrikug (orc)",
+                "Opeghat (orc)",
+                "Ignorg (orc)"
+              ],
+              "flees_at_hp": [
+                17
+              ],
+              "min_hp": 2,
+              "decisions": 84,
+              "log": "logs/bench/20261008-191830/paladin-orcs-jev-01.jsonl",
+              "input_tokens": 191455,
+              "cost_usd": 0.008041,
+              "cost_by_kind": {
+                "fight": 0.008041
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 245.4
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00804,
+          "cost_per_round_usd": 0.00804,
+          "latency_ms_avg": 245.4,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Zabghat (orc)",
+                "Karguk (orc)",
+                "Umragig (orc)",
+                "Oghuglat (orc)"
+              ],
+              "blessings": {
+                "Consecrate Weapon": 4,
+                "Holy Light": 4
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Zabghat (orc)",
+                "Karguk (orc)",
+                "Umragig (orc)",
+                "Oghuglat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 41,
+              "log": "logs/bench/20261008-191830/paladin-orcs-haiku-01.jsonl",
+              "input_tokens": 135371,
+              "cost_usd": 0.016219,
+              "cost_by_kind": {
+                "fight": 0.016219
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1903.9
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01622,
+          "cost_per_round_usd": 0.01622,
+          "latency_ms_avg": 1903.9,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.13476,
+    "cost_per_hour_usd": 0.3606,
+    "calls": 667,
+    "by_role": {
+      "system1": 0.13476
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 667,
+        "input_tokens": 1841695,
+        "output_tokens": 134317,
+        "cost_usd": 0.13476,
+        "latency_ms_avg": 882.3
+      }
+    },
+    "by_model": {
+      "anthropic/claude-haiku-5.5": {
+        "calls": 183,
+        "input_tokens": 648196,
+        "output_tokens": 50267,
+        "cost_usd": 0.084633,
+        "latency_ms_avg": 2481.5
+      },
+      "typesafe/jev-1.13-20260917": {
+        "calls": 484,
+        "input_tokens": 1193499,
+        "output_tokens": 84050,
+        "cost_usd": 0.050127,
+        "latency_ms_avg": 277.6
+      }
+    },
+    "cost_per_decision_usd": 0.000202
+  },
+  "openrouter_key_spent_usd": 0.141652
+}

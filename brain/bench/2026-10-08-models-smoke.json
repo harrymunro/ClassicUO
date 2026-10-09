@@ -1,0 +1,208 @@
+{
+  "started": "2026-10-08T16:42:56",
+  "rounds": 1,
+  "lane": 0,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "planner": "anthropic/claude-sonnet-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-sonnet-5.5"
+    }
+  },
+  "aliases": {
+    "haiku": "anthropic/claude-haiku-5.5",
+    "nemo": "mistralai/mistral-nemo"
+  },
+  "scenarios": {
+    "priority": {
+      "bead": "cuo-46e.3",
+      "right": "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 63.6,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 37,
+              "log": "logs/bench/20261008-164256/priority-jev-01.jsonl",
+              "input_tokens": 69748,
+              "cost_usd": 0.002929,
+              "cost_by_kind": {
+                "fight": 0.002929
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 307.7
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00293,
+          "cost_per_round_usd": 0.00293,
+          "latency_ms_avg": 307.7,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 16.4,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 6,
+              "log": "logs/bench/20261008-164256/priority-haiku-01.jsonl",
+              "input_tokens": 18140,
+              "cost_usd": 0.002236,
+              "cost_by_kind": {
+                "fight": 0.002236
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1967.6
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 1,
+          "cost_usd": 0.00224,
+          "cost_per_round_usd": 0.00224,
+          "latency_ms_avg": 1967.6,
+          "errors": 0
+        },
+        "nemo": {
+          "runs": [
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": false,
+              "seconds": 34.0,
+              "player_died": true,
+              "kills": [
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 4,
+              "log": "logs/bench/20261008-164256/priority-nemo-01.jsonl",
+              "input_tokens": 6623,
+              "cost_usd": 0.000138,
+              "cost_by_kind": {
+                "fight": 0.000138
+              },
+              "models": [
+                "mistralai/mistral-nemo"
+              ],
+              "latency_ms_avg": 7673.6
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 1,
+          "cost_usd": 0.00014,
+          "cost_per_round_usd": 0.00014,
+          "latency_ms_avg": 7673.6,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.005303,
+    "cost_per_hour_usd": 0.1508,
+    "calls": 47,
+    "by_role": {
+      "system1": 0.005303
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 47,
+        "input_tokens": 94511,
+        "output_tokens": 5996,
+        "cost_usd": 0.005303,
+        "latency_ms_avg": 1146.4
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 37,
+        "input_tokens": 69748,
+        "output_tokens": 4490,
+        "cost_usd": 0.002929,
+        "latency_ms_avg": 307.7
+      },
+      "anthropic/claude-haiku-5.5": {
+        "calls": 6,
+        "input_tokens": 18140,
+        "output_tokens": 980,
+        "cost_usd": 0.002236,
+        "latency_ms_avg": 1966.9
+      },
+      "mistralai/mistral-nemo": {
+        "calls": 4,
+        "input_tokens": 6623,
+        "output_tokens": 526,
+        "cost_usd": 0.000138,
+        "latency_ms_avg": 7672.9
+      }
+    },
+    "cost_per_decision_usd": 0.0001128
+  },
+  "openrouter_key_spent_usd": 0.002489
+}

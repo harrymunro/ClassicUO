@@ -27,15 +27,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from . import questions
-from . import calls
+from . import calls, costs, questions
 from .judge import Judge
 from .logs import creature_kind
 from .state import Situation
 from .world import DEFAULT_MAP, World
 
 KNOWN_KEY = "what_you_know_about_this_place"
-PRICE_PER_MILLION = 0.042  # Jev's list price per million input tokens (loop.LoopConfig has the same)
 CHUNK = 25                 # questions per Jev request; bigger shortlists go out as parallel requests
 STOPWORDS = {"the", "and", "with", "from", "that", "this", "your", "yourself", "keep", "near", "into", "when",
              "then", "them", "there", "their", "have", "some", "more", "most", "until", "while", "about", "every",
@@ -128,17 +126,19 @@ def shortlist(world: World, x: int, y: int, kinds: set[str] | frozenset[str] = f
         add(spawn_words(s), "spawns", s.get("source", ""))
     if goal and (words := keywords(goal)):
         for n in world.notes(keywords=words, limit=8):
-            add(n["text"], "goal", n.get("source", ""))
+            if not sighting(n):
+                add(n["text"], "goal", n.get("source", ""))
     if archetype:
         for n in world.notes(keywords=archetype, limit=5):
-            add(n["text"], "archetype", n.get("source", ""))
+            if not sighting(n):
+                add(n["text"], "archetype", n.get("source", ""))
     return list(facts.values())
 
 
 async def score(judge: Judge, state: dict[str, Any], texts: list[str],
-                question: Callable[[str], dict[str, Any]]) -> tuple[list[float], int, float]:
+                question: Callable[[str], dict[str, Any]]) -> tuple[list[float], int, float, float]:
     """One Noul per text, in requests of at most CHUNK questions sent together.
-    Returns the scores in the texts' order, the input tokens and the slowest latency (ms)."""
+    Returns the scores in the texts' order, the input tokens, the slowest latency (ms) and the cost."""
     chunks = [list(range(i, min(i + CHUNK, len(texts)))) for i in range(0, len(texts), CHUNK)]
     answers = await asyncio.gather(*(judge.ask(state, {f"f{i + 1}": question(texts[i]) for i in ids})
                                      for ids in chunks))
@@ -146,7 +146,8 @@ async def score(judge: Judge, state: dict[str, Any], texts: list[str],
     for ids, ans in zip(chunks, answers):
         for i in ids:
             scores[i] = float(ans.nouls.get(f"f{i + 1}", 0.0))
-    return scores, sum(a.input_tokens for a in answers), max((a.latency_ms for a in answers), default=0.0)
+    return (scores, sum(a.input_tokens for a in answers), max((a.latency_ms for a in answers), default=0.0),
+            sum(a.cost for a in answers))
 
 
 # ---------------------------------------------------------------- tactical
@@ -203,7 +204,7 @@ class FactPicker:
 
     def __init__(self, world: World | None, judge: Judge | None, mode: str = "jev", keep: int = 3,
                  threshold: float = 0.6, min_interval_s: float = 5.0, focus: str | None = None,
-                 map: str = DEFAULT_MAP, price_per_million: float = PRICE_PER_MILLION):
+                 map: str = DEFAULT_MAP):
         if mode not in ("jev", "all", "none"):
             raise ValueError(f"facts mode should be jev, all or none, not {mode!r}")
         self.world = world
@@ -214,11 +215,11 @@ class FactPicker:
         self.min_interval_s = min_interval_s
         self.focus = focus      # a hunt's area name, which may be a spawn area rather than a region
         self.map = map
-        self.price = price_per_million
         self.log: Callable[[dict[str, Any]], None] = lambda rec: None
         self.chosen: list[tuple[Fact, float | None]] = []
         self.selections = 0
         self.input_tokens = 0
+        self.cost = 0.0
         self._untaken = 0
         self._key: tuple[str, str] | None = None
         self._kinds: set[str] = set()       # creature kinds in view since the last area or goal change
@@ -275,15 +276,16 @@ class FactPicker:
         rec: dict[str, Any] = {"type": "facts", "t": time.time(), "mode": self.mode, "trigger": trigger,
                                "areas": areas, "creatures": sorted(kinds), "goal": goal, "shortlist": len(facts)}
         scores: list[float | None] = [None] * len(facts)
-        tokens = 0
+        tokens, cost = 0, 0.0
         if self.mode == "all":
             chosen = [(f, None) for f in facts]
         elif not facts or not can_rank(self.judge):
             chosen = []
         else:
             try:
-                got, tokens, latency = await score(self.judge, situation_words(sit, areas, goal),
-                                                   [f.text for f in facts], fact_question(sit))
+                with costs.kind("facts"):
+                    got, tokens, latency, cost = await score(self.judge, situation_words(sit, areas, goal),
+                                                             [f.text for f in facts], fact_question(sit))
                 scores = list(got)
                 rec["latency_ms"] = round(latency, 1)
             except Exception as e:  # a failed selection leaves the decisions without facts, not stuck
@@ -294,19 +296,20 @@ class FactPicker:
         self.chosen = chosen
         self.selections += 1
         self.input_tokens += tokens
+        self.cost += cost
         self._untaken += tokens
         rec.update({
             "chosen": [{"text": f.text, "score": None if s is None else round(s, 3)} for f, s in chosen],
             "facts": [{"text": f.text, "why": f.why, "score": None if s is None else round(s, 3)}
                       for f, s in zip(facts, scores)],
-            "input_tokens": tokens, "est_cost_usd": round(tokens / 1e6 * self.price, 5),
+            "input_tokens": tokens, "cost_usd": round(cost, 6),
             "seconds": round(time.perf_counter() - t0, 2)})
         self.log(rec)
         if any(s is not None for s in scores):
             kept = {id(f) for f, _ in chosen}
             ranked = sorted(zip(facts, scores), key=lambda fs: -(fs[1] or 0.0))[:6]
             calls.emit({"kind": "facts", "title": f"which facts matter here? ({len(facts)} on the shortlist)",
-                        "model": getattr(self.judge, "name", ""), "latency_ms": rec.get("latency_ms", 0),
+                        "model": getattr(self.judge, "name", ""), "latency_ms": rec.get("latency_ms", 0), "cost": round(cost, 6),
                         "questions": [{"q": "facts", "title": f"a yes/no for each, kept at {self.threshold}",
                                        "kind": "many", "options": [{"label": f.text[:70], "p": round(s or 0.0, 3),
                                                                      "kept": id(f) in kept} for f, s in ranked]}],
@@ -352,17 +355,12 @@ def rerank_question(question: str, goal: str) -> Callable[[str], dict[str, Any]]
 class Ranker:
     """The planner's world queries, with list results re-ranked by Jev against its question."""
 
-    def __init__(self, judge: Judge | None, log: Callable[[dict[str, Any]], None] | None = None,
-                 price_per_million: float = PRICE_PER_MILLION):
+    def __init__(self, judge: Judge | None, log: Callable[[dict[str, Any]], None] | None = None):
         self.judge = judge
         self.log = log or (lambda rec: None)
-        self.price = price_per_million
         self.calls = 0
         self.input_tokens = 0
-
-    @property
-    def cost(self) -> float:
-        return self.input_tokens / 1e6 * self.price
+        self.cost = 0.0
 
     async def call_tool(self, world: World, name: str, args: dict[str, Any] | str | None, goal: str = "",
                         context: str = "") -> Any:
@@ -385,8 +383,10 @@ class Ranker:
         rec: dict[str, Any] = {"type": "rerank", "t": time.time(), "tool": name, "args": args, "question": question,
                                "shortlist": len(found)}
         try:
-            scores, tokens, latency = await score(self.judge, {"planner_question": question, "player_goal": goal},
-                                                  [result_words(name, r) for r in found], rerank_question(question, goal))
+            with costs.kind("rerank"):
+                scores, tokens, latency, cost = await score(
+                    self.judge, {"planner_question": question, "player_goal": goal},
+                    [result_words(name, r) for r in found], rerank_question(question, goal))
         except Exception as e:  # the store's own order, rather than no answer
             rec["error"] = f"{type(e).__name__}: {e}"[:300]
             self.log(rec)
@@ -396,8 +396,9 @@ class Ranker:
                for i in order[:limit]]
         self.calls += 1
         self.input_tokens += tokens
+        self.cost += cost
         rec.update({"order": order, "scores": [round(s, 3) for s in scores], "kept": len(out),
-                    "input_tokens": tokens, "est_cost_usd": round(tokens / 1e6 * self.price, 5),
+                    "input_tokens": tokens, "cost_usd": round(cost, 6),
                     "latency_ms": round(latency, 1)})
         self.log(rec)
         return out

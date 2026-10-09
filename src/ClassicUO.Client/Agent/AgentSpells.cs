@@ -28,9 +28,17 @@ namespace ClassicUO.Agent
         public const ushort NECRO_BOOK_GRAPHIC = 0x2253, CHIVALRY_BOOK_GRAPHIC = 0x2252;
         public const int CLOSE_WOUNDS = 202, CLEANSE_BY_FIRE = 201;
 
-        // Spells that need no target but are part of a fight: Consecrate Weapon, Divine Fury, Enemy
-        // of One, Dispel Evil (chivalry); Curse Weapon, Wither (necromancy). They answer to fight.
-        public static readonly HashSet<int> FightBlessings = new HashSet<int> { 203, 204, 205, 206, 104, 116 };
+        // Spells that aren't harmful but are part of a fight, so they answer to fight: Consecrate
+        // Weapon, Divine Fury, Enemy of One, Dispel Evil (chivalry); Curse Weapon (necromancy); and
+        // the magery a brain may use in a fight (cuo-ryt): Reactive Armor, Agility, Cunning,
+        // Strength, Bless, Magic Reflection, the fields, and the summons. Wither is harmful already.
+        public static readonly HashSet<int> FightSpells = new HashSet<int>
+        {
+            203, 204, 205, 206, 104,
+            7, 9, 10, 16, 17, 36,          // Reactive Armor, Agility, Cunning, Strength, Bless, Magic Reflection
+            24, 28, 39, 47, 50,            // Wall of Stone, Fire Field, Poison Field, Paralyze Field, Energy Field
+            33, 40, 58, 60, 61, 62, 63, 64 // Blade Spirits, Summon Creature, Energy Vortex, the elementals, Summon Daemon
+        };
 
         // Mana per circle, first to eighth.
         private static readonly int[] CircleMana = { 4, 6, 9, 11, 14, 20, 40, 50 };
@@ -70,6 +78,10 @@ namespace ClassicUO.Agent
             [201] = 1000, [202] = 1500, [203] = 500, [204] = 250, [205] = 1000, [206] = 500, [207] = 1750,
             [208] = 1500, [209] = 1750, [210] = 1500
         };
+
+        // Spells that summon a creature: Blade Spirits, Summon Creature, Energy Vortex, the
+        // elementals, Summon Daemon, Vengeful Spirit.
+        public static bool IsSummon(int id) => id == 33 || id == 40 || id == 58 || id >= 60 && id <= 64 || id == 114;
 
         public static AgentSchool SchoolOf(int id) => id >= 1 && id <= 64 ? AgentSchool.Magery
             : id >= 101 && id <= 117 ? AgentSchool.Necromancy
@@ -119,8 +131,15 @@ namespace ClassicUO.Agent
         public static int Tithing(int id) => SchoolOf(id) == AgentSchool.Chivalry ? SpellsChivalry.GetSpell(id - 200).TithingCost : 0;
 
         // ModernUO magery: (3 + circle index) ticks of 0.25s, with no faster casting; necromancy
-        // and chivalry by spell.
-        public static uint CastDelayMs(int id) => SchoolCastDelayMs.TryGetValue(id, out uint ms) ? ms : (uint) (Circle(id) + 2) * 250;
+        // and chivalry by spell. Two summons are slower (cuo-ryt): Blade Spirits three times a
+        // fifth-circle spell from SE on and Summon Creature five times, each less SA's quarter
+        // second a time (four times before AOS, so a little longer there).
+        public static uint CastDelayMs(int id) => id switch
+        {
+            33 => 4500,
+            40 => 7500,
+            _ => SchoolCastDelayMs.TryGetValue(id, out uint ms) ? ms : (uint) (Circle(id) + 2) * 250
+        };
 
         // Chivalry recovers more slowly (CastRecoveryBase 7 ticks of 0.25 s, against 6).
         public static uint RecoveryMs(int id) => SchoolOf(id) == AgentSchool.Chivalry ? 1750u : RECOVERY_MS;

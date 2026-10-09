@@ -6,7 +6,7 @@
   uo-brain strategy add "Attack relentlessly and never flee."   (or: strategy load my-strategy.md)
   uo-brain strategy templates | strategy template relentless [--replace] | strategy drop relentless
   uo-brain status | snapshot [--semantic] | act attack target=0x1234 | say "[AgentKit" | shot out.png
-  uo-brain report logs/run.jsonl
+  uo-brain report logs/run.jsonl   (costs: uo-brain costs logs/run.jsonl [--check])
   uo-brain review logs/run.jsonl   (the planner model proposes strategy lines; then: review ... --accept 2)
   uo-brain bench --scenarios core --judges heuristic,jev --rounds 10   (bench report bench/*.json)
   uo-brain world find bank --near-place "Britain graveyard" | world hunt warrior new | world note "..." --area Britain
@@ -25,7 +25,7 @@ from pathlib import Path
 from . import bench as benchmark
 from . import guides
 from . import judge as judges
-from . import llm, logs, loop, outcomes, policy, state
+from . import costs, llm, logs, loop, models, outcomes, policy, state
 from . import machine as machines
 from . import review as reviews
 from . import strategy as strategies
@@ -100,8 +100,12 @@ def main() -> None:
     bn.add_argument("--facts", default="none,all,jev",
                     help="world-fact scenarios: which conditions to play per judge (none, all, jev; default all three)")
     bn.add_argument("--judges", default="heuristic,jev",
-                    help="comma-separated: heuristic, jev, jev+<template>, each optionally /nokite (no stepping back), "
+                    help="comma-separated: heuristic, jev, a model alias (haiku, sonnet, or one from --alias or the "
+                         "profile), each with +<template>, and optionally /nokite (no stepping back), "
                          "/nopack (code doesn't leave from a pack) or #<machine> (follow that plan; uo-brain machine list)")
+    bn.add_argument("--alias", action="append", default=[], metavar="NAME=MODEL",
+                    help="a short name for a model, to use as a judge label (repeatable), e.g. qwen=qwen/qwen3.7-flash")
+    add_model_args(bn)
     bn.add_argument("--rounds", type=int, default=10)
     bn.add_argument("--lane", type=int, default=0, help="test-field lane, so several clients can run at once")
     bn.add_argument("--out", type=Path, help="results JSON (default bench/<time>.json)")
@@ -109,6 +113,13 @@ def main() -> None:
 
     rp = sub.add_parser("report", help="summarise a decision log")
     rp.add_argument("log")
+
+    co = sub.add_parser("costs", help="what the AI calls in one or more logs cost, by role, kind and model")
+    co.add_argument("logs", nargs="*", type=Path, help="session or decision logs (a session's .decisions log is "
+                                                       "read with it)")
+    co.add_argument("--prices", action="store_true", help="update brain/prices.json from OpenRouter's list prices")
+    co.add_argument("--key", action="store_true", help="show what the OpenRouter key has spent in all")
+    co.add_argument("--json", action="store_true")
 
     rv = sub.add_parser("review", help="after-action review: the planner model proposes strategy lines from a log")
     rv.add_argument("log", type=Path)
@@ -128,8 +139,21 @@ def main() -> None:
     rpl.add_argument("log")
     rpl.add_argument("--judge", choices=["jev", "heuristic"], default="jev")
     rpl.add_argument("--provider", choices=["auto", "openrouter", "typesafe"], default="auto")
-    rpl.add_argument("--model")
+    rpl.add_argument("--model", help="Jev or any OpenRouter model, asked through the chat adapter (models.py)")
     rpl.add_argument("--limit", type=int, default=200)
+
+    rpp = sub.add_parser("replay-planner", help="put a session log's planner moments to another model, offline")
+    rpp.add_argument("log", type=Path)
+    rpp.add_argument("--planner-model", required=True, help="any OpenRouter model with tool calling")
+    rpp.add_argument("--limit", type=int, default=40)
+
+    fl = sub.add_parser("fleet", help="several agents on one server, each on its own models (a fleet file)")
+    fl.add_argument("file", type=Path, help="e.g. brain/fleets/graveyard-three.toml")
+    fl.add_argument("--hours", type=float, help="override the file's hours")
+    fl.add_argument("--out", type=Path, help="folder for the logs (default logs/fleet/<time>-<name>)")
+    flr = sub.add_parser("fleet-report", help="what each character of a fleet run did and cost, and the load")
+    flr.add_argument("dir", type=Path)
+    flr.add_argument("--json", action="store_true")
 
     add_world_args(sub)
 
@@ -175,6 +199,9 @@ def main() -> None:
     if args.cmd == "report":
         report(Path(args.log))
         return
+    if args.cmd == "costs":
+        costs_cmd(args)
+        return
     if args.cmd == "review" and not args.accept:
         review_cmd(args)
         return
@@ -186,6 +213,21 @@ def main() -> None:
     if args.cmd == "replay":
         asyncio.run(replay(args))
         return
+    if args.cmd in ("fleet", "fleet-report"):
+        from . import fleet
+        try:
+            r = fleet.main_run(args.file, args.out, args.hours) if args.cmd == "fleet" else fleet.report(args.dir)
+        except (ValueError, OSError) as e:
+            sys.exit(f"fleet: {e}")
+        print(json.dumps(r, indent=2) if getattr(args, "json", False) else fleet.markdown(r))
+        return
+    if args.cmd == "replay-planner":
+        from .planner import replay as replay_planner
+        recs = [r for r in logs.read_session(args.log) if r.get("type") == "planner" and r.get("messages")]
+        if not recs:
+            sys.exit(f"no planner moments with their messages in {args.log} (logs from before 2026-10-08 have none)")
+        print(json.dumps(asyncio.run(replay_planner(recs[:args.limit], args.planner_model)), indent=2))
+        return
     if args.cmd == "bench" and args.what != "run":
         bench_offline(args)
         return
@@ -195,10 +237,21 @@ def main() -> None:
     asyncio.run(dispatch(args))
 
 
+def add_model_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--profile", metavar="NAME|FILE",
+                   help="the models for each AI role, and a budget (brain/profiles/<name>.toml; see models.py)")
+    p.add_argument("--use", action="append", default=[], metavar="KIND=MODEL",
+                   help="the model for one kind of call or a whole system, over the profile (repeatable): "
+                        "system1, system2, fight, routine, facts, rerank, strategy, recorder, planner, review, "
+                        "guide, design; cheaper1/cheaper2 for over a 'cheaper' budget")
+
+
 def add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--judge", choices=["jev", "heuristic"], default="jev")
     p.add_argument("--provider", choices=["auto", "openrouter", "typesafe"], default="auto")
-    p.add_argument("--model", help="model id (default: ~typesafe/jev-latest on OpenRouter, jev-latest direct)")
+    p.add_argument("--model", help="system one's model: Jev (default ~typesafe/jev-latest on OpenRouter, jev-latest "
+                                   "direct) or any OpenRouter model, asked through the chat adapter")
+    add_model_args(p)
     p.add_argument("--mode", choices=["keep", "off", "assist", "auto"], default="keep",
                    help="set the client's agent mode first (default: leave as is)")
     p.add_argument("--archetype", choices=["auto", "warrior", "mage", "archer", "tamer", "bard", "necromancer", "paladin"],
@@ -210,9 +263,12 @@ def add_run_args(p: argparse.ArgumentParser) -> None:
                    help="pull this strategy template in first (repeatable; see: uo-brain strategy templates)")
     p.add_argument("--log", type=Path, help="append decisions to this JSONL file")
     p.add_argument("--min-confidence", type=float, default=policy.PolicyConfig.min_intent_confidence)
-    p.add_argument("--price-per-million", type=float, default=loop.LoopConfig.price_per_million)
+    p.add_argument("--budget-per-hour", type=float, metavar="USD",
+                   help="a cap on what the AI calls cost an hour (judged over the last ten minutes)")
+    p.add_argument("--over-budget", choices=["slow", "cheaper", "stop"], default="slow",
+                   help="over the cap: decide less often (default), switch to the profile's cheaper models, or stop")
     p.add_argument("--shard", default="local", help="world store for the planner (run with a goal in auto mode)")
-    p.add_argument("--planner-model", help="default anthropic/claude-sonnet-5.5 (or PLANNER_MODEL)")
+    p.add_argument("--planner-model", help="system two's model (default anthropic/claude-sonnet-5.5, or PLANNER_MODEL)")
     p.add_argument("--facts", choices=["jev", "all", "none"], default="jev",
                    help="world facts in the fight decisions: the few Jev picks (default), every shortlisted one, or none")
     p.add_argument("--machine", metavar="NAME|FILE",
@@ -439,7 +495,15 @@ async def login(rpc: AgentRpc, args) -> None:
 
 
 def make_judge(args) -> judges.Judge:
-    return judges.make(args.judge, args.provider, args.model)
+    """The judge for a run, after making its profile the active one (models.py): the models for
+    each kind of call, and the profile's budget unless --budget-per-hour gave one."""
+    try:
+        models.active = models.from_args(args)
+    except ValueError as e:
+        sys.exit(str(e))
+    if models.active.budget and getattr(args, "budget_per_hour", None) is None:
+        costs.ledger.budget = models.active.budget
+    return models.make_judge(args.judge, args.provider)
 
 
 async def strategy_cmd(rpc: AgentRpc, args) -> None:
@@ -487,7 +551,8 @@ async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
     judge = make_judge(args)
     stop = asyncio.Event()
     asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop.set)
-    lcfg = loop.LoopConfig(duration_s=args.duration, price_per_million=args.price_per_million)
+    lcfg = loop.LoopConfig(duration_s=args.duration)
+    set_budget(args)
     pcfg = policy.PolicyConfig(min_intent_confidence=args.min_confidence)
     archetype = None if args.archetype == "auto" else args.archetype
     print(f"running with {judge.name}; Ctrl-C to stop")
@@ -511,7 +576,7 @@ async def run_loop(rpc: AgentRpc, args) -> loop.RunStats:
         stats = await loop.run(rpc, judge, lcfg, pcfg, args.log, stop, archetype=archetype, machine=runner_of(args))
     finally:
         await judge.close()
-    print(json.dumps(stats.summary(lcfg.price_per_million), indent=2))
+    print(json.dumps(stats.summary(), indent=2))
     return stats
 
 
@@ -527,7 +592,7 @@ async def scenario(rpc: AgentRpc, args) -> None:
         print(f"round {n}: {args.monsters} monsters, {args.round_seconds:.0f}s")
         args.duration = args.round_seconds
         stats = await run_loop(rpc, args)
-        results.append(stats.summary(args.price_per_million))
+        results.append(stats.summary())
     await rpc.call("act", verb="say", text="[AgentReset", source="manual")
     kills = sum(r["client_stats"].get("kills", 0) for r in results)
     deaths = sum(r["client_stats"].get("deaths", 0) for r in results)
@@ -543,6 +608,7 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
 
     world = World.open(args.shard)
     judge = make_judge(args)
+    set_budget(args)
     log = args.log.open("a") if args.log else None
 
     def write(rec: dict) -> None:
@@ -567,12 +633,17 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     stop = asyncio.Event()
     asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop.set)
     await rpc.call("mode", mode="auto")
+    mark = costs.ledger.mark()
+    key_check(write)
     try:
-        summary = await plan.run(hours=args.hours, stop=stop)
+        with costs.ledger.logging_to(write):
+            summary = await plan.run(hours=args.hours, stop=stop)
     finally:
         await judge.close()
         world.close()
     summary |= session.routine_summary()
+    summary["costs"] = costs.ledger.summary(mark, kills=summary.get("kills"))
+    key_check(write)
     write({"type": "session_summary", "t": time.time(), **summary})
     if log:
         log.close()
@@ -585,6 +656,8 @@ async def do_goal(rpc: AgentRpc, args) -> None:
 
     world = World.open(args.shard)
     judge = make_judge(args) if args.goal == "hunt" else None
+    if judge is not None:
+        set_budget(args)
     log = args.log.open("a") if getattr(args, "log", None) else None
     session = Session(rpc, world, judge, log=lambda rec: print(json.dumps(rec)) if not log else
                       log.write(json.dumps(rec) + "\n"))
@@ -640,6 +713,15 @@ def bench_names(spec: str) -> list[str]:
 
 
 async def bench(rpc: AgentRpc, args) -> None:
+    try:
+        models.active = models.from_args(args)
+        for spec in args.alias:
+            name, _, model = spec.partition("=")
+            if not model.strip() or "/" in name or "+" in name or "#" in name or "@" in name:
+                raise ValueError(f"--alias wants NAME=MODEL, a name without / + # @; not {spec!r}")
+            models.active.aliases[name.strip()] = model.strip()
+    except ValueError as e:
+        sys.exit(str(e))
     stamp = time.strftime("%Y%m%d-%H%M%S")
     out = args.out or Path("bench") / f"{stamp}.json"
     # Lanes run side by side: two benches started in the same second shared one log folder.
@@ -674,7 +756,8 @@ async def replay(args) -> None:
     latencies = []
     try:
         for d in ds:
-            ans = await judge.ask(d["state"], d["questions"])
+            with costs.kind("replay"):
+                ans = await judge.ask(d["state"], d["questions"])
             latencies.append(ans.latency_ms)
             for q in same:
                 old = d["answers"]["choices"].get(q, {}).get("choice")
@@ -688,12 +771,16 @@ async def replay(args) -> None:
                     confusion[key] = confusion.get(key, 0) + 1
     finally:
         await judge.close()
+    lat = sorted(latencies)
     print(json.dumps({
         "decisions": len(ds),
         "judge": judge.name,
         "agreement": {q: round(same[q] / asked[q], 3) if asked[q] else None for q in same},
         "intent_logged_to_new": dict(sorted(confusion.items(), key=lambda kv: -kv[1])),
-        "latency_ms_avg": round(sum(latencies) / len(latencies), 1) if latencies else None,
+        "latency_ms_avg": round(sum(lat) / len(lat), 1) if lat else None,
+        "latency_ms_p95": round(lat[int(0.95 * (len(lat) - 1))], 1) if lat else None,
+        "unanswered_questions": getattr(judge, "missing", 0),
+        "costs": costs.ledger.summary(decisions=len(ds)),
     }, indent=2))
 
 
@@ -715,12 +802,48 @@ def review_cmd(args) -> None:
     print(reviews.show(rv))
 
 
+def key_check(write) -> None:
+    """OpenRouter's own count of what the key has spent, into the log at a session's start and
+    end, so `uo-brain costs LOG` can check the recorded costs against it."""
+    if (usage := costs.openrouter_usage()) is not None:
+        write({"type": "openrouter_key", "t": time.time(), "usage": usage})
+
+
+def set_budget(args) -> None:
+    if getattr(args, "budget_per_hour", None) is not None:
+        costs.ledger.budget = costs.Budget(args.budget_per_hour, args.over_budget)
+
+
+def costs_cmd(args) -> None:
+    if args.prices:
+        print(f"{costs.update_prices()} model prices saved to {costs.PRICES_FILE}")
+    if args.key:
+        spent = costs.openrouter_usage()
+        print("OpenRouter key: " + ("no key or no answer" if spent is None else f"${spent:.4f} spent in all"))
+    if not args.logs:
+        if not (args.prices or args.key):
+            sys.exit("costs needs a log (or --prices, --key)")
+        return
+    files = {f.resolve() for p in args.logs for f in (p, logs.companion(p)) if f.exists()}
+    records = sorted((r for f in files for r in logs.read(f)), key=lambda r: r.get("t") or 0.0)
+    s = costs.from_records(records, kills=None)
+    checks = [r for r in records if r.get("type") == "openrouter_key"]
+    if s and len(checks) >= 2:
+        key_spent = checks[-1]["usage"] - checks[0]["usage"]
+        s["openrouter_key_spent_usd"] = round(key_spent, 6)
+        s["recorded_vs_key"] = round(s["cost_usd"] / key_spent, 3) if key_spent > 0 else None
+    print(json.dumps(s, indent=2) if args.json else costs.describe(s) + (
+        f"\nOpenRouter's own count for the key over the same run: ${s['openrouter_key_spent_usd']:.4f}"
+        if s and "openrouter_key_spent_usd" in s else ""))
+
+
 def report(path: Path) -> None:
     decisions = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     ds = [d for d in decisions if d["type"] == "decision"]
     if not ds:
         print("no decisions")
         return
+    kills = sum((s.get("client_stats") or {}).get("kills", 0) for s in decisions if s["type"] == "summary")
     lat = sorted(d["answers"]["latency_ms"] for d in ds)
     intents: dict[str, int] = {}
     for d in ds:
@@ -735,6 +858,7 @@ def report(path: Path) -> None:
         "latency_ms_p50": lat[len(lat) // 2],
         "latency_ms_p95": lat[int(0.95 * (len(lat) - 1))],
         "input_tokens": sum(d["answers"]["input_tokens"] for d in ds),
+        "costs": costs.from_records(decisions, kills=kills or None, decisions=len(ds)),
         "summaries": [d for d in decisions if d["type"] == "summary"],
     }, indent=2))
 

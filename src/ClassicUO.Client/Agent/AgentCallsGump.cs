@@ -104,13 +104,34 @@ namespace ClassicUO.Agent
                 counts.Append(counts.Length == 0 ? "" : " · ").Append(Name(kv.Key)).Append(' ').Append(kv.Value);
             }
 
-            y = AddWrapped(counts.Length == 0 ? "no calls yet" : counts.ToString(), PAD, y, INNER, DIM) + 6;
+            y = AddWrapped(counts.Length == 0 ? "no calls yet" : counts.ToString(), PAD, y, INNER, DIM);
+
+            // What they have cost: the total, an hourly rate, the dearest kinds, and the budget.
+            if (_agent.Spent is AgentSpent spent)
+            {
+                var line = new StringBuilder($"spent {Dollars(spent.Total)} · {Dollars(spent.PerHour)}/h");
+
+                for (int i = 0; i < spent.ByKind.Count && i < 3; i++)
+                {
+                    line.Append(" · ").Append(Name(spent.ByKind[i].Kind)).Append(' ').Append(Dollars(spent.ByKind[i].Cost));
+                }
+
+                if (spent.Budget >= 0)
+                {
+                    line.Append($" · cap {Dollars(spent.Budget)}/h").Append(spent.OverBudget ? ", over" : "");
+                }
+
+                y = AddWrapped(line.ToString(), PAD, y, INNER, spent.OverBudget ? RED : DIM);
+            }
+
+            y += 6;
 
             AgentDecision d = _agent.LastDecision;
 
             if (d != null)
             {
-                string head = $"fight · {Ago(d.Time)} ago" + (d.LatencyMs > 0 ? $" · {Math.Round(d.LatencyMs)} ms" : "");
+                string head = $"fight · {Ago(d.Time)} ago" + (d.LatencyMs > 0 ? $" · {Math.Round(d.LatencyMs)} ms" : "")
+                              + (d.Cost > 0 ? $" · {Dollars(d.Cost)}" : "");
                 y = AddHeader(head, y);
 
                 foreach (AgentCallQuestion q in d.Questions)
@@ -144,7 +165,7 @@ namespace ClassicUO.Agent
                 }
 
                 string head = $"{c.Title} · {Ago(c.Time)} ago" + (c.LatencyMs > 0 ? $" · {Math.Round(c.LatencyMs)} ms" : "")
-                              + (c.Cost > 0 ? $" · ${c.Cost:0.0000}" : "");
+                              + (c.Cost > 0 ? $" · {Dollars(c.Cost)}" : "");
                 y = AddHeader(head, y);
 
                 foreach (AgentCallQuestion q in c.Questions)
@@ -267,6 +288,9 @@ namespace ClassicUO.Agent
         private static string Trim(string s, int n) => s.Length <= n ? s : s.Substring(0, n - 1) + "…";
 
         private static string Pct(float p) => $"{Math.Round(Math.Clamp(p, 0f, 1f) * 100)}%";
+
+        // Dollars to four places, or six for the fractions of a cent a Jev question costs.
+        private static string Dollars(float d) => d >= 0.01f || d <= 0 ? $"${d:0.0000}" : $"${d:0.000000}";
 
         private static string Ago(uint time)
         {

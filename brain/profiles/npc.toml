@@ -1,0 +1,12 @@
+# A smart NPC (cuo-m70.4): the cheapest models that still play well, and a cap.
+# Which models those are comes from the model comparison (cuo-m70.3, README Results).
+
+[models]
+system1 = "jev"
+system2 = "anthropic/claude-haiku-5.5"
+
+# Jev's fight decisions alone cost an active warrior about $0.08 an hour, Haiku's planning about $0.02:
+# at $0.10 a fleet's NPC spent most of its half hour resting over budget (2026-10-08).
+[budget]
+per_hour = 0.15
+over = "slow"

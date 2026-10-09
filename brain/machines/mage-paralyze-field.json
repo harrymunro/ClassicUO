@@ -1,0 +1,11 @@
+{
+  "name": "paralyze fields in the way",
+  "why": "cuo-ev9 test: does a mage that keeps a paralyze field between itself and the creatures do better than one that only blasts?",
+  "start": "fields",
+  "states": {
+    "fields": {
+      "says": "Keep a paralyze field across the way between you and the nearest creature, and attack with spells while they are held.",
+      "spell": "Paralyze Field"
+    }
+  }
+}

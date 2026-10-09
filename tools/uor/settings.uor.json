@@ -1,0 +1,18 @@
+{
+  "username": "",
+  "password": "",
+  "ip": "login.uorenaissance.com",
+  "port": 2593,
+  "ignore_relay_ip": false,
+  "ultimaonlinedirectory": "",
+  "profilespath": "",
+  "clientversion": "5.0.8.3",
+  "encryption": 0,
+  "use_verdata": false,
+  "saveaccount": false,
+  "autologin": false,
+  "reconnect": false,
+  "plugins": [],
+  "agent_port": 0,
+  "agent_start_brain": false
+}

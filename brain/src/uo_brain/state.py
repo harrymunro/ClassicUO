@@ -10,10 +10,13 @@ options code has already checked.
 from dataclasses import dataclass, field
 from typing import Any
 
-from .spells import (AREA_MIN, AREA_RADIUS, AREA_SPELLS, ATTACK_SPELLS, BLESSING_SPELLS, NECRO_AREA_SPELLS,
-                     NECRO_ATTACK_SPELLS, WITHER_RADIUS, mana_words)
+from .spells import (AREA_MIN, AREA_RADIUS, BLESSING_SPELLS, FIELD_SPELLS, SUMMON_SLOTS, WITHER_RADIUS, cast_chance,
+                     chance_words, fight_spells, mana_words)
 
 SPELL_RANGE = 10  # tiles; ModernUO's magery range from Mondain's Legacy on
+QUAKE_RADIUS = 4  # Earthquake reaches 1 + Magery/15 tiles (AOS) or 1 + Magery/20: offered for this many round
+FIELD_MIN = 3     # tiles to the creature before a field goes between: one for the field, one to spare
+MANA_SPELLS = ("Feeblemind", "Mana Drain", "Mana Vampire", "Mind Rot")  # only worth it against a spellcaster
 MELEE_SKILLS = ("Swordsmanship", "Mace Fighting", "Fencing", "Archery")
 SONGS = ("Provocation", "Peacemaking", "Discordance")
 CASTERS = ("mage", "mage-tamer", "warrior-mage", "necromancer")  # archetypes that cast attack spells
@@ -163,9 +166,16 @@ class Situation:
     corpses: list[Candidate] = field(default_factory=list)
     items: list[Candidate] = field(default_factory=list)
     hp_pct: int = 100
+    hp_drop: int = 0  # health (percent) lost over the last few seconds, set by the loop (policy.Memory.health_drop)
+
+    def note_health_drop(self, drop: int) -> None:
+        """The fall in health over the last few seconds, for code and, once it's a real fall, in words."""
+        self.hp_drop = drop
+        if drop >= 20:
+            self.state["you"]["health_falling"] = f"down {drop} points in the last few seconds"
     strategy: str = ""
     archetype: str = "warrior"
-    spells: list[Candidate] = field(default_factory=list)  # attack spells castable right now
+    spells: list[Candidate] = field(default_factory=list)  # spells for the fight castable right now
     mana_pct: int = 100
     mode: str = "auto"         # "assist" is combat assist: the player drives, the agent only fights
     traveling: bool = False    # on a long walk (travel): no seeking or looting on the way
@@ -276,7 +286,13 @@ class Situation:
 
     @property
     def area_spells(self) -> list[Candidate]:
+        """The damage spells that hit several creatures at once, on offer now."""
         return [c for c in self.spells if c.info.get("area")]
+
+    @property
+    def focus(self) -> Candidate | None:
+        """The creature a caster's next spell is about: its current target, else the nearest."""
+        return focus_of(self.targets)
 
     def signature(self) -> tuple:
         """Changes when something worth re-deciding about happens."""
@@ -348,8 +364,9 @@ def archetype_of(snapshot: dict[str, Any]) -> str:
 
 def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_items: set[int] = frozenset(),
           max_hostiles: int = 6, archetype: str | None = None, casts_at: dict[int, int] | None = None,
-          bestiary: dict[int, dict[str, Any]] | None = None) -> Situation:
-    """bestiary (World.bestiary): body -> creature stats, to say how strong each hostile is."""
+          bestiary: dict[int, dict[str, Any]] | None = None, cooling: set[tuple[int, str]] | None = None) -> Situation:
+    """bestiary (World.bestiary): body -> creature stats, to say how strong each hostile is.
+    cooling (Memory.cooling): (creature or 0, spell) pairs cast too recently to offer again."""
     p = snapshot["player"]
     archetype = archetype or archetype_of(snapshot)
     mage = archetype in CASTERS
@@ -421,7 +438,8 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                 kind = {"red": "a red player (a murderer)", "criminal": "a criminal player"}.get(m["threat"], "another player")
                 others.append({"name": kind, "kind": "player", "distance": distance_words(m["distance"])})
                 continue
-            kind = "your pet" if m.get("pet") else "person" if m.get("human") else "creature"
+            kind = "your pet" if m.get("pet") else "your summon" if m.get("summon") else "person" if m.get("human") \
+                else "creature"
             others.append({"name": m.get("label") or m.get("name") or "someone", "kind": kind,
                            "distance": distance_words(m["distance"])})
 
@@ -451,27 +469,15 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
     magic = snapshot.get("magic") or {}
     area_center, area_count = None, 0
     if mage:
-        known = {s["name"]: s for s in magic.get("spells", [])}
         necro = archetype == "necromancer"
-        for name, what in (NECRO_ATTACK_SPELLS if necro else ATTACK_SPELLS).items():
-            s = known.get(name)
-            if s and not s.get("missing"):
-                sid = f"s{len(spells) + 1}"
-                info = {"id": sid, "name": name, "effect": what, "mana": s["mana"], "circle": s["circle"]}
-                spells.append(Candidate(sid, s["id"], name, 0, info))
         # Mages and necromancers only: a warrior-mage casts one opener at a creature that is still coming.
+        quake: tuple[Candidate | None, int] = (None, 0)
         if archetype in ("mage", "mage-tamer"):
             area_center, area_count = area_target(snapshot, hostiles)
+            quake = around_target(snapshot, hostiles, QUAKE_RADIUS, QUAKE_RADIUS + 2)
         elif necro:
             area_center, area_count = around_target(snapshot, hostiles, WITHER_RADIUS - 1, WITHER_RADIUS + 1)
-        for name, what in (NECRO_AREA_SPELLS if necro else AREA_SPELLS).items() if area_center else ():
-            s = known.get(name)
-            if s and not s.get("missing"):
-                sid = f"s{len(spells) + 1}"
-                info = {"id": sid, "name": name, "mana": s["mana"], "circle": s["circle"], "area": True,
-                        "effect": f"{what} ({area_count} creatures there now)" if necro else
-                        f"{what} (cast at {area_center.name} it hits {area_count} creatures now)"}
-                spells.append(Candidate(sid, s["id"], name, 0, info))
+        spells = spell_candidates(snapshot, archetype, hostiles, area_center, area_count, quake, cooling or set())
 
     you = {
         "health": f"{health_words(hp_pct)} ({hp_pct}%)",
@@ -545,7 +551,7 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
         secs = max(1, round(ready_ms / 1000))
         you["next_spell"] = "can cast now" if ready_ms <= 0 and not magic.get("casting") \
             else f"in about {secs} second{'s' if secs > 1 else ''}"
-        you["attack_spells_available"] = [c.name for c in spells] or ["none: not enough mana or reagents"]
+        you["spells_available"] = [c.name for c in spells] or ["none: not enough mana or reagents"]
         regs = reagents_of(p, archetype)
         low = sorted(k.replace("_", " ") for k, v in regs.items() if v < 5)
         you["reagents"] = "plenty" if not low else "running out of " + ", ".join(low)
@@ -571,6 +577,74 @@ def build(snapshot: dict[str, Any], looted: set[int], events: list[str], skip_it
                      archetype=archetype, spells=spells, mana_pct=mana_pct, mode=mode, engage=engage,
                      traveling=traveling, pack=pack, pack_weight=weight, area_center=area_center,
                      area_count=area_count)
+
+
+def focus_of(targets: list[Candidate]) -> Candidate | None:
+    return next((h for h in targets if h.info["your_current_target"]), None) \
+        or (min(targets, key=lambda h: h.distance) if targets else None)
+
+
+def spell_candidates(snapshot: dict[str, Any], archetype: str, hostiles: list[Candidate], area_center: Candidate | None,
+                     area_count: int, quake: tuple[Candidate | None, int], cooling: set[tuple[int, str]]
+                     ) -> list[Candidate]:
+    """Every spell in the book a fight can use right now (cuo-ryt), attack spells first. Each is
+    offered only where it can do something: an area spell with a crowd, a curse once on a creature
+    while it lasts (one on mana only against a spellcaster), a field with room between the caster
+    and the creature, a summon with follower slots free, a blessing on the caster while it is down."""
+    p = snapshot["player"]
+    known = {s["name"]: s for s in (snapshot.get("magic") or {}).get("spells", [])}
+    targets = [h for h in hostiles if h.allowed]
+    focus = focus_of(targets)
+    casters = any(h.info.get("casts_spells") for h in targets)
+    free = (p.get("followers_max") or 5) - (p.get("followers") or 0)
+    buffs = set(p.get("buffs", []))
+    magery = (p.get("skills") or {}).get("Magery", 100.0)
+    necro = archetype == "necromancer"
+    out: list[Candidate] = []
+    for name, aim, what in fight_spells(necro):
+        s = known.get(name)
+        if not s or s.get("missing"):
+            continue
+        info = {"name": name, "effect": what, "mana": s["mana"], "circle": s["circle"], "aim": aim}
+        if name in SUMMON_SLOTS and SUMMON_SLOTS[name] > free:
+            continue
+        if aim == "area":
+            if not area_center or (area_center.serial, name) in cooling:
+                continue
+            if name != "Mass Curse":
+                info["area"] = True  # damage: what an area spell is for (policy)
+            info["hits"] = area_count
+            info["effect"] = f"{what} (cast at {area_center.name} it hits {area_count} creatures now)"
+        elif aim == "around":
+            center, n = (area_center, area_count) if necro else quake
+            if not center:
+                continue
+            info["area"], info["hits"] = True, n
+            info["effect"] = f"{what} ({n} creatures {'there' if necro else 'around the mage'} now)"
+        elif aim == "creature":
+            if name in MANA_SPELLS and not casters:
+                continue
+            if focus and (focus.serial, name) in cooling:
+                continue
+        elif aim == "ground":
+            # Not a field for a warrior-mage: it would wall itself off from the creature it goes to fight.
+            wall = name in FIELD_SPELLS
+            reach = (FIELD_MIN if wall else 1, SPELL_RANGE)
+            if not focus or not reach[0] <= focus.distance <= reach[1] or (0, name) in cooling \
+                    or wall and archetype == "warrior-mage":
+                continue
+        elif aim == "summon":
+            if not targets or (0, name) in cooling:
+                continue
+        elif aim == "self":
+            if name.replace(" ", "") in buffs or (0, name) in cooling:
+                continue
+        if s.get("circle"):  # magery: a high circle fizzles often at middling skill
+            info["chance"] = cast_chance(s["circle"], magery, snapshot.get("era", "aos"))
+            info["effect"] += chance_words(info["chance"])
+        sid = info["id"] = f"s{len(out) + 1}"
+        out.append(Candidate(sid, s["id"], name, 0, {"id": sid, **info}))
+    return out
 
 
 def reagents_of(p: dict[str, Any], archetype: str | None) -> dict[str, int]:

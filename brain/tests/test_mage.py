@@ -34,7 +34,7 @@ def test_mage_state_has_mana_spells_and_range_in_words(mage):
     assert you["next_spell"] == "can cast now"
     assert "bandages_left" not in you
     # Ordered strongest first; Flame Strike lacks reagents.
-    assert you["attack_spells_available"] == ["Energy Bolt", "Explosion", "Lightning", "Fireball", "Magic Arrow"]
+    assert you["spells_available"] == ["Energy Bolt", "Explosion", "Lightning", "Fireball", "Magic Arrow"]
     assert you["reagents"] == "running out of nightshade"
     t1, t2 = sit.state["hostile_creatures"]
     assert t1["in_spell_range"] is True and t2["in_spell_range"] is False
@@ -59,7 +59,7 @@ def test_no_spell_question_without_mana(mage):
         s["missing"] = "mana"
     sit = sit_of(mage)
     assert "spell" not in questions.build(sit)
-    assert sit.state["you"]["attack_spells_available"] == ["none: not enough mana or reagents"]
+    assert sit.state["you"]["spells_available"] == ["none: not enough mana or reagents"]
 
 
 def test_fight_casts_the_chosen_spell_at_the_target(mage):
@@ -377,3 +377,150 @@ def test_after_leaving_a_mage_still_casts_at_what_comes(mage):
     mage["mobiles"][0]["war_mode"] = False
     dec = policy.decide(state.build(mage, set(), []), answers("fight"), mem, policy.PolicyConfig(), now=10.0)
     assert dec.intent != "fight"
+
+
+# ---- the rest of the book (cuo-ryt) -------------------------------------------
+
+
+def full_book(mage):
+    mage["magic"]["spells"] += [
+        _spell(17, "Bless", 3, 9, "beneficial"), _spell(24, "Wall of Stone", 3, 9, "neutral"),
+        _spell(27, "Curse", 4, 11), _spell(31, "Mana Drain", 4, 11), _spell(33, "Blade Spirits", 5, 14, "neutral"),
+        _spell(46, "Mass Curse", 6, 20), _spell(50, "Energy Field", 6, 20, "neutral"),
+        _spell(57, "Earthquake", 8, 50), _spell(62, "Earth Elemental", 8, 50, "neutral"),
+        _spell(32, "Recall", 4, 11, "neutral"), _spell(22, "Teleport", 3, 9, "neutral")]
+    mage["player"].update(followers=0, followers_max=5)
+    return mage
+
+
+def names(sit):
+    return [c.name for c in sit.spells]
+
+
+def test_the_rest_of_the_book_is_offered_where_it_can_do_something(mage):
+    sit = sit_of(full_book(mage))  # the orc 5 tiles off, the captain 12
+    assert names(sit) == ["Energy Bolt", "Explosion", "Lightning", "Fireball", "Magic Arrow", "Curse", "Wall of Stone",
+                          "Energy Field", "Blade Spirits", "Earth Elemental", "Bless"]
+    assert sit.state["you"]["spells_available"] == names(sit)
+    criteria = questions.build(sit)["spell"]["criteria"]
+    assert any(v.startswith("Wall of Stone: a short stone wall across the way") for v in criteria.values())
+    # A spell on mana only against a spellcaster; no field with the creature too close for one between.
+    mage["mobiles"][0].update(distance=2, dx=2)
+    mage["mobiles"][1]["name"] = "an orcish mage"
+    sit = state.build(mage, set(), [], bestiary={7: {"hits": 50, "difficulty": "weak", "caster": True}})
+    assert "Mana Drain" in names(sit) and "Wall of Stone" not in names(sit) and "Blade Spirits" in names(sit)
+    # No summon without follower slots; no blessing already up.
+    mage["player"].update(followers=4, buffs=["Protection", "Bless"])
+    assert not {"Blade Spirits", "Earth Elemental", "Bless"} & set(names(sit_of(mage)))
+
+
+def test_earthquake_and_mass_curse_wait_for_a_crowd(mage):
+    full_book(mage)
+    mage["mobiles"] = [dict(mage["mobiles"][0], serial=0x100 + i, distance=2, dx=2, dy=i - 1) for i in range(3)]
+    sit = sit_of(mage)
+    quake = next(c for c in sit.spells if c.name == "Earthquake")
+    assert quake.info["area"] and "3 creatures around the mage now" in quake.info["effect"]
+    # Its note and reason count those around the mage, not Chain Lightning's crowd (none here).
+    sit.area_count = 0
+    dec = policy.decide(sit, answers(spell=quake.id), policy.Memory(), CFG)
+    assert " with Earthquake on 3 " in dec.note and dec.actions[-1]["reason"] == "area 3"
+    curse = next(c for c in sit.spells if c.name == "Mass Curse")
+    assert not curse.info.get("area")  # no damage: never the fallback for a crowd
+    dec = policy.decide(sit, answers(spell=curse.id), policy.Memory(), CFG)
+    assert dec.actions[-1]["target"] == sit.area_center.serial
+    assert policy.decide(sit, answers(spell="none", spell_conf=0.1), policy.Memory(), CFG).spell.name != "Mass Curse"
+
+
+def test_each_spell_is_aimed_as_it_needs_and_not_offered_again_at_once(mage):
+    sit = sit_of(full_book(mage))
+    mem = policy.Memory()
+    by = {c.name: c.id for c in sit.spells}
+    aimed = {}
+    for name in ("Bless", "Earth Elemental", "Wall of Stone", "Curse"):
+        dec = policy.decide(sit, answers(spell=by[name]), mem, CFG, now=100.0)
+        aimed[name] = dec.actions[-1]["target"]
+    assert aimed == {"Bless": "self", "Earth Elemental": "self", "Wall of Stone": 0x100, "Curse": 0x100}
+    later = state.build(mage, set(), [], cooling=mem.cooling(105.0))
+    assert not {"Bless", "Earth Elemental", "Wall of Stone", "Curse"} & set(names(later))
+    # Curse is kept off that orc only; the wall comes back after a few seconds, a buff once the server
+    # has had time to show its icon.
+    assert (0x100, "Curse") in mem.cooling(150.0) and (0, "Wall of Stone") not in mem.cooling(115.0)
+    assert (0, "Bless") not in mem.cooling(111.0)
+
+
+def test_unsure_jev_still_falls_back_on_damage_and_the_rules_only_know_attack_spells(mage):
+    sit = sit_of(full_book(mage))
+    dec = policy.decide(sit, answers(spell="none", spell_conf=0.1), policy.Memory(), CFG)
+    assert dec.spell.name == "Energy Bolt"
+    mage["player"]["mana"] = 20
+    sit = sit_of(mage)
+    ans = asyncio.run(HeuristicJudge().ask(sit.state, questions.build(sit)))
+    assert sit.spell(ans.choices["spell"].choice).name == "Magic Arrow"
+
+
+def test_its_own_summon_is_not_a_creature_to_fight(mage):
+    """A summoned monster shows red on ModernUO; the client marks the agent's own (not a monster)."""
+    mage["mobiles"].append({"serial": 0x150, "name": "an energy vortex", "body": 164, "notoriety": "murderer",
+                            "human": False, "pet": False, "monster": False, "summon": True, "dead": False,
+                            "distance": 4, "dx": 4, "dy": 1})
+    sit = sit_of(mage)
+    assert 0x150 not in [h.serial for h in sit.hostiles]
+    assert {"name": "an energy vortex", "kind": "your summon", "distance": "nearby"} in sit.state["other_beings_nearby"]
+
+
+def test_a_spell_that_often_fizzles_says_so(mage):
+    """At Magery 90 ModernUO casts an eighth-circle spell 1 time in 4 (Mondain's Legacy rules)."""
+    from uo_brain import spells
+    assert spells.cast_chance(8, 90) == 0.25 and spells.cast_chance(7, 90) == 0.6 and spells.cast_chance(6, 90) == 0.95
+    assert spells.cast_chance(8, 90, "pre-aos") == 0.5
+    full_book(mage)
+    sit = sit_of(mage)
+    quakeless = {c.name: c.info["effect"] for c in sit.spells}
+    assert quakeless["Earth Elemental"].endswith("about 25% of casts work, and a fizzle loses the reagents and the time, "
+                                                 "not the mana")
+    assert "fizzle" not in quakeless["Energy Bolt"] and "fizzle" not in quakeless["Blade Spirits"]
+
+
+def test_unsure_jev_falls_back_on_a_spell_that_works(mage):
+    """cuo-x2x: Flamestrike works 6 casts in 10 at Magery 90; the fallback cast it anyway."""
+    for sp in mage["magic"]["spells"]:
+        sp["missing"] = ""
+    unsure = answers(spell="none", spell_conf=0.1)
+    assert policy.decide(sit_of(mage), unsure, policy.Memory(), CFG).spell.name == "Energy Bolt"
+    mage["player"]["skills"]["Magery"] = 120.0  # a power-scrolled grandmaster: Flamestrike every time
+    assert policy.decide(sit_of(mage), unsure, policy.Memory(), CFG).spell.name == "Flamestrike"
+    mage["player"]["skills"]["Magery"] = 55.0   # sure only up to the third circle
+    assert policy.decide(sit_of(mage), unsure, policy.Memory(), CFG).spell.name == "Fireball"
+
+
+def test_a_crowd_coming_is_asked_about_walls_and_summons_first(mage):
+    """cuo-ev9: Jev hardly ever picked a field or summon from the whole book; with three or more
+    coming and fewer than two on the mage, the ward question offers only those, and its pick is cast."""
+    full_book(mage)
+    mage["mobiles"] = [dict(mage["mobiles"][0], serial=0x100 + i, distance=5 + i, dx=5 + i, dy=i, war_mode=True)
+                       for i in range(3)]
+    sit = sit_of(mage)
+    assert [c.name for c in questions.ward_options(sit)] == ["Wall of Stone", "Energy Field", "Blade Spirits"]
+    assert "ward" not in questions.build(sit)  # only when asked for (PolicyConfig.ward)
+    q = questions.build(sit, ward=True)["ward"]
+    assert "3 creatures are coming at the mage, and 0 of them have reached it" in q["instructions"]["question"]
+    assert list(q["criteria"])[-1] == "none" and len(q["criteria"]) == 4
+    wall = next(c.id for c in sit.spells if c.name == "Wall of Stone")
+    a = answers(spell="s1")
+    field = next(c.id for c in sit.spells if c.name == "Energy Field")
+    # Jev's yes spread over alike options: none above 0.3, but 0.75 together against 0.25 on attacking.
+    a.choices["ward"] = ChoiceResult("none", {wall: 0.3, field: 0.25, "s9": 0.2, "none": 0.25}, 0.3)
+    mem = policy.Memory()
+    dec = policy.decide(sit, a, mem, CFG, now=100.0)
+    assert dec.spell.name == "Wall of Stone" and dec.spell_why == "ward" and dec.actions[-1]["spell"] == "Wall of Stone"
+    # One a crowd: another field the next second was the other kinds' turn, four in two seconds.
+    assert policy.decide(sit, a, mem, CFG, now=101.0).spell_why != "ward"
+    assert policy.decide(sit, a, mem, CFG, now=116.0).spell_why == "ward"
+    a.choices["ward"] = ChoiceResult("none", {wall: 0.2, field: 0.2, "none": 0.6}, 0.6)
+    assert policy.decide(sit, a, policy.Memory(), CFG).spell_why == "jev"
+    # Not once two are on it, nor for fewer than three.
+    for m in mage["mobiles"][:2]:
+        m.update(distance=1, dx=1)
+    assert questions.ward_options(sit_of(mage)) == []
+    mage["mobiles"] = mage["mobiles"][2:]
+    assert questions.ward_options(sit_of(mage)) == []

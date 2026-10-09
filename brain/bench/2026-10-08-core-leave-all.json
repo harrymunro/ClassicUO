@@ -1,0 +1,401 @@
+{
+  "started": "2026-10-08T13:29:24",
+  "rounds": 5,
+  "lane": 1,
+  "bestiary": true,
+  "scenarios": {
+    "attrition": {
+      "bead": "cuo-46e.5",
+      "right": "A long fight on six bandages and one heal potion: disengage before the supplies are gone, unless the last monster is nearly dead.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Tactikiv (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                86,
+                87,
+                88,
+                91,
+                93,
+                95,
+                97,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                77,
+                78,
+                100,
+                100
+              ],
+              "min_hp": 77,
+              "decisions": 79,
+              "log": "logs/bench/20261008-132924-lane1/attrition-jev-01.jsonl",
+              "input_tokens": 143730,
+              "est_cost_usd": 0.006
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Chokchak (ratman)",
+                "Xarlug (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                94,
+                95,
+                96
+              ],
+              "min_hp": 94,
+              "decisions": 88,
+              "log": "logs/bench/20261008-132924-lane1/attrition-jev-02.jsonl",
+              "input_tokens": 167313,
+              "est_cost_usd": 0.007
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Defetav (ratman)"
+              ],
+              "flees_at_hp": [
+                83,
+                77,
+                77,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                95,
+                96,
+                98,
+                99
+              ],
+              "min_hp": 76,
+              "decisions": 81,
+              "log": "logs/bench/20261008-132924-lane1/attrition-jev-03.jsonl",
+              "input_tokens": 152537,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Fitactaki (ratman)",
+                "Tickukitaki (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 95,
+              "decisions": 80,
+              "log": "logs/bench/20261008-132924-lane1/attrition-jev-04.jsonl",
+              "input_tokens": 152872,
+              "est_cost_usd": 0.0064
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                92,
+                93,
+                93,
+                95,
+                97,
+                99,
+                100,
+                100,
+                94,
+                87,
+                88,
+                91,
+                93,
+                95,
+                97,
+                98,
+                100,
+                87,
+                88,
+                91,
+                92
+              ],
+              "min_hp": 86,
+              "decisions": 78,
+              "log": "logs/bench/20261008-132924-lane1/attrition-jev-05.jsonl",
+              "input_tokens": 141454,
+              "est_cost_usd": 0.0059
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0317,
+          "errors": 0
+        }
+      }
+    },
+    "mismatch": {
+      "bead": "cuo-46e.2",
+      "right": "An ogre lord walks up while four weak monsters fight the warrior: leave, or at least don't engage it.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Gelub (orc)",
+                "a headless one",
+                "Tidetckuki (ratman)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Gelub (orc)",
+                "a headless one",
+                "Tidetckuki (ratman)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                81,
+                82,
+                83,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 79,
+              "decisions": 58,
+              "log": "logs/bench/20261008-132924-lane1/mismatch-jev-01.jsonl",
+              "input_tokens": 107603,
+              "est_cost_usd": 0.0045
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Sarhbub (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Sarhbub (orc)",
+                "a mongbat",
+                "a headless one",
+                "Kikechokii (ratman)"
+              ],
+              "flees_at_hp": [
+                68,
+                69,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 53,
+              "decisions": 57,
+              "log": "logs/bench/20261008-132924-lane1/mismatch-jev-02.jsonl",
+              "input_tokens": 105111,
+              "est_cost_usd": 0.0044
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.4,
+              "player_died": false,
+              "kills": [
+                "Cherek (ratman)"
+              ],
+              "engaged": [
+                "Pregu (orc)",
+                "Cherek (ratman)",
+                "Pregu (orc)"
+              ],
+              "flees_at_hp": [
+                86,
+                80,
+                81,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 66,
+              "decisions": 57,
+              "log": "logs/bench/20261008-132924-lane1/mismatch-jev-03.jsonl",
+              "input_tokens": 111539,
+              "est_cost_usd": 0.0047
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Wikchichoki (ratman)",
+                "a headless one",
+                "a mongbat",
+                "Zlog (orc)"
+              ],
+              "engaged": [
+                "Wikchichoki (ratman)",
+                "a headless one",
+                "a mongbat",
+                "Zlog (orc)"
+              ],
+              "flees_at_hp": [
+                98,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 65,
+              "decisions": 48,
+              "log": "logs/bench/20261008-132924-lane1/mismatch-jev-04.jsonl",
+              "input_tokens": 89721,
+              "est_cost_usd": 0.0038
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Vrigka (orc)",
+                "a headless one",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Vrigka (orc)",
+                "a headless one",
+                "a mongbat",
+                "Ritiki (ratman)"
+              ],
+              "flees_at_hp": [
+                81,
+                82,
+                82,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 69,
+              "decisions": 59,
+              "log": "logs/bench/20261008-132924-lane1/mismatch-jev-05.jsonl",
+              "input_tokens": 104260,
+              "est_cost_usd": 0.0044
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0218,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

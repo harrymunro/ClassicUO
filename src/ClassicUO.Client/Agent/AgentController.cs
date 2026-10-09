@@ -88,6 +88,15 @@ namespace ClassicUO.Agent
         // will answer, when its cast delay ends, and when the next spell may start.
         private int _castSpell;
         private uint _castTarget, _castStarted, _castUntil, _castCursorBy, _nextCastAt;
+        private uint _castNear; // a field or a placed summon: the creature whose tile beside it the cursor gets
+
+        // The agent's own summons (cuo-ryt). ModernUO shows a summoned monster red, so the agent would
+        // fight or run from its own Blade Spirits. A creature that appears within 3 tiles of where a
+        // summon was cast, in the seconds after, is taken as the summon, and is never a target.
+        public static readonly HashSet<uint> OwnSummons = new HashSet<uint>();
+        private HashSet<uint> _beforeSummon;
+        private uint _summonUntil;
+        private int _summonX, _summonY;
         private bool _castSurvival;
 
         // A spell the brain wants cast as soon as the current one allows ("queue": true).
@@ -410,6 +419,7 @@ namespace ClassicUO.Agent
             d.Seq = ++_decisionSeq;
             d.Time = Time.Ticks;
             _decisions.Add(d);
+            Spent = d.Spent ?? Spent;
             _callCounts["fight"] = _callCounts.GetValueOrDefault("fight") + 1;
 
             if (_decisions.Count > 12)
@@ -439,6 +449,7 @@ namespace ClassicUO.Agent
         public IReadOnlyDictionary<string, AgentCall> LatestCalls => _calls;
         public IReadOnlyDictionary<string, int> CallCounts => _callCounts;
         public int CallSeq { get; private set; }
+        public AgentSpent Spent { get; private set; } // the brain's AI costs so far, from its latest call
         public bool CallsOpen => _callsGump != null && !_callsGump.IsDisposed;
 
         public void RecordCall(AgentCall c)
@@ -450,6 +461,7 @@ namespace ClassicUO.Agent
 
             c.Time = Time.Ticks;
             _calls[c.Kind] = c;
+            Spent = c.Spent ?? Spent;
             _callCounts[c.Kind] = _callCounts.GetValueOrDefault(c.Kind) + 1;
             CallSeq++;
             _lastBrainContact = Time.Ticks;
@@ -647,6 +659,7 @@ namespace ClassicUO.Agent
             UpdatePets(now);
             UpdateSong(now);
             UpdateCast(now);
+            UpdateSummons(now);
             UpdateRearm(now);
 
             if (Mode == AgentMode.Off && _engaged == 0 && _lootCorpse == 0 && _takeQueue.Count == 0)
@@ -1047,7 +1060,7 @@ namespace ClassicUO.Agent
 
         public static bool IsMonsterTarget(Mobile m)
         {
-            if (m.IsHuman || m.IsRenamable || m.IsDead || (m.Serial & 0x80000000) != 0)
+            if (m.IsHuman || m.IsRenamable || m.IsDead || (m.Serial & 0x80000000) != 0 || OwnSummons.Contains(m.Serial))
             {
                 return false;
             }
@@ -1129,16 +1142,52 @@ namespace ClassicUO.Agent
                 }
             }
 
+            // A field or a placed summon (Wall of Stone, Blade Spirits) aimed at a creature: its cursor
+            // asks for a tile, and gets the one beside the creature on the caster's side (cuo-ryt).
+            Mobile near = spell.TargetType == TargetType.Neutral && target != p.Serial ? _world.Mobiles.Get(target) : null;
+
+            if (near != null)
+            {
+                if (near.IsDead || near.Distance > 10)
+                {
+                    return ("failed", "out of spell range");
+                }
+
+                if (!a.Manual && !IsMonsterTarget(near))
+                {
+                    Stats.Blocked++;
+
+                    return ("blocked", "not a monster");
+                }
+            }
+
             uint delay = AgentSpells.CastDelayMs(spell.ID);
             _castSpell = spell.ID;
             // Travel spells target an item (a rune); their table entry says neutral.
             bool itemTarget = target != 0 && target != uint.MaxValue && _world.Items.Get(target) != null;
             _castTarget = spell.TargetType == TargetType.Neutral && !itemTarget ? 0 : target;
+            _castNear = near?.Serial ?? 0;
+
+            if (AgentSpells.IsSummon(spell.ID))
+            {
+                _beforeSummon = new HashSet<uint>();
+
+                foreach (Mobile m in _world.Mobiles.Values)
+                {
+                    _beforeSummon.Add(m.Serial);
+                }
+
+                _summonUntil = now + delay + 4000;
+                (_summonX, _summonY) = near != null ? (near.X, near.Y) : (p.X, p.Y);
+            }
+
             _castSurvival = survival;
             _castStarted = now;
             _castUntil = now + delay;
-            // Spells without a cursor (Protection is a self toggle) free the slot soon after.
-            _castCursorBy = now + delay + 1200;
+            // Spells without a cursor (Protection is a self toggle) free the slot soon after. A long
+            // cast waits longer: with Protection up the server adds half a second to every cast, and
+            // Blade Spirits takes that three times over.
+            _castCursorBy = now + delay + Math.Max(1200, delay / 2);
             _nextCastAt = now + delay + AgentSpells.RecoveryMs(spell.ID);
             Stats.Casts++;
 
@@ -1151,6 +1200,80 @@ namespace ClassicUO.Agent
             GameActions.CastSpell(spell.ID);
 
             return ("done", string.Empty);
+        }
+
+        private void UpdateSummons(uint now)
+        {
+            if (_summonUntil != 0)
+            {
+                foreach (Mobile m in _world.Mobiles.Values)
+                {
+                    if (m != _world.Player && !m.IsHuman && !_beforeSummon.Contains(m.Serial)
+                        && Math.Max(Math.Abs(m.X - _summonX), Math.Abs(m.Y - _summonY)) <= 3)
+                    {
+                        OwnSummons.Add(m.Serial);
+                    }
+                }
+
+                if (now > _summonUntil)
+                {
+                    (_summonUntil, _beforeSummon) = (0, null);
+                }
+            }
+
+            if (OwnSummons.Count != 0)
+            {
+                OwnSummons.RemoveWhere(s => _world.Mobiles.Get(s) == null);
+            }
+        }
+
+        // The free tile next to a creature nearest the player: where a field goes between them, or a
+        // summon is put down beside it. Null when the creature is gone or every tile is taken.
+        private (int, int)? TileBeside(uint serial)
+        {
+            Mobile m = _world.Mobiles.Get(serial);
+            PlayerMobile p = _world.Player;
+
+            if (m == null || m.IsDead)
+            {
+                return null;
+            }
+
+            (int, int)? best = null;
+            int bestD = int.MaxValue;
+
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    int x = m.X + dx, y = m.Y + dy;
+                    int d = Math.Max(Math.Abs(x - p.X), Math.Abs(y - p.Y)) * 10 + Math.Abs(x - p.X) + Math.Abs(y - p.Y);
+
+                    if ((dx == 0 && dy == 0) || (x == p.X && y == p.Y) || d >= bestD)
+                    {
+                        continue;
+                    }
+
+                    bool taken = false;
+
+                    foreach (Mobile o in _world.Mobiles.Values)
+                    {
+                        if (!o.IsDead && o.X == x && o.Y == y)
+                        {
+                            taken = true;
+
+                            break;
+                        }
+                    }
+
+                    if (!taken)
+                    {
+                        (best, bestD) = ((x, y), d);
+                    }
+                }
+            }
+
+            return best;
         }
 
         private bool SelfSpell(AgentAction a) =>
@@ -1205,6 +1328,10 @@ namespace ClassicUO.Agent
                 if (playerTookOver)
                 {
                     // The player has the controls: the cursor is theirs to use or cancel.
+                }
+                else if (_castNear != 0 && tm.TargetingState == CursorTarget.Position && TileBeside(_castNear) is (int x, int y))
+                {
+                    tm.Target(0, (ushort) x, (ushort) y, _world.Map.GetTileZ(x, y));
                 }
                 else if (e != null && !(e is Mobile m && m.IsDead) && (tm.TargetingState == CursorTarget.Object || tm.TargetingState == CursorTarget.Position))
                 {
@@ -1421,8 +1548,9 @@ namespace ClassicUO.Agent
             }
             else
             {
-                // The whole pack in view, nearer ones counting more. Within 10 tiles only, a pack
-                // still 11 or more away gave no direction and the run went north, into a dead end.
+                // Every creature in view, each about the same whatever its distance (a unit step away
+                // from it), so three gargoyles far off outweigh the orc adjacent. Within 10 tiles only,
+                // a pack still 11 or more away gave no direction and the run went north, into a dead end.
                 foreach (Mobile m in _world.Mobiles.Values)
                 {
                     if (m != p && !m.IsDead && m.Distance <= _world.ClientViewRange && IsMonsterTarget(m))

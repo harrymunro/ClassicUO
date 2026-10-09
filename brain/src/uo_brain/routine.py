@@ -31,7 +31,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from . import calls
+from . import calls, costs
 from .judge import Answers, Judge
 from .spells import ATTACK_SPELLS, NECRO_ATTACK_SPELLS, mana_words
 from .state import archetype_of, coming_at, health_words, reagents_of
@@ -53,7 +53,6 @@ class RoutineConfig:
     leave_wait_s: float = 45.0      # after leaving from danger, the hunt ends once nothing is coming, or after this
     quiet_floor_s: float = 600.0    # with Jev: nothing to fight for this long ends the hunt anyway
     full_bag_pct: int = 98          # a floor: the bag can take no more
-    price_per_million: float = 0.042  # Jev's price per million input tokens (loop.LoopConfig)
     # The rules used without Jev: the old fixed thresholds.
     min_bandages: int = 10
     min_reagents: int = 5
@@ -119,6 +118,7 @@ class HuntWatch:
         self.left_at = 0.0
         self.asked = 0
         self.input_tokens = 0
+        self.cost = 0.0  # dollars, as reported for each question (costs.py)
         self.verdicts: dict[str, int] = {}
 
     # ------------------------------------------------------------ snapshots
@@ -257,7 +257,8 @@ class HuntWatch:
             qs = questions(words, who=words["you"]["character"], strategy=(snap["agent"].get("strategy") or "").strip(),
                            quiet=quiet)
             try:
-                ans = await self.judge.ask(words, qs)
+                with costs.kind("routine"):
+                    ans = await self.judge.ask(words, qs)
             except Exception as e:  # network, credits: the rules take over after two failures
                 self.failed += 1
                 self.log({"type": "routine", "t": time.time(), "area": self.area, "moment": moment,
@@ -266,6 +267,7 @@ class HuntWatch:
             self.failed = 0
             self.asked += 1
             self.input_tokens += ans.input_tokens
+            self.cost += ans.cost
             v = self.verdict(ans, words)
             self.verdicts[v.kind] = self.verdicts.get(v.kind, 0) + 1
             if v.kind in ("head_back", "leave_spot", "handover"):
@@ -275,7 +277,7 @@ class HuntWatch:
             self.log({"type": "routine", "t": time.time(), "area": self.area, "moment": moment, "state": words,
                       "questions": qs, "answers": ans.to_log(), "verdict": v.kind, "reason": v.reason})
             calls.emit({"kind": "routine", "title": f"hunt at {self.area} ({moment})", "model": ans.model,
-                        "latency_ms": round(ans.latency_ms, 1),
+                        "latency_ms": round(ans.latency_ms, 1), "cost": round(ans.cost, 7),
                         "questions": calls.view(qs, ans, cuts={"head_back": self.cfg.yes, "move_spot": self.cfg.yes,
                                                                "stay_here": self.cfg.no}),
                         "note": f"{v.kind.replace('_', ' ')}: {v.reason}"[:200]})
@@ -381,7 +383,7 @@ class HuntWatch:
 
     def summary(self) -> dict[str, Any]:
         hours = max((self.clock() - self.began) / 3600, 1e-9)
-        cost = self.input_tokens / 1e6 * self.cfg.price_per_million
+        cost = self.cost
         return {"judged_by": "jev" if self.jev else "rules", "questions": self.asked,
                 "input_tokens": self.input_tokens, "cost_usd": round(cost, 5),
                 "cost_usd_per_hour": round(cost / hours, 4), "verdicts": self.verdicts}

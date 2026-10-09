@@ -1,0 +1,17 @@
+# The player's character: Jev for every system-one call, Sonnet for the planner.
+# Copy this file to make another profile, then: uo-brain run --profile <name>
+# Kinds: system one = fight, routine, facts, rerank, strategy, recorder;
+#        system two = planner, review, guide, design. A kind's own line beats its system's.
+
+[models]
+system1 = "jev"
+system2 = "anthropic/claude-sonnet-5.5"
+
+# Used while over a budget whose `over` is "cheaper".
+[cheaper]
+system2 = "anthropic/claude-haiku-5.5"
+
+# No budget by default. Uncomment for a cap on what the AI calls cost an hour:
+# [budget]
+# per_hour = 0.60
+# over = "cheaper"   # slow, cheaper or stop

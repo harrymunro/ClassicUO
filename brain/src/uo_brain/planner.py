@@ -20,7 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from . import calls, llm, world as worlds
+from . import calls, costs, llm, world as worlds
 from . import machine as machines
 from .facts import Ranker
 from .session import Result, Session, describe
@@ -141,7 +141,7 @@ class Planner:
                  machines_allowed: bool = True):
         self.session = session
         self.goal = goal
-        self.model = llm.planner_model(model)
+        self.model = model  # None: the active profile's, chosen at each call (models.py), cheaper over budget
         self.chat = chat_fn
         self.log = log or (lambda _: None)
         self.max_queries = max_queries
@@ -172,6 +172,15 @@ class Planner:
         """One planning decision, with any world queries it needs, then the goal carried out. Jev
         fights what attacks while the model thinks (Session.defended): a hunt that ended in a leave
         hands over with the creatures possibly still about."""
+        if (budget := costs.ledger.budget) and costs.ledger.over_budget():
+            rate = f"${costs.ledger.rate():.3f}/h against a cap of ${budget.per_hour:.3f}/h"
+            if budget.action == "stop":
+                return await self.carry_out("finish", {"summary": f"stopped: over budget ({rate})",
+                                                       "why": "the session is over its budget"})
+            if budget.action == "slow":
+                # Thinking is the dear part: rest a minute where it stands instead, until the spending
+                # of the last ten minutes is back under the cap.
+                return await self.carry_out("rest", {"seconds": 60, "why": f"over budget ({rate}): waiting"})
         snap = await self.session.snap()
         situation = describe(snap, self.session.world)
         msgs = self.messages(situation)
@@ -182,7 +191,9 @@ class Planner:
     async def choose(self, msgs: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
         """The model's next goal (tool, arguments), after the world queries it asks first."""
         for _ in range(self.max_queries + 1):
-            res = await self.chat(msgs, tools=self.tools, tool_choice="auto", model=self.model, max_tokens=600)
+            with costs.kind("planner"):
+                res = await self.chat(msgs, tools=self.tools, tool_choice="auto", model=llm.planner_model(self.model),
+                                      max_tokens=600)
             self.usage = self.usage + res.usage
             if res.tool_calls:
                 c = res.tool_calls[0]
@@ -193,7 +204,9 @@ class Planner:
                             "questions": [{"q": c.name, "kind": "text",
                                            "title": ", ".join(f"{k}: {str(v)[:60]}" for k, v in args.items())[:200]}],
                             "note": str((c.arguments or {}).get("why", ""))[:200]})
-            self.log({"type": "planner", "t": time.time(), "usage": res.usage.to_log(),
+            # What it was sent after the fixed system prompt, so `uo-brain replay-planner` can put the same
+            # moment to another model (cuo-m70.3).
+            self.log({"type": "planner", "t": time.time(), "usage": res.usage.to_log(), "messages": msgs[1:],
                       "content": (res.content or "")[:500], "calls": [{"name": c.name, "args": c.arguments} for c in res.tool_calls]})
             if not res.tool_calls:
                 msgs += [res.message, {"role": "user", "content": "Answer by calling exactly one tool."}]
@@ -292,6 +305,46 @@ class Planner:
             "reranked_queries": self.ranker.calls,
             "rerank_cost_usd": round(self.ranker.cost, 5),
         }
+
+
+async def replay(records: list[dict[str, Any]], model: str, chat_fn: llm.ChatFn = llm.chat,
+                 machines_allowed: bool = True) -> dict[str, Any]:
+    """The planner moments of a log (records with the `messages` they were sent) put to another
+    model: how often it picks the same tool, how often it answers with a usable tool call at all,
+    and what that costs and how long it takes. Offline: the game isn't needed."""
+    tools = goal_tools() + ([machine_tool()] if machines_allowed else []) + worlds.tool_schemas()
+    known = {t["function"]["name"] for t in tools}
+    moments = [r for r in records if r.get("type") == "planner" and r.get("messages") and r.get("calls")]
+    same = usable = goals_same = goals = 0
+    pairs: dict[str, int] = {}
+    latencies: list[float] = []
+    mark = costs.ledger.mark()
+    for r in moments:
+        with costs.kind("planner"):
+            try:
+                res = await chat_fn([{"role": "system", "content": SYSTEM}, *r["messages"]], tools=tools,
+                                    tool_choice="auto", model=model, max_tokens=600)
+            except llm.LlmError as e:
+                pairs[f"error: {str(e)[:60]}"] = pairs.get(f"error: {str(e)[:60]}", 0) + 1
+                continue
+        latencies.append(res.usage.latency_ms)
+        logged = r["calls"][0]["name"]
+        new = res.tool_calls[0].name if res.tool_calls else "(no tool)"
+        usable += new in known
+        same += new == logged
+        if logged in GOALS:
+            goals += 1
+            goals_same += new == logged
+        pairs[f"{logged}->{new}"] = pairs.get(f"{logged}->{new}", 0) + 1
+    lat = sorted(latencies)
+    n = len(moments)
+    return {"model": model, "moments": n, "usable_tool_call": round(usable / n, 3) if n else None,
+            "same_tool": round(same / n, 3) if n else None,
+            "same_goal_when_logged_chose_a_goal": round(goals_same / goals, 3) if goals else None,
+            "latency_ms_avg": round(sum(lat) / len(lat), 1) if lat else None,
+            "latency_ms_p95": round(lat[int(0.95 * (len(lat) - 1))], 1) if lat else None,
+            "costs": costs.ledger.summary(mark, decisions=n),
+            "logged_to_new": dict(sorted(pairs.items(), key=lambda kv: -kv[1]))}
 
 
 def describe_goal(tool: str, args: dict[str, Any]) -> str:

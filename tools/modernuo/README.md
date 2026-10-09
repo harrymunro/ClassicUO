@@ -21,7 +21,7 @@ start; stop the server, edit, start again):
 | `dataDirectories` | `["/Users/<you>/Workspace/UOClassic"]` | the client files from `tools/uo-download` |
 | `listeners` | `["127.0.0.1:2593"]` | local only |
 | `accountHandler.enableAutoAccountCreation` | `true` | `warrior`/`warrior` is created on first login |
-| `accountHandler.maxAccountsPerIP` | `10` | the default of 1 blocks a second account from 127.0.0.1 |
+| `accountHandler.maxAccountsPerIP` | `50` | the default of 1 blocks a second account from 127.0.0.1; at 10 a fleet's third agent was refused ("ip already has 10 accounts") once the bench and soak accounts were there |
 | `serverListing.autoDetect` | `false` | no public IP lookup |
 | `pathfinding.prebakeMaps` | `false` | skips a first-boot prompt |
 | `crashGuard.restartServer` | `false` | no stray restarts |

@@ -28,6 +28,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
+from . import costs
 from .judge import load_dotenv
 
 OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -94,7 +95,12 @@ ChatFn = Callable[..., Awaitable[ChatResult]]
 
 
 def planner_model(model: str | None = None) -> str:
-    return model or os.environ.get("PLANNER_MODEL") or PLANNER_MODEL
+    """The model given, else the one the active profile names for the kind of call being made
+    (models.py: the profile, then PLANNER_MODEL, then Sonnet)."""
+    if model:
+        return model
+    from . import models
+    return models.active.model_for(costs.current_kind("planner"))
 
 
 def api_key() -> str:
@@ -123,7 +129,8 @@ def with_cache_marks(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_request(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None,
                   tool_choice: str | dict[str, Any] | None = None, model: str | None = None,
-                  max_tokens: int = 1024, temperature: float | None = None, cache: bool = True) -> dict[str, Any]:
+                  max_tokens: int = 1024, temperature: float | None = None, cache: bool = True,
+                  response_format: dict[str, Any] | None = None, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     body: dict[str, Any] = {
         "model": planner_model(model),
         "messages": with_cache_marks(messages) if cache else messages,
@@ -138,7 +145,9 @@ def build_request(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | 
                                else tool_choice)
     if temperature is not None:
         body["temperature"] = temperature
-    return body
+    if response_format is not None:
+        body["response_format"] = response_format
+    return {**body, **(extra or {})}
 
 
 def parse_response(data: dict[str, Any], model: str, latency_ms: float = 0.0) -> ChatResult:
@@ -203,14 +212,15 @@ def _post(body: dict[str, Any], key: str, timeout: float, retries: int) -> dict[
 async def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None,
                tool_choice: str | dict[str, Any] | None = None, model: str | None = None, max_tokens: int = 1024,
                temperature: float | None = None, cache: bool = True, timeout: float = 120.0,
-               retries: int = 2) -> ChatResult:
+               retries: int = 2, response_format: dict[str, Any] | None = None,
+               extra: dict[str, Any] | None = None) -> ChatResult:
     """One chat completion. `tools` are OpenAI-style function definitions; `tool_choice`
     is "auto", "none", "required", a tool name to force, or an OpenAI tool_choice dict."""
     forced = tool_choice == "required" or isinstance(tool_choice, dict) or (
         isinstance(tool_choice, str) and tool_choice not in ("auto", "none"))
     if forced and planner_model(model) in _AUTO_ONLY:
         tool_choice = "auto"
-    body = build_request(messages, tools, tool_choice, model, max_tokens, temperature, cache)
+    body = build_request(messages, tools, tool_choice, model, max_tokens, temperature, cache, response_format, extra)
     key = api_key()
     started = time.perf_counter()
     try:
@@ -220,4 +230,9 @@ async def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | Non
             raise
         _AUTO_ONLY.add(body["model"])
         data = await asyncio.to_thread(_post, {**body, "tool_choice": "auto"}, key, timeout, retries)
-    return parse_response(data, body["model"], (time.perf_counter() - started) * 1000)
+    res = parse_response(data, body["model"], (time.perf_counter() - started) * 1000)
+    u = res.usage
+    call = costs.ledger.record(costs.make_call(costs.current_kind("other"), u.model, u.prompt_tokens,
+                                               u.completion_tokens, u.cached_tokens, u.latency_ms, u.cost))
+    u.cost = call.cost  # the table's estimate when OpenRouter didn't say
+    return res

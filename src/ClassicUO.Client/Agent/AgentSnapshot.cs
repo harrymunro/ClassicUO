@@ -86,6 +86,9 @@ namespace ClassicUO.Agent
             w.WriteNumber("weight", p.Weight);
             w.WriteNumber("weight_max", p.WeightMax);
             w.WriteNumber("gold", p.Gold);
+            // Follower slots: a summon or a pet takes some, and a summon is refused without room.
+            w.WriteNumber("followers", p.Followers);
+            w.WriteNumber("followers_max", p.FollowersMax);
             w.WriteBoolean("poisoned", p.IsPoisoned);
             w.WriteBoolean("paralyzed", p.IsParalyzed);
             w.WriteBoolean("dead", p.IsDead);
@@ -195,6 +198,11 @@ namespace ClassicUO.Agent
                 w.WriteBoolean("human", m.IsHuman);
                 w.WriteBoolean("pet", m.IsRenamable);
                 w.WriteBoolean("monster", AgentController.IsMonsterTarget(m));
+
+                if (AgentController.OwnSummons.Contains(m.Serial))
+                {
+                    w.WriteBoolean("summon", true);
+                }
 
                 if (m.HitsMax > 0)
                 {

@@ -535,7 +535,7 @@ class Session:
                 for lx, ly in {(cx, cy), (p.get("x", cx), p.get("y", cy))}:
                     self.left_from.append((lx, ly, time.monotonic(), name, hw.left_why.split(";")[0]))
             retreat = await self.defended(self.retreat())
-        s = stats.summary(lcfg.price_per_million)["client_stats"]
+        s = stats.summary()["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         routine = hw.summary()
         for k in ("questions", "input_tokens", "cost_usd"):

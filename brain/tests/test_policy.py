@@ -73,6 +73,23 @@ def test_seek_walks_to_the_creature(snapshot):
                                                                "confidence": 0, "reason": ""}
 
 
+def test_seek_goes_only_after_what_jev_would_attack(snapshot):
+    """cuo-8ga: target 'none' at 0.58 and intent seek 0.83; seek walked to the nearest creature."""
+    snapshot["mobiles"] = [snapshot["mobiles"][1]]  # the captain, 6 tiles off
+    snapshot["corpses"] = []
+    snapshot["agent"]["engaged"] = 0
+    a = answers("seek", 0.83, target="none")
+    a.choices["target"] = ChoiceResult("none", {"none": 0.58, "t1": 0.42}, 0.58)
+    dec = policy.decide(sit_of(snapshot), a, policy.Memory(), CFG)
+    assert dec.intent == "rest" and dec.target is None
+    assert not any(x["verb"] == "walk_to" for x in dec.actions)
+    assert "none of these" in dec.note
+    # A weak 'none' is no answer: the seek goes on, to the strategy's pick.
+    a.choices["target"] = ChoiceResult("none", {"none": 0.4, "t1": 0.35}, 0.4)
+    dec = policy.decide(sit_of(snapshot), a, policy.Memory(), CFG)
+    assert dec.intent == "seek" and dec.target.serial == 0x101
+
+
 def test_panic_overrides_when_dying_without_potions(snapshot):
     snapshot["player"]["hits"] = 15
     snapshot["player"]["supplies"]["heal_potions"] = 0
@@ -523,6 +540,32 @@ def test_after_leaving_it_does_not_go_back_for_a_while(snapshot):
     assert not any(a["verb"] == "attack" for a in fight.actions)
 
 
+def test_any_leave_runs_from_them_all_not_only_the_nearest(snapshot):
+    """cuo-d28.11: pack bench, Jev without the pack rule. Its leave_now fired with an orc adjacent and
+    three gargoyles 12-14 tiles off; the run went away from the orc, into the gargoyles."""
+    pack_snapshot(snapshot, (17, "an orc", 1, True, 100), (4, "a gargoyle", 12, True, 100),
+                  (4, "a gargoyle", 12, True, 100), (4, "a gargoyle", 13, True, 100))
+    snapshot["mobiles"][0]["dx"] = -1  # the orc on the far side from them
+    nopack = policy.PolicyConfig(leave_packs=False)
+    mem = policy.Memory()
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    dec = policy.decide(sit, answers("fight", leave_now=0.6), mem, nopack, now=10.0)
+    assert dec.intent == "leave" and dec.actions[-1]["verb"] == "flee" and dec.actions[-1]["target"] == 0
+    assert dec.note.startswith("leave, away from all 4 in sight")
+    # Still leaving, with nothing coming any more: from them all again, not from the nearest.
+    for m in snapshot["mobiles"]:
+        m["war_mode"] = False
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert len(sit.pack) < 2  # only the orc, on the character
+    again = policy.decide(sit, answers("fight"), mem, nopack, now=12.0)
+    assert again.intent == "leave" and again.actions[-1] == {**again.actions[-1], "verb": "flee", "target": 0}
+    # One creature in sight: away from it.
+    pack_snapshot(snapshot, (4, "a gargoyle", 5, True, 100))
+    last = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), mem, nopack,
+                         now=14.0)
+    assert last.actions[-1]["target"] == 0x200 and last.note == "leaving, away from a gargoyle"
+
+
 def test_a_leave_says_which_rule_chose_it(snapshot):
     """A soak run's hunt ended on "Jev: leave (1.00)" when it was the cautious strategy's rule."""
     snapshot["player"]["hits"] = 40
@@ -546,3 +589,50 @@ def test_leaving_on_a_trip_keeps_to_the_road_unless_they_are_ahead(snapshot):
     ahead = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
     dec = policy.decide(ahead, answers("fight"), policy.Memory(), CFG)
     assert dec.intent == "leave" and any(a["verb"] == "flee" for a in dec.actions)
+
+
+def test_no_path_away_with_them_still_far_off_keeps_leaving_another_way(snapshot):
+    """cuo-y4l: soak run planners-3. Two runs in a row found no path by the graveyard wall while the
+    gargoyles were still far off; the cornered rule then held the warrior in the fight for 15 s and it died."""
+    pack_snapshot(snapshot, (4, "a gargoyle", 9, True, 100), (4, "a gargoyle", 11, True, 100))
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    mem = policy.Memory(leaving_until=100.0, flee_failed=2)
+    dec = policy.decide(sit, answers("fight", leave_now=0.9), mem, CFG, now=10.0)
+    nearest = min(sit.hostiles, key=lambda h: h.distance)
+    assert dec.intent == "leave" and mem.cornered_until == 0.0
+    assert dec.actions[-1]["verb"] == "flee" and dec.actions[-1]["target"] == nearest.serial
+    # One on it: cornered, as before.
+    pack_snapshot(snapshot, (4, "a gargoyle", 1, True, 100), (4, "a gargoyle", 9, True, 100))
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    mem = policy.Memory(leaving_until=100.0, flee_failed=2)
+    assert policy.decide(sit, answers("fight", leave_now=0.9), mem, CFG, now=10.0).intent == "fight"
+    assert mem.cornered_until == 25.0
+    # Four failures in a row count whatever the distance.
+    pack_snapshot(snapshot, (4, "a gargoyle", 9, True, 100), (4, "a gargoyle", 11, True, 100))
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    mem = policy.Memory(leaving_until=100.0, flee_failed=4)
+    policy.decide(sit, answers("fight", leave_now=0.9), mem, CFG, now=10.0)
+    assert mem.cornered_until == 25.0
+
+
+def test_losing_fast_to_one_fair_fight_asks_about_leaving_and_flees_sooner(snapshot):
+    """cuo-8vk: soak run planners-2. One gargoyle, "a fair fight", took a warrior from 58% to 20% in a
+    second and killed it: leaving was never asked, and the emergency flee waited for danger 0.9 (0.86)."""
+    mem = policy.Memory()
+    assert mem.health_drop(92, 0.0) == 0 and mem.health_drop(60, 2.0) == 32
+    assert mem.health_drop(100, 3.0) == 0                       # a heal
+    assert mem.health_drop(58, 5.0) == 42                       # ...doesn't hide the fall after it
+    assert mem.health_drop(58, 12.0) == 0                       # six seconds on, it's history
+    pack_snapshot(snapshot, (4, "a gargoyle", 1, True, 100))
+    snapshot["player"]["hits"] = 20                             # 20%
+    snapshot["player"]["supplies"]["heal_potions"] = 0
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert questions.leave_reason(sit) == ""                    # one fair fight, health steady: no reason
+    sit.note_health_drop(38)
+    assert sit.state["you"]["health_falling"] == "down 38 points in the last few seconds"
+    assert questions.leave_reason(sit).startswith("The warrior's health fell 38 points in the last few seconds, to 21%")
+    assert "leave_now" in questions.build(sit)
+    dec = policy.decide(sit, answers("fight", danger=0.86), policy.Memory(), CFG)
+    assert dec.intent == "flee"
+    steady = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    assert policy.decide(steady, answers("fight", danger=0.86), policy.Memory(), CFG).intent == "fight"

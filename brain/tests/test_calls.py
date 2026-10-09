@@ -39,7 +39,7 @@ def test_actions_are_put_in_words_with_where_a_move_goes():
             {"verb": "attack", "target": 0x100}, {"verb": "cast", "spell": "Protection", "target": "self"}]
     res = [{"status": "done", "detail": "15 tiles northwest"}, {"status": "done"}, {"status": "failed", "detail": "busy"}]
     assert calls.did(sit, acts, res) == [
-        {"what": "run 15 tiles northwest from the pack", "result": ""},
+        {"what": "run 15 tiles northwest from all in sight", "result": ""},
         {"what": "walk 10 tiles northwest", "result": ""},
         {"what": "attack an orc", "result": "failed: busy"},
         {"what": "cast Protection at itself", "result": ""}]

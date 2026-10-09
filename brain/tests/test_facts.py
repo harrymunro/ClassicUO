@@ -99,9 +99,14 @@ def test_danger_sightings_are_left_to_the_planner(w):
                tags=["danger"], source="seen")
     w.add_note("Stronger than a new character, seen 2026-10-07 04:55: 1 wisp.", area=bench.TEST_FIELD,
                tags=["danger"], source="seen")
+    w.add_note("Had to leave, 2026-10-07 15:05: 2 ghouls; together far stronger than a warrior", area="Elsewhere",
+               tags=["danger"], source="seen")
     texts = [f.text for f in facts.shortlist(w, *LANE_1, {"wisp", "orc"})]
     assert not any(t.startswith(("Had to leave", "Stronger than a new character")) for t in texts)
     assert any("never attack first" in t for t in texts)
+    # Nor through the goal's words or the archetype: a graveyard goal brought them back (cuo-knd).
+    texts = [f.text for f in facts.shortlist(w, *LANE_1, goal="hunt the gargoyles and ghouls", archetype="warrior")]
+    assert not any(t.startswith(("Had to leave", "Stronger than a new character")) for t in texts)
 
 
 def picker_with(w, judge, **kw):
@@ -352,7 +357,8 @@ def test_a_world_fact_round_runs_end_to_end_with_its_own_store(tmp_path, monkeyp
     snap = wisp_snapshot()
     snap["journal"] = []
     monkeypatch.setattr(bench, "say", say)
-    monkeypatch.setattr(judges, "make", lambda kind, *a, **k: FactJudge() if kind == "jev" else judges.HeuristicJudge())
+    from uo_brain import models
+    monkeypatch.setattr(models, "make_judge", lambda kind, *a, **k: FactJudge() if kind == "jev" else judges.HeuristicJudge())
     quick = dataclasses.replace(bench.SCENARIOS["wisp-leave-alone"], seconds=0.4)
     monkeypatch.setitem(bench.SCENARIOS, "wisp-leave-alone", quick)
     out = tmp_path / "result.json"

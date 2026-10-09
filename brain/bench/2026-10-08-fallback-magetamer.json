@@ -1,0 +1,172 @@
+{
+  "started": "2026-10-08T14:14:44",
+  "rounds": 5,
+  "lane": 1,
+  "bestiary": true,
+  "scenarios": {
+    "mage-tamer-orcs": {
+      "bead": "cuo-cvl.3",
+      "right": "Three orcs come at a mage-tamer with a grizzly bear: set the bear on them, cast at what it fights, heal it with spells; kill all three without losing the bear.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Omogulg (orc)"
+              ],
+              "pet_lost": true,
+              "pet_min_hp": 6,
+              "pet_spell_heals": 4,
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Omogulg (orc)",
+                "Speghat (orc)"
+              ],
+              "flees_at_hp": [
+                69,
+                69,
+                71,
+                72,
+                72,
+                73,
+                74,
+                75,
+                76,
+                91,
+                93,
+                94,
+                95,
+                98,
+                98,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 47,
+              "decisions": 96,
+              "log": "logs/bench/20261008-141444-lane1/mage-tamer-orcs-jev-01.jsonl",
+              "input_tokens": 388426,
+              "est_cost_usd": 0.0163
+            },
+            {
+              "success": true,
+              "kills": [
+                "Xaguk (orc)",
+                "Quugug (orc)",
+                "Rugbu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 36,
+              "pet_spell_heals": 7,
+              "seconds": 49.9,
+              "player_died": false,
+              "engaged": [
+                "Xaguk (orc)",
+                "Quugug (orc)",
+                "Rugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 35,
+              "log": "logs/bench/20261008-141444-lane1/mage-tamer-orcs-jev-02.jsonl",
+              "input_tokens": 146973,
+              "est_cost_usd": 0.0062
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zudagog (orc)",
+                "Ergoth (orc)",
+                "Torgan (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 31,
+              "pet_spell_heals": 4,
+              "seconds": 53.6,
+              "player_died": false,
+              "engaged": [
+                "Zudagog (orc)",
+                "Ergoth (orc)",
+                "Torgan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 34,
+              "log": "logs/bench/20261008-141444-lane1/mage-tamer-orcs-jev-03.jsonl",
+              "input_tokens": 142300,
+              "est_cost_usd": 0.006
+            },
+            {
+              "success": true,
+              "kills": [
+                "Worthag (orc)",
+                "Diggu (orc)",
+                "Xruul (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 10,
+              "pet_spell_heals": 7,
+              "seconds": 59.5,
+              "player_died": false,
+              "engaged": [
+                "Worthag (orc)",
+                "Diggu (orc)",
+                "Xruul (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 44,
+              "log": "logs/bench/20261008-141444-lane1/mage-tamer-orcs-jev-04.jsonl",
+              "input_tokens": 181294,
+              "est_cost_usd": 0.0076
+            },
+            {
+              "success": true,
+              "kills": [
+                "Fubdagog (orc)",
+                "Wumanok (orc)",
+                "Kupgugh (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 61,
+              "pet_spell_heals": 1,
+              "seconds": 56.7,
+              "player_died": false,
+              "engaged": [
+                "Fubdagog (orc)",
+                "Wumanok (orc)",
+                "Kupgugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 38,
+              "log": "logs/bench/20261008-141444-lane1/mage-tamer-orcs-jev-05.jsonl",
+              "input_tokens": 156597,
+              "est_cost_usd": 0.0066
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0427,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "energy fields in the way",
+  "why": "cuo-ev9 test: does a mage that keeps an energy field between itself and the creatures do better than one that only blasts?",
+  "start": "fields",
+  "states": {
+    "fields": {
+      "says": "Keep an energy field across the way between you and the nearest creature, and attack with spells while they go round it.",
+      "spell": "Energy Field"
+    }
+  }
+}

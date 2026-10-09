@@ -17,8 +17,9 @@ namespace ClassicUO.Agent
     // The agent's panel: mode, what the agent is doing, and what Jev is thinking:
     // its probabilities for each intent, the danger judgment, the target and spell
     // it picked, what was done about it, the player's strategy and how Jev read it.
-    // Collapses to a few lines. Rebuilt a few times a second when something changes;
-    // the strategy entry box is kept across rebuilds so typing is not lost.
+    // While the calls window is open, Jev's thinking is one line here. Collapses to a
+    // few lines. Rebuilt a few times a second when something changes; the strategy
+    // entry box is kept across rebuilds so typing is not lost.
     internal sealed class AgentGump : Gump
     {
         private const int WIDTH = 310;
@@ -513,6 +514,17 @@ namespace ClassicUO.Agent
                 string steps = string.Join("  ›  ", d.PlanSteps.ConvertAll(st => st == d.PlanStep ? $"[{st}]" : st));
                 y = AddWrapped(steps, PAD, y, INNER, GOLD);
                 y = AddWrapped(d.PlanSays + (d.PlanLast.Length != 0 ? $"  (last: {d.PlanLast})" : ""), PAD, y, INNER, GREY) + 4;
+            }
+
+            // With the calls window open, it has the bars, question by question, and the actions:
+            // the panel keeps one line, so the two don't show the same decision twice (cuo-vc1).
+            if (_agent.CallsOpen)
+            {
+                string summary = d.Gated ? $"unsure ({Pct(d.Confidence)}), keeping course"
+                    : string.IsNullOrEmpty(d.Note) ? $"{d.Intent} {Pct(d.Confidence)}" : d.Note;
+                y = AddWrapped(summary, PAD, y, INNER, WHITE);
+
+                return AddWrapped("details in the calls window", PAD, y, INNER, DIM) + 4;
             }
 
             foreach ((string name, float p) in d.Intents)

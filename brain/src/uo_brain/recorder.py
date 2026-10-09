@@ -21,6 +21,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import costs
 from .judge import Judge
 from .state import BODY_KINDS
 from .world import World, tiles
@@ -177,7 +178,8 @@ class Recorder:
         answers = None
         if questions and self.judge is not None:
             try:
-                answers = await self.judge.ask(state, questions)
+                with costs.kind("recorder"):
+                    answers = await self.judge.ask(state, questions)
             except Exception:  # a failed judgment just leaves these for later
                 self._npcs.extend(npcs)
                 return []

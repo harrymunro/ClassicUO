@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import calls, loop, policy, state
+from . import calls, costs, loop, policy, state
 from .facts import FactPicker
 from .judge import Judge
 from .planner import Planner, PlanStep
@@ -64,6 +64,7 @@ class Autopilot:
         fight loop says so at its first look, but the planner's first step and a walk from the bank
         can take a minute before that, and the panel read "brain off" meanwhile."""
         text = (snap["agent"].get("strategy") or "").strip()
+        costs.ledger.character = snap["player"].get("name") or costs.ledger.character
         await self.rpc.call("brain_info", judge=self.judge.name, archetype=self.archetype or state.archetype_of(snap),
                             strategy_reading=loop.READINGS.get(text))
 
@@ -72,20 +73,29 @@ class Autopilot:
             self.log_file.write(json.dumps(rec) + "\n")
             self.log_file.flush()
 
+    def key_check(self) -> None:
+        """OpenRouter's own count for the key, at the start and end of the log (uo-brain costs --check)."""
+        if self.log_file and (usage := costs.openrouter_usage()) is not None:
+            self.log({"type": "openrouter_key", "t": time.time(), "usage": usage})
+
     async def run(self, stop: asyncio.Event) -> None:
+        self.key_check()
         try:
-            while not stop.is_set():
-                snap = await self.rpc.call("snapshot", since=0)
-                if not snap.get("in_game"):
-                    await asyncio.sleep(1)
-                    continue
-                await self.announce(snap)
-                if wants_planner(snap) and self.world is not None:
-                    await self.work_on_goal(snap, stop)
-                else:
-                    await self.fight(stop)
+            with costs.ledger.logging_to(self.log if self.log_file else None):
+                while not stop.is_set():
+                    snap = await self.rpc.call("snapshot", since=0)
+                    if not snap.get("in_game"):
+                        await asyncio.sleep(1)
+                        continue
+                    await self.announce(snap)
+                    if wants_planner(snap) and self.world is not None:
+                        await self.work_on_goal(snap, stop)
+                    else:
+                        await self.fight(stop)
         finally:
             if self.log_file:
+                self.log({"type": "costs", "t": time.time(), **costs.ledger.summary()})
+                self.key_check()
                 self.log_file.close()
 
     async def fight(self, stop: asyncio.Event) -> None:

@@ -96,6 +96,56 @@ namespace ClassicUO.Agent
         }
     }
 
+    // What the brain's AI calls have cost so far (costs.py's ledger.live()), sent with every call:
+    // the total, an hourly rate, the split by kind of call, and the budget if one is set.
+    internal sealed class AgentSpent
+    {
+        public float Total, PerHour, Budget = -1;
+        public int Calls;
+        public bool OverBudget;
+        public readonly List<(string Kind, float Cost)> ByKind = new List<(string, float)>();
+
+        public static AgentSpent FromJson(JsonElement p)
+        {
+            if (p.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var s = new AgentSpent();
+
+            foreach (JsonProperty prop in p.EnumerateObject())
+            {
+                JsonElement v = prop.Value;
+
+                switch (prop.Name)
+                {
+                    case "total" when v.ValueKind == JsonValueKind.Number: s.Total = v.GetSingle(); break;
+                    case "per_hour" when v.ValueKind == JsonValueKind.Number: s.PerHour = v.GetSingle(); break;
+                    case "calls" when v.ValueKind == JsonValueKind.Number: s.Calls = v.GetInt32(); break;
+                    case "budget_per_hour" when v.ValueKind == JsonValueKind.Number: s.Budget = v.GetSingle(); break;
+                    case "over_budget" when v.ValueKind is JsonValueKind.True or JsonValueKind.False:
+                        s.OverBudget = v.GetBoolean();
+
+                        break;
+
+                    case "by_kind" when v.ValueKind == JsonValueKind.Object:
+                        foreach (JsonProperty k in v.EnumerateObject())
+                        {
+                            if (k.Value.ValueKind == JsonValueKind.Number)
+                            {
+                                s.ByKind.Add((k.Name, k.Value.GetSingle()));
+                            }
+                        }
+
+                        break;
+                }
+            }
+
+            return s;
+        }
+    }
+
     // One model call other than a fight decision ("ai_call" RPC): a routine hunt question, a pick of
     // world facts, a strategy read, a planner goal. The latest of each kind is kept for the live view.
     internal sealed class AgentCall
@@ -105,6 +155,7 @@ namespace ClassicUO.Agent
         public string Model = string.Empty;
         public string Note = string.Empty;
         public float LatencyMs = -1, Cost = -1;
+        public AgentSpent Spent;
         public uint Time;
         public readonly List<AgentCallQuestion> Questions = new List<AgentCallQuestion>();
 
@@ -144,6 +195,7 @@ namespace ClassicUO.Agent
                     case "note" when v.ValueKind == JsonValueKind.String: c.Note = v.GetString(); break;
                     case "latency_ms" when v.ValueKind == JsonValueKind.Number: c.LatencyMs = v.GetSingle(); break;
                     case "cost" when v.ValueKind == JsonValueKind.Number: c.Cost = v.GetSingle(); break;
+                    case "spent": c.Spent = AgentSpent.FromJson(v); break;
                     case "questions": c.Questions.AddRange(ParseQuestions(v)); break;
                 }
             }

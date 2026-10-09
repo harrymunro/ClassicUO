@@ -1,0 +1,657 @@
+{
+  "started": "2026-10-08T19:01:01",
+  "rounds": 2,
+  "lane": 0,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "planner": "anthropic/claude-sonnet-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-sonnet-5.5"
+    }
+  },
+  "aliases": {
+    "haiku": "anthropic/claude-haiku-5.5"
+  },
+  "scenarios": {
+    "pack-gargoyles": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; three gargoyles (a fair fight each, and spellcasters) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (89%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 43,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Woabadug (orc)",
+                "Zogugh (orc)"
+              ],
+              "flees_at_hp": [
+                89,
+                91,
+                92,
+                94,
+                96,
+                98,
+                100,
+                100,
+                91,
+                91,
+                68,
+                71,
+                100
+              ],
+              "decisions": 53,
+              "log": "logs/bench/20261008-190101/pack-gargoyles-jev-01.jsonl",
+              "input_tokens": 96869,
+              "cost_usd": 0.004068,
+              "cost_by_kind": {
+                "fight": 0.004068
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 292.3
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (67%)",
+              "why": "5 coming at once: 2 orcs (weak each) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [],
+              "engaged_pack": true,
+              "min_hp": 46,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Wapkagut (orc)",
+                "a gargoyle"
+              ],
+              "flees_at_hp": [
+                69,
+                47,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                94,
+                95,
+                96,
+                98,
+                100
+              ],
+              "decisions": 59,
+              "log": "logs/bench/20261008-190101/pack-gargoyles-jev-02.jsonl",
+              "input_tokens": 107867,
+              "cost_usd": 0.00453,
+              "cost_by_kind": {
+                "fight": 0.00453
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 284.5
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0086,
+          "cost_per_round_usd": 0.0043,
+          "latency_ms_avg": 288.4,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (79%)",
+              "why": "5 coming at once: 2 orcs (weak each) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [
+                "Woghuglat (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 48,
+              "seconds": 92.3,
+              "player_died": false,
+              "engaged": [
+                "Woghuglat (orc)",
+                "Yalakgh (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                48,
+                51,
+                91,
+                92,
+                95,
+                56,
+                57,
+                100,
+                81,
+                82
+              ],
+              "decisions": 28,
+              "log": "logs/bench/20261008-190101/pack-gargoyles-haiku-01.jsonl",
+              "input_tokens": 78990,
+              "cost_usd": 0.010709,
+              "cost_by_kind": {
+                "fight": 0.010709
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1750.0
+            },
+            {
+              "success": false,
+              "left": true,
+              "left_at_hp": "lightly wounded (89%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Yakgnath (orc)",
+                "Buordud (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 0,
+              "seconds": 63.2,
+              "player_died": true,
+              "engaged": [
+                "Yakgnath (orc)",
+                "Buordud (orc)"
+              ],
+              "flees_at_hp": [
+                75,
+                28,
+                31,
+                68,
+                82,
+                9
+              ],
+              "decisions": 23,
+              "log": "logs/bench/20261008-190101/pack-gargoyles-haiku-02.jsonl",
+              "input_tokens": 67041,
+              "cost_usd": 0.008208,
+              "cost_by_kind": {
+                "fight": 0.008208
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1573.5
+            }
+          ],
+          "n": 2,
+          "successes": 1,
+          "rate": 0.5,
+          "ci95": [
+            0.095,
+            0.905
+          ],
+          "deaths": 1,
+          "cost_usd": 0.01892,
+          "cost_per_round_usd": 0.00946,
+          "latency_ms_avg": 1661.8,
+          "errors": 0
+        }
+      }
+    },
+    "pack-bone-knights": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; two bone knights (each stronger than it) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (69%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Sahgigoth (orc)",
+                "Olaugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 56,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Sahgigoth (orc)",
+                "Olaugh (orc)"
+              ],
+              "flees_at_hp": [
+                69,
+                70,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261008-190101/pack-bone-knights-jev-01.jsonl",
+              "input_tokens": 105065,
+              "cost_usd": 0.004413,
+              "cost_by_kind": {
+                "fight": 0.004413
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 251.9
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (87%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Ugghra (orc)",
+                "Fupgugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 47,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Ugghra (orc)",
+                "Fupgugh (orc)"
+              ],
+              "flees_at_hp": [
+                87,
+                88,
+                89,
+                92,
+                94,
+                96,
+                98,
+                100
+              ],
+              "decisions": 64,
+              "log": "logs/bench/20261008-190101/pack-bone-knights-jev-02.jsonl",
+              "input_tokens": 111470,
+              "cost_usd": 0.004682,
+              "cost_by_kind": {
+                "fight": 0.004682
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 224.8
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0091,
+          "cost_per_round_usd": 0.00455,
+          "latency_ms_avg": 238.4,
+          "errors": 0
+        },
+        "haiku": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (75%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Wraog (orc)",
+                "Ulgan (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 69,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Wraog (orc)",
+                "Ulgan (orc)"
+              ],
+              "flees_at_hp": [
+                76,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 30,
+              "log": "logs/bench/20261008-190101/pack-bone-knights-haiku-01.jsonl",
+              "input_tokens": 79660,
+              "cost_usd": 0.009376,
+              "cost_by_kind": {
+                "fight": 0.009376
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1572.2
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (51%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Poogugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 51,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Poogugh (orc)",
+                "Quordud (orc)"
+              ],
+              "flees_at_hp": [
+                87,
+                88,
+                92,
+                94,
+                97,
+                100,
+                100,
+                100
+              ],
+              "decisions": 28,
+              "log": "logs/bench/20261008-190101/pack-bone-knights-haiku-02.jsonl",
+              "input_tokens": 79048,
+              "cost_usd": 0.010345,
+              "cost_by_kind": {
+                "fight": 0.010345
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1973.4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01972,
+          "cost_per_round_usd": 0.00986,
+          "latency_ms_avg": 1772.8,
+          "errors": 0
+        }
+      }
+    },
+    "wisp-leave-alone": {
+      "bead": "cuo-5of.7",
+      "right": "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit when attacked: kill the orcs, never attack the wisp.",
+      "judges": {
+        "jev@jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Zeakgu (orc)",
+                "Smegugh (orc)"
+              ],
+              "engaged": [
+                "Zeakgu (orc)",
+                "Smegugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 69,
+              "decisions": 58,
+              "log": "logs/bench/20261008-190101/wisp-leave-alone-jev_jev-01.jsonl",
+              "input_tokens": 141786,
+              "cost_usd": 0.005955,
+              "cost_by_kind": {
+                "fight": 0.005473,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 271.6,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11472,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Kugbu (orc)",
+                "Tidgug (orc)"
+              ],
+              "engaged": [
+                "Kugbu (orc)",
+                "Tidgug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 71,
+              "decisions": 59,
+              "log": "logs/bench/20261008-190101/wisp-leave-alone-jev_jev-02.jsonl",
+              "input_tokens": 158552,
+              "cost_usd": 0.006659,
+              "cost_by_kind": {
+                "fight": 0.006177,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 301.1,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11471,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ]
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01261,
+          "cost_per_round_usd": 0.0063,
+          "latency_ms_avg": 286.4,
+          "errors": 0
+        },
+        "haiku@jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 77.6,
+              "player_died": false,
+              "kills": [
+                "Drigka (orc)",
+                "Wegub (orc)"
+              ],
+              "engaged": [
+                "Drigka (orc)",
+                "Wegub (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 65,
+              "decisions": 19,
+              "log": "logs/bench/20261008-190101/wisp-leave-alone-haiku_jev-01.jsonl",
+              "input_tokens": 76833,
+              "cost_usd": 0.011705,
+              "cost_by_kind": {
+                "fight": 0.008759,
+                "facts": 0.002946
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 2702.5,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 16698,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Barfu (orc)",
+                "Xugha (orc)"
+              ],
+              "engaged": [
+                "Barfu (orc)",
+                "Xugha (orc)"
+              ],
+              "flees_at_hp": [
+                95
+              ],
+              "min_hp": 35,
+              "decisions": 28,
+              "log": "logs/bench/20261008-190101/wisp-leave-alone-haiku_jev-02.jsonl",
+              "input_tokens": 106880,
+              "cost_usd": 0.01296,
+              "cost_by_kind": {
+                "fight": 0.010008,
+                "facts": 0.002952
+              },
+              "models": [
+                "anthropic/claude-haiku-5.5"
+              ],
+              "latency_ms_avg": 1536.9,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 16694,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ]
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02466,
+          "cost_per_round_usd": 0.01233,
+          "latency_ms_avg": 2119.7,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.093611,
+    "cost_per_hour_usd": 0.3216,
+    "calls": 517,
+    "by_role": {
+      "system1": 0.093611
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 509,
+        "input_tokens": 1153726,
+        "output_tokens": 77042,
+        "cost_usd": 0.08675,
+        "latency_ms_avg": 741.0
+      },
+      "facts": {
+        "calls": 8,
+        "input_tokens": 56335,
+        "output_tokens": 6585,
+        "cost_usd": 0.006861,
+        "latency_ms_avg": 4319.7
+      }
+    },
+    "by_model": {
+      "anthropic/claude-haiku-5.5": {
+        "calls": 160,
+        "input_tokens": 488452,
+        "output_tokens": 38651,
+        "cost_usd": 0.063304,
+        "latency_ms_avg": 1968.3
+      },
+      "typesafe/jev-1.13-20260917": {
+        "calls": 357,
+        "input_tokens": 721609,
+        "output_tokens": 44976,
+        "cost_usd": 0.030308,
+        "latency_ms_avg": 271.2
+      }
+    },
+    "cost_per_decision_usd": 0.0001839
+  },
+  "openrouter_key_spent_usd": 0.111809
+}

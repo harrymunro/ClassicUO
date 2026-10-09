@@ -18,7 +18,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
-from . import llm
+from . import costs, llm
 from .world import World
 
 MAX_BYTES = 2_000_000  # biggest page we download
@@ -160,9 +160,10 @@ async def summarise(text: str, title: str, source: str, area: str | None = None,
         intro += f"The page is about {area}; use that as the area when a fact names nothing more specific.\n"
     if len(text) > MAX_CHARS:
         intro += "The page was cut short.\n"
-    result = await chat_fn([{"role": "system", "content": GUIDE_PROMPT},
-                            {"role": "user", "content": f"{intro}\n---\n{clipped}"}],
-                           tools=[ADD_NOTES], tool_choice="add_notes", model=model, max_tokens=8192)
+    with costs.kind("guide"):
+        result = await chat_fn([{"role": "system", "content": GUIDE_PROMPT},
+                                {"role": "user", "content": f"{intro}\n---\n{clipped}"}],
+                               tools=[ADD_NOTES], tool_choice="add_notes", model=model, max_tokens=8192)
     notes = _notes_from(result)
     for n in notes:
         n["area"] = _area(n.get("area")) or area or None
@@ -204,9 +205,10 @@ async def fill_gaps(world: World, area: str, chat_fn: llm.ChatFn = llm.chat,
                     model: str | None = None) -> dict[str, Any]:
     """The model's own knowledge of an area, stored as unverified. Replaces earlier
     unverified notes for the same area."""
-    result = await chat_fn([{"role": "system", "content": GAPS_PROMPT},
-                            {"role": "user", "content": f"Area: {area}"}],
-                           tools=[ADD_NOTES], tool_choice="add_notes", model=model, max_tokens=8192)
+    with costs.kind("guide"):
+        result = await chat_fn([{"role": "system", "content": GAPS_PROMPT},
+                                {"role": "user", "content": f"Area: {area}"}],
+                               tools=[ADD_NOTES], tool_choice="add_notes", model=model, max_tokens=8192)
     notes = _notes_from(result)
     if not notes:
         raise ValueError(f"the planner model wrote no notes about {area}; nothing was changed")

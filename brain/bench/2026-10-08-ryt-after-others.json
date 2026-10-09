@@ -1,0 +1,427 @@
+{
+  "started": "2026-10-08T13:14:39",
+  "rounds": 5,
+  "lane": 1,
+  "bestiary": true,
+  "scenarios": {
+    "necro-orcs": {
+      "bead": "cuo-cvl.5",
+      "right": "Three orcs come at a necromancer from 8 tiles: kill them with necromancy without dying.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Spoguk (orc)",
+                "Sabub (orc)",
+                "Ig (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 10,
+                "Pain Spike": 28,
+                "Wither": 1
+              },
+              "seconds": 57.3,
+              "player_died": false,
+              "engaged": [
+                "Spoguk (orc)",
+                "Sabub (orc)",
+                "Ig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 44,
+              "log": "logs/bench/20261008-131439-lane1/necro-orcs-jev-01.jsonl",
+              "input_tokens": 116097,
+              "est_cost_usd": 0.0049
+            },
+            {
+              "success": true,
+              "kills": [
+                "Kog (orc)",
+                "Fagdud (orc)",
+                "Pergu (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 9,
+                "Pain Spike": 22
+              },
+              "seconds": 55.1,
+              "player_died": false,
+              "engaged": [
+                "Kog (orc)",
+                "Fagdud (orc)",
+                "Pergu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 51,
+              "decisions": 37,
+              "log": "logs/bench/20261008-131439-lane1/necro-orcs-jev-02.jsonl",
+              "input_tokens": 97769,
+              "est_cost_usd": 0.0041
+            },
+            {
+              "success": true,
+              "kills": [
+                "Piggu (orc)",
+                "Egharod (orc)",
+                "Vakgu (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 10,
+                "Pain Spike": 17,
+                "Wither": 2
+              },
+              "seconds": 50.7,
+              "player_died": false,
+              "engaged": [
+                "Piggu (orc)",
+                "Egharod (orc)",
+                "Vakgu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 38,
+              "decisions": 34,
+              "log": "logs/bench/20261008-131439-lane1/necro-orcs-jev-03.jsonl",
+              "input_tokens": 90273,
+              "est_cost_usd": 0.0038
+            },
+            {
+              "success": true,
+              "kills": [
+                "Tozhug (orc)",
+                "Onog (orc)",
+                "Jogug (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 15,
+                "Pain Spike": 18,
+                "Wither": 2
+              },
+              "seconds": 61.4,
+              "player_died": false,
+              "engaged": [
+                "Jogug (orc)",
+                "Onog (orc)",
+                "Tozhug (orc)",
+                "Onog (orc)",
+                "Jogug (orc)"
+              ],
+              "flees_at_hp": [
+                56
+              ],
+              "min_hp": 19,
+              "decisions": 43,
+              "log": "logs/bench/20261008-131439-lane1/necro-orcs-jev-04.jsonl",
+              "input_tokens": 119330,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "kills": [
+                "Klughig (orc)",
+                "Urag (orc)",
+                "Kebub (orc)"
+              ],
+              "spells": {
+                "Poison Strike": 11,
+                "Pain Spike": 15
+              },
+              "seconds": 46.3,
+              "player_died": false,
+              "engaged": [
+                "Klughig (orc)",
+                "Urag (orc)",
+                "Kebub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 59,
+              "decisions": 32,
+              "log": "logs/bench/20261008-131439-lane1/necro-orcs-jev-05.jsonl",
+              "input_tokens": 83798,
+              "est_cost_usd": 0.0035
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0213,
+          "errors": 0
+        }
+      }
+    },
+    "mage-tamer-orcs": {
+      "bead": "cuo-cvl.3",
+      "right": "Three orcs come at a mage-tamer with a grizzly bear: set the bear on them, cast at what it fights, heal it with spells; kill all three without losing the bear.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Vlorg (orc)",
+                "Gaakt (orc)",
+                "Yonkathu (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 8,
+              "pet_spell_heals": 8,
+              "seconds": 68.8,
+              "player_died": false,
+              "engaged": [
+                "Vlorg (orc)",
+                "Gaakt (orc)",
+                "Yonkathu (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 53,
+              "log": "logs/bench/20261008-131439-lane1/mage-tamer-orcs-jev-01.jsonl",
+              "input_tokens": 192665,
+              "est_cost_usd": 0.0081
+            },
+            {
+              "success": true,
+              "kills": [
+                "Nogugh (orc)",
+                "Clog (orc)",
+                "Vambag (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 43,
+              "pet_spell_heals": 4,
+              "seconds": 58.5,
+              "player_died": false,
+              "engaged": [
+                "Nogugh (orc)",
+                "Clog (orc)",
+                "Vambag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 42,
+              "log": "logs/bench/20261008-131439-lane1/mage-tamer-orcs-jev-02.jsonl",
+              "input_tokens": 172771,
+              "est_cost_usd": 0.0073
+            },
+            {
+              "success": true,
+              "kills": [
+                "Vitgurat (orc)",
+                "Marfu (orc)",
+                "Spoguk (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 39,
+              "pet_spell_heals": 5,
+              "seconds": 52.1,
+              "player_died": false,
+              "engaged": [
+                "Vitgurat (orc)",
+                "Marfu (orc)",
+                "Spoguk (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 32,
+              "log": "logs/bench/20261008-131439-lane1/mage-tamer-orcs-jev-03.jsonl",
+              "input_tokens": 135595,
+              "est_cost_usd": 0.0057
+            },
+            {
+              "success": true,
+              "kills": [
+                "Yukgnath (orc)",
+                "Ymafubag (orc)",
+                "Yakgnath (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 36,
+              "pet_spell_heals": 6,
+              "seconds": 53.0,
+              "player_died": false,
+              "engaged": [
+                "Yukgnath (orc)",
+                "Ymafubag (orc)",
+                "Yakgnath (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 40,
+              "log": "logs/bench/20261008-131439-lane1/mage-tamer-orcs-jev-04.jsonl",
+              "input_tokens": 165009,
+              "est_cost_usd": 0.0069
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zahgorim (orc)",
+                "Ughat (orc)",
+                "Brugagh (orc)"
+              ],
+              "pet_lost": false,
+              "pet_min_hp": 54,
+              "pet_spell_heals": 4,
+              "seconds": 55.5,
+              "player_died": false,
+              "engaged": [
+                "Zahgorim (orc)",
+                "Ughat (orc)",
+                "Brugagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 32,
+              "log": "logs/bench/20261008-131439-lane1/mage-tamer-orcs-jev-05.jsonl",
+              "input_tokens": 133565,
+              "est_cost_usd": 0.0056
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0336,
+          "errors": 0
+        }
+      }
+    },
+    "warrior-mage-opener": {
+      "bead": "cuo-cvl.3",
+      "right": "Two orcs come at a warrior-mage from 8 tiles: open on one with a spell while it comes, fight in melee, and have the sword back in hand after every cast; kill both.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Nomgulg (orc)",
+                "Carthurg (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 53.9,
+              "player_died": false,
+              "engaged": [
+                "Nomgulg (orc)",
+                "Carthurg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 38,
+              "log": "logs/bench/20261008-131439-lane1/warrior-mage-opener-jev-01.jsonl",
+              "input_tokens": 116382,
+              "est_cost_usd": 0.0049
+            },
+            {
+              "success": true,
+              "kills": [
+                "Faghig (orc)",
+                "Valthurg (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 52.4,
+              "player_died": false,
+              "engaged": [
+                "Faghig (orc)",
+                "Valthurg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 35,
+              "decisions": 35,
+              "log": "logs/bench/20261008-131439-lane1/warrior-mage-opener-jev-02.jsonl",
+              "input_tokens": 119940,
+              "est_cost_usd": 0.005
+            },
+            {
+              "success": true,
+              "kills": [
+                "Yugug (orc)",
+                "Vultog (orc)"
+              ],
+              "openers": 2,
+              "weapon_at_end": "Katana",
+              "seconds": 36.5,
+              "player_died": false,
+              "engaged": [
+                "Yugug (orc)",
+                "Vultog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 83,
+              "decisions": 21,
+              "log": "logs/bench/20261008-131439-lane1/warrior-mage-opener-jev-03.jsonl",
+              "input_tokens": 60513,
+              "est_cost_usd": 0.0025
+            },
+            {
+              "success": true,
+              "kills": [
+                "Taugh (orc)",
+                "Vrograg (orc)"
+              ],
+              "openers": 2,
+              "weapon_at_end": "Katana",
+              "seconds": 43.6,
+              "player_died": false,
+              "engaged": [
+                "Taugh (orc)",
+                "Vrograg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 78,
+              "decisions": 27,
+              "log": "logs/bench/20261008-131439-lane1/warrior-mage-opener-jev-04.jsonl",
+              "input_tokens": 81160,
+              "est_cost_usd": 0.0034
+            },
+            {
+              "success": true,
+              "kills": [
+                "Olaugh (orc)",
+                "Yahg (orc)"
+              ],
+              "openers": 1,
+              "weapon_at_end": "Katana",
+              "seconds": 49.4,
+              "player_died": false,
+              "engaged": [
+                "Olaugh (orc)",
+                "Yahg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 60,
+              "decisions": 36,
+              "log": "logs/bench/20261008-131439-lane1/warrior-mage-opener-jev-05.jsonl",
+              "input_tokens": 123517,
+              "est_cost_usd": 0.0052
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.021,
+          "errors": 0
+        }
+      }
+    }
+  }
+}

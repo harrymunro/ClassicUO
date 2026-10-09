@@ -305,6 +305,18 @@ namespace ClassicUO.UnitTests.Agent
             AgentSpells.CastDelayMs(id).Should().Be(delayMs);
         }
 
+        [Theory]
+        [InlineData(33, true)]
+        [InlineData(58, true)]
+        [InlineData(62, true)]
+        [InlineData(114, true)]
+        [InlineData(59, false)]  // resurrection
+        [InlineData(24, false)]  // wall of stone
+        public void Summons_are_known(int id, bool summon)
+        {
+            AgentSpells.IsSummon(id).Should().Be(summon);
+        }
+
         [Fact]
         public void Unknown_spells_are_null()
         {
@@ -317,6 +329,9 @@ namespace ClassicUO.UnitTests.Agent
         [InlineData(29, 4, 11, 1500)]   // greater heal
         [InlineData(42, 6, 20, 2000)]   // energy bolt
         [InlineData(51, 7, 40, 2250)]   // flamestrike
+        [InlineData(33, 5, 14, 4500)]   // blade spirits: ModernUO casts it three times as slowly
+        [InlineData(40, 5, 14, 7500)]   // summon creature: five times
+        [InlineData(58, 8, 50, 2500)]   // energy vortex: as its circle
         public void Costs_and_delays_follow_the_circle(int id, int circle, int mana, uint delayMs)
         {
             AgentSpells.Circle(id).Should().Be(circle);
@@ -337,6 +352,11 @@ namespace ClassicUO.UnitTests.Agent
         [InlineData("Pain Spike", "fight")]
         [InlineData("Wither", "fight")]
         [InlineData("Sacred Journey", "misc")]
+        [InlineData("Wall of Stone", "fight")]
+        [InlineData("Blade Spirits", "fight")]
+        [InlineData("Earth Elemental", "fight")]
+        [InlineData("Bless", "fight")]
+        [InlineData("Recall", "misc")]
         public void Cast_authority_follows_the_spell(string spell, string behavior)
         {
             new AgentAction { Verb = "cast", Spell = spell }.Behavior.Name().Should().Be(behavior);
@@ -390,6 +410,29 @@ namespace ClassicUO.UnitTests.Agent
             AgentCall c = AgentCall.FromJson(call.RootElement);
             c.Kind.Should().Be("facts");
             c.Questions[0].Options[0].Kept.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Parses_what_a_call_cost_and_the_running_total()
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(
+                "{\"intent\": \"fight\", \"cost\": 0.0001234, \"spent\": {\"total\": 0.0213, \"per_hour\": 0.41," +
+                " \"calls\": 57, \"by_kind\": {\"planner\": 0.02, \"fight\": 0.0013}, \"budget_per_hour\": 0.5," +
+                " \"over_budget\": false}}");
+            AgentDecision d = AgentDecision.FromJson(doc.RootElement);
+
+            d.Cost.Should().BeApproximately(0.0001234f, 1e-7f);
+            d.Spent.Total.Should().BeApproximately(0.0213f, 1e-6f);
+            d.Spent.Calls.Should().Be(57);
+            d.Spent.ByKind.Should().HaveCount(2);
+            d.Spent.ByKind[0].Kind.Should().Be("planner");
+            d.Spent.Budget.Should().BeApproximately(0.5f, 1e-6f);
+            d.Spent.OverBudget.Should().BeFalse();
+
+            using var call = System.Text.Json.JsonDocument.Parse("{\"kind\": \"routine\", \"cost\": 0.00004, \"spent\": {\"total\": 0.03}}");
+            AgentCall c = AgentCall.FromJson(call.RootElement);
+            c.Cost.Should().BeApproximately(0.00004f, 1e-8f);
+            c.Spent.Budget.Should().Be(-1);
         }
 
         [Fact]

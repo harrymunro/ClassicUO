@@ -15,6 +15,8 @@ import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+from . import costs
+
 # Who to send `ai_call` records to: set by whatever owns the client connection (loop.run, the
 # autopilot, a session). One brain talks to one client.
 sink: Callable[[dict[str, Any]], Awaitable[Any]] | None = None
@@ -25,16 +27,17 @@ TITLES = {
     "leave_now": "leave now?", "pull_back": "call the pet back?", "head_back": "head back to town?",
     "stay_here": "spot still worth it?", "move_spot": "walk elsewhere in the spawn?", "allows_flee": "strategy allows fleeing?",
     "aggression": "how aggressive?", "target_priority": "who first?", "looting": "how much to loot?",
-    "opening_spell": "opening spell?", "main_spell": "main spell?",
+    "opening_spell": "opening spell?", "main_spell": "main spell?", "ward": "wall or summon first?",
 }
 
 
 def emit(record: dict[str, Any]) -> None:
-    """Send one call to the client, without waiting: the view must never slow a decision."""
+    """Send one call to the client, without waiting: the view must never slow a decision. Each
+    carries the session's running cost (costs.ledger) for the window's total."""
     if sink is None:
         return
     try:
-        asyncio.get_running_loop().create_task(_send(record))
+        asyncio.get_running_loop().create_task(_send({**record, "spent": costs.ledger.live()}))
     except RuntimeError:
         pass  # no event loop (offline tools): nothing to show it on
 
@@ -123,7 +126,7 @@ def did(sit: Any, actions: list[dict[str, Any]], results: list[dict[str, Any]]) 
             dx, dy = a.get("x", p["x"]) - p["x"], a.get("y", p["y"]) - p["y"]
             what = f"{'walk' if verb == 'walk_to' else 'travel'} {max(abs(dx), abs(dy))} tiles {compass(dx, dy)}"
         elif verb == "flee":
-            what = "run" + (f" {detail}" if detail else "") + (" from the pack" if a.get("target") == 0 else
+            what = "run" + (f" {detail}" if detail else "") + (" from all in sight" if a.get("target") == 0 else
                                                                 f" from {who(a.get('target'))}")
         elif verb == "kite":
             what = "step back" + (f" {detail}" if detail else "")

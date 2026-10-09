@@ -186,3 +186,39 @@ def test_the_planner_thinks_with_the_character_defended(tmp_path):
     asyncio.run(p.step())
     # Thinking ran inside one defended stretch, and the rest goal inside another.
     assert order == ["defend", "done", "defend", "done"]
+
+
+def test_over_budget_the_planner_rests_instead_of_thinking_or_stops(tmp_path):
+    from uo_brain import costs
+    costs.ledger.reset()
+    try:
+        costs.ledger.record(costs.Call("planner", "m", cost=1.0))  # $1 in the first minutes: $12/h
+        s = FakeSession(world(tmp_path))
+        chat = scripted()
+        costs.ledger.budget = costs.Budget(0.50, "slow")
+        step = asyncio.run(planner.Planner(s, "hunt", chat_fn=chat).step())
+        assert step.tool == "rest" and "over budget" in step.args["why"] and not chat.seen
+        costs.ledger.budget = costs.Budget(0.50, "stop")
+        p = planner.Planner(s, "hunt", chat_fn=chat)
+        asyncio.run(p.step())
+        assert p.finished.startswith("stopped: over budget") and not chat.seen
+    finally:
+        costs.ledger.reset()
+
+
+def test_a_logged_planner_moment_can_be_put_to_another_model(tmp_path):
+    from uo_brain import logs
+    log = tmp_path / "s.jsonl"
+    recs = []
+    s = FakeSession(world(tmp_path))
+    chat = scripted(reply(call("hunt", {"area": "Britain Graveyard", "minutes": 10, "why": "hunt"})))
+    p = planner.Planner(s, "hunt the graveyard", chat_fn=chat, log=recs.append)
+    asyncio.run(p.step())
+    log.write_text("\n".join(json.dumps(r) for r in recs) + "\n")
+    moment = [r for r in logs.read(log) if r["type"] == "planner"]
+    assert moment and moment[0]["messages"][0]["role"] == "user"  # the system prompt is fixed: not logged
+    other = scripted(reply(call("bank", {"deposit": "gold", "why": "bank"})))
+    r = asyncio.run(planner.replay(moment, "some/model", chat_fn=other))
+    assert r["moments"] == 1 and r["usable_tool_call"] == 1.0 and r["same_tool"] == 0.0
+    assert r["logged_to_new"] == {"hunt->bank": 1}
+    assert other.seen[0]["messages"][0]["content"] == planner.SYSTEM

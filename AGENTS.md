@@ -142,6 +142,26 @@ result updates the README in the same commit:
 Before closing a bead, check the README against the change. Keep this section the same in
 `AGENTS.md` and `CLAUDE.md`.
 
+## Notes in the Obsidian vault
+
+Prose notes for this project live in Harry's Obsidian vault, not the repo:
+`/Users/harry/Documents/Obsidian Vault`, folder `Business/UO x Jev/`, index `UO x Jev MOC.md`.
+They hold what the repo doesn't: what each session did and learned, what each experiment showed,
+and why things were decided. Beads stays the issue tracker, `bd remember` the agent memory, and
+the README the user guide with every measured result.
+
+- **Start of a session:** read `UO x Jev Session Log.md` for what recent sessions did; open a note in `Sessions/` only when you need the detail.
+- **Finding past context:** run `vault-search "<question>"` before reading or grepping notes by hand. `.claude/vault-search.toml` scopes it to this folder and has Jev rank the passages (Harry's decision; don't change it).
+- **As you go, not only at the end:**
+  - every benchmark, soak or live run worth keeping gets a row at the top of `Experiment log.md` (date, what, the command and results file, the outcome), and a run with more to say gets its own note, `Experiments/YYYY-MM-DD <what> (<bead>).md`;
+  - a decision Harry makes, or one that sets direction, goes in `Decisions.md`;
+  - research (a shard's rules, a server's mechanics, a model comparison) gets its own note, linked from the MOC.
+- **End of a session,** before handing off: write `Sessions/YYYY-MM-DD<letter> <topic>.md` (what was done, with bead ids; what was decided; what was learned; what's next and what's uncommitted) and add a one-line row at the top of the table in `UO x Jev Session Log.md`.
+- **Format:** frontmatter `project: UO x Jev`, `source: claude`, `date: YYYY-MM-DD`, `type: session|experiment|decision|research|note`, `summary: <one line>`. Link notes with `[[wikilinks]]`; link new evergreen notes from the MOC.
+- **Scope:** the vault holds other projects' and clients' notes. Read, search and write only inside `Business/UO x Jev/` (and its one link in `Home MOC.md`); never list or search the vault as a whole. The `obsidian` CLI isn't installed here, so read and write the files directly.
+
+Keep this section the same in `AGENTS.md` and `CLAUDE.md`.
+
 ## Build & Test
 
 Requires the .NET 10 SDK (`/usr/local/share/dotnet`) and Xcode command line tools (NativeAOT links with clang).
@@ -171,5 +191,5 @@ Agent brain (Python, uv): `cd brain && uv run pytest`. Agent C# tests: `dotnet t
 ### Agent (Jev)
 
 - `src/ClassicUO.Client/Agent/`: the in-client half. `AgentHost` runs a loopback JSON-lines RPC server (`-agent_port 5577` / `agent_port` in settings.json) and dispatches requests on the game thread from `GameController.Update`. `AgentController` (owned by `World`, ticked after `Macros.Update` in `GameScene.Update`) holds mode, per-behaviour authority (off/suggest/auto), reflexes (`ReflexPolicy`, pure), engagement/loot/flee execution and the human-input pause. `AgentSnapshot` writes the state JSON, `AgentJournal` keeps sequenced messages, `AgentLogin` drives the login screens, `AgentGump` is the in-game panel (fed by the brain's `decision` RPC), `AgentSpells` holds spell facts for magery, necromancy and chivalry, `AgentWeapons`, `AgentPets`, `AgentBard` and `AgentRearm` cover archers, tamers' pet orders, bards' songs and a warrior-mage's weapon, `AgentNav`/`AgentErrands` do travel, banking and shops, `AgentTemplates` serves the strategy templates in `Agent/Templates/*.md` (embedded) plus a user `AgentTemplates/` folder next to the executable. Hooks into existing code are small and marked by `_world.Agent` / `AgentHost` calls.
-- `brain/`: the Python decision loop. `state.py` turns snapshots into worded state and candidate ids, `questions.py` builds one fan-out Jev request, `policy.py` masks, gates and composes actions (warrior, mage, archer, tamer, bard, necromancer, paladin and the hybrids), `spells.py` lists attack spells, area spells and a paladin's blessings, `machine.py` runs plans for fights as state machines (the planner designs them, Jev answers the moves), `strategy.py` compiles the player's strategy to settings, `loop.py` runs it and logs JSONL, `cli.py` is `uo-brain`. Above the fights: `session.py` carries out goals (travel, hunt, bank, buy, sell, rest, each with a fight loop beside it), `routine.py` asks Jev the in-hunt calls, `planner.py` chooses goals, `world.py`/`facts.py` hold and pick world knowledge, `bench.py` is the judgment benchmark and `soak.py` reports unattended runs.
+- `brain/`: the Python decision loop. `state.py` turns snapshots into worded state and candidate ids, `questions.py` builds one fan-out Jev request, `policy.py` masks, gates and composes actions (warrior, mage, archer, tamer, bard, necromancer, paladin and the hybrids), `spells.py` lists attack spells, area spells and a paladin's blessings, `machine.py` runs plans for fights as state machines (the planner designs them, Jev answers the moves), `strategy.py` compiles the player's strategy to settings, `loop.py` runs it and logs JSONL, `cli.py` is `uo-brain`. Above the fights: `session.py` carries out goals (travel, hunt, bank, buy, sell, rest, each with a fight loop beside it), `routine.py` asks Jev the in-hunt calls, `planner.py` chooses goals, `world.py`/`facts.py` hold and pick world knowledge, `bench.py` is the judgment benchmark and `soak.py` reports unattended runs. Around them: `costs.py` records what every AI call costs (one ledger per process: `ai_cost` log records, totals, a budget), `models.py` names the model for each kind of call (profiles in `brain/profiles/`, and `ChatJudge`, which puts Jev's questions to any OpenRouter chat model), and `fleet.py` runs several agents on one server (`brain/fleets/`).
 - Test server: ModernUO in `~/Workspace/ModernUO` (start with `./start-agent-server.sh`), custom commands `[AgentGo`, `[AgentKit`, `[AgentArena`, `[AgentReset` in `Projects/UOContent/Custom/AgentTestKit.cs`. The copy kept in this repo, with setup notes, is `tools/modernuo/`.

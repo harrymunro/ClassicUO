@@ -1,0 +1,11 @@
+{
+  "name": "blade spirits into the crowd",
+  "why": "cuo-ev9 test: does a mage that keeps Blade Spirits going among a crowd do better than one that only blasts?",
+  "start": "blades",
+  "states": {
+    "blades": {
+      "says": "Keep blade spirits among the creatures: summon them beside the nearest whenever they can be cast, and attack with spells in between.",
+      "spell": "Blade Spirits"
+    }
+  }
+}

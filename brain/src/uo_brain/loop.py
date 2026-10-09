@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import calls, policy, questions, state
+from . import calls, costs, policy, questions, state
 from .machine import Runner
 from . import strategy as strategies
 from .facts import FactPicker
@@ -24,7 +24,7 @@ class LoopConfig:
     combat_interval_s: float = 1.0
     idle_interval_s: float = 3.0
     duration_s: float | None = None
-    price_per_million: float = 0.042  # Jev 1.13 list price per million input tokens; check your provider
+    slow_factor: float = 4.0  # over a "slow" budget: decide this many times less often, and only on the clock
 
 
 @dataclass
@@ -43,12 +43,15 @@ class RunStats:
     assist_disagree: int = 0
     first_agent_stats: dict[str, int] | None = None
     last_agent_stats: dict[str, int] | None = None
+    cost_mark: costs.Mark = field(default_factory=costs.ledger.mark)  # the ledger when the run began
+    slowed: int = 0  # decisions put off because the session was over its budget
 
-    def summary(self, price: float) -> dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         hours = max((time.monotonic() - self.started) / 3600, 1e-9)
         a0, a1 = self.first_agent_stats or {}, self.last_agent_stats or {}
         delta = {k: a1.get(k, 0) - a0.get(k, 0) for k in a1}
         lat = sorted(self.latencies)
+        spent = costs.ledger.summary(self.cost_mark, kills=delta.get("kills"), decisions=self.decisions, hours=hours)
         return {
             "minutes": round(hours * 60, 1),
             "decisions": self.decisions,
@@ -59,8 +62,10 @@ class RunStats:
             "input_tokens": self.input_tokens,
             "fact_selections": self.fact_selections,
             "fact_input_tokens": self.fact_tokens,
-            "est_cost_usd": round(self.input_tokens / 1e6 * price, 4),
-            "est_cost_usd_per_hour": round(self.input_tokens / 1e6 * price / hours, 4),
+            "cost_usd": spent["cost_usd"],
+            "cost_usd_per_hour": spent["cost_per_hour_usd"],
+            "costs": spent,
+            **({"slowed_for_budget": self.slowed} if self.slowed else {}),
             "intents": self.intents,
             "act_results": self.statuses,
             "client_stats": delta,
@@ -99,95 +104,121 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
     stop = stop or asyncio.Event()
     if facts is not None and log:
         facts.log = lambda rec: log.write(json.dumps(rec) + "\n")
+    cost_log = (lambda rec: log.write(json.dumps(rec) + "\n")) if log else None
+    was_over = False
 
     try:
-        while not stop.is_set():
-            now = time.monotonic()
-            if cfg.duration_s and now - stats.started > cfg.duration_s:
-                break
+        with costs.ledger.logging_to(cost_log):
+            while not stop.is_set():
+                now = time.monotonic()
+                if cfg.duration_s and now - stats.started > cfg.duration_s:
+                    break
 
-            try:
-                snap = await rpc.call("snapshot", since=since)
-            except TimeoutError:
-                stats.errors += 1
-                continue
-            if not snap.get("in_game"):
-                await asyncio.sleep(1.0)
-                continue
+                try:
+                    snap = await rpc.call("snapshot", since=since)
+                except TimeoutError:
+                    stats.errors += 1
+                    continue
+                if not snap.get("in_game"):
+                    await asyncio.sleep(1.0)
+                    continue
 
-            since = snap["journal_seq"]
-            if on_snapshot:
-                on_snapshot(snap)
-            events.extend(state.journal_events(snap["journal"]))
-            agent_stats = snap["agent"]["stats"]
-            stats.first_agent_stats = stats.first_agent_stats or dict(agent_stats)
-            stats.last_agent_stats = dict(agent_stats)
+                since = snap["journal_seq"]
+                costs.ledger.character = snap["player"].get("name") or costs.ledger.character
+                if on_snapshot:
+                    on_snapshot(snap)
+                events.extend(state.journal_events(snap["journal"]))
+                agent_stats = snap["agent"]["stats"]
+                stats.first_agent_stats = stats.first_agent_stats or dict(agent_stats)
+                stats.last_agent_stats = dict(agent_stats)
 
-            # Assist mode: when the player next picks a target, did they pick the suggested one?
-            target = next((m["serial"] for m in snap["mobiles"] if m.get("my_target")), 0)
-            if suggested and target and target != last_target:
-                agree = target == suggested[0]
-                stats.assist_agree += agree
-                stats.assist_disagree += not agree
-                if log:
-                    log.write(json.dumps({"type": "assist_feedback", "t": time.time(), "suggested": suggested[0],
-                                          "chosen": target, "agree": agree}) + "\n")
-                suggested = None
-            if suggested and now - suggested[1] > 10:
-                suggested = None
-            last_target = target
+                # Assist mode: when the player next picks a target, did they pick the suggested one?
+                target = next((m["serial"] for m in snap["mobiles"] if m.get("my_target")), 0)
+                if suggested and target and target != last_target:
+                    agree = target == suggested[0]
+                    stats.assist_agree += agree
+                    stats.assist_disagree += not agree
+                    if log:
+                        log.write(json.dumps({"type": "assist_feedback", "t": time.time(), "suggested": suggested[0],
+                                              "chosen": target, "agree": agree}) + "\n")
+                    suggested = None
+                if suggested and now - suggested[1] > 10:
+                    suggested = None
+                last_target = target
 
-            # The player's strategy changed (or this is the first look): re-read it into settings.
-            text = (snap["agent"].get("strategy") or "").strip()
-            new_arch = archetype or state.archetype_of(snap)
-            if text != strategy_text:
-                strategy_text = text
-                active, reading = await load_strategy(rpc, judge, text, pcfg, stats, log)
-                arch = None  # resend brain_info with the new reading
-            if new_arch != arch:
-                arch = new_arch
-                await rpc.call("brain_info", judge=judge.name, archetype=arch, strategy_reading=reading)
+                # The player's strategy changed (or this is the first look): re-read it into settings.
+                text = (snap["agent"].get("strategy") or "").strip()
+                new_arch = archetype or state.archetype_of(snap)
+                if text != strategy_text:
+                    strategy_text = text
+                    active, reading = await load_strategy(rpc, judge, text, pcfg, stats, log)
+                    arch = None  # resend brain_info with the new reading
+                if new_arch != arch:
+                    arch = new_arch
+                    await rpc.call("brain_info", judge=judge.name, archetype=arch, strategy_reading=reading)
 
-            # Spells the client cast since the last look (queued ones included) went at the engaged creature.
-            casts = agent_stats.get("casts", 0) - agent_stats.get("spell_heals", 0)
-            if casts_seen is not None and casts > casts_seen and snap["agent"].get("engaged"):
-                engaged = snap["agent"]["engaged"]
-                mem.casts_at[engaged] = mem.casts_at.get(engaged, 0) + casts - casts_seen
-            casts_seen = casts
+                # Spells the client cast since the last look (queued ones included) went at the engaged creature.
+                casts = agent_stats.get("casts", 0) - agent_stats.get("spell_heals", 0)
+                if casts_seen is not None and casts > casts_seen and snap["agent"].get("engaged"):
+                    engaged = snap["agent"]["engaged"]
+                    mem.casts_at[engaged] = mem.casts_at.get(engaged, 0) + casts - casts_seen
+                casts_seen = casts
 
-            mem.update(snap["agent"], now)
-            sit = state.build(snap, mem.looted, list(events), mem.skip_items, archetype=arch, casts_at=mem.casts_at,
-                              bestiary=bestiary)
-            if facts is not None:
-                facts.update(snap, sit)
-                facts.apply(sit)
-                spent = facts.take_tokens()
-                stats.input_tokens += spent
-                stats.fact_tokens += spent
-                stats.fact_selections = facts.selections
+                mem.update(snap["agent"], now)
+                sit = state.build(snap, mem.looted, list(events), mem.skip_items, archetype=arch, casts_at=mem.casts_at,
+                                  bestiary=bestiary, cooling=mem.cooling(now))
+                sit.note_health_drop(mem.health_drop(sit.hp_pct, now))
+                if facts is not None:
+                    facts.update(snap, sit)
+                    facts.apply(sit)
+                    spent = facts.take_tokens()
+                    stats.input_tokens += spent
+                    stats.fact_tokens += spent
+                    stats.fact_selections = facts.selections
 
-            # With the agent off there is nothing to decide: don't spend tokens asking.
-            busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting") \
-                or snap["agent"].get("mode") == "off"
-            sig = sit.signature()
-            if not busy and (now >= next_decide or sig != last_sig):
-                for action, res in await decide_once(rpc, judge, sit, mem, active, stats, log, on_decision, machine):
-                    if action["verb"] == "attack" and res["status"] == "suggested":
-                        suggested = (action["target"], time.monotonic())
-                last_sig = sig
-                interval = cfg.combat_interval_s if sit.hostiles else cfg.idle_interval_s
-                next_decide = time.monotonic() + interval
+                # Over the session's budget (costs.Budget): decide less often, or stop.
+                over = costs.ledger.over_budget()
+                budget = costs.ledger.budget
+                if over != was_over and budget:
+                    was_over = over
+                    await rpc.call("note", text=budget_note(over, budget))
+                if over and budget and budget.action == "stop":
+                    break
+                slow = over and budget is not None and budget.action == "slow"
 
-            await asyncio.sleep(cfg.poll_s)
+                # With the agent off there is nothing to decide: don't spend tokens asking.
+                busy = snap["player"]["dead"] or snap["agent"].get("fleeing") or snap["agent"].get("looting") \
+                    or snap["agent"].get("mode") == "off"
+                sig = sit.signature()
+                if not busy and (now >= next_decide or (sig != last_sig and not slow)):
+                    done = await decide_once(rpc, judge, sit, mem, active, stats, log, on_decision, machine)
+                    for action, res in done:
+                        if action["verb"] == "attack" and res["status"] == "suggested":
+                            suggested = (action["target"], time.monotonic())
+                    last_sig = sig
+                    interval = cfg.combat_interval_s if sit.hostiles else cfg.idle_interval_s
+                    stats.slowed += slow
+                    next_decide = time.monotonic() + interval * (cfg.slow_factor if slow else 1.0)
+
+                await asyncio.sleep(cfg.poll_s)
     finally:
         if facts is not None:
             facts.close()
             facts.log = lambda rec: None
         if log:
-            log.write(json.dumps({"type": "summary", "t": time.time(), **stats.summary(cfg.price_per_million),
+            log.write(json.dumps({"type": "summary", "t": time.time(), **stats.summary(),
                                   **({"machine": machine.summary()} if machine else {})}) + "\n")
             log.close()
     return stats
+
+
+def budget_note(over: bool, budget: costs.Budget) -> str:
+    """What the panel says when the session goes over its budget, or back under it."""
+    rate = costs.ledger.rate()
+    if not over:
+        return f"back under budget (${rate:.3f}/h, cap ${budget.per_hour:.3f}/h)"
+    then = {"slow": "deciding less often", "cheaper": "on the cheaper models", "stop": "stopping"}[budget.action]
+    return f"over budget: ${rate:.3f}/h against a cap of ${budget.per_hour:.3f}/h; {then}"
 
 
 # Strategy text -> how it was last read, in words: the autopilot tells the panel before any fight.
@@ -217,8 +248,8 @@ async def load_strategy(rpc: AgentRpc, judge: Judge, text: str, base: policy.Pol
     COMPILED[(judge.name, text)] = knobs
     if answers:
         calls.emit({"kind": "strategy", "title": "reading the strategy", "model": answers.model,
-                    "latency_ms": round(answers.latency_ms, 1), "questions": calls.view(strategies.QUESTIONS, answers),
-                    "note": reading})
+                    "latency_ms": round(answers.latency_ms, 1), "cost": round(answers.cost, 7),
+                    "questions": calls.view(strategies.QUESTIONS, answers), "note": reading})
     if answers:
         stats.input_tokens += answers.input_tokens
         await rpc.call("note", text=f"strategy: {reading}")
@@ -236,11 +267,12 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
     transitions go in the same request, and its state limits what the policy may choose."""
     if machine:
         sit.plan = machine.plan_words()
-    qs = questions.build(sit)
+    qs = questions.build(sit, ward=pcfg.ward)
     if machine:
         qs.update(machine.questions(sit, questions.character(sit), questions.role(sit)))
     try:
-        answers = await judge.ask(sit.state, qs)
+        with costs.kind("fight"):
+            answers = await judge.ask(sit.state, qs)
     except Exception as e:  # network, rate limit, credits: keep the loop alive
         stats.errors += 1
         await rpc.call("note", text=f"judge error: {type(e).__name__}")
@@ -324,6 +356,8 @@ def decision_payload(judge: Judge, sit: state.Situation, qs: dict[str, Any], ans
         "judge": judge.name,
         "archetype": sit.archetype,
         "latency_ms": round(answers.latency_ms, 1),
+        "cost": round(answers.cost, 7),
+        "spent": costs.ledger.live(),
         "intent": dec.intent,
         "confidence": round(dec.confidence, 3),
         "gated": dec.gated,

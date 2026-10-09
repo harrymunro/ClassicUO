@@ -23,8 +23,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import judge as judges
-from . import loop, policy
+from . import costs
+from . import loop, models, policy
 from . import machine as machines
 from .facts import FactPicker
 from .rpc import AgentRpc
@@ -43,6 +43,7 @@ class Trace:
     names: dict[int, str] = field(default_factory=dict)      # creature serial -> name (with kind)
     first_seen: dict[int, float] = field(default_factory=dict)
     died: list[tuple[float, int]] = field(default_factory=list)  # (t, serial), in order
+    summons: set[int] = field(default_factory=set)  # the character's own summoned creatures
     engaged: list[tuple[float, int]] = field(default_factory=list)  # each new target the agent took on
     flees: list[tuple[float, int]] = field(default_factory=list)  # (t, hp %) when a flee started
     hp: list[tuple[float, int]] = field(default_factory=list)
@@ -76,7 +77,9 @@ class Trace:
 
         nearest = 99
         for m in snap.get("mobiles", []):
-            if not m.get("monster"):
+            if m.get("summon"):
+                self.summons.add(m["serial"])  # the character's own: its end is no kill (cuo-ev9)
+            if not m.get("monster") or m["serial"] in self.summons:
                 continue
             serial = m["serial"]
             if serial not in self.names:
@@ -97,7 +100,8 @@ class Trace:
         for d in snap.get("deaths", []):
             if d["time_ms"] >= self.start_ms and d["serial"] in self.pets:
                 self.pet_died = True
-            if d["time_ms"] >= self.start_ms and d["serial"] in self.names and d["serial"] not in self._death_serials:
+            if d["time_ms"] >= self.start_ms and d["serial"] in self.names and d["serial"] not in self._death_serials \
+                    and d["serial"] not in self.summons:
                 self._death_serials.add(d["serial"])
                 self.died.append((t, d["serial"]))
 
@@ -552,6 +556,11 @@ class JudgeSpec:
         return "/nopack" not in self.base
 
     @property
+    def ward(self) -> bool:
+        """"jev/ward": a mage with a crowd coming is asked about walls and summons first (cuo-ev9)."""
+        return "/ward" in self.base
+
+    @property
     def facts(self) -> str:
         return self.label.split("@", 1)[1] if "@" in self.label else "none"
 
@@ -595,7 +604,7 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
 
 
 async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, log_path: Path,
-                     price: float, min_confidence: float, world: World | None = None) -> dict[str, Any]:
+                     min_confidence: float, world: World | None = None) -> dict[str, Any]:
     template = sc.template or spec.template
     await prepare(rpc, sc, template, lane)
     tr = Trace()
@@ -621,11 +630,11 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
         await say(rpc, cmd)
     tr.started = time.monotonic()
 
-    judge = judges.make(spec.kind)
-    lcfg = loop.LoopConfig(duration_s=sc.seconds, price_per_million=price)
-    pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite, leave_packs=spec.pack)
-    facts = FactPicker(world, judge, mode=spec.facts, price_per_million=price) \
-        if world is not None and spec.facts != "none" else None
+    judge = models.make_judge(spec.kind)
+    lcfg = loop.LoopConfig(duration_s=sc.seconds)
+    pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite, leave_packs=spec.pack,
+                               ward=spec.ward)
+    facts = FactPicker(world, judge, mode=spec.facts) if world is not None and spec.facts != "none" else None
     try:
         runner = machines.Runner(machines.load(spec.machine)) if spec.machine else None
         stats = await loop.run(rpc, judge, lcfg, pcfg, log_path, stop, archetype=KIT_ARCHETYPES.get(sc.kit, sc.kit),
@@ -641,9 +650,12 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     lines = log_path.read_text().splitlines() if log_path.exists() else []
     tr.decisions = [d for d in map(json.loads, lines) if d.get("type") == "decision"]
     ok, details = sc.check(tr)
-    summary = stats.summary(price)
+    summary = stats.summary()
     out = {"success": ok, **details, **tr.summary(), "log": str(log_path),
-           "input_tokens": summary["input_tokens"], "est_cost_usd": summary["est_cost_usd"]}
+           "input_tokens": summary["input_tokens"], "cost_usd": summary["cost_usd"],
+           "cost_by_kind": {k: v["cost_usd"] for k, v in summary["costs"]["by_kind"].items()},
+           "models": sorted(summary["costs"]["by_model"]), "latency_ms_avg": summary["latency_ms_avg"],
+           "decisions": summary["decisions"]}
     if runner is not None:
         out["plan"] = runner.summary()
     if world is not None:
@@ -655,7 +667,7 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
 
 
 async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: int, lane: int,
-              out: Path, log_dir: Path, price: float = loop.LoopConfig.price_per_million,
+              out: Path, log_dir: Path,
               min_confidence: float = policy.PolicyConfig.min_intent_confidence,
               progress: Callable[[str], None] = print, fact_modes: list[str] | None = None) -> dict[str, Any]:
     """Plays every scenario for every judge, rounds times, interleaving the judges so a slow
@@ -664,7 +676,14 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
     against its own store under log_dir/worlds/<scenario>/."""
     load_bestiary()
     result: dict[str, Any] = {"started": time.strftime("%Y-%m-%dT%H:%M:%S"), "rounds": rounds, "lane": lane,
-                              "bestiary": bool(BESTIARY.get("local")), "scenarios": {}}
+                              "bestiary": bool(BESTIARY.get("local")), "profile": models.active.to_log(),
+                              "aliases": {k: models.active.resolve(k) for k in (JudgeSpec(x).kind for x in judge_labels)
+                                          if k not in ("jev", "heuristic")},
+                              "scenarios": {}}
+    mark = costs.ledger.mark()
+    # OpenRouter's own count for the key, before and after, to check the recorded costs against
+    # (another bench on the same key at the same time counts in it too).
+    key_before = costs.openrouter_usage()
     log_dir.mkdir(parents=True, exist_ok=True)
     out.parent.mkdir(parents=True, exist_ok=True)
     for name in names:
@@ -685,7 +704,7 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
                 log_path = log_dir / f"{name}-{label.replace('+', '_').replace('/', '_').replace('@', '_')}-{n:02d}.jsonl"
                 log_path.unlink(missing_ok=True)
                 try:
-                    r = await play_round(rpc, sc, spec, lane, log_path, price, min_confidence, world)
+                    r = await play_round(rpc, sc, spec, lane, log_path, min_confidence, world)
                 except Exception as e:  # a round that could not be played is not a failure of the judge
                     r = {"error": f"{type(e).__name__}: {e}"[:300]}
                 j = entry["judges"].setdefault(label, {"runs": []})
@@ -694,10 +713,15 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
                 progress(f"{name} {label} {n}/{rounds}: "
                          f"{'error ' + r['error'] if 'error' in r else ('right' if r['success'] else 'wrong')}"
                          f"  ({j['successes']}/{j['n']})")
+                result["costs"] = costs.ledger.summary(mark)
                 out.write_text(json.dumps(result, indent=2))
         if world is not None:
             world.close()
     await say(rpc, "[AgentReset")
+    result["costs"] = costs.ledger.summary(mark)
+    if key_before is not None and (key_after := costs.openrouter_usage()) is not None:
+        result["openrouter_key_spent_usd"] = round(key_after - key_before, 6)
+    out.write_text(json.dumps(result, indent=2))
     return result
 
 
@@ -709,7 +733,11 @@ def tally(j: dict[str, Any]) -> None:
     lo, hi = wilson(j["successes"], j["n"])
     j["ci95"] = [round(lo, 3), round(hi, 3)]
     j["deaths"] = sum(r.get("player_died", False) for r in played)
-    j["cost_usd"] = round(sum(r.get("est_cost_usd", 0) for r in played), 4)
+    # Rounds before costs were recorded (cuo-m70.1) carry an estimate from input tokens instead.
+    j["cost_usd"] = round(sum(r.get("cost_usd", r.get("est_cost_usd", 0)) for r in played), 5)
+    j["cost_per_round_usd"] = round(j["cost_usd"] / j["n"], 5) if j["n"] else None
+    lat = [r["latency_ms_avg"] for r in played if r.get("latency_ms_avg")]
+    j["latency_ms_avg"] = round(sum(lat) / len(lat), 1) if lat else None
     j["errors"] = len(j["runs"]) - len(played)
 
 
@@ -721,7 +749,9 @@ def table(results: list[dict[str, Any]], labels: list[str] | None = None) -> str
             for label, j in entry["judges"].items():
                 if j.get("n"):
                     tag = labels[i] if labels else res.get("started", str(i))
+                    per_round = j.get("cost_per_round_usd", j["cost_usd"] / j["n"])
+                    lat = f"{j['latency_ms_avg']:>5.0f} ms" if j.get("latency_ms_avg") else "        "
                     rows.append(f"{name:<28} {label:<16} {j['successes']:>2}/{j['n']:<2} "
                                 f"{100 * j['rate']:>5.0f}%  [{100 * j['ci95'][0]:.0f}-{100 * j['ci95'][1]:.0f}%]"
-                                f"  deaths {j['deaths']:<2} ${j['cost_usd']:.3f}  {tag}")
+                                f"  deaths {j['deaths']:<2} ${j['cost_usd']:.3f} (${per_round:.4f}/round) {lat}  {tag}")
     return "\n".join(rows)

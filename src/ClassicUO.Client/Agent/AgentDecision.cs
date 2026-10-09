@@ -54,6 +54,10 @@ namespace ClassicUO.Agent
         public readonly List<AgentCallQuestion> Questions = new List<AgentCallQuestion>();
         public readonly List<(string What, string Result)> Did = new List<(string, string)>();
 
+        // What the call cost (dollars; -1 when not said), and the session's running total with it.
+        public float Cost = -1;
+        public AgentSpent Spent;
+
         public static AgentDecision FromJson(JsonElement p)
         {
             var d = new AgentDecision();
@@ -77,6 +81,8 @@ namespace ClassicUO.Agent
                     case "judge": d.Judge = v.GetString() ?? string.Empty; break;
                     case "archetype": d.Archetype = v.GetString() ?? string.Empty; break;
                     case "latency_ms": d.LatencyMs = v.GetSingle(); break;
+                    case "cost" when v.ValueKind == JsonValueKind.Number: d.Cost = v.GetSingle(); break;
+                    case "spent": d.Spent = AgentSpent.FromJson(v); break;
                     case "intent": d.Intent = v.GetString() ?? string.Empty; break;
                     case "confidence": d.Confidence = v.GetSingle(); break;
                     case "gated": d.Gated = v.GetBoolean(); break;

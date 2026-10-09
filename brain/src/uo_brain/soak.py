@@ -6,6 +6,10 @@ LOG.decisions.jsonl. This puts them together: which goals the planner chose and 
 loops, kills and deaths, where the time went, what was bought and banked, and what Jev and the
 planner cost an hour. Disruptions applied from outside during the run (a JSONL file of
 {t, what}) are matched to the goals that followed them, to see how the planner adapted.
+
+Costs come from the logs' `ai_cost` records (costs.py): what each call cost as the provider
+reported it. Logs from before those were written are costed the old way: the planner's
+reported cost, and Jev's input tokens at its list price.
 """
 
 import json
@@ -13,15 +17,16 @@ import re
 from pathlib import Path
 from typing import Any
 
-from . import logs
-from .loop import LoopConfig
+from . import costs, logs
+
+JEV_PRICE = costs.PRICES["typesafe/jev"][0]  # for logs without cost records
 
 
-def report(log: Path, disruptions: Path | None = None, price_per_million: float = LoopConfig.price_per_million
-           ) -> dict[str, Any]:
+def report(log: Path, disruptions: Path | None = None, price_per_million: float = JEV_PRICE) -> dict[str, Any]:
     records = logs.read(log)
     decisions_log = log.with_name(log.stem + logs.DECISIONS + log.suffix)
-    decisions = [d for d in logs.read(decisions_log) if d["type"] == "decision"] if decisions_log.exists() else []
+    dlog = logs.read(decisions_log) if decisions_log.exists() else []
+    decisions = [d for d in dlog if d["type"] == "decision"]
     if not records:
         return {"log": str(log), "error": "empty log"}
     t0, t1 = records[0]["t"], max(r.get("t", 0) for r in records)
@@ -53,12 +58,18 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
     for b in buys:
         bought[b.get("item", "?")] = bought.get(b.get("item", "?"), 0) + int(b.get("got") or 0)
 
-    planner_cost = sum((r.get("usage") or {}).get("cost") or 0.0 for r in records if r["type"] == "planner")
     planner_calls = sum(1 for r in records if r["type"] == "planner")
-    jev_tokens = sum((d.get("answers") or {}).get("input_tokens", 0) for d in decisions)
     routine = [r for r in records if r["type"] == "routine"]
-    routine_tokens = sum((r.get("answers") or {}).get("input_tokens", 0) for r in routine)
-    jev_cost = (jev_tokens + routine_tokens) * price_per_million / 1e6
+    kills = sum(h.get("kills", 0) for h in hunts)
+    recorded = costs.from_records(records + dlog, hours=hours, kills=kills or None, decisions=len(decisions) or None)
+    if recorded:
+        system2 = recorded["by_role"].get("system2", 0.0)
+        system1 = recorded["by_role"].get("system1", 0.0)
+    else:
+        system2 = sum((r.get("usage") or {}).get("cost") or 0.0 for r in records if r["type"] == "planner")
+        jev_tokens = sum((d.get("answers") or {}).get("input_tokens", 0) for d in decisions)
+        routine_tokens = sum((r.get("answers") or {}).get("input_tokens", 0) for r in routine)
+        system1 = (jev_tokens + routine_tokens) * price_per_million / 1e6
 
     out: dict[str, Any] = {
         "log": str(log),
@@ -70,7 +81,7 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
         "goals_failed": [{"minute": minute(r["t"]), "goal": r["tool"], "result": (r.get("result") or {}).get("result", "")}
                          for r in results if not (r.get("result") or {}).get("ok", True)],
         "hunts": len(hunts),
-        "kills": sum(h.get("kills", 0) for h in hunts),
+        "kills": kills,
         # A death outside a hunt ends the session: its summary says so, or a goal ends at 0 health.
         # One in a hunt is in the hunt's count already.
         "deaths": max(sum(h.get("deaths", 0) for h in hunts), 1 if any(
@@ -89,9 +100,18 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
         "fight_decisions": len(decisions),
         "routine_questions": len(routine),
         "planner_calls": planner_calls,
-        "cost_usd": {"planner": round(planner_cost, 4), "jev": round(jev_cost, 5)},
-        "cost_per_hour_usd": {"planner": round(planner_cost / hours, 4), "jev": round(jev_cost / hours, 4)},
+        "cost_usd": {"system1": round(system1, 5), "system2": round(system2, 4),
+                     "total": round(system1 + system2, 5)},
+        "cost_per_hour_usd": {"system1": round(system1 / hours, 4), "system2": round(system2 / hours, 4),
+                              "total": round((system1 + system2) / hours, 4)},
+        "cost_per_kill_usd": round((system1 + system2) / kills, 5) if kills else None,
+        "costs_recorded": recorded is not None,
     }
+    if recorded:
+        out["costs"] = recorded
+    checks = [r for r in records if r["type"] == "openrouter_key"]
+    if len(checks) >= 2:
+        out["openrouter_key_spent_usd"] = round(checks[-1]["usage"] - checks[0]["usage"], 6)
     if disruptions and disruptions.exists():
         out["disruptions"] = []
         for d in _jsonl(disruptions):
@@ -121,10 +141,15 @@ def markdown(r: dict[str, Any]) -> str:
              f"Time: " + ", ".join(f"{k} {v} min" for k, v in r["time_minutes"].items()) + ".",
              f"Travel: {r['travel']['trips']} trips, {r['travel']['arrived']} arrived, "
              f"{r['travel']['stuck_spots']} stuck spots, {r['travel']['minutes']} min walking.",
-             f"Cost: planner ${r['cost_usd']['planner']} ({r['planner_calls']} calls, "
-             f"${r['cost_per_hour_usd']['planner']}/h), Jev ${r['cost_usd']['jev']} "
+             f"Cost: ${r['cost_usd']['total']} (${r['cost_per_hour_usd']['total']}/h"
+             + (f", ${r['cost_per_kill_usd']} a kill" if r.get("cost_per_kill_usd") else "") + "); "
+             f"system two ${r['cost_usd']['system2']} ({r['planner_calls']} planner calls, "
+             f"${r['cost_per_hour_usd']['system2']}/h), system one ${r['cost_usd']['system1']} "
              f"({r['fight_decisions']} fight decisions, {r['routine_questions']} routine questions, "
-             f"${r['cost_per_hour_usd']['jev']}/h).",
+             f"${r['cost_per_hour_usd']['system1']}/h)"
+             + ("" if r.get("costs_recorded") else ", estimated from tokens: the log has no cost records")
+             + (f". OpenRouter's own count for the key: ${r['openrouter_key_spent_usd']}"
+                if "openrouter_key_spent_usd" in r else "") + ".",
              "", "Goals:"]
     lines += [f"- {g['minute']} min: {g['goal']} {g['args']}: {g['why']}" for g in r["goals"]]
     if r["goals_failed"]:

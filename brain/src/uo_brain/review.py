@@ -28,7 +28,7 @@ from itertools import zip_longest
 from pathlib import Path
 from typing import Any
 
-from . import llm, logs
+from . import costs, llm, logs
 from . import strategy as strategies
 
 MAX_LINES = 5
@@ -304,7 +304,8 @@ async def propose(dig: dict[str, Any], chat_fn: llm.ChatFn = llm.chat,
             {"role": "user", "content": "The digest:\n" + json.dumps(dig, indent=1)}]
     usage = llm.LlmUsage(calls=0)
     for _ in range(2):
-        res = await chat_fn(msgs, tools=[PROPOSE], tool_choice="auto", model=model, max_tokens=2000)
+        with costs.kind("review"):
+            res = await chat_fn(msgs, tools=[PROPOSE], tool_choice="auto", model=model, max_tokens=2000)
         usage = usage + res.usage
         lines = lines_from(res)
         if lines is not None:
