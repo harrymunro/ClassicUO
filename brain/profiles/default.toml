@@ -2,7 +2,7 @@
 # character alive as well as Sonnet at a fortieth of the cost, cuo-08x). System one is Microsoft's
 # Decision 1, with Jev for the calls Jev measured better at (Harry, 2026-10-12: "keep Jev for the bits
 # it's objectively better at and use Decision 1 for the bits where it's objectively better at or it is
-# inconclusive", cuo-3ni; README Results, "Jev and Microsoft's Decision 1"):
+# inconclusive", cuo-3ni; docs/results.md, "Jev and Microsoft's Decision 1"):
 # - fight: Decision 1 won the benchmark, 139 rounds of 150 to 128, and held its gaps on a quiet machine.
 # - routine: Jev. In a soak hour each Decision 1's "stay here" fell under the cut 20 s into 5 hunts of 10
 #   (13 kills to Jev's 31).
@@ -21,7 +21,7 @@ system1 = "decision1"
 routine = "jev"
 strategy = "jev"
 system2 = "anthropic/claude-haiku-5.5"
-# Sonnet where Haiku fell short (cuo-twd, 2026-10-09, README Results). Each is a one-off call, a few
+# Sonnet where Haiku fell short (cuo-twd, 2026-10-09, docs/results.md). Each is a one-off call, a few
 # cents, not an hourly cost:
 # - review: on the same logs Haiku missed the main problem Sonnet found (a 94-decision flee at full
 #   health from weak monsters, 2 tries of 2) and once proposed resting instead of seeking where seeking

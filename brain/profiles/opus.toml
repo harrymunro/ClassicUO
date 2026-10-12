@@ -3,7 +3,7 @@
 # for system one with Jev for routine and strategy, Haiku for the routine planner, Sonnet for guide import.
 # uo-brain run --profile opus
 # Here to try it, not as a recommendation. Measured offline against Sonnet and Haiku on 2026-10-10
-# (cuo-vpi, README Results), it wasn't better for its price:
+# (cuo-vpi, docs/results.md), it wasn't better for its price:
 # - escalate: on 78 recorded hard moments it chose as well as Haiku and better than Sonnet by a little
 #   (61, 61 and 58 right), at about $0.066 a step against $0.0016 and $0.031, and 8 s against 2 and 3.
 # - review: it read the logs more exactly, but ranked a session's main problem last or left it out, and

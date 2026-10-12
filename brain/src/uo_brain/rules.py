@@ -1,7 +1,7 @@
 """Rules of play by name (cuo-der): how a character travels, talks and behaves, a set at a time.
 
 A set is a TOML file in brain/rules/ (`realistic`, `run-always`) whose keys are the fleet file's own
-settings (README, "Rules of play"). `uo-brain session --rules NAME` and `rules = "NAME"` in a fleet
+settings (docs/fleets.md, "Rules of play"). `uo-brain session --rules NAME` and `rules = "NAME"` in a fleet
 file take one; a setting given on its own (a flag, the fleet file's key, `--set`) wins over the set.
 """
 

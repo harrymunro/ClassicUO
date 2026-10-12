@@ -1,6 +1,6 @@
 # The walk out of an inn (cuo-0jz): party-inn.toml with the leader asked for the inn first, so the party's
 # first walk after the table comes a few minutes into the run, not at its end. Before the fix that walk
-# failed with "no way there on the map" in two runs of three (README, Results, "Leaving the inn").
+# failed with "no way there on the map" in two runs of three (docs/results.md, "Leaving the inn").
 #   uv run uo-brain fleet fleets/party-inn-exit.toml --hours 0.25 --set memory=false
 # The lich scene with a party that talks (epic cuo-cod): the same five as party-lich.toml, staged the same
 # way, each with a persona. They call out through the fight in their own voices, help each other, walk

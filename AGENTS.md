@@ -130,19 +130,24 @@ bd prime                # Refresh Beads context
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/core-concepts/sync-concepts.md for details and anti-patterns.
 <!-- END BEADS CODEX SETUP -->
 
-## Keep the README current
+## Keep the README and docs current
 
-`README.md` is the project's front page on GitHub and the user guide for the agent, so it
-must always describe what the code does now. Any change that adds, removes or changes a
-feature, command, RPC method, act verb, setting, template, test-server command or measured
-result updates the README in the same commit:
+`README.md` is the project's front page on GitHub: what the agent is, the features table,
+Quick start, How it works, and the index of the user guide in `docs/`. Together they must always
+describe what the code does now. Any change that adds, removes or changes a feature, command, RPC
+method, act verb, setting, template, test-server command or measured result updates them in the
+same commit:
 
-- the feature sections and the Reference (in-game commands, `uo-brain` subcommands, RPC methods and verbs);
-- Quick start, when setup or launch steps change;
-- Results, with the date and the exact command that produced each number (single runs say so);
-- Where things are, and Known limits (remove a limit once it's fixed).
+- the feature's guide: `docs/playing.md` (play states, panel, reflexes, safety, leaving, character types, strategy), `docs/goals.md` (the planner, travel and errands, plans for fights), `docs/world-and-memory.md`, `docs/seeing-what-it-does.md` (logs, costs, which model answers, review) or `docs/fleets.md` (several agents, rules of play, parties, headless clients), and the README's features table when a feature is new;
+- `docs/reference.md`: in-game commands, `uo-brain` subcommands, RPC methods and verbs, test-server commands, and Where things are;
+- Quick start in the README, when setup or launch steps change;
+- `docs/results.md`, with the date and the exact command that produced each number (single runs say so), and its contents list for a new section;
+- `docs/known-limits.md` (remove a limit once it's fixed), and `docs/public-shards.md` for a shard's rules.
 
-Before closing a bead, check the README against the change.
+Link between the docs with relative paths and heading anchors (`results.md#where-it-runs`); a
+renamed heading changes its anchor, so check links into it.
+
+Before closing a bead, check the README and docs against the change.
 
 ## Notes in the Obsidian vault
 

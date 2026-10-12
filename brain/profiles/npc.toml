@@ -1,5 +1,5 @@
 # A smart NPC (cuo-m70.4): the cheapest models that still play well, and a cap.
-# Which models those are comes from the model comparison (cuo-m70.3, README Results).
+# Which models those are comes from the model comparison (cuo-m70.3, docs/results.md).
 
 [models]
 system1 = "decision1"   # with Jev for routine and strategy, as in default.toml (cuo-3ni)

@@ -58,8 +58,8 @@ DEFAULTS = {"system1": DECISION1, "system2": llm.PLANNER_MODEL}
 SYSTEM_ONE_DEFAULTS = {"routine": JEV, "strategy": JEV}
 # Kinds whose default isn't their system's, used unless a profile names a model for that kind: the
 # planner's hard moments go to Sonnet (cuo-d4j; the planner's own model for `escalate` turns escalation
-# off), and so do the after-action review and guide import, where Haiku fell short (cuo-twd, README
-# Results): it missed the main problem in logs Sonnet read right, and left Trammel-only facts unmarked.
+# off), and so do the after-action review and guide import, where Haiku fell short (cuo-twd,
+# docs/results.md): it missed the main problem in logs Sonnet read right, and left Trammel-only facts unmarked.
 KIND_DEFAULTS = {"escalate": "anthropic/claude-sonnet-5.5", "review": "anthropic/claude-sonnet-5.5",
                  "guide": "anthropic/claude-sonnet-5.5"}
 ALIASES = {
