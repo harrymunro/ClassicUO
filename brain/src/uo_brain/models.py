@@ -7,7 +7,7 @@ planner model's chat. A profile names the model for each, in one place:
     [models]
     system1 = "jev"                            # every system-one kind...
     routine = "anthropic/claude-haiku-5.5"     # ...but this one
-    system2 = "anthropic/claude-sonnet-5.5"
+    system2 = "anthropic/claude-sonnet-5.5"    # (the default is Haiku; this is profiles/sonnet.toml)
 
     [cheaper]                                  # used while over a budget whose action is "cheaper"
     system2 = "anthropic/claude-haiku-5.5"
@@ -22,12 +22,16 @@ planner model's chat. A profile names the model for each, in one place:
 Profiles live in brain/profiles/<name>.toml (or any file). The model for a kind is, from
 weakest to strongest: the built-in default, JEV_MODEL / PLANNER_MODEL in the environment, the
 profile, then the command line (`--use KIND=MODEL`, `--model` for system one, `--planner-model`
-for system two). One profile is active in a process (`active`), as one ledger is.
+for system two). One profile is active in a process (`active`), as one ledger is. A few kinds
+(KIND_DEFAULTS: escalate, review, guide) are Sonnet unless a profile or the command line names
+their model, whatever the system's line or the environment says.
 
-"jev" (or any typesafe/jev id) is Jev through TypeSafe's system-one API. Any other model in a
-system-one role is asked the same questions through `ChatJudge`, which has the chat model state
-a probability for every option and reads its answer into the same Answers, so policy, the bench
-and the logs don't change. System two already speaks chat: its model is a per-kind setting.
+"jev" (or any typesafe/jev id) is Jev through TypeSafe's system-one API, and a model of Jev's own
+kind (judge.DECISION_MODELS: Microsoft's Decision 1, alias "decision1") is sent the same request
+with its own id. Any other model in a system-one role is asked the same questions through
+`ChatJudge`, which has the chat model state a probability for every option and reads its answer
+into the same Answers, so policy, the bench and the logs don't change. System two already speaks
+chat: its model is a per-kind setting.
 """
 
 import json
@@ -45,12 +49,25 @@ from .judge import Answers, ChoiceResult
 
 PROFILES_DIR = Path(__file__).resolve().parents[2] / "profiles"
 JEV = "jev"
-DEFAULTS = {"system1": JEV, "system2": llm.PLANNER_MODEL}
+DECISION1 = "microsoft/microsoft-decision-1"
+# System one is Decision 1 but for the kinds Jev measured better at (Harry, 2026-10-12, cuo-3ni): the
+# routine in-hunt calls (Decision 1's "stay here" fell under the cut 20 s into 5 hunts of 10) and
+# compiling a strategy (it dropped "finish with Lightning"). Those stay Jev unless the profile names a
+# model for system one or for the kind, so a profile of one model is that model throughout.
+DEFAULTS = {"system1": DECISION1, "system2": llm.PLANNER_MODEL}
+SYSTEM_ONE_DEFAULTS = {"routine": JEV, "strategy": JEV}
+# Kinds whose default isn't their system's, used unless a profile names a model for that kind: the
+# planner's hard moments go to Sonnet (cuo-d4j; the planner's own model for `escalate` turns escalation
+# off), and so do the after-action review and guide import, where Haiku fell short (cuo-twd, README
+# Results): it missed the main problem in logs Sonnet read right, and left Trammel-only facts unmarked.
+KIND_DEFAULTS = {"escalate": "anthropic/claude-sonnet-5.5", "review": "anthropic/claude-sonnet-5.5",
+                 "guide": "anthropic/claude-sonnet-5.5"}
 ALIASES = {
     "jev": JEV,
     "sonnet": "anthropic/claude-sonnet-5.5",
     "haiku": "anthropic/claude-haiku-5.5",
     "opus": "anthropic/claude-opus-5.5",
+    "decision1": DECISION1,
 }
 
 
@@ -81,7 +98,8 @@ class Profile:
         if cheap and (m := self.cheaper.get(kind) or self.cheaper.get(role)):
             return self.resolve(m)
         env = os.environ.get("JEV_MODEL" if role == "system1" else "PLANNER_MODEL")
-        return self.resolve(self.models.get(kind) or self.models.get(role) or env or DEFAULTS[role])
+        return self.resolve(self.models.get(kind) or KIND_DEFAULTS.get(kind) or self.models.get(role) or env
+                            or SYSTEM_ONE_DEFAULTS.get(kind) or DEFAULTS[role])
 
     def use(self, spec: str) -> None:
         """Apply one command-line setting, KIND=MODEL (a kind, system1 or system2)."""
@@ -319,7 +337,7 @@ class RoutedJudge:
 
     def judge_for(self, model: str):
         if model not in self._judges:
-            if is_jev(model):
+            if model == JEV or judges.speaks_decisions(model):
                 self._judges[model] = judges.JevJudge(self.provider, None if model == JEV else model)
             else:
                 self._judges[model] = ChatJudge(model)
@@ -333,14 +351,15 @@ class RoutedJudge:
             await j.close()
 
 
-def make_judge(kind: str = "jev", provider: str = "auto", profile: Profile | None = None):
+def make_judge(kind: str = "jev", provider: str = "auto", profile: Profile | None = None, pin: bool = False):
     """The rule judge, or the routed one for the active (or given) profile. `kind` may also be an
-    alias or model id: every system-one kind then goes to that model."""
+    alias or model id: every system-one kind then goes to that model; so does "jev" with pin=True,
+    where without it "jev" means the profile's own model for each kind."""
     judges.load_dotenv(Path(__file__).resolve().parents[2] / ".env")
     if kind == "heuristic":
         return judges.HeuristicJudge()
     p = profile or active
-    if kind != "jev":
+    if kind != "jev" or pin:
         p = Profile(p.name, {**p.models, "system1": p.resolve(kind)}, p.cheaper, p.aliases, p.budget)
         p.models = {k: v for k, v in p.models.items() if k not in costs.SYSTEM_ONE}
     return RoutedJudge(p, provider)

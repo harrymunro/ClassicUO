@@ -12,13 +12,17 @@ Every row says where it came from (`source`) and when it was last confirmed (`la
     modernuo:<file>    the server's own data files (world_import.py)
     seen               observed in game by the agent
     note               typed in by the player (uo-brain world note)
+    markers:<file>     the shard's map markers for the client's world map (markers.py)
     guide:<url>        summarised from a guide or wiki page (guides.py)
     model:unverified   the planner model's own knowledge, until the game confirms it
     outcomes           a note summing up the recorded outcomes of an area (outcomes.py)
 
 A fact that a newer observation contradicts is marked stale instead of being deleted:
-queries skip it, but the history stays. Other players' names and speech never go in.
-A PK sighting is stored as "a red player was seen here", not who it was.
+queries skip it, but the history stays. A place seen in game confirms the same kind of
+place stored nearby from another source (its last_seen moves on). Where two sources put
+the same kind of place within a few tiles, queries list the more trusted one
+(SOURCE_TRUST). Other players' names and speech never go in. A PK sighting is stored as
+"a red player was seen here", not who it was.
 
 Distances are in tiles, counted the way a character walks: max(|dx|, |dy|).
 """
@@ -64,7 +68,7 @@ CREATE INDEX IF NOT EXISTS spawns_source ON spawns(source);
 CREATE TABLE IF NOT EXISTS creatures (
     id INTEGER PRIMARY KEY, type TEXT NOT NULL, name TEXT, body INTEGER,
     hits_min INTEGER, hits_max INTEGER, damage_min INTEGER, damage_max INTEGER,
-    fame INTEGER, karma INTEGER, difficulty TEXT, {_COMMON});
+    fame INTEGER, karma INTEGER, difficulty TEXT, rooted INTEGER NOT NULL DEFAULT 0, fight_mode TEXT, {_COMMON});
 CREATE INDEX IF NOT EXISTS creatures_type ON creatures(type COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS creatures_source ON creatures(source);
 
@@ -84,8 +88,18 @@ CREATE TABLE IF NOT EXISTS notes (
 CREATE INDEX IF NOT EXISTS notes_source ON notes(source);
 """
 
+# ModernUO FightModes that never start a fight with a character of good karma: Aggressor (birds, deer)
+# and None only fight back, Evil goes for characters with negative karma.
+PEACEFUL_MODES = ("Aggressor", "None", "Evil")
+
 # Keyword search over notes, stemmed so "lich" finds "liches". External-content FTS5 kept
 # in step by triggers; if this SQLite has no FTS5, notes() falls back to LIKE.
+# (table, column, declaration) added after the first stores were made, added to older stores on open.
+ADDED_COLUMNS = [
+    ("creatures", "rooted", "INTEGER NOT NULL DEFAULT 0"),  # can't move from its spot (a reaper, a corpser)
+    ("creatures", "fight_mode", "TEXT"),  # ModernUO's FightMode: Closest attacks on sight, Aggressor only fights back
+]
+
 FTS_SCHEMA = """
 CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(text, tags, area, content='notes', content_rowid='id',
     tokenize='porter unicode61');
@@ -115,29 +129,81 @@ LEVEL_WORDS = {"beginner": "new", "novice": "new", "newbie": "new", "low": "new"
 # Town-like region kinds: no hunting there, and guards.
 TOWN_KINDS = ("town", "town_area", "guarded", "jail", "staff")
 
+# Every kind of place the store holds, from any source. A map marker's "arms" shop sells
+# weapons, armour or both (the marker doesn't say), so it is an arms_shop, which a search
+# for either finds.
+PLACE_KINDS = (
+    "bank", "healer", "mage_shop", "alchemist", "herbalist", "provisioner", "weapon_vendor", "armour_vendor",
+    "arms_shop", "blacksmith", "inn", "tavern", "bowyer", "tailor", "scribe", "tinker", "butcher", "baker", "cook",
+    "fisherman", "stable", "jeweller", "carpenter", "mapmaker", "shipwright", "tanner", "cobbler", "farmer",
+    "furtrader", "guildmaster", "town", "landmark", "graveyard", "docks", "moongate", "teleporter",
+    "dungeon_entrance", "dungeon_level", "dungeon_spot", "shrine", "reagent_spawn", "shop_sign",
+)
+
+KIND_WORDS = {part for kind in PLACE_KINDS for part in kind.split("_")}  # never folded as typos (tokens)
+
 # Kinds a planner may ask for that cover several stored kinds.
 KIND_ALIASES = {
     "reagent_vendor": ("mage_shop", "alchemist", "herbalist"),
     "reagents": ("mage_shop", "alchemist", "herbalist"),
     "banker": ("bank",),
     "dungeon": ("dungeon_entrance",),
-    "armor_vendor": ("armour_vendor",),
-    "weapon_shop": ("weapon_vendor",),
-    "armour_shop": ("armour_vendor",),
-    "armor_shop": ("armour_vendor",),
-    "weaponsmith": ("weapon_vendor", "blacksmith"),
-    "armourer": ("armour_vendor", "blacksmith"),
-    "armorer": ("armour_vendor", "blacksmith"),
+    "weapon_vendor": ("arms_shop",),
+    "armour_vendor": ("arms_shop",),
+    "armor_vendor": ("armour_vendor", "arms_shop"),
+    "weapon_shop": ("weapon_vendor", "arms_shop"),
+    "armour_shop": ("armour_vendor", "arms_shop"),
+    "armor_shop": ("armour_vendor", "arms_shop"),
+    "weaponsmith": ("weapon_vendor", "blacksmith", "arms_shop"),
+    "armourer": ("armour_vendor", "blacksmith", "arms_shop"),
+    "armorer": ("armour_vendor", "blacksmith", "arms_shop"),
     "jeweler": ("jeweller",),
     "cemetery": ("graveyard",),
     "gate": ("moongate",),
     "resurrection": ("healer",),
 }
 
+# Which source to believe when two put the same kind of place close together: what the
+# agent saw, then the server's data and the player's word, then the shard's map markers
+# (drawn by hand, usually within 10 tiles of the door), then guides, then the model's guesses.
+SOURCE_TRUST = {"seen": 5, "modernuo": 4, "note": 3, "markers": 2, "guide": 1, "model:unverified": 0}
+SAME_PLACE_TILES = 10  # a marker and the server's place of the same kind this close are one place
+
+
+def trust(source: str | None) -> int:
+    """How far a source is believed (SOURCE_TRUST). A source made by code that isn't
+    listed (a test's fixture, a benchmark's rows) counts as the player's word."""
+    s = source or ""
+    return SOURCE_TRUST.get(s, SOURCE_TRUST.get(s.split(":", 1)[0], SOURCE_TRUST["note"]))
+
+
+def outranked(rows: list[sqlite3.Row]) -> set[int]:
+    """Ids of places another, more trusted source puts within SAME_PLACE_TILES as the same
+    kind: a bank marker drawn in the middle of the building beside the server's banker."""
+    by_kind: dict[tuple[str, str], list[sqlite3.Row]] = {}
+    for r in rows:
+        by_kind.setdefault((r["map"].lower(), r["kind"]), []).append(r)
+    out: set[int] = set()
+    for group in by_kind.values():
+        rated = [(trust(r["source"]), r) for r in group]
+        if len({t for t, _ in rated}) < 2:
+            continue
+        for t, r in rated:
+            if any(u > t and tiles(o["x"], o["y"], r["x"], r["y"]) <= SAME_PLACE_TILES for u, o in rated):
+                out.add(r["id"])
+    return out
+
 # Words that mean the same thing in place names.
 SYNONYMS = {"cemetery": "graveyard", "banker": "bank", "armor": "armour", "armorer": "armourer",
             "brit": "britain", "gy": "graveyard", "moon": "moongate", "tele": "teleporter",
             "lvl": "level"}
+
+
+def near_xy(name: str) -> tuple[int, int] | None:
+    """The tile in a name like "wilderness near 1800,1400", the way facts name a place outside any
+    region: the planner makes up others like it ("wilderness near 1693,1473"), which no store holds."""
+    m = re.search(r"\bnear\s+(\d+)\s*,\s*(\d+)\s*$", name)
+    return (int(m[1]), int(m[2])) if m else None
 
 
 class WorldError(ValueError):
@@ -236,7 +302,9 @@ def tokens(text: str) -> list[str]:
     for w in re.findall(r"[a-z0-9]+", text.lower().replace("'s", "").replace("_", " ")):
         if len(w) > 3 and w.endswith("s") and not w.endswith("ss"):
             w = w[:-1]
-        if w not in SYNONYMS and len(w) >= 5:  # "cemetary" still means graveyard
+        # "cemetary" still means graveyard; but a word that is a kind of place is no typo: "baker" is
+        # as close to "banker" (0.91), and a trip to the "Britain bank" went to the Britain baker.
+        if w not in SYNONYMS and w not in KIND_WORDS and len(w) >= 5:
             w = next(iter(difflib.get_close_matches(w, SYNONYMS, n=1, cutoff=0.85)), w)
         out.append(SYNONYMS.get(w, w))
     return out
@@ -275,6 +343,22 @@ def _load_json(text: str | None, default: Any = None) -> Any:
         return default
 
 
+DUNGEONS_FROM_X = 5120  # Felucca and Trammel keep their dungeons east of this, apart from the land (AgentNav.SameLandmass)
+NO_WALK = ("not on foot: it lies apart from the land (a dungeon's own part of the map), and travel can't use its "
+           "entrance yet. Don't choose it")
+
+
+def no_walk(map: str, x: int, from_x: int | None = None) -> str | None:
+    """Why a spot can't be walked to, or None: on Felucca and Trammel a dungeon's floor is east of x 5120, a
+    part of the map no walk reaches from the land (or the other way round). With nowhere to measure from, a
+    spot over there is said to be so: `hunt Britain Sewer` failed 14 times of 14, "no route: the dungeons lie
+    apart from the land", and the planner's stronger models chose it every time it was offered (cuo-432)."""
+    if map.strip().lower() not in ("felucca", "trammel"):
+        return None
+    there = x >= DUNGEONS_FROM_X
+    return NO_WALK if (there if from_x is None else there != (from_x >= DUNGEONS_FROM_X)) else None
+
+
 def _compact(d: dict[str, Any]) -> dict[str, Any]:
     """Drop empty fields so tool results stay short for the model."""
     return {k: v for k, v in d.items() if v is not None and v != [] and v != ""}
@@ -294,6 +378,10 @@ class World:
             # wait for a writer.
             self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
+        # Columns added since a store was made: CREATE TABLE IF NOT EXISTS leaves an old table as it was.
+        for table, column, decl in ADDED_COLUMNS:
+            if column not in {r[1] for r in self.db.execute(f"PRAGMA table_info({table})")}:
+                self.db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
         try:
             self.db.executescript(FTS_SCHEMA)
             self.fts = True
@@ -375,7 +463,8 @@ class World:
                   source: str = "seen") -> int:
         """Record a place. The same (map, kind, name) from the same source is updated in
         place. A game observation (source "seen") marks other sources' copies of the place
-        stale when they put it more than 3 tiles away."""
+        stale when they put it more than 3 tiles away, and confirms (last_seen) the places of
+        the same kind other sources put within SAME_PLACE_TILES: a map marker, say."""
         kind = kind.strip().lower().replace(" ", "_")
         if region is None:
             hit = self.region_at(x, y, map)
@@ -393,12 +482,16 @@ class World:
         if source == "seen":
             self.db.execute("UPDATE places SET stale = 1 WHERE map = ? AND kind = ? AND name = ? COLLATE NOCASE "
                             "AND source != 'seen' AND MAX(ABS(x - ?), ABS(y - ?)) > 3", (map, kind, name, x, y))
+            self.db.execute("UPDATE places SET last_seen = ? WHERE map = ? AND kind = ? AND source != 'seen' "
+                            "AND stale = 0 AND MAX(ABS(x - ?), ABS(y - ?)) <= ?",
+                            (fields["last_seen"], map, kind, x, y, SAME_PLACE_TILES))
         self.db.commit()
         return rid
 
     def bestiary(self) -> dict[int, dict[str, Any]]:
         """What each body graphic is, for describing creatures in fights: body -> {name, hits,
-        damage, difficulty, caster}. Where several creature types share a body, the strongest."""
+        damage, difficulty, caster, rooted, peaceful}. Where several creature types share a body, the strongest.
+        peaceful: it only fights back (a bird, a deer); None when the import didn't say."""
         if getattr(self, "_bestiary", None) is not None:
             return self._bestiary
         out: dict[int, dict[str, Any]] = {}
@@ -409,7 +502,9 @@ class World:
                 continue
             entry = {"type": r["type"], "name": r["name"], "hits": hits,
                      "damage": f"{r['damage_min']}-{r['damage_max']}" if r["damage_min"] else None,
-                     "difficulty": r["difficulty"], "caster": "/Magic/" in (r["source"] or "")}
+                     "difficulty": r["difficulty"], "caster": "/Magic/" in (r["source"] or ""),
+                     "rooted": bool(r["rooted"]),
+                     "peaceful": None if not r["fight_mode"] else r["fight_mode"] in PEACEFUL_MODES}
             kinds = (out[r["body"]]["kinds"] if r["body"] in out else []) + [entry]
             if r["body"] not in out or hits > out[r["body"]]["hits"]:
                 out[r["body"]] = dict(entry)
@@ -497,6 +592,8 @@ class World:
             hits = self.place(near, map=map, limit=1)
             if hits:
                 return hits[0]["x"], hits[0]["y"], hits[0]["name"]
+            if xy := near_xy(near):
+                return xy[0], xy[1], near.strip()
             raise WorldError(f"no place called {near!r} is known on {map}")
         raise WorldError(f"can't read a location from {near!r}")
 
@@ -514,7 +611,8 @@ class World:
         for r in self.db.execute(f"SELECT * FROM places WHERE {where}", args):
             s = name_score(name, r["name"], f"{r['kind']} {r['region'] or ''}")
             if s > 0.5:
-                cands.append((s, self._from_centre(r), self._place_dict(r)))
+                rank = (-trust(r["source"]), r["kind"] == "landmark")
+                cands.append((s, rank, self._from_centre(r), self._place_dict(r)))
         for r in self.db.execute(f"SELECT * FROM regions WHERE {where}", args):
             s = name_score(name, r["name"], r["kind"])
             if s > 0.5:
@@ -524,9 +622,12 @@ class World:
                               "x": x, "y": y, "z": z, "guarded": bool(r["guarded"]),
                               "entrance": list(reg.entrance) if reg.entrance else None,
                               "source": r["source"], "last_seen": r["last_seen"]})
-                cands.append((s + 0.01, 0, d))  # a region is the more general answer to a tie
-        cands.sort(key=lambda c: (-c[0], c[1], len(c[2]["name"])))
-        return [{**d, "match": 1.0 if s >= 2 else min(round(s, 2), 0.99)} for s, _, d in cands[:limit]]
+                # A region is the more general answer to a tie.
+                cands.append((s + 0.01, (-trust(r["source"]), False), 0, d))
+        # Best match first; a tie goes to the more trusted source, then to anything but a landmark (the
+        # "Covetous" entrance rather than its exit), then to the place nearest its town's centre.
+        cands.sort(key=lambda c: (-c[0], c[1], c[2], len(c[3]["name"])))
+        return [{**d, "match": 1.0 if s >= 2 else min(round(s, 2), 0.99)} for s, _, _, d in cands[:limit]]
 
     def _from_centre(self, r: sqlite3.Row) -> int:
         if not r["region"]:
@@ -556,6 +657,8 @@ class World:
             rows = [r for r in self.db.execute("SELECT * FROM places WHERE stale = 0 AND map = ? COLLATE NOCASE "
                                                "AND sells IS NOT NULL", (map,))
                     if any(all(w in tokens(s) for w in item) for s in _load_json(r["sells"], []))]
+        if drop := outranked(rows):
+            rows = [r for r in rows if r["id"] not in drop]
         if near is None:
             rows = sorted(rows, key=lambda r: r["name"])
             return [self._place_dict(r) for r in rows[:limit]]
@@ -616,10 +719,12 @@ class World:
                 rows = self.db.execute("SELECT * FROM spawns WHERE stale = 0 AND map = ? COLLATE NOCASE "
                                        "AND MAX(ABS(x - ?), ABS(y - ?)) <= ?", (map, nx, ny, radius)).fetchall()
         spawners = self._spawners(rows)
+        for s in spawners:
+            s["reach"] = no_walk(map, s["x"], nx)
         if nx is not None:
             for s in spawners:
                 s["distance"] = tiles(s["x"], s["y"], nx, ny)
-            spawners.sort(key=lambda s: s["distance"])
+            spawners.sort(key=lambda s: (s["reach"] is not None, s["distance"]))
         else:
             spawners.sort(key=lambda s: -sum(c.get("max_count") or 0 for c in s["creatures"]))
         return [_compact(s) for s in spawners[:limit]]
@@ -678,6 +783,10 @@ class World:
             if recent := self.recent_danger(a["area"]):
                 a["recent_danger"] = recent
                 rank *= 0.25
+            # No walk goes there (a dungeon's floor, from the land): said, and listed after every place one does.
+            if reach := no_walk(map, a["x"], nx):
+                a["reach"] = reach
+                rank -= 1e6
             out.append((rank, a))
         out.sort(key=lambda t: -t[0])
         return [_compact(a) for _, a in out[:limit]]
@@ -956,7 +1065,8 @@ def tool_schemas() -> list[dict[str, Any]]:
            "armour_vendor, blacksmith, tailor, inn, tavern, stable, moongate, teleporter, dungeon_entrance, "
            "town, shrine, graveyard, docks, guildmaster, landmark. Or pass an item word (\"bandages\", "
            "\"heal potion\", \"black pearl\") to find vendors that sell it. Returns places nearest first with "
-           "distance in tiles and, for vendors, what they sell.",
+           "distance in tiles and, for vendors, what they sell. Each has its source: seen in game, the server's "
+           "data (modernuo:...), or the shard's map markers (markers:..., placed by hand, a few tiles off at times).",
            {"kind": {"type": "string", "description": "A place kind from the list, or an item to buy."},
             "near": _NEAR, "map": _MAP, "limit": _LIMIT}, ["kind"]),
         fn("hunting_spots",

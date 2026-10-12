@@ -1,0 +1,26 @@
+3
++bank: 1425 1690 0 The First Bank of Britain
+-healer: 1472 1607 0 Healer of Britain
++moongate: 1336 1997 0 Britain Moongate
++moongate: 2711 2234 1 Buccaneer's Den Moongate
++moongate: 3763 2771 2 Haven Moongate
++moongate: 1215 467 3 Compassion
++dungeon: 2499 916 0 Covetous
+-exit: 5456 1863 0 Covetous
+-reagents: 1498 1659 0 Ethereal Goods
+-arms: 1437 1647 0 Heavy Metal Armorer
+-warriors guild: 1460 1580 0 Warriors   Guild of   Britain
++point of interest: 1610 1650 0 East Side Bank
++Body of Water: 1496 472 0 Arrow's Point Bay
++teleporter: 791 1548 3 
++treasure: 2643 851 0 NENWa1
++small house: 1500 1500 0 a house
++small boat (N): 1600 1800 0 a boat
+bank: 1 2 0 no plus or minus
++bank 1655 1606 0 no colon
++bank: east 1606 0 not a number
++healer: 1500
++bank: 900 900 7 Nowhere Bank
+
+-guild: 1418 1503 0 Counselor's Guild
+-guild: 1628 1664 0 Counselor's Guild

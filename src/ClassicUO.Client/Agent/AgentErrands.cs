@@ -74,14 +74,17 @@ namespace ClassicUO.Agent
                 return Fail("nothing to deposit or withdraw");
             }
 
-            if (BankBox() == null)
+            // The client keeps a bank box it was shown, contents and all, after the server has closed
+            // it (the character walked away), and the server refuses whatever is dropped in it then:
+            // a soak run's every deposit after the first failed so. Ask the banker each time, and count
+            // the box open once it is opened again.
+            if (_world.Player.FindItemByLayer(Layer.Bank) is Item known)
             {
-                Ask("bank");
+                known.Opened = false;
+                UIManager.GetGump<ContainerGump>(known.Serial)?.Dispose();
             }
-            else
-            {
-                PlanBank();
-            }
+
+            Ask("bank");
 
             return ("done", string.Empty);
         }
@@ -215,7 +218,7 @@ namespace ClassicUO.Agent
         {
             Item box = _world.Player.FindItemByLayer(Layer.Bank);
 
-            return box != null && (box.Opened || box.Items != null || UIManager.GetGump<ContainerGump>(box.Serial) != null) ? box : null;
+            return box != null && (box.Opened || UIManager.GetGump<ContainerGump>(box.Serial) != null) ? box : null;
         }
 
         private void PlanBank()
@@ -577,6 +580,15 @@ namespace ClassicUO.Agent
         }
 
         // The nearest townsperson who could be a vendor: human, not a player, not hostile.
+        // A guildmaster stands in the shop with the vendors but sells nothing (ModernUO's
+        // BaseGuildmaster is no active vendor): "vendor buy" next to one gets no answer.
+        private bool IsGuildmaster(Mobile m)
+        {
+            string title = _agent.LabelOf(m) ?? m.Title ?? string.Empty;
+
+            return title.Contains("guildmaster", StringComparison.OrdinalIgnoreCase) || title.Contains("guildmistress", StringComparison.OrdinalIgnoreCase);
+        }
+
         private uint NearestVendor()
         {
             Mobile best = null;
@@ -584,7 +596,7 @@ namespace ClassicUO.Agent
             foreach (Mobile m in _world.Mobiles.Values)
             {
                 if (m == _world.Player || m.IsDead || !m.IsHuman || m.Distance > 12 || AgentController.IsMonsterTarget(m)
-                    || m.NotorietyFlag != NotorietyFlag.Invulnerable)
+                    || m.NotorietyFlag != NotorietyFlag.Invulnerable || IsGuildmaster(m))
                 {
                     continue;
                 }

@@ -44,9 +44,15 @@ namespace ClassicUO
         private bool _suppressedDraw;
         private bool _pluginsInitialized = false;
         private float _displayScale;
+        private bool _hideOnFirstFrame;
+        private uint _updatesCount, _frameTicks, _drawnFrames;
+        private double _rateTime;
 
-        public GameController(IPluginHost pluginHost)
+        public GameController(IPluginHost pluginHost, bool headless = false)
         {
+            Headless = headless;
+            _hideOnFirstFrame = headless;
+
             GraphicManager = new GraphicsDeviceManager(this);
 
             GraphicManager.PreparingDeviceSettings += (sender, e) =>
@@ -69,6 +75,18 @@ namespace ClassicUO
         }
 
         public Scene Scene { get; private set; }
+
+        // Headless (cuo-1k7): the window is hidden and nothing is drawn, while the game loop,
+        // network, world, agent and RPC run as usual. Set at launch (-headless, settings.json
+        // "headless") and switched while running by SetHeadless (the agent's "window" RPC).
+        public bool Headless { get; private set; }
+
+        // Measured over the last second: game loop updates, frames the frame cap let through
+        // (drawn or, headless, skipped) and frames actually drawn.
+        public uint UpdatesPerSecond { get; private set; }
+        public uint FramesPerSecond { get; private set; }
+        public uint DrawsPerSecond { get; private set; }
+
         public AudioManager Audio { get; private set; }
         public UltimaOnline UO { get; } = new UltimaOnline();
         public IPluginHost PluginHost { get; private set; }
@@ -116,7 +134,50 @@ namespace ClassicUO
 
             _displayScale = DpiScale;
 
+            if (Headless)
+            {
+                // FNA shows the window just before its loop starts; the first update hides it
+                // again. Until then it is fully transparent, so nothing flashes on the screen.
+                SDL_SetWindowOpacity(Window.Handle, 0f);
+            }
+
             base.Initialize();
+        }
+
+        // Hide the window and stop drawing (true), or show it and draw again (false).
+        public void SetHeadless(bool headless)
+        {
+            if (headless == Headless)
+            {
+                return;
+            }
+
+            Headless = headless;
+
+            if (headless)
+            {
+                SDL_HideWindow(Window.Handle);
+                MacApp.SetWindowShown(false);
+                Audio?.StopMusic();
+                Audio?.StopSounds();
+            }
+            else
+            {
+                SDL_SetWindowOpacity(Window.Handle, 1f);
+                MacApp.SetWindowShown(true);
+                SDL_ShowWindow(Window.Handle);
+                SDL_RaiseWindow(Window.Handle);
+
+                // Screen positions weren't kept up to date while nothing was drawn.
+                GameScene gs = GetScene<GameScene>();
+
+                if (gs != null)
+                {
+                    gs.UpdateDrawPosition = true;
+                }
+            }
+
+            Log.Trace($"[agent] window {(headless ? "hidden, not drawing" : "shown")}");
         }
 
         protected override void LoadContent()
@@ -393,6 +454,25 @@ namespace ClassicUO
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
             Time.Delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+            if (_hideOnFirstFrame)
+            {
+                _hideOnFirstFrame = false;
+                SDL_HideWindow(Window.Handle);
+                SDL_SetWindowOpacity(Window.Handle, 1f);
+            }
+
+            _updatesCount++;
+            _rateTime += gameTime.ElapsedGameTime.TotalMilliseconds;
+
+            if (_rateTime >= 1000)
+            {
+                UpdatesPerSecond = _updatesCount;
+                FramesPerSecond = _frameTicks;
+                DrawsPerSecond = _drawnFrames;
+                _updatesCount = _frameTicks = _drawnFrames = 0;
+                _rateTime %= 1000;
+            }
+
             Mouse.Update();
 
             var data = NetClient.Socket.CollectAvailableData();
@@ -437,6 +517,14 @@ namespace ClassicUO
             if (_totalElapsed > x)
             {
                 _totalElapsed %= x;
+                _frameTicks++;
+
+                if (Headless)
+                {
+                    // The frame cap still paces the loop; the frame just isn't drawn.
+                    _suppressedDraw = true;
+                    SuppressDraw();
+                }
             }
             else
             {
@@ -488,6 +576,7 @@ namespace ClassicUO
             Profiler.EnterContext(Profiler.ProfilerContext.RENDER_FRAME);
 
             _totalFrames++;
+            _drawnFrames++;
 
             GraphicsDevice.Clear(Color.Black);
 

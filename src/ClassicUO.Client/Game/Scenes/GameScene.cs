@@ -47,7 +47,7 @@ namespace ClassicUO.Game.Scenes
         private uint _time_cleanup = Time.Ticks + 5000;
         private bool _alphaChanged;
         private long _alphaTimer;
-        private bool _forceStopScene;
+        private bool _forceStopScene, _backToLogin;
         private HealthLinesManager _healthLinesManager;
 
         private Point _lastSelectedMultiPositionInHouseCustomization;
@@ -344,6 +344,14 @@ namespace ClassicUO.Game.Scenes
             if (Settings.GlobalSettings.Reconnect)
             {
                 _forceStopScene = true;
+            }
+            else if (Client.Game.Headless || Agent.AgentLogin.UsedThisRun)
+            {
+                // Nobody can click the message box away (headless), or the brain logged this client in
+                // and will again (a fleet's): back to the login screen at once, so status says so and
+                // the agent can log in again (cuo-1k7, cuo-m12).
+                Log.Warn($"[agent] connection lost ({e}), back to the login screen");
+                _backToLogin = true;
             }
             else
             {
@@ -697,6 +705,55 @@ namespace ClassicUO.Game.Scenes
             UpdateDrawPosition = false;
         }
 
+        // Headless (cuo-1k7) nothing builds the draw list, and building it is what loads the
+        // ground around the player (FillGameObjectList above); the pathfinder reads only loaded
+        // chunks, so without this a character in open country stopped at the edge of its chunk.
+        // Keep the chunks within 24 tiles (the view range, about what a window of the usual size
+        // loads, and more than the agent's 16-tile travel legs) loaded from the update path
+        // instead. No further: the pathfinder searches all that is loaded before it gives up on
+        // a creature it can't reach. Chunk.Load reads only map and statics; meshes (GPU) are
+        // still built only when drawing, and Map.ClearUnusedBlocks evicts the rest as usual.
+        private const int HEADLESS_TILE_RANGE = Constants.MAX_VIEW_RANGE;
+        private int _keptX = -1, _keptY = -1, _keptMap = -1;
+        private uint _keepChunksTime;
+
+        private void KeepChunksAroundPlayer()
+        {
+            Map.Map map = _world.Map;
+
+            if (map == null || _world.Player == null)
+            {
+                return;
+            }
+
+            int px = _world.Player.X;
+            int py = _world.Player.Y;
+
+            // Again on entering another tile, and every second (eviction waits 3 s unused).
+            if (px == _keptX && py == _keptY && map.Index == _keptMap && Time.Ticks < _keepChunksTime)
+            {
+                return;
+            }
+
+            _keptX = px;
+            _keptY = py;
+            _keptMap = map.Index;
+            _keepChunksTime = Time.Ticks + 1000;
+
+            int blocksX = Client.Game.UO.FileManager.Maps.MapBlocksSize[map.Index, 0];
+            int blocksY = Client.Game.UO.FileManager.Maps.MapBlocksSize[map.Index, 1];
+            int minX = Math.Max(0, px - HEADLESS_TILE_RANGE) >> 3, maxX = Math.Min(blocksX - 1, (px + HEADLESS_TILE_RANGE) >> 3);
+            int minY = Math.Max(0, py - HEADLESS_TILE_RANGE) >> 3, maxY = Math.Min(blocksY - 1, (py + HEADLESS_TILE_RANGE) >> 3);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    map.GetChunk2(x, y, true);
+                }
+            }
+        }
+
         private void UpdateTextServerEntities<T>(IEnumerable<T> entities, bool force)
             where T : Entity
         {
@@ -738,9 +795,21 @@ namespace ClassicUO.Game.Scenes
                 return;
             }
 
+            if (_backToLogin)
+            {
+                Client.Game.SetScene(new LoginScene(_world));
+
+                return;
+            }
+
             if (!_world.InGame)
             {
                 return;
+            }
+
+            if (Client.Game.Headless)
+            {
+                KeepChunksAroundPlayer();
             }
 
             if (Time.Ticks > _timePing)

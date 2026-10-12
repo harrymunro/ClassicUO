@@ -14,5 +14,6 @@
   "reconnect": false,
   "plugins": [],
   "agent_port": 0,
-  "agent_start_brain": false
+  "agent_start_brain": false,
+  "agent_sight_rule": "runuo"
 }

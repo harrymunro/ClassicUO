@@ -1,0 +1,29 @@
+# A talk test (cuo-x2q.3): does a warning from one NPC change where another goes? Two NPCs start at
+# the West Britain bank. Kessa, cautious, starts out remembering a lich at the Britain graveyard;
+# Bran, bold, wants to fight the undead there and knows nothing of it. Run it with talk and with
+# --no-talk (the control), and compare where Bran goes. From brain/:
+#   uv run uo-brain fleet fleets/britain-talk.toml          and   ... --no-talk
+name = "britain-talk"
+server_port = 2593
+hours = 0.17
+
+[[agent]]
+name = "Kessa"
+account = "talk1"
+password = "talk1"
+port = 5664
+profile = "npc"
+persona = { background = "a scout who has walked every road around Britain", temperament = "cautious and talkative; she warns people about what she has seen", trade = "scouting and the odd hunt", wants = "to keep her friends alive" }
+long_goals = ["save 2000 gold"]
+memories = ["Saw a lich and two bone knights at the Britain Graveyard an hour ago; they killed a warrior there and they are still about."]
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 60 gold 200"]
+
+[[agent]]
+name = "Bran"
+account = "talk2"
+password = "talk2"
+port = 5665
+profile = "npc"
+persona = { background = "a young fighter new to Britain", temperament = "eager and trusting; he listens to people who know the land", trade = "fighting", wants = "to test his blade on the undead at the Britain graveyard" }
+long_goals = ["reach 85 swordsmanship"]
+prep = ["[AgentReset", "[AgentGo 1426 1691", "[AgentKit warrior", "[AgentSupplies bandages 60 gold 200"]

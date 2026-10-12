@@ -29,6 +29,32 @@ from .session import Session, describe, note_threats, routine_totals
 from .world import World
 
 
+def death_advice(world: World, snap: dict[str, Any], advised: dict[str, Any]) -> str:
+    """With the player driving (combat assist) and the character dead: the steps the planner would
+    take, as advice for the panel, once per death and again when it is alive with its corpse to
+    fetch (cuo-4b3). Nothing is done for the player."""
+    if not snap.get("in_game") or snap["agent"].get("mode") == "auto":
+        return ""
+    p = snap["player"]
+    death = p.get("last_death")
+    if not death:
+        return ""
+    key = (death["x"], death["y"], death.get("resurrections"), p["dead"])
+    if advised.get("key") == key:
+        return ""
+    advised["key"] = key
+    if p["dead"]:
+        healers = world.find_place("healer", near=[p["x"], p["y"]], limit=1)
+        if not healers:
+            return "dead: no healer known nearby; look for one or an ankh"
+        h = healers[0]
+        return (f"dead: the nearest healer is {h['name']}, {h.get('distance', '?')} tiles away at {h['x']},{h['y']}; "
+                f"walk up to it and accept. Your corpse is at {death['x']},{death['y']}.")
+    if death.get("ago_s", 1e9) < 20 * 60:
+        return f"alive again: your corpse is at {death['x']},{death['y']}; take your things back before it decays."
+    return ""
+
+
 def wants_planner(snap: dict[str, Any]) -> bool:
     goal = snap["agent"].get("goal") or {}
     return snap["agent"].get("mode") == "auto" and bool(goal.get("text")) and not goal.get("paused")
@@ -38,7 +64,7 @@ class Autopilot:
     def __init__(self, rpc: AgentRpc, judge: Judge, world: World | None, lcfg: loop.LoopConfig,
                  pcfg: policy.PolicyConfig, log_path: Path | None, archetype: str | None = None,
                  planner_model: str | None = None, facts_mode: str = "jev", machine=None,
-                 machines_allowed: bool = True):
+                 machines_allowed: bool = True, escalate: bool = True, memory: bool = True):
         self.rpc = rpc
         calls.sink = lambda rec: rpc.call("ai_call", **rec)  # the client's live view of every model call
         self.judge = judge
@@ -50,6 +76,8 @@ class Autopilot:
         self.facts_mode = facts_mode  # which world facts reach the fights (facts.py)
         self.machine = machine        # machine.Runner: a plan for the fights, from --machine; the planner may replace it
         self.machines_allowed = machines_allowed
+        self.escalate = escalate      # hard moments to the stronger model (planner.py, cuo-d4j)
+        self.memory = memory          # the character's memory and long goals (memory.py, longgoals.py)
         self.log_path = log_path
         self.log_file = log_path.open("a") if log_path else None
         self.planners: dict[str, Planner] = {}  # goal text -> its planner, so a handover keeps history
@@ -78,8 +106,26 @@ class Autopilot:
         if self.log_file and (usage := costs.openrouter_usage()) is not None:
             self.log({"type": "openrouter_key", "t": time.time(), "usage": usage})
 
+    async def keep_long_goals(self, stop: asyncio.Event) -> None:
+        """The panel's view of the character's long goals, and what the player asks there (add,
+        done, drop), every few seconds whether or not the planner is running."""
+        from .longgoals import LongGoals
+        if self.world is None:
+            return
+        goals = LongGoals(self.world)
+        while not stop.is_set():
+            try:
+                snap = await self.rpc.call("snapshot", since=0)
+                if snap.get("in_game"):
+                    goals.character = snap["player"].get("name") or goals.character
+                    await goals.sync(self.rpc, self.log)
+            except Exception:
+                pass
+            await asyncio.sleep(3)
+
     async def run(self, stop: asyncio.Event) -> None:
         self.key_check()
+        keeper = asyncio.create_task(self.keep_long_goals(stop))
         try:
             with costs.ledger.logging_to(self.log if self.log_file else None):
                 while not stop.is_set():
@@ -93,6 +139,7 @@ class Autopilot:
                     else:
                         await self.fight(stop)
         finally:
+            keeper.cancel()
             if self.log_file:
                 self.log({"type": "costs", "t": time.time(), **costs.ledger.summary()})
                 self.key_check()
@@ -103,10 +150,13 @@ class Autopilot:
         inner = asyncio.Event()
 
         noted: dict[str, float] = {}
+        advised: dict[str, Any] = {}
 
         def watch(snap: dict[str, Any]) -> None:
             if self.world is not None:
                 note_threats(self.world, snap, noted)
+                if advice := death_advice(self.world, snap, advised):
+                    asyncio.get_running_loop().create_task(self.rpc.call("note", text=advice))
             if self.recorder is not None:
                 self.recorder.observe(snap)
                 if self.recorder.due():
@@ -140,7 +190,8 @@ class Autopilot:
         planner = self.planners.get(text)
         if planner is None:
             planner = self.planners[text] = Planner(session, text, model=self.planner_model, log=self.log, on_goal=show,
-                                                    machines_allowed=self.machines_allowed)
+                                                    machines_allowed=self.machines_allowed, escalate=self.escalate,
+                                                    memory=None if self.memory else False)
         else:
             planner.session = session
             planner.on_goal = show
@@ -161,8 +212,16 @@ class Autopilot:
             said = time.monotonic()
             while not session.interrupt.is_set():
                 await asyncio.sleep(1)
-                s = await self.rpc.call("snapshot", since=0)
-                if s.get("in_game") and time.monotonic() - said >= 10:
+                try:
+                    s = await self.rpc.call("snapshot", since=0)
+                except Exception:  # noqa: BLE001 - a slow or lost client: look again next second
+                    continue
+                if stop.is_set():
+                    session.interrupt.set()
+                    break
+                if not s.get("in_game"):
+                    continue  # out of game (a lost connection): the planner waits, so does the guard
+                if time.monotonic() - said >= 10:
                     said = time.monotonic()
                     await self.announce(s)
                 g = s["agent"].get("goal") or {}
@@ -176,18 +235,16 @@ class Autopilot:
 
         watcher = asyncio.create_task(guard())
         try:
-            while not session.interrupt.is_set() and not planner.finished:
+            while not session.interrupt.is_set() and not planner.finished and not stop.is_set():
                 s = await self.rpc.call("snapshot", since=0)
-                if s["player"]["dead"]:
-                    planner.finished = "the character died"
-                    break
-                await planner.step()
+                await planner.step()  # dead, it resurrects and goes back for its corpse (cuo-4b3)
         finally:
             watcher.cancel()
             self.machine = planner.machine  # what the planner set carries on into plain fighting too
             for k, v in session.routine.items():
                 self.routine[k] += v
         if planner.finished:
+            await planner.close()
             await self.rpc.call("goal_status", step=f"finished: {planner.finished}", why="")
             await self.rpc.call("goal", pause=True)
             self.log({"type": "session_summary", "t": time.time(), "goal": text, **planner.summary(),

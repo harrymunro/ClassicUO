@@ -22,11 +22,19 @@ namespace ClassicUO.Game.Managers
         public int LoginMusicIndex { get; private set; }
         public int DeathMusicIndex { get; } = 42;
 
+        // No sound or music while the window is hidden (headless): nobody hears it.
+        private bool CanPlay => _canReproduceAudio && !Client.Game.Headless;
+
         public void Initialize()
         {
             try
             {
-                new DynamicSoundEffectInstance(0, AudioChannels.Stereo).Dispose();
+                // A headless client doesn't open the audio device; it opens when a sound
+                // first plays, if the window is shown.
+                if (!Client.Game.Headless)
+                {
+                    new DynamicSoundEffectInstance(0, AudioChannels.Stereo).Dispose();
+                }
             }
             catch (NoAudioHardwareException ex)
             {
@@ -69,7 +77,7 @@ namespace ClassicUO.Game.Managers
         {
             Profile currentProfile = ProfileManager.CurrentProfile;
 
-            if (!_canReproduceAudio || currentProfile == null)
+            if (!CanPlay || currentProfile == null)
             {
                 return;
             }
@@ -112,7 +120,7 @@ namespace ClassicUO.Game.Managers
 
         public void PlaySoundWithDistance(World world, int index, int x, int y)
         {
-            if (!_canReproduceAudio || !world.InGame)
+            if (!CanPlay || !world.InGame)
             {
                 return;
             }
@@ -160,7 +168,7 @@ namespace ClassicUO.Game.Managers
 
         public void PlayMusic(int music, bool iswarmode = false, bool is_login = false)
         {
-            if (!_canReproduceAudio)
+            if (!CanPlay)
             {
                 return;
             }

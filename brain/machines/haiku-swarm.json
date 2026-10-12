@@ -1,0 +1,111 @@
+{
+  "name": "mage vs mixed melee packs",
+  "why": "Keep spells landing on mixed packs of five or six weak to moderate melee monsters: blast them while they bunch up, finish the weakest, and pull back to recover mana and health before a lone mage gets swarmed.",
+  "start": "open",
+  "states": {
+    "open": {
+      "says": "Attack from range with strong single-target spells as the pack comes in. Pick off whatever is closest first. Keep distance from melee creatures when possible.",
+      "allow": [
+        "fight",
+        "seek",
+        "rest"
+      ],
+      "target": "closest_first",
+      "kite": true,
+      "spell": "Energy Bolt",
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more creatures are bunched up close together near the mage.",
+          "requires": [
+            "area spell ready"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "out",
+          "when": "Several creatures are already adjacent and the mage is losing health fast or is low on mana.",
+          "requires": [
+            "health below 50"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "blast": {
+      "says": "Stand and cast area spells at the bunch so every creature in it takes damage from each cast. Do not step back into open ground while they are clustered.",
+      "allow": [
+        "fight",
+        "rest"
+      ],
+      "kite": false,
+      "spell": "Chain Lightning",
+      "transitions": [
+        {
+          "to": "finish",
+          "when": "Only one or two creatures are left close, or most of the bunch is badly hurt.",
+          "unless": "Three or more fairly healthy creatures are still bunched up together.",
+          "at": 0.6
+        },
+        {
+          "to": "out",
+          "when": "Mana is nearly gone or health is sliding while several creatures are still on the mage.",
+          "requires": [
+            "mana below 25"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "finish": {
+      "says": "Finish the creature with the least health left using quick single-target spells. Step away from anything still adjacent when there is room.",
+      "allow": [
+        "fight",
+        "rest",
+        "loot"
+      ],
+      "target": "weakest_first",
+      "kite": true,
+      "spell": "Energy Bolt",
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more creatures are bunched up close together again.",
+          "requires": [
+            "area spell ready"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "out",
+          "when": "Mana is nearly gone and creatures are still fighting.",
+          "requires": [
+            "mana below 15"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "out": {
+      "says": "Get away from the fight: run to open distance, drink a heal potion if health is low, and recover mana. Do not attack unless cornered.",
+      "allow": [
+        "flee",
+        "leave",
+        "rest"
+      ],
+      "max_s": 30.0,
+      "then": "open",
+      "transitions": [
+        {
+          "to": "open",
+          "when": "Mana is back above half and nothing is close.",
+          "requires": [
+            "mana above 50",
+            "none close"
+          ],
+          "at": 0.6
+        }
+      ]
+    }
+  }
+}

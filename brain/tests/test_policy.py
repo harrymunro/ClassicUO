@@ -70,7 +70,30 @@ def test_seek_walks_to_the_creature(snapshot):
     snapshot["agent"]["engaged"] = 0
     dec = policy.decide(sit_of(snapshot), answers("seek", target="t1"), policy.Memory(), CFG)
     assert dec.actions[0] | {"confidence": 0, "reason": ""} == {"verb": "walk_to", "x": 994, "y": 1002, "distance": 1,
-                                                               "confidence": 0, "reason": ""}
+                                                               "target": 0x101, "confidence": 0, "reason": ""}
+
+
+def test_a_creature_no_walk_reaches_is_given_up_for_the_hunt(snapshot):
+    """cuo-20l: a fleet NPC sought a sewer rat under the street for six minutes, every walk "no path".
+    Two walks with no path to it and it is left out, as the client's unreachable ones are (cuo-2ct)."""
+    snapshot["mobiles"] = [snapshot["mobiles"][1]]  # the captain, 6 tiles off
+    snapshot["corpses"] = []
+    snapshot["agent"]["engaged"] = 0
+    mem = policy.Memory()
+    mem.seek_result(0x101, "failed", "no path")
+    assert mem.no_path == set()  # once could be a crowd in the way
+    mem.seek_result(0x101, "done", "")
+    mem.seek_result(0x101, "failed", "no path")
+    assert mem.no_path == set()  # a walk that worked starts the count again
+    mem.seek_result(0x101, "failed", "no path")
+    assert mem.no_path == {0x101}
+    sit = state.build(snapshot, set(), [], no_path=mem.no_path)
+    assert sit.hostiles == []
+    dec = policy.decide(sit, answers("seek", target="t1"), mem, CFG)
+    assert dec.intent == "rest" and dec.actions == []
+    # It comes at the character: fought as anything else is.
+    snapshot["mobiles"][0].update(attacking_me=True, distance=1, dx=-1, dy=0)
+    assert [h.serial for h in state.build(snapshot, set(), [], no_path=mem.no_path).hostiles] == [0x101]
 
 
 def test_seek_goes_only_after_what_jev_would_attack(snapshot):
@@ -591,6 +614,50 @@ def test_leaving_on_a_trip_keeps_to_the_road_unless_they_are_ahead(snapshot):
     assert dec.intent == "leave" and any(a["verb"] == "flee" for a in dec.actions)
 
 
+def test_leaving_by_the_road_lets_the_fight_go_so_the_walk_goes_on(snapshot):
+    """cuo-1ts: on the walk to Cove a warrior engaged a reaper, then left it and an ettin by the road at
+    1.0 for 35 s with nothing sent; travel waits while the agent is engaged, so it stood there and died."""
+    pack_snapshot(snapshot, (47, "a reaper", 1, True, 40), (4, "a gargoyle", 1, True, 100))
+    for m in snapshot["mobiles"]:
+        m["dx"], m["dy"] = -1, 0  # west of the character, with the trip going east
+    snapshot["agent"]["travel"] = {"state": "walking", "x": snapshot["player"]["x"] + 300, "y": snapshot["player"]["y"]}
+    snapshot["agent"]["engaged"] = 0x200
+    mem = policy.Memory()
+    sit = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
+    dec = policy.decide(sit, answers("leave", probs={"leave": 1.0}, leave_now=1.0), mem, CFG, now=10.0)
+    assert dec.intent == "leave" and dec.note.startswith("leave by the road")
+    assert [a["verb"] for a in dec.actions] == ["disengage"]
+    # The next look, still leaving and still engaged (the act may not have landed): let go again.
+    again = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), mem, CFG, now=11.0)
+    assert again.note == "leaving by the road: the trip goes on" and [a["verb"] for a in again.actions] == ["disengage"]
+    # Let go: nothing more to send while the walk goes on.
+    snapshot["agent"]["engaged"] = 0
+    later = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), mem, CFG, now=12.0)
+    assert later.intent == "leave" and later.actions == []
+
+
+def test_on_a_trip_a_creature_that_cannot_move_is_walked_past(snapshot):
+    """cuo-evh: every walk to Cove met a reaper by the road east of Britain, and the defend loop stood
+    fighting it while its health fell, once to 5%. A reaper never moves: walking on leaves it behind."""
+    rooted = {**PACK_BESTIARY, 47: {**PACK_BESTIARY[47], "rooted": True}}
+    pack_snapshot(snapshot, (47, "a reaper", 1, True, 100))
+    snapshot["agent"]["travel"] = {"state": "walking", "x": snapshot["player"]["x"] + 300, "y": snapshot["player"]["y"]}
+    snapshot["agent"]["engaged"] = 0x200  # the client was fighting it already
+    defend = policy.PolicyConfig(defend_only=True)
+    sit = state.build(snapshot, set(), [], bestiary=rooted)
+    assert sit.hostiles[0].info["moves"] == state.ROOTED_WORDS and not sit.hostiles[0].allowed
+    dec = policy.decide(sit, answers("fight"), policy.Memory(), defend)
+    assert dec.intent == "rest" and [a["verb"] for a in dec.actions] == ["disengage"]
+    # Not engaged: nothing to send, the walk goes on.
+    snapshot["agent"]["engaged"] = 0
+    assert policy.decide(state.build(snapshot, set(), [], bestiary=rooted), answers("fight"), policy.Memory(),
+                         defend).actions == []
+    # Off a trip (resting, at the bank) it is fought as anything else on the character is.
+    snapshot["agent"]["travel"] = {}
+    sit = state.build(snapshot, set(), [], bestiary=rooted)
+    assert sit.hostiles[0].allowed and policy.decide(sit, answers("fight"), policy.Memory(), defend).intent == "fight"
+
+
 def test_no_path_away_with_them_still_far_off_keeps_leaving_another_way(snapshot):
     """cuo-y4l: soak run planners-3. Two runs in a row found no path by the graveyard wall while the
     gargoyles were still far off; the cornered rule then held the warrior in the fight for 15 s and it died."""
@@ -636,3 +703,45 @@ def test_losing_fast_to_one_fair_fight_asks_about_leaving_and_flees_sooner(snaps
     assert dec.intent == "flee"
     steady = state.build(snapshot, set(), [], bestiary=PACK_BESTIARY)
     assert policy.decide(steady, answers("fight", danger=0.86), policy.Memory(), CFG).intent == "fight"
+
+
+def test_the_loop_counts_seeks_that_find_no_path(snapshot):
+    """cuo-20l, end to end: the client answers each walk to the sewer rat "no path"; after two the loop
+    has given it up, and the next look offers it no more."""
+    import io
+
+    from uo_brain import loop
+
+    class NoPath:
+        def __init__(self):
+            self.walks = 0
+
+        async def call(self, method, **params):
+            if method == "act" and params.get("verb") == "walk_to":
+                self.walks += 1
+                return {"status": "failed", "detail": "no path"}
+            return {"status": "done"} if method == "act" else {}
+
+    class Seek:
+        name = "fake-jev"
+
+        async def ask(self, state_words, qs):
+            a = Answers(model="fake", input_tokens=100, latency_ms=5.0)
+            for q, spec in qs.items():
+                if spec["type"] == "choice":
+                    opts = list(spec["criteria"])
+                    pick = "seek" if q == "intent" else opts[0]
+                    a.choices[q] = ChoiceResult(pick, {o: float(o == pick) for o in opts}, 0.9)
+                else:
+                    a.nouls[q] = 0.1
+            return a
+
+    snapshot["mobiles"] = [snapshot["mobiles"][1]]
+    snapshot["corpses"] = []
+    snapshot["agent"]["engaged"] = 0
+    rpc, mem = NoPath(), policy.Memory()
+    for _ in range(2):
+        sit = state.build(snapshot, set(), [], no_path=mem.no_path)
+        asyncio.run(loop.decide_once(rpc, Seek(), sit, mem, CFG, loop.RunStats(), io.StringIO()))
+    assert rpc.walks == 2 and mem.no_path == {0x101}
+    assert state.build(snapshot, set(), [], no_path=mem.no_path).hostiles == []

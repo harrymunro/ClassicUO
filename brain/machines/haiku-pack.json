@@ -1,0 +1,81 @@
+{
+  "name": "warrior holds against packs",
+  "why": "Keep the warrior fighting what it can beat one at a time, pull back to heal before health gets low, and get out when a pack of gargoyles or bone knights comes at it together.",
+  "start": "hunt",
+  "states": {
+    "hunt": {
+      "says": "Fight the nearest creature coming at the warrior, one at a time. Do not run toward a second group while one is still on it. Loot corpses when clear.",
+      "allow": [
+        "fight",
+        "loot",
+        "seek",
+        "rest"
+      ],
+      "target": "closest_first",
+      "transitions": [
+        {
+          "to": "pull_back",
+          "when": "Health is falling faster than the bandages can cover, or is already well down.",
+          "requires": [
+            "health below 60"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "leave_area",
+          "when": "The creatures coming at the warrior together are too strong for it, such as two or more gargoyles casting at once or two bone knights.",
+          "requires": [
+            "pack"
+          ],
+          "at": 0.5
+        }
+      ]
+    },
+    "pull_back": {
+      "says": "Step away from the creatures and let the warrior heal: bandage up or drink a heal potion. Fight only what is still on the warrior and do not chase anything.",
+      "allow": [
+        "flee",
+        "rest"
+      ],
+      "loot": "nothing",
+      "max_s": 20.0,
+      "then": "hunt",
+      "transitions": [
+        {
+          "to": "hunt",
+          "when": "Health is back above 75, or nothing is attacking the warrior any more.",
+          "requires": [
+            "health above 75"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "leave_area",
+          "when": "Creatures keep closing in and health is still dropping despite the healing.",
+          "requires": [
+            "health below 35"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "leave_area": {
+      "says": "Leave the area: run away from the creatures until none are in sight. Do not stop to fight or loot on the way.",
+      "allow": [
+        "leave",
+        "rest"
+      ],
+      "loot": "nothing",
+      "transitions": [
+        {
+          "to": "hunt",
+          "when": "Nothing hostile is coming at the warrior any more.",
+          "requires": [
+            "none close"
+          ],
+          "at": 0.6
+        }
+      ]
+    }
+  }
+}

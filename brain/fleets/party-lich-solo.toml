@@ -1,0 +1,59 @@
+# The lich scene from the update video (cuo-vpb), for party play (cuo-4ar): five classes staged just
+# south of the Britain graveyard, a lich with two bone knights and four skeletons waiting 30 tiles north
+# (the first member's prep clears the last run's spawns; the last member's spawns the wave, once all are in:
+# spawned at the start, a run's leader was killed during the others' logins, its agent still off). Each plans alone, as in the video's takes 1 and 2: the comparison for party-lich.toml.
+# Measure a run with: uv run python scripts/party_scene.py logs/fleet/RUN
+# The graveyard's own spawns are cleared for the run (the leader's prep: [AgentDisrupt despawn, 36 tiles round
+# its centre for 15 minutes), so what is fought is the wave: on 2026-10-10, after an evening without hunts, the
+# graveyard had filled with wraiths, spectres and zombies, and a party that walked in met them and the wave at
+# once and was wiped in two and a half minutes whatever it did. Runs before that date had whatever stood there.
+name = "party-lich-solo"
+server_port = 2593
+hours = 0.15
+headless = true
+talk = false
+
+[[agent]]
+name = "Roland"
+account = "life1"
+password = "life1"
+port = 5661
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentDisrupt restore quiet", "[AgentReset", "[AgentGo 1392 1528", "[AgentDisrupt despawn 1384 1492 36 15 quiet", "[AgentKit warrior", "[AgentSupplies bandages 150"]
+
+[[agent]]
+name = "Isolde"
+account = "life2"
+password = "life2"
+port = 5662
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentReset", "[AgentGo 1394 1528", "[AgentKit mage", "[AgentSupplies bandages 40 gold 200"]
+
+[[agent]]
+name = "Wystan"
+account = "life3"
+password = "life3"
+port = 5663
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentReset", "[AgentGo 1390 1528", "[AgentKit archer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Thea"
+account = "talk1"
+password = "talk1"
+port = 5664
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentReset", "[AgentGo 1392 1530", "[AgentKit tamer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Corwin"
+account = "talk2"
+password = "talk2"
+port = 5665
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentReset", "[AgentGo 1394 1530", "[AgentKit bard", "[AgentSupplies bandages 100", "[AgentDisrupt strong 1380 1500 Lich 1 quiet", "[AgentDisrupt strong 1378 1502 BoneKnight 2 quiet", "[AgentDisrupt strong 1382 1502 Skeleton 4 quiet"]

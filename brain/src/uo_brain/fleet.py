@@ -17,8 +17,25 @@ goal in words:
     profile = "default"
     goal = "Hunt the undead at the Britain graveyard ..."
     prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+    headless = true                 # its client without a window (cuo-1k7); `headless` at the top sets the default
 
-`uo-brain fleet FILE` starts a client for each agent that hasn't one running (from bin/osx-arm64),
+An agent's `env` table goes into its brain's environment (`env = { UO_BRAIN_ASK_EVERY_TICK = "1" }`
+puts one agent on the fight loop as it was before cuo-df8, to compare the two in one fleet).
+
+A party (cuo-4ar) plays on one plan: with `party = true` and `leader = "NAME"` at the top, the leader's
+planner chooses the goals and the others follow them (party.py): they travel, hunt and rest with the
+leader, fight beside it, and buy their own supplies when it calls a restock. Only the leader needs a
+goal. Each run is its own party, so a run never follows an earlier one's goals.
+
+An NPC can instead have a life of its own (cuo-x2q.1): a persona, put in its planner's system
+prompt, and its own long goals, kept with its memories (longgoals.py) and added at the start if
+it doesn't have them yet. With no `goal`, it chooses its own days from them.
+
+    persona = { background = "...", temperament = "...", trade = "...", wants = "..." }
+    long_goals = ["save 5000 gold for a smithy", "reach 90 swordsmanship"]
+
+`uo-brain fleet FILE` starts a client for each agent that hasn't one running (from bin/osx-arm64,
+headless where the file says so; client.py),
 logs it in, runs its prep commands, then runs `uo-brain session` for it as its own process, so
 each brain has its own ledger: one character's AI costs. While they play it samples the CPU and
 memory of every client, brain and the server. At the end, and with `uo-brain fleet-report DIR`, it
@@ -37,12 +54,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import costs, logs, soak
-from .rpc import AgentRpc
+from . import client, costs, logs, rules, soak
+from .rpc import AgentRpc, RpcError
 
-BRAIN_DIR = Path(__file__).resolve().parents[2]
-CLIENT_DIR = BRAIN_DIR.parent / "bin" / "osx-arm64"
-WARRIOR = {"str": 50, "dex": 30, "int": 10, "skills": {"Swordsmanship": 30, "Tactics": 30, "Healing": 30, "Anatomy": 30}}
+BRAIN_DIR = client.BRAIN_DIR
 
 
 @dataclass
@@ -54,6 +69,13 @@ class Agent:
     goal: str
     profile: str = "default"
     prep: list[str] = field(default_factory=list)
+    persona: dict[str, str] = field(default_factory=dict)
+    long_goals: list[str] = field(default_factory=list)
+    memories: list[str] = field(default_factory=list)   # seeded as events at the start (a test's setup)
+    talk: bool = True                                    # hears and answers the others (with a persona)
+    headless: bool = False  # its client hides its window and draws nothing (client.py)
+    env: dict[str, str] = field(default_factory=dict)  # for its brain, e.g. UO_BRAIN_ASK_EVERY_TICK = "1"
+    travel: str = ""        # walk or run: the pace of its trips, over the fleet's (cuo-der)
 
 
 @dataclass
@@ -63,37 +85,88 @@ class Fleet:
     hours: float = 0.5
     server_port: int = 2593
     host: str = "127.0.0.1"
+    party: bool = False  # one plan for all, the leader's (cuo-4ar)
+    leader: str = ""
+    callouts: bool = True  # a party's members call out in fights (cuo-cod.2)
+    help: bool = True      # ...and heal, bandage and take creatures off each other (cuo-4ti)
+    small_talk: bool = True  # characters who talk also chat when they have time (cuo-cod.6)
+    pace: bool = True        # ...and answer at a human pace, one speaker at a time (cuo-cod.9)
+    roleplay: bool = False   # a party's members emote and gesture in character (cuo-cod.8)
+    memory: bool = True      # false: every brain runs without its character's memory, so repeat runs are independent
+    plan: str = "leader"     # a party's one plan: the leader's (cuo-4ar), or agreed in a huddle, a planner each (cuo-bih)
+    walk: bool = False       # a party walks its trips together and runs only in danger (cuo-cod.7)
+    party_id: str = ""       # this run's party in the store (set when the run starts)
+    use: list[str] = field(default_factory=list)  # KIND=MODEL for every brain, over its profile (session --use)
+    travel: str = ""         # walk or run: every trip's pace; "" leaves it to each client's agent_travel_pace (cuo-der)
+    rules: str = ""          # the set of rules of play under these settings (brain/rules/, cuo-der)
 
 
-def load(path: Path) -> Fleet:
+def parse_setting(spec: str) -> tuple[str, Any]:
+    """KEY=VALUE from the command line, the value read as TOML would (true, 0.5, "words")."""
+    key, sep, value = spec.partition("=")
+    if not sep or not key.strip():
+        raise ValueError(f"--set wants KEY=VALUE, not {spec!r}")
+    try:
+        return key.strip(), tomllib.loads(f"v = {value.strip()}")["v"]
+    except tomllib.TOMLDecodeError:
+        return key.strip(), value.strip()
+
+
+def load(path: Path, settings: list[str] | None = None) -> Fleet:
     data = tomllib.loads(Path(path).read_text())
-    agents = [Agent(str(a["name"]), str(a["account"]), str(a["password"]), int(a["port"]), str(a["goal"]),
-                    str(a.get("profile", "default")), [str(c) for c in a.get("prep") or []])
+    for spec in settings or []:  # this run's overrides of the file's top-level settings
+        key, value = parse_setting(spec)
+        data[key] = value
+    if data.get("rules"):
+        # A set of rules under the file's own settings: one the file (or --set) gives wins (cuo-der).
+        data = {**rules.load(str(data["rules"])), **data}
+    travel = str(data.get("travel") or "")
+    for where, pace in [("travel", travel)] + [(f"{a.get('name')}'s travel", str(a.get("travel") or ""))
+                                               for a in data.get("agent") or []]:
+        if pace not in ("", "walk", "run"):
+            raise ValueError(f"{path}: {where} should be walk or run, not {pace!r}")
+    headless = bool(data.get("headless", False))
+    agents = [Agent(str(a["name"]), str(a["account"]), str(a["password"]), int(a["port"]), str(a.get("goal") or ""),
+                    str(a.get("profile", "default")), [str(c) for c in a.get("prep") or []],
+                    {str(k): str(v) for k, v in (a.get("persona") or {}).items()},
+                    [str(g) for g in a.get("long_goals") or []], [str(m) for m in a.get("memories") or []],
+                    bool(a.get("talk", data.get("talk", True))), bool(a.get("headless", headless)),
+                    {str(k): str(v) for k, v in (a.get("env") or {}).items()}, str(a.get("travel") or ""))
               for a in data.get("agent") or []]
+    party = bool(data.get("party", False))
+    leader = str(data.get("leader") or (agents[0].name if party and agents else ""))
+    if party and leader not in {a.name for a in agents}:
+        raise ValueError(f"{path}: the party's leader {leader!r} isn't one of its agents")
+    plan = str(data.get("plan", "leader"))
+    if plan not in ("leader", "huddle"):
+        raise ValueError(f"{path}: plan should be leader or huddle, not {plan!r}")
+    if party and plan == "huddle":
+        # A planner each: one who has no goal of its own is given the party's (the leader's).
+        shared = next((a.goal for a in agents if a.name == leader), "")
+        for a in agents:
+            a.goal = a.goal or shared
+    for a in agents:
+        if not a.goal and not a.long_goals and not (party and a.name != leader):
+            raise ValueError(f"{path}: {a.name} needs a goal or long_goals")
     if not agents:
         raise ValueError(f"{path}: no [[agent]] entries")
     if len({a.port for a in agents}) != len(agents) or len({a.account for a in agents}) != len(agents):
         raise ValueError(f"{path}: each agent needs its own port and account")
     return Fleet(str(data.get("name") or Path(path).stem), agents, float(data.get("hours", 0.5)),
-                 int(data.get("server_port", 2593)), str(data.get("host", "127.0.0.1")))
+                 int(data.get("server_port", 2593)), str(data.get("host", "127.0.0.1")), party, leader,
+                 callouts=bool(data.get("callouts", True)), help=bool(data.get("help", True)),
+                 small_talk=bool(data.get("small_talk", True)), pace=bool(data.get("pace", True)),
+                 roleplay=bool(data.get("roleplay", False)), walk=bool(data.get("walk", False)),
+                 memory=bool(data.get("memory", True)), plan=plan,
+                 use=[str(u) for u in ([data["use"]] if isinstance(data.get("use"), str) else data.get("use") or [])],
+                 travel=travel, rules=str(data.get("rules") or ""))
 
 
 # ---------------------------------------------------------------- running it
 
-def port_open(port: int) -> bool:
-    import socket
-    with socket.socket() as s:
-        s.settimeout(0.5)
-        return s.connect_ex(("127.0.0.1", port)) == 0
-
-
 def start_client(agent: Agent, out_dir: Path) -> subprocess.Popen | None:
-    """A client for the agent, unless one already listens on its port."""
-    if port_open(agent.port):
-        return None
-    log = (out_dir / f"{agent.name}.client.log").open("w")
-    return subprocess.Popen(["./cuo", "-agent_port", str(agent.port)], cwd=CLIENT_DIR, stdout=log,
-                            stderr=subprocess.STDOUT)
+    """A client for the agent (headless if it says so), unless one already listens on its port."""
+    return client.start(agent.port, out_dir / f"{agent.name}.client.log", headless=agent.headless)
 
 
 async def log_in(fleet: Fleet, agent: Agent) -> str:
@@ -101,36 +174,125 @@ async def log_in(fleet: Fleet, agent: Agent) -> str:
     rpc = AgentRpc(port=agent.port)
     await rpc.connect(attempts=90)
     try:
-        st = await rpc.call("status")
-        if not st.get("in_game"):
-            await rpc.call("login", account=agent.account, password=agent.password, host=fleet.host,
-                           port=fleet.server_port, character=agent.name, create={"name": agent.name, **WARRIOR})
-            for _ in range(90):
-                await asyncio.sleep(1)
-                st = await rpc.call("status")
-                if st.get("in_game") or st.get("login_error"):
-                    break
-        if not st.get("in_game"):
-            return f"not in game: {st.get('login_error') or st}"
+        result = await client.log_in(rpc, agent.account, agent.password, agent.name, fleet.host, fleet.server_port,
+                                     create=client.warrior(agent.name))
+        if not result.startswith("in game"):
+            # Once more: a login can stick between the login server and the game server (the server
+            # "force disconnecting stuck socket", 2026-10-10), and a party then ran without its fifth member,
+            # whose prep spawns what the others were to fight.
+            again = await client.log_in(rpc, agent.account, agent.password, agent.name, fleet.host, fleet.server_port,
+                                        create=client.warrior(agent.name))
+            if not again.startswith("in game"):
+                return f"{result} (and at a second try: {again[:120]})"
+            result = f"{again} (at the second try)"
+        if agent.headless:
+            # A client that was already running (not started here) goes headless too.
+            await rpc.call("window", visible=False)
         await rpc.call("mode", mode="off")
         await rpc.call("goal", clear=True)
         for cmd in agent.prep:
             await rpc.call("act", verb="say", text=cmd, source="manual")
             await asyncio.sleep(1.5)
-        return f"in game as {st.get('player')}"
+        return result
     finally:
         await rpc.close()
 
 
+LOGGING_IN = ("connecting", "server_selected", "entering", "creating")
+
+
+async def relog(fleet: Fleet, agent: Agent) -> str:
+    """A client that lost its connection (back at the login screen, cuo-m12) logged in again and put
+    back in auto mode for its session; "" when it is in game, or busy logging in, or unreachable."""
+    rpc = AgentRpc(port=agent.port)
+    try:
+        await rpc.connect(attempts=2)
+    except OSError:
+        return ""
+    try:
+        st = await rpc.call("status")
+        # Back at the login screen with no login of the brain's under way (the last one's state stays
+        # "in_game" after a lost connection).
+        if st.get("in_game") or st.get("scene") != "login" or st.get("login_state") in LOGGING_IN:
+            return ""
+        result = await client.log_in(rpc, agent.account, agent.password, agent.name, fleet.host, fleet.server_port)
+        if result.startswith("in game"):
+            await rpc.call("mode", mode="auto")
+        return result
+    except Exception as e:  # noqa: BLE001 - try again at the next look
+        return f"error: {type(e).__name__}: {e}"[:200]
+    finally:
+        await rpc.close()
+
+
+def seed_long_goals(agent: Agent, shard: str = "local", root: Path | None = None) -> list[int]:
+    """The agent's long goals from the fleet file, added to its store unless it has them already."""
+    from .longgoals import LongGoals
+    from .world import World
+    if not agent.long_goals:
+        return []
+    with World.open(shard, root) as w:
+        goals = LongGoals(w, agent.name)
+        have = {g["text"].lower() for g in goals.list(status=None)}  # done or dropped ones stay so
+        return [goals.add(t, source="fleet") for t in agent.long_goals if t.lower() not in have]
+
+
+def seed_memories(agent: Agent, shard: str = "local", root: Path | None = None) -> int:
+    """A test's setup: memories the agent should start with (an hour old, importance 4), added once."""
+    from . import memory as memories
+    from .world import World
+    if not agent.memories:
+        return 0
+    with World.open(shard, root) as w:
+        mem = memories.Memory(w, agent.name)
+        have = {m["text"] for m in mem.list(limit=200)}
+        new = [t for t in agent.memories if t not in have]
+        for t in new:
+            mem.add(t, kind="event", source="player", importance=4, at=time.time() - 3600)
+        return len(new)
+
+
 def start_brain(fleet: Fleet, agent: Agent, out_dir: Path) -> subprocess.Popen:
+    seed_long_goals(agent)
+    seed_memories(agent)
+    # --fresh: a fleet run doesn't pick up an earlier run's planner state, so repeats are independent.
     cmd = [sys.executable, "-m", "uo_brain.cli", "--port", str(agent.port), "session", agent.goal,
-           "--hours", str(fleet.hours), "--profile", agent.profile, "--log", str(out_dir / f"{agent.name}.jsonl")]
+           "--hours", str(fleet.hours), "--profile", agent.profile, "--log", str(out_dir / f"{agent.name}.jsonl"),
+           "--fresh"]
+    for spec in fleet.use:
+        cmd += ["--use", spec]
+    if pace := agent.travel or fleet.travel:
+        cmd += ["--travel", pace]
+    if not fleet.memory:
+        # A measurement's repeat runs: a leader that remembers the last run's deaths goes elsewhere in the next.
+        cmd += ["--no-memory"]
+    if fleet.party:
+        # One party a run: its id is the fleet's name and the run's folder.
+        cmd += ["--party", fleet.party_id or f"{fleet.name}-{out_dir.name}", "--party-members", ",".join(a.name for a in fleet.agents),
+                "--leader", fleet.leader]
+        cmd += [] if fleet.callouts else ["--no-callouts"]
+        cmd += [] if fleet.help else ["--no-party-help"]
+        cmd += ["--roleplay"] if fleet.roleplay else []
+        cmd += ["--party-walk"] if fleet.walk else []
+        cmd += ["--party-plan", "huddle"] if fleet.plan == "huddle" else []
+    if agent.persona:
+        persona = out_dir / f"{agent.name}.persona.json"
+        persona.write_text(json.dumps({"name": agent.name, **agent.persona}, indent=2))
+        cmd += ["--persona", str(persona)]
+    # NPCs with lives of their own hear the fleet's other characters, and only them (cuo-x2q.2); a party
+    # hears itself, persona or not (cuo-cod.1). `talk = false` in the file: nobody hears anybody.
+    if agent.talk and (agent.persona or fleet.party) and (others := [a.name for a in fleet.agents if a.name != agent.name]):
+        cmd += ["--hear", ",".join(others)]
+        cmd += [] if fleet.small_talk else ["--no-small-talk"]
+        cmd += [] if fleet.pace else ["--no-pace"]
     return subprocess.Popen(cmd, cwd=BRAIN_DIR, stdout=(out_dir / f"{agent.name}.out").open("w"),
-                            stderr=subprocess.STDOUT)
+                            stderr=subprocess.STDOUT, env={**os.environ, **agent.env} if agent.env else None)
 
 
 def sample(pids: dict[str, int]) -> dict[str, dict[str, float]]:
-    """CPU (percent of one core) and memory (MB) of each named process, from ps."""
+    """CPU (percent of one core) and memory (MB) of each named process, from ps, and its physical
+    footprint (MB) where macOS's footprint tool gives it: what Activity Monitor calls memory,
+    which counts the GPU memory a client's textures take and ps's resident size leaves out."""
     alive = {k: v for k, v in pids.items() if v}
     if not alive:
         return {}
@@ -141,7 +303,38 @@ def sample(pids: dict[str, int]) -> dict[str, dict[str, float]]:
         parts = line.split()
         if len(parts) == 3:
             by_pid[int(parts[0])] = {"cpu": float(parts[1]), "mb": round(int(parts[2]) / 1024, 1)}
+    for pid, mb in footprints(list(by_pid)).items():
+        by_pid[pid]["footprint_mb"] = mb
     return {k: by_pid[p] for k, p in alive.items() if p in by_pid}
+
+
+def footprints(pids: list[int]) -> dict[int, float]:
+    """Physical footprint (MB) of each process, from `footprint` (macOS); {} where it isn't there."""
+    import re
+    try:
+        out = subprocess.run(["footprint", "--noCategories", "-f", "bytes", *map(str, pids)],
+                             capture_output=True, text=True, timeout=20).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return {}
+    return {int(m[1]): round(int(m[2]) / 2**20, 1) for m in re.finditer(r"\[(\d+)\]: .*?Footprint: (\d+) B", out)}
+
+
+async def loop_rates(agents: list[Agent]) -> dict[str, dict[str, Any]]:
+    """Each client's game loop over the last second (updates, frames drawn) and whether it is
+    headless: a hidden client that macOS slowed down (App Nap) would show it here."""
+    rates: dict[str, dict[str, Any]] = {}
+    for a in agents:
+        rpc = AgentRpc(port=a.port)
+        try:
+            await rpc.connect(attempts=1)
+            st = await rpc.call("status", timeout=3)
+            rates[f"{a.name}/client"] = {"ups": st.get("updates_per_s"), "draws": st.get("draws_per_s"),
+                                         "headless": st.get("headless")}
+        except (OSError, asyncio.TimeoutError, RuntimeError, RpcError):
+            pass  # a client that doesn't answer has no rate this time
+        finally:
+            await rpc.close()
+    return rates
 
 
 def pid_listening(port: int) -> int:
@@ -152,6 +345,10 @@ def pid_listening(port: int) -> int:
 
 async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
+    # One party a run. A second run into a folder used before (`--out`) is another party: with the first one's id
+    # its followers would carry out that run's last goal at once (a "finish" ends all of them).
+    again = (out_dir / "fleet.jsonl").exists() and (out_dir / "fleet.jsonl").stat().st_size > 0
+    fleet.party_id = f"{fleet.name}-{out_dir.name}" + (f"-{int(time.time())}" if again else "")
     events = (out_dir / "fleet.jsonl").open("a")
 
     def note(rec: dict[str, Any]) -> None:
@@ -159,27 +356,84 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
         events.flush()
 
     note({"type": "fleet", "name": fleet.name, "hours": fleet.hours,
-          "agents": [{"name": a.name, "port": a.port, "profile": a.profile, "goal": a.goal} for a in fleet.agents]})
+          **({"party": True, "party_id": fleet.party_id, "leader": fleet.leader, "callouts": fleet.callouts, "help": fleet.help,
+              "roleplay": fleet.roleplay, "walk": fleet.walk, "small_talk": fleet.small_talk, "pace": fleet.pace,
+              "travel": fleet.travel, "rules": fleet.rules}
+             if fleet.party else {}), **({} if fleet.memory else {"memory": False}),
+          **({"plan": fleet.plan} if fleet.plan != "leader" else {}), **({"use": fleet.use} if fleet.use else {}),
+          "agents": [{"name": a.name, "port": a.port, "profile": a.profile, "goal": a.goal, "headless": a.headless,
+                      **({"env": a.env} if a.env else {})}
+                     for a in fleet.agents]})
     clients = {a.name: start_client(a, out_dir) for a in fleet.agents}
-    for a in fleet.agents:
-        note({"type": "login", "agent": a.name, "result": await log_in(fleet, a)})
-    brains = {a.name: start_brain(fleet, a, out_dir) for a in fleet.agents}
-    pids = {"server": pid_listening(fleet.server_port)}
-    for a in fleet.agents:
-        client = clients[a.name]
-        pids[f"{a.name}/client"] = client.pid if client else pid_listening(a.port)
-        pids[f"{a.name}/brain"] = brains[a.name].pid
-    while any(b.poll() is None for b in brains.values()):
-        await asyncio.sleep(every_s)
-        note({"type": "load", "processes": sample(pids)})
-    for c in clients.values():
-        if c is not None:
-            c.terminate()
-    events.close()
+    try:
+        brains: dict[str, subprocess.Popen] = {}
+        for a in fleet.agents:
+            try:
+                result = await log_in(fleet, a)
+            except (OSError, RpcError, RuntimeError) as e:
+                # A client that didn't answer in time (a TimeoutError, whose text is empty) ended a whole fleet
+                # with the message "fleet: " and nothing else; that agent sits the run out and the others play.
+                result = f"not in game: {type(e).__name__}: {e}".rstrip(": ")
+            note({"type": "login", "agent": a.name, "result": result})
+            if fleet.party:
+                # A party's brains start one by one, each as soon as its character is in and prepared: it fights
+                # back from then on, and its leader's planner waits for the others (planner.wait_for_party).
+                # Started together after the last login, a leader stood with its agent off for half a minute
+                # while a stray bone knight killed it and the archer beside it.
+                brains[a.name] = start_brain(fleet, a, out_dir)
+        for a in fleet.agents:
+            if a.name not in brains:
+                brains[a.name] = start_brain(fleet, a, out_dir)
+        pids = {"server": pid_listening(fleet.server_port)}
+        for a in fleet.agents:
+            proc = clients[a.name]
+            pids[f"{a.name}/client"] = proc.pid if proc else pid_listening(a.port)
+            pids[f"{a.name}/brain"] = brains[a.name].pid
+        while any(b.poll() is None for b in brains.values()):
+            await asyncio.sleep(every_s)
+            note({"type": "load", "processes": sample(pids), "loops": await loop_rates(fleet.agents)})
+            for a in fleet.agents:
+                if brains[a.name].poll() is None and (result := await relog(fleet, a)):
+                    note({"type": "relogin", "agent": a.name, "result": result})
+    finally:
+        # Whatever ended the run, the clients it started go with it: left running, three of them held their
+        # ports and the next run waited on them for good.
+        for c in clients.values():
+            if c is not None:
+                c.terminate()
+        events.close()
     return report(out_dir)
 
 
 # ---------------------------------------------------------------- the report
+
+def talk_report(session: list[dict[str, Any]], others: list[str]) -> dict[str, Any]:
+    """An NPC's talk (talk.py, cuo-x2q.2/.3): lines heard and said, what talk cost, and the goals that
+    followed from a conversation: chosen within 10 minutes of talk, naming the other character in its
+    reason, or going to the place a conversation was about."""
+    talk = [x for x in session if x.get("type") == "talk"]
+    said = [x for x in talk if x.get("said")]
+    heard = [x for x in talk if x.get("heard")]
+    if not talk:
+        return {}
+    cost = sum(x.get("cost") or 0 for x in session if x.get("type") == "ai_cost" and x.get("kind") in ("chat", "talk"))
+    places = {str(x.get("about") or "").lower() for x in said if x.get("about")}
+    changed = []
+    for g in (x for x in session if x.get("type") == "goal"):
+        if not any(0 <= g["t"] - h["t"] <= 600 for h in heard + said):
+            continue
+        args = g.get("args") or {}
+        why = str(args.get("why", "")).lower()
+        target = str(args.get("area") or args.get("place") or "").lower()
+        # The other character named in the reason, or a goal going to (or kept from) the place a talk was about.
+        if any(n.lower() in why for n in others) or (target and target in places):
+            changed.append({"t": g["t"], "tool": g.get("tool"), "why": str(args.get("why", ""))[:200]})
+    minutes = max((session[-1]["t"] - session[0]["t"]) / 60, 1e-9) if session else 1e-9
+    return {"lines_said": len(said), "lines_heard": len(heard), "lines_per_hour": round(len(said) * 60 / minutes, 1),
+            "talk_cost_usd": round(cost, 5), "talk_cost_per_hour_usd": round(cost * 60 / minutes, 4),
+            "talk_gave": [x.get("gives") for x in said if x.get("gives") not in (None, "none")],
+            "goals_after_talk": changed}
+
 
 def report(out_dir: Path) -> dict[str, Any]:
     """What each character did and cost, and the fleet together: cost an hour, per character and per
@@ -205,13 +459,27 @@ def report(out_dir: Path) -> dict[str, Any]:
                              "kills": r.get("kills"), "deaths": r.get("deaths"), "gold_banked": r.get("gold_banked"),
                              "finished": summary.get("finished"), "cost_usd": r.get("cost_usd"),
                              "cost_per_hour_usd": r.get("cost_per_hour_usd"), "judge_errors": errors,
-                             "models": sorted((r.get("costs") or {}).get("by_model", {}))}
+                             "fight_decisions": r.get("fight_decisions"),
+                             "fight_decisions_per_hour": r.get("fight_decisions_per_hour"),
+                             "fight_decisions_not_asked": r.get("fight_decisions_not_asked"),
+                             "models": sorted((r.get("costs") or {}).get("by_model", {})),
+                             **talk_report(session, [x["name"] for x in head["agents"] if x["name"] != a["name"]])}
     loads = [x["processes"] for x in records if x["type"] == "load"]
     load: dict[str, dict[str, float]] = {}
     for name in sorted({k for s in loads for k in s}):
         cpu = [s[name]["cpu"] for s in loads if name in s]
         mb = [s[name]["mb"] for s in loads if name in s]
         load[name] = {"cpu_avg": round(sum(cpu) / len(cpu), 1), "cpu_max": max(cpu), "mb_max": max(mb)}
+        if fp := [s[name]["footprint_mb"] for s in loads if "footprint_mb" in s.get(name, {})]:
+            load[name]["footprint_mb_max"] = max(fp)
+    for a in head["agents"]:
+        if a.get("headless") and f"{a['name']}/client" in load:
+            load[f"{a['name']}/client"]["headless"] = True
+    loops = [x.get("loops") or {} for x in records if x["type"] == "load"]
+    for name in load:
+        ups = [s[name]["ups"] for s in loops if name in s and s[name].get("ups") is not None]
+        if ups:
+            load[name]["ups_avg"], load[name]["ups_min"] = round(sum(ups) / len(ups)), min(ups)
     ts = [x["t"] for x in all_costs]
     hours = max((max(ts) - min(ts)) / 3600, 1e-9) if ts else None
     together = costs.from_records(all_costs, hours=hours) if all_costs else None
@@ -233,23 +501,46 @@ def markdown(r: dict[str, Any]) -> str:
              f"${t['cost_usd']:.4f} together (${t['cost_per_hour_usd'] or 0:.3f}/h"
              + (f", ${t['cost_per_kill_usd']:.4f} a kill" if t.get("cost_per_kill_usd") else "")
              + f"), {t['judge_errors']} judge errors.", "",
-             "| agent | profile | minutes | kills | deaths | gold banked | $/h | models |", "|---|---|---|---|---|---|---|---|"]
+             "| agent | profile | minutes | kills | deaths | gold banked | fight decisions/h | $/h | models |",
+             "|---|---|---|---|---|---|---|---|---|"]
     for name, a in r["agents"].items():
         if "error" in a:
-            lines.append(f"| {name} | {a.get('profile') or ''} | | | | | | did not play: {a['error'][:80]} |")
+            lines.append(f"| {name} | {a.get('profile') or ''} | | | | | | | did not play: {a['error'][:80]} |")
             continue
         lines.append(f"| {name} | {a['profile']} | {a['minutes']} | {a['kills']} | {a['deaths']} | {a['gold_banked']} | "
+                     f"{a.get('fight_decisions_per_hour') or ''} | "
                      f"{(a['cost_per_hour_usd'] or {}).get('total', 0):.3f} | {', '.join(a['models'])} |")
+    talkers = {n: a for n, a in r["agents"].items() if a.get("lines_said") is not None}
+    if talkers:
+        lines += ["", "| agent | lines said | heard | lines an hour | talk $/h | it gave | goals after talk |",
+                  "|---|---|---|---|---|---|---|"]
+        for n, a in talkers.items():
+            lines.append(f"| {n} | {a['lines_said']} | {a['lines_heard']} | {a['lines_per_hour']} | "
+                         f"{a['talk_cost_per_hour_usd']:.4f} | {', '.join(a['talk_gave']) or 'nothing'} | "
+                         f"{len(a['goals_after_talk'])} |")
+        for n, a in talkers.items():
+            for g in a["goals_after_talk"]:
+                lines.append(f"- {n}, {g['tool']}: {g['why']}")
     if r["load"]:
-        lines += ["", "| process | CPU avg % | CPU max % | memory max MB |", "|---|---|---|---|"]
-        lines += [f"| {k} | {v['cpu_avg']} | {v['cpu_max']} | {v['mb_max']} |" for k, v in r["load"].items()]
+        lines += ["", "| process | CPU avg % | CPU max % | resident max MB | footprint max MB | client updates/s avg (min) |",
+                  "|---|---|---|---|---|---|"]
+        lines += [f"| {k}{' (headless)' if v.get('headless') else ''} | {v['cpu_avg']} | {v['cpu_max']} | {v['mb_max']} | "
+                  f"{v.get('footprint_mb_max', '')} | " + (f"{v['ups_avg']} ({v['ups_min']})" if "ups_avg" in v else "") + " |"
+                  for k, v in r["load"].items()]
     return "\n".join(lines)
 
 
-def main_run(path: Path, out: Path | None, hours: float | None) -> dict[str, Any]:
-    fleet = load(path)
+def main_run(path: Path, out: Path | None, hours: float | None, talk: bool = True,
+             windowed: bool = False, settings: list[str] | None = None) -> dict[str, Any]:
+    fleet = load(path, settings)
     if hours:
         fleet.hours = hours
-    out = out or BRAIN_DIR / "logs" / "fleet" / f"{time.strftime('%Y%m%d-%H%M%S')}-{fleet.name}"
+    if windowed:  # to film a run (tools/video/film.py): a headless client has no window
+        for a in fleet.agents:
+            a.headless = False
+    if not talk:  # the control for a talk test: same characters, nobody hears anybody
+        for a in fleet.agents:
+            a.talk = False
+    out = out or BRAIN_DIR / "logs" / "fleet" / f"{time.strftime('%Y%m%d-%H%M%S')}-{fleet.name}{'' if talk else '-quiet'}"
     os.environ.setdefault("PYTHONUNBUFFERED", "1")
     return asyncio.run(run(fleet, out))

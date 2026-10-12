@@ -15,19 +15,20 @@ import asyncio
 import json
 import math
 import random
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from . import calls, loop, policy
+from . import calls, loop, policy, state
 from .facts import FactPicker
 from .judge import Judge
 from .logs import session_name
 from .routine import HuntWatch, RoutineConfig
 from .rpc import AgentRpc
-from .world import World, name_score, tiles, tokens
+from .world import World, name_score, near_xy, tiles, tokens
 
 # A vendor place's kind -> words its title carries in game ("Lucy the healer").
 VENDOR_TITLES: dict[str, tuple[str, ...]] = {
@@ -45,6 +46,7 @@ VENDOR_TITLES: dict[str, tuple[str, ...]] = {
     "bowyer": ("bowyer",),
     "tailor": ("tailor", "weaver"),
 }
+GUILDMASTER = re.compile(r"guild(master|mistress)")
 
 
 @dataclass
@@ -83,9 +85,59 @@ class Session:
         # there are refused for a while: told not to, a soak run's planner still sent its warrior to
         # "the skeleton spawner" of the graveyard it had just left two gargoyles at, and it died.
         self.left_from: list[tuple[int, int, float, str, str]] = []
+        # A party that walks its trips together (cuo-cod.7): "walk" makes every trip a walk (the client runs
+        # while there is danger, and to catch up); `leads` has the leader wait for anyone who falls behind.
+        self.pace = "run"
+        # Every trip's pace (cuo-der: --travel, a fleet's `travel`, a set of rules): "walk" or "run";
+        # None leaves it to the client's own setting (agent_travel_pace), read from the snapshot.
+        self.travel_pace: str | None = None
+        self.leads = False
+        self.beside: str | None = None  # a follower: the leader it walks beside
+        self.roleplay = None  # roleplay.Roleplay: small things done in character on events (cuo-cod.8)
+
+    def paced(self) -> dict[str, str]:
+        """The pace for a short walk of the session's own, when every trip has one (travel_pace)."""
+        return {"pace": self.travel_pace} if self.travel_pace else {}
+
+    async def play(self, event: str, **kw: Any) -> None:
+        if self.roleplay is not None:
+            await self.roleplay.act(event, **kw)
+
+    LAG_TILES = 8      # a companion further behind the leader than this is waited for
+    LAG_WAIT_S = 20.0  # ...this long at a time
+    LAG_FAR = 60       # one further off than this is on business of its own: not waited for
+
+    def laggards(self, snap: dict[str, Any], to: tuple[int, int] | None = None) -> list[str]:
+        """The party's members who have fallen behind the leader on a walk: alive, more than LAG_TILES
+        away and no more than LAG_FAR, and (with the trip's end in `to`) further from it than the
+        leader is: one who has gone ahead isn't waited for. By what the client sees; for those out of
+        view, by their own last report."""
+        link = self.pcfg.link
+        if link is None or not self.leads:
+            return []
+        here = self.where(snap)
+        left = tiles(*here, *to) if to else 0
+
+        def behind(x: int, y: int) -> bool:
+            return self.LAG_TILES < tiles(*here, x, y) <= self.LAG_FAR and (to is None or tiles(x, y, *to) > left)
+
+        seen = {m["name"]: m for m in snap.get("mobiles") or [] if m.get("name") in self.pcfg.companions}
+        out = [n for n, m in seen.items() if not m.get("dead") and behind(here[0] + m.get("dx", 0), here[1] + m.get("dy", 0))]
+        for name, st in link.party.statuses().items():
+            if name not in seen and name != link.party.me and not st.get("dead") and st["age_s"] < 30 \
+                    and behind(st["x"], st["y"]):
+                out.append(name)
+        return out
 
     AVOID_TILES = 30
     AVOID_MINUTES = 30
+
+    def last_leave(self) -> dict[str, Any] | None:
+        """Where this character last left creatures behind, and how long ago: for its party's reports."""
+        if not self.left_from:
+            return None
+        x, y, at, _, why = self.left_from[-1]
+        return {"x": x, "y": y, "ago_s": round(time.monotonic() - at), "why": why[:80]}
 
     def avoided(self, x: int, y: int) -> str | None:
         """Why a goal at (x, y) is refused, or None: within AVOID_TILES of where a hunt ended in a
@@ -167,25 +219,41 @@ class Session:
         if not place:
             return None
         found = self.world.place(place, limit=1)
-        return (found[0]["x"], found[0]["y"], found[0]["name"]) if found else None
+        if found:
+            return found[0]["x"], found[0]["y"], found[0]["name"]
+        xy = near_xy(place)
+        return (xy[0], xy[1], place) if xy else None
 
     # ------------------------------------------------------------ travel
 
     async def travel_to(self, place: str | None = None, x: int | None = None, y: int | None = None,
-                        distance: int = 2, timeout_s: float = 600, recall: bool = True) -> Result:
+                        distance: int = 2, timeout_s: float = 600, recall: bool = True,
+                        refuse: bool = True, pace: str | None = None, together: bool = False) -> Result:
         """Get to a named place or a tile: by Recall when a rune or runebook goes there,
-        walking the rest (or all of it), fighting what attacks on the way."""
+        walking the rest (or all of it), fighting what attacks on the way. together: a trip the party
+        makes as one (the leader's travel, a hunt's walk, the walk to the inn): a party that walks its
+        trips walks it, its leader waits for anyone who falls behind, and nobody recalls away from the
+        others. A member's own errands (a shop, the bank, a healer, its corpse) are run as ever, unless every
+        trip walks (travel_pace). pace: "walk" or "run", to say so outright."""
+        pace = pace or ("walk" if together and self.pace == "walk" else self.travel_pace)
         target = self.resolve(place, x, y)
         if target is None:
             return Result(False, f"no place called {place!r} in the world store")
         tx, ty, name = target
-        if refused := self.avoided(tx, ty):
+        # The refusal after a leave is about hunting there; a trip to a healer or a corpse passes refuse=False.
+        if refuse and (refused := self.avoided(tx, ty)):
             return Result(False, refused)
         snap = await self.snap()
+        if not snap.get("in_game"):
+            return Result(False, "not in game (the connection was lost?)")
         start = self.where(snap)
+        pace = pace or snap["agent"].get("travel_pace") or "run"
+        ghost = bool(snap["player"]["dead"])  # a ghost walks to a healer or its corpse; it can't recall
         if tiles(*start, tx, ty) <= distance:
             return Result(True, f"already at {name}", {"x": tx, "y": ty})
-        recalled = await self.recall_to(name, tx, ty, snap) if recall and tiles(*start, tx, ty) > 40 else None
+        walking = pace == "walk" and not ghost
+        recalled = await self.recall_to(name, tx, ty, snap) \
+            if recall and not ghost and not walking and tiles(*start, tx, ty) > 40 else None
         if recalled is not None:
             snap = await self.snap()
             start = self.where(snap)
@@ -194,10 +262,16 @@ class Session:
         here = self.world.region_at(*start)
         from_name = here["name"] if here else f"{start[0]},{start[1]}"
 
-        res = await self.act("travel", x=tx, y=ty, distance=distance)
-        self.log("travel", to=name, x=tx, y=ty, status=res.get("status"), detail=res.get("detail"))
+        if tiles(*start, tx, ty) > 30 and not ghost:
+            await self.play("set_out")
+        go = {"x": tx, "y": ty, "distance": distance, "pace": "walk" if walking else "run"}
+        res = await self.act("travel", **go)
+        self.log("travel", to=name, x=tx, y=ty, status=res.get("status"), detail=res.get("detail"),
+                 **({"pace": "walk"} if walking else {}))
         if res.get("status") != "done":
             return Result(False, f"could not set off for {name}: {res.get('detail') or res.get('status')}")
+        waited = 0.0
+        left_behind: set[str] = set()  # waited for once, and still behind: not waited for again until they catch up
 
         began = time.monotonic()
         trail: list[list[int]] = [list(start)]
@@ -205,8 +279,10 @@ class Session:
         while time.monotonic() - began < timeout_s and not self.interrupt.is_set():
             await asyncio.sleep(1.0)
             snap = await self.snap()
+            if not snap.get("in_game"):
+                return Result(False, "lost the connection on the way", {"at": trail[-1]})
             self.seen(snap)
-            if snap["player"]["dead"]:
+            if snap["player"]["dead"] and not ghost:
                 return Result(False, "died on the way", {"at": list(self.where(snap))})
             pos = list(self.where(snap))
             if tiles(*pos, *trail[-1]) >= 8:
@@ -214,9 +290,29 @@ class Session:
             travel = snap["agent"].get("travel") or {}
             if travel.get("state") != "walking":
                 break
+            lagging = set(self.laggards(snap, (tx, ty))) if walking and together else set()
+            left_behind &= lagging
+            if behind := sorted(lagging - left_behind):
+                # The leader waits for anyone who has fallen behind (a door, a fight on the way), then walks on.
+                # Once for each: one who is still behind after a full wait is on business of its own, and
+                # waiting again and again made a crawl of a trip (40 waits, 179 tiles unfinished in 9 minutes).
+                await self.act("stop")
+                held = time.monotonic()
+                still = set(behind)
+                while time.monotonic() - held < self.LAG_WAIT_S and not self.interrupt.is_set() \
+                        and (still := set(behind) & set(self.laggards(await self.snap(), (tx, ty)))):
+                    await asyncio.sleep(1.0)
+                left_behind |= still
+                waited += time.monotonic() - held
+                self.log("waited_for", who=behind, seconds=round(time.monotonic() - held, 1),
+                         **({"went_on_without": sorted(still)} if still else {}))
+                if (await self.act("travel", **go)).get("status") != "done":
+                    travel = {"state": "stopped", "why": "could not set off again after waiting for the party"}
+                    break
         else:
             await self.act("stop")
-            travel = {"state": "interrupted" if self.interrupt.is_set() else "timed out", **travel}
+            # The client still says "walking": the session's own reason wins.
+            travel = {**travel, "state": "interrupted" if self.interrupt.is_set() else "timed out"}
 
         seconds = round(time.monotonic() - began)
         state = travel.get("state", "?")
@@ -225,11 +321,65 @@ class Session:
         trail.append(list(self.where(snap)))
         self.world.add_route(from_name, name, trail, outcome="ok" if ok else "stuck",
                              stuck_at=stuck or None, duration_s=seconds)
-        self.log("travelled", to=name, state=state, seconds=seconds, stuck_at=stuck)
+        self.log("travelled", to=name, state=state, seconds=seconds, stuck_at=stuck,
+                 **{k: travel[k] for k in ("why", "stuck_why", "replans", "doors", "hops", "plans", "plan_ms_max")
+                    if travel.get(k) not in (None, [])})
         if ok:
-            return Result(True, f"arrived at {name} in {seconds} s", {"seconds": seconds, "replans": travel.get("replans", 0)})
-        return Result(False, f"did not reach {name}: {state}, {travel.get('left', '?')} tiles short",
+            return Result(True, f"arrived at {name} in {seconds} s" + (", at a walk with the party" if walking else ""),
+                          {"seconds": seconds, "replans": travel.get("replans", 0),
+                           **({"waited_for_the_party_s": round(waited)} if waited else {})})
+        why = f" ({travel['why']})" if travel.get("why") else ""
+        return Result(False, f"did not reach {name}: {state}{why}, {travel.get('left', '?')} tiles short",
                       {"seconds": seconds, "stuck_at": stuck, "position": list(self.where(snap))})
+
+    async def walk_with(self, leader: str, place: str | None = None, x: int | None = None, y: int | None = None,
+                        distance: int = 3, timeout_s: float = 600) -> Result:
+        """Walk to a place beside the party's leader (cuo-cod.7): the client keeps within two tiles of it
+        as it goes (`act follow`: at a walk, running in danger and to catch up). With the leader out of
+        view, already there, or dead, or on a client that can't follow, it makes its own way there."""
+        target = self.resolve(place, x, y)
+        if target is None:
+            return Result(False, f"no place called {place!r} in the world store")
+        tx, ty, name = target
+        began = time.monotonic()
+        following = 0
+        snap: dict[str, Any] = {}
+
+        async def alone(pace: str = "run") -> Result:
+            if following:
+                await self.act("stop")
+            return await self.travel_to(name, tx, ty, distance=distance, refuse=False, pace=pace,
+                                        timeout_s=max(30.0, timeout_s - (time.monotonic() - began)))
+
+        while time.monotonic() - began < timeout_s and not self.interrupt.is_set():
+            snap = await self.snap()
+            if not snap.get("in_game"):
+                return Result(False, "lost the connection on the way")
+            self.seen(snap)
+            if snap["player"]["dead"]:
+                return Result(False, "died on the way", {"at": list(self.where(snap))})
+            here = self.where(snap)
+            if tiles(*here, tx, ty) <= distance + 1:
+                if following:
+                    await self.act("stop")
+                secs = round(time.monotonic() - began)
+                return Result(True, f"walked to {name} with {leader} in {secs} s", {"seconds": secs, "with": leader})
+            m = next((m for m in snap.get("mobiles") or [] if m.get("name") == leader and not m.get("dead")), None)
+            if m is None:
+                return await alone("run")  # out of view: catch up
+            if tiles(here[0] + m["dx"], here[1] + m["dy"], tx, ty) <= distance + 1:
+                return await alone()       # the leader is there already
+            state = (snap["agent"].get("follow") or {}).get("state")
+            if following != m["serial"] or state in (None, "lost"):
+                res = await self.act("follow", target=m["serial"], distance=2, pace="walk")
+                if res.get("status") != "done":
+                    return await alone(self.pace)   # a client that can't follow: its own way, at the party's pace
+                following = m["serial"]
+            await asyncio.sleep(1.0)
+        if following:
+            await self.act("stop")
+        return Result(False, f"did not reach {name}: {'interrupted' if self.interrupt.is_set() else 'timed out'}",
+                      {"position": list(self.where(snap)) if snap.get("in_game") else None})
 
     def rune_for(self, name: str, tx: int, ty: int, snap: dict[str, Any]) -> tuple[int, int, str] | None:
         """(serial, runebook entry or -1, label) of the rune or runebook entry that goes to a
@@ -294,10 +444,11 @@ class Session:
         return {"state": "failed", "detail": "timed out"}
 
     async def go_near(self, kind: str, within: int, skip: set[str] = frozenset(),
-                      sells: str | None = None) -> tuple[dict[str, Any] | None, Result | None]:
+                      sells: str | None = None, max_walk: int | None = None) -> tuple[dict[str, Any] | None, Result | None]:
         """The nearest place of a kind (or selling an item), walked to if further than `within`.
         With `sells`, places known not to sell that item are left out (a wandering healer is a
-        healer that sells no bandages), and those known to sell it come first."""
+        healer that sells no bandages), and those known to sell it come first. With `max_walk`, a
+        place further than that isn't walked to: the result names it and how far it is."""
         snap = await self.snap()
         found = [p for p in self.world.find_place(kind, near=list(self.where(snap)), limit=12) if p["name"] not in skip]
         if sells:
@@ -310,11 +461,30 @@ class Session:
         if not found:
             return None, Result(False, f"the world store knows no {'other ' if skip else ''}{kind}")
         place = found[0]
-        if tiles(*self.where(snap), place["x"], place["y"]) > within:
+        far = tiles(*self.where(snap), place["x"], place["y"])
+        if max_walk is not None and far > max_walk:
+            what = f"{place['kind']} selling {sells}" if sells else place["kind"]
+            return place, Result(False, f"the nearest {'other ' if skip else ''}{what} is {place['name']}, {far} tiles "
+                                        f"away", {"too_far": True, "place": place["name"], "tiles": far})
+        if far > within:
             r = await self.travel_to(place["name"], place["x"], place["y"], distance=max(1, within - 2))
             if not r.ok:
                 return place, Result(False, f"could not get to {place['name']}: {r.summary}", r.data)
         return place, None
+
+    async def find_inn(self) -> dict[str, Any] | None:
+        """The nearest inn the world store knows (an innkeeper's place), else the nearest tavern."""
+        snap = await self.snap()
+        here = list(self.where(snap))
+        for kind in ("inn", "tavern"):
+            found = self.world.find_place(kind, near=here, limit=6)
+            if found and found[0].get("distance", 99) <= 12:
+                return found[0]  # standing at one already (a first run walked on to another inn 135 tiles off)
+            # Else places from the shard's own data first: a "seen" one is where an innkeeper happened to stand.
+            known = [p for p in found if p.get("source") != "seen"] or found
+            if known:
+                return known[0]
+        return None
 
     async def bank(self, deposit: str = "gold,loot", withdraw: str = "") -> Result:
         """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank."""
@@ -330,11 +500,13 @@ class Session:
         self.log("bank", place=place["name"], ok=ok, detail=e.get("detail"), **data)
         if ok:
             self.world.add_place("bank", place["name"], place["x"], place["y"], z=place.get("z"), source="seen")
-        return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}", data | {"weight_before": before.get("weight")})
+        return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}",
+                      data | {"weight_before": before.get("weight"), "gold_before": before.get("gold")})
 
     async def vendor(self, kind: str, words: tuple[str, ...], exclude: set[int] = frozenset(),
-                     skip: set[str] = frozenset(), sells: str | None = None) -> tuple[dict[str, Any] | None, int, Result | None]:
-        place, failed = await self.go_near(kind, 8, skip, sells)
+                     skip: set[str] = frozenset(), sells: str | None = None,
+                     max_walk: int | None = None) -> tuple[dict[str, Any] | None, int, Result | None]:
+        place, failed = await self.go_near(kind, 8, skip, sells, max_walk)
         if failed:
             return place, 0, failed
         snap = await self.snap()
@@ -342,13 +514,30 @@ class Session:
         best = None
         for m in snap["mobiles"]:
             label = (m.get("label") or m.get("name") or "").lower()
+            # A guildmaster stands in the shop but sells nothing (ModernUO's BaseGuildmaster is no
+            # active vendor): a soak run's buys at the Britain healer went to the healer guildmistress
+            # on the next tile and got no list.
             if m.get("human") and not m.get("monster") and m["notoriety"] == "invulnerable" and \
-                    any(w in label for w in titles) and m["serial"] not in exclude and m["distance"] <= 14:
+                    any(w in label for w in titles) and not GUILDMASTER.search(label) and \
+                    m["serial"] not in exclude and m["distance"] <= 14:
                 if best is None or m["distance"] < best["distance"]:
                     best = m
         if best is None:
             return place, 0, Result(False, f"no {'/'.join(titles)} in sight at {place['name']}")
         return place, best["serial"], None
+
+    async def pack_read(self, timeout_s: float = 10.0) -> bool:
+        """Wait (up to timeout_s) until the client has looked into every bag in the pack, so the
+        supplies it counts are all there; it opens them one a second while the agent is on. False
+        when some are still unread; True at once with a client that doesn't say (no unread_bags)."""
+        began = time.monotonic()
+        while True:
+            snap = await self.snap()
+            if not snap.get("in_game") or snap["player"].get("supplies", {}).get("unread_bags", 0) == 0:
+                return True
+            if time.monotonic() - began >= timeout_s:
+                return False
+            await asyncio.sleep(0.5)
 
     async def held(self, item: str) -> int:
         """How many of an item the backpack holds, by the client's supply counts or by name."""
@@ -365,10 +554,15 @@ class Session:
         word = item.lower().rstrip("s")
         return sum(i.get("amount", 1) for i in snap.get("pack", []) if word in i.get("name", "").lower())
 
+    BUY_WALK_TILES = 200  # a buy walks to a shop no further than this; a further one is the planner's call
+
     async def buy(self, item: str, count: int, vendor_kind: str | None = None) -> Result:
         """Buy `count` of an item ("bandage", "black pearl") from the nearest vendors that sell it.
         A vendor only stocks so many (a healer has 20 bandages), so it goes round the vendors in
-        sight, each once, then on to the next shop, until it has enough."""
+        sight, each once, then on to the next shop, until it has enough. It walks to no shop further
+        than BUY_WALK_TILES: with Britain's healer sold out, a fleet NPC's buy went on to the Cove
+        healer, 770 tiles and 6.6 minutes away past a bog thing and a plague beast (cuo-1kk). The
+        result names the next shop and how far it is, and the planner decides."""
         start = await self.held(item)
         gold0 = (await self.snap())["player"].get("gold", 0)
         tried: set[int] = set()
@@ -376,7 +570,15 @@ class Session:
         spent, notes, place = 0, [], None
         last_place = None
         while await self.held(item) - start < count and len(tried) < 8 and len(done_places) < 3:
-            place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places, sells=item)
+            place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places, sells=item,
+                                                      max_walk=self.BUY_WALK_TILES)
+            if failed and failed.data.get("too_far"):
+                trip = f"{failed.summary}; travel_to it first if the trip is worth it"
+                if not tried:
+                    return Result(False, trip, failed.data)
+                notes.append(f"nothing more at {last_place['name'] if last_place else 'the shops near'}; {trip}")
+                place = last_place
+                break
             last_place = place or last_place
             if failed:
                 if place is None or "in sight" not in failed.summary:
@@ -411,6 +613,55 @@ class Session:
         return Result(ok, f"{where}: bought {got} of {count} {item} for {spent} gold"
                           + ("" if ok else f" ({'; '.join(notes)})"), {"bought": got, "gold_spent": spent})
 
+    # What each kind of character carries into a hunt: (at least, buy up to), as the planner's prompt
+    # asks for (planner.SYSTEM). A party's followers restock by these when the leader calls a restock.
+    REAGENTS = ("black pearl", "blood moss", "garlic", "ginseng", "mandrake root", "nightshade", "sulfurous ash",
+                "spiders silk")
+    PAGAN = ("bat wing", "grave dust", "daemon blood", "nox crystal", "pig iron")
+    PRICE = 6  # gold an item, about: bandages and reagents are 3-7 at ModernUO's vendors
+
+    def wants(self, plays: str, snap: dict[str, Any]) -> dict[str, tuple[int, int]]:
+        bandages = {"tamer": (80, 120), "mage-tamer": (80, 120), "necromancer": (30, 50)}.get(plays, (50, 80))
+        out: dict[str, tuple[int, int]] = {} if plays == "mage" else {"bandage": bandages}
+        if plays in MAGERY_PLAYS:
+            out |= {r: (30, 50) for r in self.REAGENTS}
+        if plays == "necromancer":
+            out |= {r: (30, 50) for r in self.PAGAN}
+        if plays == "archer":
+            ammo = "bolt" if "bolt" in str((snap["player"].get("ranged") or {}).get("ammo", "")).lower() else "arrow"
+            out[ammo] = (150, 200)
+        return out
+
+    async def restock(self) -> Result:
+        """Buy what the character is short of for what it plays as (wants), drawing gold from the bank
+        first when it carries too little. A party's followers do this when the leader calls a restock."""
+        await self.pack_read()
+        snap = await self.snap(pack=True)
+        plays = state.archetype_of(snap)
+        needs = []
+        for item, (least, up_to) in self.wants(plays, snap).items():
+            have = await self.held(item)
+            if have < least:
+                needs.append((item, up_to - have))
+        if not needs:
+            return Result(True, f"supplies enough for a {plays}: nothing to buy", {"bought": {}})
+        notes = []
+        gold = snap["player"].get("gold", 0)
+        cost = sum(n for _, n in needs) * self.PRICE
+        if gold < cost:
+            b = await self.bank("loot", f"gold:{cost - gold + 100}")
+            notes.append(b.summary)
+        bought: dict[str, int] = {}
+        for item, n in needs:
+            r = await self.buy(item, n)
+            bought[item] = r.data.get("bought", 0)
+            if not r.ok:
+                notes.append(r.summary)
+        ok = all(bought[i] >= n for i, n in needs)
+        got = ", ".join(f"{bought[i]} {i}" for i, _ in needs)
+        return Result(ok, f"restocked as a {plays}: bought {got}" + (f" ({'; '.join(notes)})" if notes else ""),
+                      {"bought": bought})
+
     async def sell(self, items: str = "loot", vendor_kind: str = "weaponsmith") -> Result:
         """Sell loot (or named items) to the nearest vendor of a kind."""
         place, serial, failed = await self.vendor(vendor_kind, ())
@@ -442,14 +693,33 @@ class Session:
 
     async def rest(self, seconds: float = 30) -> Result:
         await self.rpc.call("mode", mode="auto")
-        began = time.monotonic()
+        if seconds >= 20:
+            await self.play("rest")
+        began = looked = time.monotonic()
+        snap = await self.snap()
+        ghost = bool(snap.get("in_game") and snap["player"].get("dead"))
         while time.monotonic() - began < seconds and not self.interrupt.is_set():
             await asyncio.sleep(1)
+            if time.monotonic() - looked >= 3 and not ghost:
+                looked = time.monotonic()
+                snap = await self.snap()
+                if snap.get("in_game") and snap["player"].get("dead"):
+                    # Killed while it rested: its resurrection can't wait for the rest to run out.
+                    return Result(False, f"died while resting, after {round(time.monotonic() - began)} s", {"died": True})
         p = (await self.snap())["player"]
         return Result(True, f"rested {round(time.monotonic() - began)} s",
                       {"health": f"{p['hits']}/{p['hits_max']}", "mana": f"{p['mana']}/{p['mana_max']}"})
 
     # ------------------------------------------------------------ hunting
+
+    def hunt_spot(self, area: str) -> tuple[int, int, str, int] | None:
+        """Where a hunt of an area goes: the centre of its spawn (or the place of that name), its name, and
+        how far round it the creatures spawn."""
+        spawns = self.world.what_spawns(area=area, limit=1) or self.world.what_spawns(near=area, limit=1)
+        if spawns:
+            return spawns[0]["x"], spawns[0]["y"], spawns[0]["area"], min(int(spawns[0].get("range") or 10), 15)
+        target = self.resolve(area, None, None)
+        return (*target, 10) if target else None
 
     async def hunt(self, area: str, minutes: float = 10, min_bandages: int = 10, max_weight_pct: int = 85,
                    log_path: Path | None = None) -> Result:
@@ -457,20 +727,18 @@ class Session:
         time to head back or the spot isn't worth it (routine.py). Code still stops on the floors
         (dead, out of supplies, a full bag); without Jev, min_bandages and max_weight_pct are the
         old fixed rules. Walks around the spawn when it is quiet."""
-        spawns = self.world.what_spawns(area=area, limit=1) or self.world.what_spawns(near=area, limit=1)
-        target = self.resolve(area, None, None)
-        if spawns:
-            cx, cy, name = spawns[0]["x"], spawns[0]["y"], spawns[0]["area"]
-            radius = min(int(spawns[0].get("range") or 10), 15)
-        elif target:
-            cx, cy, name = target
-            radius = 10
-        else:
+        spot = self.hunt_spot(area)
+        if spot is None:
             return Result(False, f"no hunting area called {area!r} in the world store")
+        cx, cy, name, radius = spot
         if refused := self.avoided(cx, cy):
             return Result(False, refused)
 
-        r = await self.travel_to(name, cx, cy, distance=3)
+        # The walk there fights what attacks, as every other goal's walk does (cuo-sj2: a warrior walked
+        # into the graveyard's lich with no decision for 32 s and died "on the way"). A party's follower
+        # walks it beside the leader (cuo-cod.7).
+        r = await self.defended(self.walk_with(self.beside, name, cx, cy) if self.beside and self.pace == "walk"
+                                else self.travel_to(name, cx, cy, distance=3, together=True))
         if not r.ok:
             return Result(False, f"could not get to {name}: {r.summary}", r.data)
         if self.judge is None:
@@ -483,7 +751,7 @@ class Session:
         last: dict[str, Any] = {}
         # When to head back, whether to stay, whether to walk elsewhere in the spawn: Jev's calls.
         hw = HuntWatch(name, minutes, self.judge, RoutineConfig(min_bandages=min_bandages, max_weight_pct=max_weight_pct),
-                       log=self._log, archetype=self.archetype, radius=radius)
+                       log=self._log, archetype=self.archetype, radius=radius, bestiary=self.world.bestiary())
         asking: list[asyncio.Task] = []
 
         def watch(snap: dict[str, Any]) -> None:
@@ -505,7 +773,7 @@ class Session:
                 # Quiet: wander to another spot of the spawn to find something.
                 a = random.uniform(0, 6.283)
                 tx, ty = cx + round(radius * 0.7 * math.cos(a)), cy + round(radius * 0.7 * math.sin(a))
-                asyncio.get_running_loop().create_task(self.act("travel", x=tx, y=ty, distance=1))
+                asyncio.get_running_loop().create_task(self.act("travel", x=tx, y=ty, distance=1, **self.paced()))
             if why:
                 stop.set()
 
@@ -567,6 +835,169 @@ class Session:
                                            f"stopped because {data['stopped_because']}"
                                            + (f"; then {retreat}" if retreat else ""), data)
 
+    # ------------------------------------------------------------ after a death (cuo-4b3)
+
+    HEALER_WORDS = ("healer", "mystic")
+
+    def healer_in_view(self, snap: dict[str, Any]) -> dict[str, Any] | None:
+        """The nearest healer NPC in view (its title says so), as a mobile from the snapshot."""
+        found = [m for m in snap.get("mobiles", []) if m.get("human") and not m.get("dead")
+                 and any(w in f"{m.get('name', '')} {m.get('label', '')}".lower() for w in self.HEALER_WORDS)]
+        return min(found, key=lambda m: m["distance"]) if found else None
+
+    async def resurrect(self, tries: int = 3, wait_s: float = 8.0) -> Result:
+        """As a ghost, walk to the nearest healer and step up to it until it offers to resurrect
+        (the client accepts in auto mode). On ModernUO a healer offers only when a ghost steps to
+        within 4 tiles of it from further out, in its sight, and not more than once every 2 s, so
+        arriving isn't enough: the ghost stands off at 6 tiles and walks in, up to `tries` times
+        per healer, at most three healers."""
+        snap = await self.snap()
+        if not snap["player"]["dead"]:
+            return Result(True, "already alive")
+        began = time.monotonic()
+        here = self.where(snap)
+        healers = self.world.find_place("healer", near=list(here), limit=12)
+        # A ghost can't be hurt on the way, but a character resurrected out in the wilds comes back with
+        # little health among whatever killed it: a soak character died five times running that way
+        # (2026-10-09). Healers in a guarded town first, the rest after, nearest first within each.
+        def guarded(h: dict[str, Any]) -> bool:
+            region = self.world.region_at(h["x"], h["y"])
+            return bool(region and region.get("guarded"))
+        healers = sorted(healers, key=lambda h: (not guarded(h), h.get("distance", 0)))
+        tried: list[str] = []
+        for h in healers[:3]:
+            r = await self.travel_to(h["name"], h["x"], h["y"], distance=5, refuse=False, pace="run")
+            if not r.ok:
+                tried.append(f"{h['name']}: {r.summary}")
+                continue
+            for _ in range(tries):
+                snap = await self.snap()
+                if not snap["player"]["dead"]:
+                    break
+                mob = self.healer_in_view(snap)
+                px, py = self.where(snap)
+                hx, hy = (px + mob["dx"], py + mob["dy"]) if mob else (h["x"], h["y"])
+                # Stand off at 6 tiles on our side of the healer, then walk in to 1.
+                d = max(1, tiles(px, py, hx, hy))
+                ox, oy = hx + round((px - hx) * 6 / d), hy + round((py - hy) * 6 / d)
+                if tiles(px, py, hx, hy) < 5:
+                    await self.walk_to(ox, oy, 1, pace="run")
+                await self.walk_to(hx, hy, 1, pace="run")
+                for _ in range(int(wait_s)):
+                    await asyncio.sleep(1)
+                    snap = await self.snap()
+                    if not snap["player"]["dead"]:
+                        break
+                if not snap["player"]["dead"]:
+                    break
+            if not snap["player"]["dead"]:
+                secs = round(time.monotonic() - began)
+                self.log("resurrected", healer=h["name"], seconds=secs)
+                healed = await self.defended(self.recover_health())
+                return Result(True, f"resurrected at {h['name']} in {secs} s; {healed}",
+                              {"seconds": secs, "healer": h["name"]})
+            said = [e.get("text", "") for e in (snap.get("journal") or [])[-8:]]
+            why = next((t for t in said if "resurrect" in t.lower() or "bank" in t.lower()), "no offer came")
+            tried.append(f"{h['name']}: {why}")
+        return Result(False, "not resurrected: " + ("; ".join(tried) or "no healer in the world store"),
+                      {"seconds": round(time.monotonic() - began)})
+
+    async def recover_health(self, pct: float = 70, timeout_s: float = 120, mana_pct: float = 50) -> str:
+        """Stand and heal (the client's reflexes bandage) until health is back to `pct`, and a caster's mana
+        to `mana_pct`, or the time is up. Resurrected with no mana to recall, at a healer out in the open,
+        every planner model sometimes set off on foot, and in the logs that walk died 3 times in 4 (cuo-tyv)."""
+        began = time.monotonic()
+
+        def words(p: dict[str, Any], secs: float) -> str:
+            mana = f", mana {p.get('mana')}/{p.get('mana_max')}" if caster else ""
+            return f"healed to {p.get('hits')}/{p.get('hits_max')}{mana} in {secs:.0f} s"
+
+        caster = False
+        while time.monotonic() - began < timeout_s:
+            snap = await self.snap()
+            p = snap.get("player") or {}
+            if p.get("dead"):
+                return "died while healing"
+            caster = bool(p.get("mana_max")) and state.archetype_of(snap) in CASTER_PLAYS
+            mana_back = not caster or p["mana"] * 100 >= mana_pct * p["mana_max"]
+            if p.get("hits_max") and p["hits"] * 100 >= pct * p["hits_max"] and mana_back:
+                return words(p, time.monotonic() - began)
+            await asyncio.sleep(2)
+        return words((await self.snap()).get("player") or {}, timeout_s)
+
+    async def walk_to(self, x: int, y: int, distance: int = 1, timeout_s: float = 30, pace: str | None = None) -> str:
+        """A short walk (no recall, no route record): the travel state it ended in."""
+        res = await self.act("travel", x=x, y=y, distance=distance, **({"pace": pace} if pace else self.paced()))
+        if res.get("status") != "done":
+            return "refused"
+        began = time.monotonic()
+        while time.monotonic() - began < timeout_s:
+            await asyncio.sleep(0.5)
+            travel = (await self.snap())["agent"].get("travel") or {}
+            if travel.get("state") != "walking":
+                return str(travel.get("state"))
+        await self.act("stop")
+        return "timed out"
+
+    async def recover_corpse(self, wait_s: float = 20.0, go_anyway: bool = False) -> Result:
+        """Back to where the character died, open its corpse and take everything back. On an
+        AOS-era server opening its own corpse puts everything back and on (ModernUO's self-loot);
+        on an older one the client takes each item into the pack and puts back on what was worn."""
+        snap = await self.snap()
+        if snap["player"]["dead"]:
+            return Result(False, "still a ghost: resurrect first")
+        death = snap["player"].get("last_death")
+        if not death:
+            return Result(False, "no death this session to go back to")
+        region = self.world.region_at(death["x"], death["y"])
+        if region and not go_anyway and (danger := self.world.recent_danger(region["name"], minutes=15)):
+            # In a soak a second death came walking back to a corpse with the lich that made it still there.
+            return Result(False, f"not going back yet: the corpse lies in {region['name']}, where danger was seen "
+                                 f"{danger}; wait, or call recover_corpse with go_anyway when it is worth the risk")
+        began = time.monotonic()
+        r = await self.travel_to(x=death["x"], y=death["y"], distance=1, refuse=False, pace="run")
+        if not r.ok:
+            return Result(False, f"could not get back to the corpse: {r.summary}", r.data)
+        snap = await self.snap()
+        corpse = next((c for c in snap.get("corpses", []) if c.get("own")), None)
+        if corpse is None:
+            return Result(False, "the corpse is gone (decayed or taken)", {"seconds": round(time.monotonic() - began)})
+        used = await self.act("use", target=corpse["serial"])
+        if used.get("status") not in (None, "done"):
+            return Result(False, f"could not open the corpse: {used.get('detail') or used.get('status')}")
+        taken = 0
+        done = ""
+        for _ in range(int(wait_s)):
+            await asyncio.sleep(1)
+            snap = await self.snap()
+            said = " ".join(e.get("text", "") for e in (snap.get("journal") or [])[-6:]).lower()
+            if "gather all of your belongings" in said:
+                done = "gathered"
+                break
+            c = next((c for c in snap.get("corpses", []) if c.get("serial") == corpse["serial"]), None)
+            items = (c or {}).get("items") or []
+            if c is None:  # an AOS self-loot leaves bones, which aren't a corpse any more
+                done = "the corpse turned to bones"
+                break
+            if c.get("opened") and not items:
+                done = "emptied"
+                break
+            if "gather some of your belongings" in said:
+                return Result(False, "took back what fitted; the rest is still on the corpse",
+                              {"seconds": round(time.monotonic() - began)})
+            if c.get("opened") and items and snap.get("era") == "pre-aos":
+                for it in items:  # pre-AOS: no self-loot, take each item by hand
+                    await self.act("take", target=it["serial"])
+                    taken += 1
+                await asyncio.sleep(2 + 0.6 * len(items))
+                await self.act("rewear")
+        secs = round(time.monotonic() - began)
+        if not done:
+            return Result(False, f"the corpse didn't give its things back in {secs} s (it never opened, or kept them)",
+                          {"seconds": secs, "taken": taken})
+        self.log("corpse_recovered", seconds=secs, taken=taken)
+        return Result(True, f"took everything back from the corpse in {secs} s", {"seconds": secs, "taken": taken})
+
     async def retreat(self) -> str:
         """After leaving a hunt from danger, recall to a guarded town when a rune or runebook entry goes
         to one (a bank first, then the nearest), since the creatures may still be about. What
@@ -574,7 +1005,8 @@ class Session:
         snap = await self.snap()
         here = self.where(snap)
         # A recall takes seconds standing still, and a hit breaks it: not with anything close or fighting.
-        about = [m for m in snap.get("mobiles", []) if m.get("monster") and not m.get("dead")
+        bestiary = self.world.bestiary()
+        about = [m for m in snap.get("mobiles", []) if state.threatening(m, bestiary)
                  and (m["distance"] <= 10 or m.get("war_mode"))]
         if about:
             return f"didn't stop to recall: {len(about)} creature{'s' if len(about) > 1 else ''} still about"
@@ -631,12 +1063,23 @@ def note_threats(world: World, snap: dict[str, Any], noted: dict[str, float], ev
             world.add_note(f"A {t['kind']} player was seen here.", area=area, tags=("pk", "danger"), source="seen")
 
 
-def describe(snap: dict[str, Any], world: World | None = None) -> dict[str, Any]:
-    """The character's situation in words, for the planner."""
+MAGERY_PLAYS = ("mage", "mage-tamer", "warrior-mage")
+CASTER_PLAYS = (*MAGERY_PLAYS, "necromancer", "paladin")  # wait for mana after a resurrection
+NOT_COUNTED = "not counted yet: a bag in the pack hasn't been looked into"
+
+
+def describe(snap: dict[str, Any], world: World | None = None, companions: dict[str, str] | None = None) -> dict[str, Any]:
+    """The character's situation in words, for the planner: what it plays as, and the supplies
+    that matter for that. A mage heals with spells, so it isn't told of bandages; reagents that
+    can't be counted yet (a bag not looked into) are said to be uncounted, not left out: a new
+    mage told of 0 bandages and no reagents was sent shopping for both (cuo-pz9)."""
     p = snap["player"]
     s = p.get("supplies", {})
+    plays = state.archetype_of(snap)
+    unread = s.get("unread_bags", 0) > 0
     here = world.region_at(p["x"], p["y"]) if world else None
     out = {
+        "plays_as": plays,
         "position": {"x": p["x"], "y": p["y"], "area": here["name"] if here else "open country"},
         "health": f"{p['hits']}/{p['hits_max']}",
         "gold_carried": p.get("gold", 0),
@@ -645,18 +1088,36 @@ def describe(snap: dict[str, Any], world: World | None = None) -> dict[str, Any]
         "heal_potions": s.get("heal_potions", 0),
         "cure_potions": s.get("cure_potions", 0),
         "dead": p["dead"],
-        "hostiles_in_sight": sum(1 for m in snap["mobiles"] if m.get("monster") and not m.get("dead")),
+        "hostiles_in_sight": 0,
     }
-    threats = snap["agent"].get("threats") or []
+    # Birds and deer only fight back: named apart, not counted as hostiles (cuo-s9p).
+    bestiary = world.bestiary() if world else None
+    calm = []
+    for m in snap["mobiles"]:
+        if state.threatening(m, bestiary):
+            out["hostiles_in_sight"] += 1
+        elif m.get("monster") and not m.get("dead"):
+            calm.append(m.get("name") or "a creature")
+    if calm:
+        out["harmless_wildlife_in_sight"] = sorted(set(calm))[:3]
+    if plays == "mage":
+        del out["bandages"]
+    # A party's companions aren't strangers: "a unknown player 2 tiles away" was the mage beside it (cuo-4ar).
+    names = {m["serial"]: m.get("name") for m in snap.get("mobiles") or []}
+    threats = [t for t in snap["agent"].get("threats") or [] if names.get(t["serial"]) not in (companions or {})]
     if threats:
-        out["players_near"] = [f"a {t['kind']} player {t['distance']} tiles away" for t in threats]
+        out["players_near"] = [f"{'an' if t['kind'][:1] in 'aeiou' else 'a'} {t['kind']} player {t['distance']} tiles away"
+                               for t in threats]
     if p.get("mana_max"):
         out["mana"] = f"{p['mana']}/{p['mana_max']}"
     regs = s.get("reagents") or {}
     if regs and any(regs.values()):
         out["reagents"] = {k.replace("_", " "): v for k, v in regs.items()}
-    if pagan := s.get("pagan_reagents"):
-        out["necromancer_reagents"] = {k.replace("_", " "): v for k, v in pagan.items()}
+    elif plays in MAGERY_PLAYS:
+        out["reagents"] = NOT_COUNTED if unread else "none"
+    if (pagan := s.get("pagan_reagents")) is not None:
+        out["necromancer_reagents"] = {k.replace("_", " "): v for k, v in pagan.items()} \
+            if any(pagan.values()) or not unread else NOT_COUNTED
     if "chivalry" in ((snap.get("magic") or {}).get("schools") or []):
         out["tithing_points"] = snap["magic"].get("tithing", 0)
     return out

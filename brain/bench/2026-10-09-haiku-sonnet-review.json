@@ -1,0 +1,1243 @@
+{
+ "what": "After-action review by Claude Haiku 5.5 and Claude Sonnet 5.5 on the same logs (cuo-twd, 2026-10-09)",
+ "command": "uv run uo-brain review <copy of LOG> --again --planner-model anthropic/claude-<haiku|sonnet>-5.5 --cost-log logs/twd/review-<model>.jsonl",
+ "logs": {
+  "arena-jev": {
+   "digest": {
+    "log": "arena-jev.jsonl",
+    "span": {
+     "from": "17:56:29",
+     "to": "18:01:05",
+     "minutes": 4.6
+    },
+    "kit": "warrior",
+    "strategy": {
+     "text": "(none)",
+     "read_as": "flees when losing, aggression 0.50, current first, loots valuables"
+    },
+    "totals": {
+     "decisions": 151,
+     "runs": 3,
+     "kills": 12,
+     "deaths": 1,
+     "flees": 0,
+     "bandages_used": 12,
+     "heal_potions_used": 4,
+     "cure_potions_used": 0,
+     "corpses_looted": 12,
+     "items_taken": 8,
+     "gated_low_confidence": 0,
+     "judge_errors": 0
+    },
+    "intents": {
+     "fight": {
+      "count": 136,
+      "average_confidence": 0.91,
+      "below_0.5": 3
+     },
+     "loot": {
+      "count": 12,
+      "average_confidence": 0.87,
+      "below_0.5": 0
+     },
+     "rest": {
+      "count": 3,
+      "average_confidence": 0.76,
+      "below_0.5": 0
+     }
+    },
+    "deaths": {
+     "count": 1,
+     "first": [
+      {
+       "time": "18:00:01",
+       "decisions_before": [
+        "17:59:57 health badly wounded (39%); 198 bandages, 4 heal potions (?); hostiles: Etakheki (a ratman) adjacent unhurt; Yagnar (an orc) adjacent unhurt; a mongbat adjacent unhurt; a headless one adjacent unhurt; Diwarek (a ratman) adjacent unhurt; Kukgilug (an orc) adjacent badly wounded [target]; 9 unlooted corpses -> fight 0.6 (fight Kukgilug (an orc) (0.60)); actions: none",
+        "17:59:59 health badly wounded (32%); 198 bandages, 4 heal potions (?); hostiles: Etakheki (a ratman) adjacent unhurt; Yagnar (an orc) adjacent unhurt; a mongbat adjacent unhurt; a headless one adjacent unhurt; Diwarek (a ratman) adjacent unhurt; Kukgilug (an orc) adjacent near death [target]; 9 unlooted corpses -> fight 0.64 (fight Kukgilug (an orc) (0.64)); actions: none",
+        "17:59:59 health near death (23%); 198 bandages, 4 heal potions (?); hostiles: Etakheki (a ratman) adjacent unhurt; Yagnar (an orc) adjacent unhurt; a mongbat adjacent unhurt; a headless one adjacent unhurt; Diwarek (a ratman) adjacent unhurt; Kukgilug (an orc) adjacent near death [target]; 9 unlooted corpses -> fight 0.4 (fight Kukgilug (an orc) (0.40)); actions: none",
+        "18:00:00 health near death (9%); 198 bandages, 4 heal potions (?); hostiles: Etakheki (a ratman) adjacent unhurt; Yagnar (an orc) adjacent unhurt; a mongbat adjacent unhurt; a headless one adjacent unhurt; Diwarek (a ratman) adjacent unhurt; Kukgilug (an orc) adjacent near death [target]; 9 unlooted corpses -> fight 0.42 (fight Kukgilug (an orc) (0.42)); actions: none",
+        "18:00:01 health near death (9%); 198 bandages, 4 heal potions (?); hostiles: Etakheki (a ratman) adjacent unhurt; Yagnar (an orc) adjacent unhurt; a mongbat adjacent unhurt; a headless one adjacent unhurt; Diwarek (a ratman) adjacent unhurt; Kukgilug (an orc) adjacent near death [target]; 9 unlooted corpses -> fight 0.38 (fight Kukgilug (an orc) (0.38)); actions: none"
+       ],
+       "journal": [
+        "You apply the bandages, but they barely help.",
+        "Who will you use the bandages on?",
+        "You begin applying the bandages.",
+        "The world is saving, please wait.",
+        "World save completed in 0.02 seconds."
+       ]
+      }
+     ]
+    },
+    "flees": {
+     "count": 0,
+     "first": []
+    },
+    "looting_with_monsters_close": {
+     "count": 0,
+     "first": []
+    },
+    "low_health": {
+     "count": 2,
+     "first": [
+      {
+       "lowest": "17:58:41 health near death (23%); 197 bandages, 4 heal potions (?); hostiles: Oggha (an orc) adjacent near death [target]; a mongbat adjacent unhurt; a headless one adjacent unhurt; Fireki (a ratman) adjacent unhurt; Yokgu (an orc) adjacent unhurt; 9 unlooted corpses -> fight 0.51 (fight Oggha (an orc) (0.51)); actions: none",
+       "decisions": 1,
+       "then": "recovered"
+      },
+      {
+       "lowest": "18:00:00 health near death (9%); 198 bandages, 4 heal potions (?); hostiles: Etakheki (a ratman) adjacent unhurt; Yagnar (an orc) adjacent unhurt; a mongbat adjacent unhurt; a headless one adjacent unhurt; Diwarek (a ratman) adjacent unhurt; Kukgilug (an orc) adjacent near death [target]; 9 unlooted corpses -> fight 0.42 (fight Kukgilug (an orc) (0.42)); actions: none",
+       "decisions": 3,
+       "then": "died"
+      }
+     ]
+    },
+    "supplies": {
+     "bandages": {
+      "first": 200,
+      "last": 198,
+      "lowest": 195
+     },
+     "heal_potions": {
+      "first": 5,
+      "last": 4,
+      "lowest": 3
+     },
+     "cure_potions": {
+      "first": 5,
+      "last": 5,
+      "lowest": 5
+     }
+    }
+   },
+   "reviews": [
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 1,
+     "cost": 0.000916,
+     "prompt_tokens": 3466,
+     "completion_tokens": 1077,
+     "latency_s": 6.1,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Flee when health is badly wounded or worse and three or more hostiles are adjacent, even if the target is nearly dead.",
+       "evidence": "Died at 18:00:01 with five hostiles adjacent (Etakheki, Yagnar, a mongbat, a headless one, Diwarek) after Jev chose to keep fighting Kukgilug at 39%, 32%, 23%, 9% health (17:59:57 to 18:00:01, confidence 0.38 to 0.64). Flees were 0 for the whole run, and the strategy is empty, so no flee rule was in effect.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "When more than two enemies are adjacent, don't keep attacking a target that is near death; step away from the crowd first.",
+       "evidence": "The fatal sequence had a near-death target held for three decisions (17:59:59 to 18:00:01) while five enemies were adjacent and unhurt, and the character never got out of the crowd. Health fell from 32% to 9% during that stretch.",
+       "confidence": 0.45
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 2,
+     "cost": 0.001027,
+     "prompt_tokens": 3466,
+     "completion_tokens": 1299,
+     "latency_s": 6.4,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Flee as soon as health is near death while two or more hostiles are adjacent.",
+       "evidence": "Died at 18:00:01 with 5 hostiles adjacent. Health went 39% -> 32% -> 23% -> 9% over about 4 seconds (17:59:57 to 18:00:01), and Jev kept choosing to fight Kukgilug at 0.64, 0.40, 0.42 and 0.38. Zero flees in the whole run, and the strategy is empty, so fleeing was never allowed.",
+       "confidence": 0.7
+      },
+      {
+       "n": 2,
+       "line": "Don't pick up or keep a new target while badly wounded with three or more hostiles adjacent; pull back first.",
+       "evidence": "At 17:59:57 health was 39% with 5 hostiles adjacent, yet Jev chose to fight Kukgilug (badly wounded) at 0.60. That fight ended in the death at 18:00:01. Bandages applied during the sequence 'barely help' according to the journal.",
+       "confidence": 0.5
+      },
+      {
+       "n": 3,
+       "line": "Once health falls below half, lower aggression and don't engage new monsters until you are healthier.",
+       "evidence": "Fight confidence averaged 0.91 across 136 fight decisions with aggression at the default 0.50, and the only death came from continuing to fight after health fell below half. The low-health moment at 17:58:41 (23%, one decision) recovered, which shows fights below half health are risky but survivable when they end quickly.",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 1,
+     "cost": 0.017226,
+     "prompt_tokens": 3466,
+     "completion_tokens": 967,
+     "latency_s": 8.4,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I am badly wounded and three or more creatures are adjacent, flee right away instead of finishing the current target.",
+       "evidence": "Died 18:00:01 with 6 hostiles adjacent. Jev chose fight at 39%, 32%, 23%, 9% and 9% (17:59:57\u201318:00:01) with confidence 0.38\u20130.64. Flees totalled 0 over 3 runs, even though the default reading is 'flees when losing'.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "At near death with any unhurt creature adjacent, leave the area altogether. Don't try to kill a nearly dead target first.",
+       "evidence": "At 18:00:00 health was 9% and Jev kept fighting a near-death orc while 5 unhurt hostiles were adjacent, and it died. At 17:58:41 it was also near death (23%) with 5 adjacent and only survived by luck.",
+       "confidence": 0.5
+      },
+      {
+       "n": 3,
+       "line": "Don't stand in a crowd. Back off and fight when no more than two creatures are adjacent. Rest to recover once the area is clear.",
+       "evidence": "Both low-health moments (17:58:41 and 18:00:00) had 5\u20136 hostiles adjacent at once (orcs, ratmen, a mongbat, a headless one). Only 3 rest decisions in 151 decisions, and 9 corpses were still unlooted at both moments.",
+       "confidence": 0.35
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 2,
+     "cost": 0.012936,
+     "prompt_tokens": 3466,
+     "completion_tokens": 538,
+     "latency_s": 4.8,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I'm badly wounded and three or more enemies are adjacent, flee or leave the area instead of finishing the target.",
+       "evidence": "Died at 18:00:01 while fighting at 39%\u21929% with 6 hostiles adjacent (17:59:57\u201318:00:01). Jev kept choosing fight at 0.38\u20130.64 confidence, and flees total 0. Earlier near-death at 18:58:41 (23%) with 5 adjacent also only recovered by luck. The default 'flees when losing' never triggered.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "Don't wade into a pack: fall back so at most two enemies can reach me at once, and attack the weakest first.",
+       "evidence": "Both low-health moments (17:58:41, 18:00:00) had 5\u20136 hostiles adjacent at once (orcs, ratmen, mongbat, headless one), mostly unhurt, while I focused a single target. 9 corpses were unlooted, so the pack kept growing.",
+       "confidence": 0.4
+      },
+      {
+       "n": 3,
+       "line": "When near death (under ~25%) with several enemies adjacent, leave the area and rest; don't keep attacking.",
+       "evidence": "Health went 32%\u219223%\u21929% over about 2 seconds (17:59:59\u201318:00:00), and the next decisions were still fight at 0.42 and 0.38. Bandages (198) and 4 heal potions were mostly unused, so healing wasn't keeping up with damage from 6 attackers.",
+       "confidence": 0.5
+      }
+     ]
+    }
+   ]
+  },
+  "planners-2": {
+   "digest": {
+    "log": "planners-2.jsonl",
+    "span": {
+     "from": "20:16:31",
+     "to": "20:24:56",
+     "minutes": 8.4
+    },
+    "kit": "warrior",
+    "strategy": {
+     "text": "(none)",
+     "read_as": "flees when losing, aggression 0.50, current first, loots valuables"
+    },
+    "totals": {
+     "decisions": 244,
+     "runs": 6,
+     "kills": 6,
+     "deaths": 1,
+     "flees": 0,
+     "bandages_used": 9,
+     "heal_potions_used": 1,
+     "cure_potions_used": 0,
+     "corpses_looted": 6,
+     "items_taken": 10,
+     "gated_low_confidence": 2,
+     "judge_errors": 0
+    },
+    "intents": {
+     "rest": {
+      "count": 149,
+      "average_confidence": 1.0,
+      "below_0.5": 0
+     },
+     "fight": {
+      "count": 64,
+      "average_confidence": 0.97,
+      "below_0.5": 0
+     },
+     "seek": {
+      "count": 21,
+      "average_confidence": 0.7,
+      "below_0.5": 4
+     },
+     "loot": {
+      "count": 10,
+      "average_confidence": 0.83,
+      "below_0.5": 0
+     }
+    },
+    "deaths": {
+     "count": 1,
+     "first": [
+      {
+       "time": "20:24:55",
+       "decisions_before": [
+        "20:24:50 health wounded (58%); 48 bandages, 4 heal potions (not for another 7 seconds); hostiles: a gargoyle adjacent near death [target]; a gargoyle far away unhurt; a gargoyle far away unhurt -> fight 0.95 (keep fighting a gargoyle (0.95)); actions: none",
+        "20:24:51 health near death (20%); 47 bandages, 4 heal potions (not for another 6 seconds); hostiles: a gargoyle adjacent near death [target]; a gargoyle far away unhurt; a gargoyle far away unhurt -> fight 0.75 (keep fighting a gargoyle (0.75)); actions: none",
+        "20:24:52 health near death (21%); 47 bandages, 4 heal potions (not for another 5 seconds); hostiles: a gargoyle adjacent near death [target]; a gargoyle far away unhurt; a gargoyle far away unhurt -> fight 0.77 (keep fighting a gargoyle (0.77)); actions: none",
+        "20:24:54 health near death (21%); 47 bandages, 4 heal potions (not for another 4 seconds); hostiles: a gargoyle adjacent near death [target]; a gargoyle far away unhurt; a gargoyle far away unhurt -> fight 0.77 (keep fighting a gargoyle (0.77)); actions: none",
+        "20:24:55 health near death (21%); 47 bandages, 4 heal potions (not for another 2 seconds); hostiles: a gargoyle adjacent badly wounded [target]; a gargoyle far away unhurt; a gargoyle far away unhurt -> fight 0.71 (keep fighting a gargoyle (0.71)); actions: none"
+       ],
+       "journal": [
+        "You must wait to perform another action.",
+        "Who will you use the bandages on?",
+        "You begin applying the bandages.",
+        "Your fingers slip!",
+        "Who will you use the bandages on?",
+        "You begin applying the bandages."
+       ]
+      }
+     ]
+    },
+    "flees": {
+     "count": 0,
+     "first": []
+    },
+    "looting_with_monsters_close": {
+     "count": 0,
+     "first": []
+    },
+    "low_health": {
+     "count": 1,
+     "first": [
+      {
+       "lowest": "20:24:51 health near death (20%); 47 bandages, 4 heal potions (not for another 6 seconds); hostiles: a gargoyle adjacent near death [target]; a gargoyle far away unhurt; a gargoyle far away unhurt -> fight 0.75 (keep fighting a gargoyle (0.75)); actions: none",
+       "decisions": 4,
+       "then": "died"
+      }
+     ]
+    },
+    "supplies": {
+     "bandages": {
+      "first": 30,
+      "last": 47,
+      "lowest": 30
+     },
+     "heal_potions": {
+      "first": 5,
+      "last": 4,
+      "lowest": 4
+     },
+     "cure_potions": {
+      "first": 5,
+      "last": 5,
+      "lowest": 5
+     }
+    },
+    "session": {
+     "hunts": [
+      {
+       "area": "Britain Graveyard",
+       "minutes": 7.0,
+       "kills": 6,
+       "deaths": 1,
+       "bandages_used": 55,
+       "stopped_because": "died",
+       "ended": "20:24:56"
+      }
+     ],
+     "failed_goals": [
+      "20:16:33 buy: could not get to East Yew healer: could not set off for East Yew healer: no route",
+      "20:24:56 hunt: hunted Britain Graveyard for 7.0 min: 6 kills, stopped because died"
+     ]
+    }
+   },
+   "reviews": [
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 1,
+     "cost": 0.000927,
+     "prompt_tokens": 3099,
+     "completion_tokens": 1171,
+     "latency_s": 6.3,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Flee when health is near death and a monster is still adjacent.",
+       "evidence": "Died at 20:24:55 after 4 consecutive fight decisions at near death (20:24:51 to 20:24:55, 20-21% health) with a gargoyle adjacent; the session had 0 flees, so the current 'flees when losing' reading never triggered.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "Don't keep fighting while health is wounded and two or more other monsters are in view; leave first.",
+       "evidence": "The fatal fight began at 58% health (20:24:50) with two more unhurt gargoyles far away, and Jev chose fight at every decision until death, never retreating as the group stayed in range.",
+       "confidence": 0.35
+      },
+      {
+       "n": 3,
+       "line": "Only seek a new monster when no hostile is in view and you are unhurt.",
+       "evidence": "4 of 21 seek intents were below 0.5 confidence (average 0.7), the lowest-confidence intent of the session.",
+       "confidence": 0.2
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 2,
+     "cost": 0.000882,
+     "prompt_tokens": 3099,
+     "completion_tokens": 1082,
+     "latency_s": 5.7,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If you are near death and a monster is still adjacent, flee instead of fighting on.",
+       "evidence": "Died at 20:24:55. For the 4 decisions before death (20:24:51 to 20:24:55) health was near death (20-21%) with a gargoyle adjacent, and Jev chose fight every time (0.71-0.77 confidence). Flees count was 0 all session, and the strategy was empty so fleeing was not being forced.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "When health drops to badly wounded or lower while fighting a gargoyle, disengage and leave rather than trade blows.",
+       "evidence": "The fatal fight went from wounded (58%, 20:24:50) to near death (20%, 20:24:51) to death (20:24:55) against one gargoyle, with two more gargoyles in view. Jev kept attacking through the whole drop, with no flee at any point.",
+       "confidence": 0.45
+      },
+      {
+       "n": 3,
+       "line": "Don't keep fighting while two or more gargoyles are within 3 tiles of you and you are wounded.",
+       "evidence": "At death, three gargoyles were present (one adjacent, two far away). The adjacent one was the only one hitting, but the extra two meant no safe retreat was taken. One death, so weak evidence.",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 1,
+     "cost": 0.013482,
+     "prompt_tokens": 3099,
+     "completion_tokens": 666,
+     "latency_s": 5.6,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When I'm near death (about 25% or lower) and my heal potion isn't ready, flee from the creatures close by instead of finishing the target, even if it's almost dead.",
+       "evidence": "Died at 20:24:55. Health was near death (20-21%) for five straight decisions (20:24:51 to 20:24:55) while Jev kept choosing fight at 0.71-0.77 confidence. Heal potions were on cooldown ('not for another 2-7 seconds') and bandages slipped ('Your fingers slip!'). Flees: 0 for the whole session, even though the strategy text is blank (so the default is 'flees when losing').",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "Don't stay in a fight when I'm wounded (about 60% or lower) and more unhurt creatures are heading my way. Leave or fall back before they reach me.",
+       "evidence": "At 20:24:50 I was wounded (58%) fighting one gargoyle, with two more unhurt gargoyles far away. Health fell to 20% by 20:24:51, and I died four seconds later. No flee or retreat was ever chosen (flees = 0).",
+       "confidence": 0.35
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 2,
+     "cost": 0.015001,
+     "prompt_tokens": 3099,
+     "completion_tokens": 818,
+     "latency_s": 7.5,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When I am near death (about 20% or lower) and a monster is adjacent, flee right away. Don't keep fighting just because the target is almost dead.",
+       "evidence": "Died at 20:24:55. Jev chose fight on 5 decisions in a row (20:24:50\u201320:24:55) while health went from 58% to 20\u201321%. Flees for the whole session: 0. The potion was on cooldown for those turns and bandages kept failing ('Your fingers slip!'), so healing was not keeping up.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "Don't start or continue a fight with several gargoyles when I am wounded. Flee or leave the area before the unhurt ones arrive.",
+       "evidence": "At death, one gargoyle was adjacent and two more were far away and unhurt. Health was already wounded (58%) at 20:24:50 and fell to near death within a second. The only death of the session came in this fight.",
+       "confidence": 0.4
+      },
+      {
+       "n": 3,
+       "line": "After fleeing, rest until health is high before seeking or fighting again.",
+       "evidence": "Only 1 death, but it came from fighting while already wounded (58%) against a gargoyle group. Rest was cheap: 149 rest decisions at 1.0 confidence. Seek had 4 decisions below 0.5 confidence.",
+       "confidence": 0.25
+      }
+     ]
+    }
+   ]
+  },
+  "soak-goal1d": {
+   "digest": {
+    "log": "soak-goal1d.jsonl",
+    "span": {
+     "from": "03:39:29",
+     "to": "04:41:28",
+     "minutes": 62.0
+    },
+    "kit": "warrior",
+    "strategy": {
+     "text": "(none)",
+     "read_as": "flees when losing, aggression 0.50, current first, loots valuables"
+    },
+    "totals": {
+     "decisions": 1112,
+     "runs": 22,
+     "kills": 4,
+     "deaths": 0,
+     "flees": 100,
+     "bandages_used": 27,
+     "heal_potions_used": 2,
+     "cure_potions_used": 0,
+     "corpses_looted": 6,
+     "items_taken": 10,
+     "gated_low_confidence": 0,
+     "judge_errors": 0
+    },
+    "intents": {
+     "rest": {
+      "count": 943,
+      "average_confidence": 0.99,
+      "below_0.5": 0
+     },
+     "leave": {
+      "count": 111,
+      "average_confidence": 0.97,
+      "below_0.5": 0
+     },
+     "fight": {
+      "count": 41,
+      "average_confidence": 0.94,
+      "below_0.5": 0
+     },
+     "seek": {
+      "count": 9,
+      "average_confidence": 0.78,
+      "below_0.5": 2
+     },
+     "loot": {
+      "count": 8,
+      "average_confidence": 0.87,
+      "below_0.5": 0
+     }
+    },
+    "deaths": {
+     "count": 0,
+     "first": []
+    },
+    "flees": {
+     "count": 3,
+     "first": [
+      {
+       "time": "04:30:21",
+       "intent": "leave",
+       "health": 63,
+       "close": [
+        "a bone knight (a skeleton)"
+       ],
+       "decisions": 8,
+       "died_within_s": null
+      },
+      {
+       "time": "04:31:11",
+       "intent": "leave",
+       "health": 28,
+       "close": [
+        "a bone knight (a skeleton)",
+        "a bone knight (a skeleton)"
+       ],
+       "decisions": 9,
+       "died_within_s": null
+      },
+      {
+       "time": "04:32:15",
+       "intent": "leave",
+       "health": 100,
+       "close": [
+        "Chachak (a ratman)",
+        "Tysahyraaath (a lizardman)",
+        "Rebub (an orc)"
+       ],
+       "decisions": 94,
+       "died_within_s": null
+      }
+     ]
+    },
+    "looting_with_monsters_close": {
+     "count": 0,
+     "first": []
+    },
+    "low_health": {
+     "count": 1,
+     "first": [
+      {
+       "lowest": "04:31:17 health near death (9%); 41 bandages, 4 heal potions (not for another 4 seconds); hostiles: a bone knight (a skeleton) close lightly wounded [target]; a bone knight (a skeleton) close unhurt; a harpy nearby unhurt; a pig nearby unhurt; a cougar far away unhurt; a bull far away unhurt -> leave 1.0 (leaving, away from a bone knight (a skeleton)); actions: flee done",
+       "decisions": 2,
+       "then": "recovered"
+      }
+     ]
+    },
+    "supplies": {
+     "bandages": {
+      "first": 30,
+      "last": 23,
+      "lowest": 23
+     },
+     "heal_potions": {
+      "first": 5,
+      "last": 2,
+      "lowest": 2
+     },
+     "cure_potions": {
+      "first": 5,
+      "last": 5,
+      "lowest": 5
+     },
+     "first_ran_low": "04:40:08: running low: 25 bandages and 2 heal potions left"
+    },
+    "session": {
+     "hunts": [
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.3,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.46): 48 bandages and 5 heal potions left, no kills yet on this hunt; bag light (22% of what the character can carry); no kill in 1.3 min, nothing hostile in sight for 80 seconds",
+       "ended": "03:58:57"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.4,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.48): 48 bandages and 5 heal potions left, no kills yet on this hunt; bag light (22% of what the character can carry); no kill in 1.3 min, nothing hostile in sight for 81 seconds",
+       "ended": "04:05:29"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.3,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.53): 48 bandages and 5 heal potions left, no kills yet on this hunt; bag light (22% of what the character can carry); no kill in 1.3 min, nothing hostile in sight for 80 seconds",
+       "ended": "04:12:05"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.4,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.49): 45 bandages and 5 heal potions left, no kills yet on this hunt; bag light (23% of what the character can carry); no kill in 1.4 min, nothing hostile in sight for 81 seconds",
+       "ended": "04:18:45"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.4,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.45): 45 bandages and 5 heal potions left, no kills yet on this hunt; bag light (23% of what the character can carry); no kill in 1.4 min, nothing hostile in sight for 81 seconds",
+       "ended": "04:20:33"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.4,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.49): 44 bandages and 5 heal potions left, no kills yet on this hunt; bag light (23% of what the character can carry); no kill in 1.4 min, nothing hostile in sight for 80 seconds",
+       "ended": "04:26:19"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.4,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.47): 44 bandages and 5 heal potions left, no kills yet on this hunt; bag light (23% of what the character can carry); no kill in 1.4 min, nothing hostile in sight for 80 seconds",
+       "ended": "04:28:15"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.0,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 3,
+       "stopped_because": "Jev: not worth staying here (0.23): no kill in 1.0 min, 11 hostile creatures in sight, 1 close",
+       "ended": "04:31:23"
+      }
+     ],
+     "failed_goals": [
+      "03:40:23 buy: Britain healer: bought 20 of 40 bandage for 100 gold (bought 20 Clean Bandage, gold -100; the vendor did not show its goods; the world store knows no ",
+      "04:41:28 travel_to: did not reach West Britain bank: walking, 21 tiles short"
+     ]
+    }
+   },
+   "reviews": [
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 1,
+     "cost": 0.001115,
+     "prompt_tokens": 4149,
+     "completion_tokens": 1337,
+     "latency_s": 6.9,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If no hostile is in sight for about a minute, move to a new area with monsters rather than resting or staying put.",
+       "evidence": "Eight Britain Graveyard hunts ended with 0 kills; seven were handed back to the planner after Jev was unsure twice running (stay here 0.45-0.53), each with 'nothing hostile in sight for 80 seconds' (04:05 to 04:28). Only 4 kills in 62 minutes, while rest was 943 of 1112 decisions.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "Don't engage bone knights when two or more are close; leave before they reach you.",
+       "evidence": "Two of three flees were from bone knights (04:30:21 at 63 health, 04:31:11 at 28 health with two bone knights close). At 04:31:17 health fell to 9% with a bone knight adjacent, and the character survived only by fleeing.",
+       "confidence": 0.5
+      },
+      {
+       "n": 3,
+       "line": "Fight a single adjacent skeleton while health stays above half, and only leave once health drops below that or a second monster closes in.",
+       "evidence": "Fight intent was used 41 times at average confidence 0.94 and produced all 4 kills with no deaths. The strategy is empty, so the default flee-when-losing rule triggered leaves at 63 and 100 health (04:30:21, 04:32:15).",
+       "confidence": 0.35
+      },
+      {
+       "n": 4,
+       "line": "When seeking a creature, choose the nearest hostile type you have already fought successfully rather than wandering.",
+       "evidence": "Seek intent averaged 0.78 confidence with 2 of 9 decisions below 0.5. The hunts that stalled came after long stretches with nothing in sight (80 seconds each).",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 2,
+     "cost": 0.000917,
+     "prompt_tokens": 4149,
+     "completion_tokens": 942,
+     "latency_s": 4.9,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If a hunt has produced no kill after about a minute and nothing hostile is close, move to a different area with monsters rather than standing around.",
+       "evidence": "Seven Britain Graveyard hunts of about 1.4 minutes each produced 0 kills and ended with Jev unsure twice running (stay here 0.45 to 0.53), from 03:58 to 04:28. The eighth hunt ended at 04:31 with 11 hostiles in sight, but only after 1.0 minutes with no kill.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "Leave when a bone knight is close and you are below about two-thirds health, rather than trading blows with it.",
+       "evidence": "Fled from bone knights at 63 health (04:30:21) and 28 health (04:31:11). At 04:31:17 health fell to 9% with a bone knight close and lightly wounded, and only the flee saved the run. No deaths occurred, and the strategy is currently empty, so this is a new rule.",
+       "confidence": 0.55
+      },
+      {
+       "n": 3,
+       "line": "Only seek a creature when you are unhurt and have bandages to spare; otherwise rest or leave.",
+       "evidence": "Seek was the least confident intent: 9 times at average confidence 0.78, with 2 below 0.5. The lowest-confidence seeks were not followed by any kill in the digest.",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 1,
+     "cost": 0.020821,
+     "prompt_tokens": 4149,
+     "completion_tokens": 1190,
+     "latency_s": 9.8,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Don't flee while health is above half from ratmen, lizardmen or orcs, even in a group. Fight them one at a time, starting with the closest.",
+       "evidence": "At 04:32:15 Jev chose leave at 100% health with a ratman, a lizardman and an orc close. That flee lasted 94 decisions. There were 111 leave decisions against 41 fight decisions and only 4 kills in 62 minutes. The current strategy has no rule on when fleeing is worth it.",
+       "confidence": 0.5
+      },
+      {
+       "n": 2,
+       "line": "When nothing hostile is in sight and health is fine, seek the nearest creature instead of resting or staying put.",
+       "evidence": "There were 943 rest decisions against 9 seek decisions. Seven Britain Graveyard hunts (03:58\u201304:28) each ended after about 1.4 min with 0 kills. Each time 'nothing hostile in sight for 80 seconds' and Jev was unsure about staying (0.45\u20130.53).",
+       "confidence": 0.5
+      },
+      {
+       "n": 3,
+       "line": "Don't take on a second bone knight. When two are close, leave before health falls below half.",
+       "evidence": "At 04:31:11 Jev fled at 28% health with two bone knights close. Health reached near death (9%) at 04:31:17, and the character survived only because a heal potion was about to apply. At 04:30:21 it had already fled one bone knight at 63%.",
+       "confidence": 0.45
+      },
+      {
+       "n": 4,
+       "line": "Don't start a fight with a bone knight unless health is unhurt. Attack lone weaker creatures first.",
+       "evidence": "The only low-health moment (9% at 04:31:17) and two of the three logged flees (04:30:21, 04:31:11) came from bone knights. Bandage use rose to 3 in that hunt, and the hunt ended with 0 kills at 04:31:23 with 11 hostiles in sight.",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 2,
+     "cost": 0.020012,
+     "prompt_tokens": 4149,
+     "completion_tokens": 1109,
+     "latency_s": 9.1,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When nothing hostile is in sight, seek the nearest creature instead of resting or standing still.",
+       "evidence": "943 of 1112 decisions were rest, with only 4 kills in 62 minutes. Seven of eight hunts ended at about 1.4 min with 0 kills and 'nothing hostile in sight for 80 seconds' (03:58, 04:05, 04:12, 04:18, 04:20, 04:26, 04:28). Seek was used only 9 times.",
+       "confidence": 0.55
+      },
+      {
+       "n": 2,
+       "line": "Don't flee at full health from ratmen, lizardmen or orcs. Fight them one at a time and keep the wounded one as the target.",
+       "evidence": "At 04:32:15 Jev chose leave at 100% health with a ratman, a lizardman and an orc close, and spent 94 decisions on it. Across the whole session there were 4 kills against 111 leave decisions.",
+       "confidence": 0.4
+      },
+      {
+       "n": 3,
+       "line": "Don't take on two bone knights at once. Back off as soon as a second one is close, before health drops below about half.",
+       "evidence": "At 04:30:21 the character fled from one bone knight at 63% health. At 04:31:11 it was at 28% with two bone knights close. At 04:31:17 it reached 9%, near death, with 4 heal potions on cooldown, and the hunt was abandoned at 04:31:23.",
+       "confidence": 0.5
+      },
+      {
+       "n": 4,
+       "line": "Against bone knights, attack the one that is already wounded and leave early if health is under about 60%.",
+       "evidence": "At 04:31:17 the target was a lightly wounded bone knight while another stood unhurt beside it. Health went 63% \u2192 28% \u2192 9% over about a minute (04:30:21 to 04:31:17) and the run ended with no kill.",
+       "confidence": 0.3
+      }
+     ]
+    }
+   ]
+  },
+  "soak-packs5": {
+   "digest": {
+    "log": "soak-packs5.jsonl",
+    "span": {
+     "from": "15:31:42",
+     "to": "16:27:46",
+     "minutes": 56.1
+    },
+    "kit": "warrior",
+    "strategy": {
+     "text": "Fight one enemy at a time, prefer zombies and skeletons. Bandage when health below 60%. Flee and leave if two or more moderate creatures (ghouls, wraiths, spectres, lich) approach. Loot gold and valuables.",
+     "read_as": "flees when losing, aggression 0.25, weakest first, loots valuables"
+    },
+    "totals": {
+     "decisions": 1092,
+     "runs": 41,
+     "kills": 15,
+     "deaths": 0,
+     "flees": 8,
+     "bandages_used": 15,
+     "heal_potions_used": 1,
+     "cure_potions_used": 2,
+     "corpses_looted": 18,
+     "items_taken": 22,
+     "gated_low_confidence": 6,
+     "judge_errors": 0
+    },
+    "intents": {
+     "rest": {
+      "count": 870,
+      "average_confidence": 1.0,
+      "below_0.5": 0
+     },
+     "fight": {
+      "count": 162,
+      "average_confidence": 0.93,
+      "below_0.5": 7
+     },
+     "seek": {
+      "count": 24,
+      "average_confidence": 0.7,
+      "below_0.5": 6
+     },
+     "loot": {
+      "count": 23,
+      "average_confidence": 0.83,
+      "below_0.5": 1
+     },
+     "leave": {
+      "count": 13,
+      "average_confidence": 0.98,
+      "below_0.5": 0
+     }
+    },
+    "deaths": {
+     "count": 0,
+     "first": []
+    },
+    "flees": {
+     "count": 2,
+     "first": [
+      {
+       "time": "15:43:47",
+       "intent": "leave",
+       "health": 100,
+       "close": [
+        "a gargoyle",
+        "a gargoyle"
+       ],
+       "decisions": 3,
+       "died_within_s": null
+      },
+      {
+       "time": "16:14:16",
+       "intent": "leave",
+       "health": 58,
+       "close": [],
+       "decisions": 10,
+       "died_within_s": null
+      }
+     ]
+    },
+    "looting_with_monsters_close": {
+     "count": 0,
+     "first": []
+    },
+    "low_health": {
+     "count": 1,
+     "first": [
+      {
+       "lowest": "16:14:19 health near death (24%); 49 bandages, 3 heal potions (not for another 6 seconds); hostiles: a gargoyle far away unhurt; a gargoyle far away unhurt; a bone knight (a skeleton) far away unhurt; a bone knight (a skeleton) far away unhurt; a skeleton far away unhurt; a wraith (a ghoul) far away unhurt [target] -> leave 1.0 (leaving, away from a gargoyle); actions: flee done",
+       "decisions": 4,
+       "then": "recovered"
+      }
+     ]
+    },
+    "supplies": {
+     "bandages": {
+      "first": 30,
+      "last": 41,
+      "lowest": 30
+     },
+     "heal_potions": {
+      "first": 5,
+      "last": 2,
+      "lowest": 2
+     },
+     "cure_potions": {
+      "first": 5,
+      "last": 3,
+      "lowest": 3
+     }
+    },
+    "session": {
+     "hunts": [
+      {
+       "area": "Britain Graveyard",
+       "minutes": 4.5,
+       "kills": 6,
+       "deaths": 0,
+       "bandages_used": 4,
+       "stopped_because": "handed back to the planner: walked round the spawn 4 times and found nothing (stay here 0.46): 6 kills in 4.5 min, last kill 2.9 min ago, nothing hostile in sight for 171 seconds",
+       "ended": "15:36:55"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.0,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "handed back to the planner: Jev was unsure twice running (stay here 0.57): 56 bandages and 5 heal potions left, no kills yet on this hunt; bag light (24% of what the character can carry); no kill in 1.0 min, nothing hostile in sight for 50 seconds",
+       "ended": "15:39:01"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 0.6,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "left the area: 2 coming at once: 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: too many to fight at once",
+       "ended": "15:44:01"
+      },
+      {
+       "area": "Britain Graveyard",
+       "minutes": 0.5,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 4,
+       "stopped_because": "left the area: 6 coming at once: 2 gargoyles (a fair fight and a spellcaster each), 3 skeletons (stronger than you each) and a ghoul (a fair fight and a spellcaster); together far stronger than you: too many to fight at once",
+       "ended": "16:14:46"
+      },
+      {
+       "area": "wilderness near 1400,1400",
+       "minutes": 4.3,
+       "kills": 4,
+       "deaths": 0,
+       "bandages_used": 3,
+       "stopped_because": "handed back to the planner: walked round the spawn 4 times and found nothing (stay here 0.44): 4 kills in 4.3 min, last kill 3.3 min ago, nothing hostile in sight for 171 seconds",
+       "ended": "16:20:25"
+      },
+      {
+       "area": "wilderness near 1300,1400",
+       "minutes": 6.9,
+       "kills": 4,
+       "deaths": 0,
+       "bandages_used": 2,
+       "stopped_because": "handed back to the planner: walked round the spawn 4 times and found nothing (stay here 0.44): 4 kills in 6.8 min, last kill 3.4 min ago, nothing hostile in sight for 201 seconds",
+       "ended": "16:27:46"
+      }
+     ],
+     "failed_goals": [
+      "15:43:13 hunt: could not get to Britain Graveyard: did not reach Britain Graveyard: stuck, 4 tiles short",
+      "15:44:17 hunt: not going back near Britain Graveyard yet: it left there 0 min ago (2 coming at once: 2 gargoyles (a fair fight and a spellcaster each)); choose somew",
+      "15:59:42 hunt: not going back near Britain Graveyard yet: it left there 16 min ago (2 coming at once: 2 gargoyles (a fair fight and a spellcaster each)); choose some",
+      "16:09:52 hunt: not going back near Britain Graveyard yet: it left there 26 min ago (2 coming at once: 2 gargoyles (a fair fight and a spellcaster each)); choose some",
+      "16:20:31 hunt: not going back near Britain Graveyard yet: it left there 6 min ago (6 coming at once: 2 gargoyles (a fair fight and a spellcaster each), 3 skeletons ("
+     ]
+    }
+   },
+   "reviews": [
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 1,
+     "cost": 0.001096,
+     "prompt_tokens": 3867,
+     "completion_tokens": 1357,
+     "latency_s": 7.1,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Treat gargoyles like ghouls: if two or more gargoyles come at you, leave.",
+       "evidence": "The flee list names ghouls, wraiths, spectres and lich but not gargoyles. Two gargoyle groups drove the party out of Britain Graveyard (15:43:47 at full health, 16:14:16 at 58%). The 16:14 exit then fell to 24% within seconds with a gargoyle nearby.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "If nothing hostile has been in sight for about 2 minutes, move to a different spawn area instead of walking the same loop.",
+       "evidence": "Three hunts ended after 'walked round the spawn 4 times and found nothing' with nothing hostile in sight for 171-201 seconds (15:36:55, 16:20:25, 16:27:46). Seek intent averaged 0.7 confidence, with 6 of 24 below 0.5.",
+       "confidence": 0.45
+      },
+      {
+       "n": 3,
+       "line": "Leave the Graveyard rather than wait for it to clear when a gargoyle is in the group and you are below 60% health.",
+       "evidence": "The 16:14 leave started at 58% health and reached 24% within seconds (16:14:16-16:14:19) with gargoyles and skeletons near. Zero deaths, but the margin was thin.",
+       "confidence": 0.35
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 1,
+     "cost": 0.022117,
+     "prompt_tokens": 3867,
+     "completion_tokens": 1376,
+     "latency_s": 11.9,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When nothing hostile is in sight, keep seeking along the spawn instead of resting, unless I'm wounded.",
+       "evidence": "870 of 1092 decisions were rest. Three hunts were handed back after 171, 171 and 201 seconds with nothing hostile in sight (15:36, 16:20, 16:27). Only 15 kills in 56 minutes.",
+       "confidence": 0.4
+      },
+      {
+       "n": 2,
+       "line": "Leave the area when I'm wounded and three or more hostiles are in view, even if they are far away.",
+       "evidence": "At 16:14:16 I fled at 58% health with nothing close. Health fell to 24% (near death) by 16:14:19, with 2 gargoyles, 2 bone knights, a skeleton and a wraith all far away. The hunt ended at 16:14:46 because 6 were coming at once.",
+       "confidence": 0.45
+      },
+      {
+       "n": 3,
+       "line": "Treat gargoyles and bone knights as moderate creatures. Flee from two or more of them, and fight one alone only if I'm healthy.",
+       "evidence": "The strategy names only ghouls, wraiths, spectres and the lich as moderate. The 15:43:47 flee from 2 gargoyles and the 16:14 flee from 2 gargoyles, 3 skeletons and a ghoul were still judged 'far stronger than you'. Bone knights are skeletons, which the strategy tells me to prefer.",
+       "confidence": 0.35
+      },
+      {
+       "n": 4,
+       "line": "Don't go back to the graveyard after fleeing from it. Move on to another known spawn.",
+       "evidence": "There were 5 failed goals. Four were 'not going back near Britain Graveyard yet' (15:44, 15:59, 16:09, 16:20). A 15:43:13 trip to the graveyard also failed because I got stuck 4 tiles short. These retries wasted time.",
+       "confidence": 0.2
+      }
+     ]
+    }
+   ]
+  },
+  "planners-a-3": {
+   "digest": {
+    "log": "planners-a-3.jsonl",
+    "span": {
+     "from": "23:25:10",
+     "to": "00:10:17",
+     "minutes": 45.1
+    },
+    "kit": "warrior",
+    "strategy": {
+     "text": "Warrior vs undead (zombies, skeletons). Fight one enemy at a time. Bandage yourself whenever health drops below 70% and no enemy is adjacent. Drink a heal potion if health falls below 40%. Flee toward the bank if two or more undead are adjacent and health is below 50%. Loot corpses for gold and valuables.",
+     "read_as": "flees when losing, aggression 0.25, current first, loots valuables"
+    },
+    "totals": {
+     "decisions": 1664,
+     "runs": 37,
+     "kills": 22,
+     "deaths": 0,
+     "flees": 13,
+     "bandages_used": 12,
+     "heal_potions_used": 1,
+     "cure_potions_used": 1,
+     "corpses_looted": 22,
+     "items_taken": 9,
+     "gated_low_confidence": 7,
+     "judge_errors": 0
+    },
+    "intents": {
+     "rest": {
+      "count": 1448,
+      "average_confidence": 0.85,
+      "below_0.5": 115
+     },
+     "fight": {
+      "count": 140,
+      "average_confidence": 0.93,
+      "below_0.5": 2
+     },
+     "seek": {
+      "count": 30,
+      "average_confidence": 0.5,
+      "below_0.5": 16
+     },
+     "leave": {
+      "count": 24,
+      "average_confidence": 0.98,
+      "below_0.5": 0
+     },
+     "loot": {
+      "count": 22,
+      "average_confidence": 0.91,
+      "below_0.5": 0
+     }
+    },
+    "deaths": {
+     "count": 0,
+     "first": []
+    },
+    "flees": {
+     "count": 3,
+     "first": [
+      {
+       "time": "23:36:29",
+       "intent": "leave",
+       "health": 100,
+       "close": [
+        "a gargoyle",
+        "a gargoyle"
+       ],
+       "decisions": 6,
+       "died_within_s": null
+      },
+      {
+       "time": "23:45:18",
+       "intent": "leave",
+       "health": 100,
+       "close": [],
+       "decisions": 9,
+       "died_within_s": null
+      },
+      {
+       "time": "23:45:41",
+       "intent": "leave",
+       "health": 100,
+       "close": [],
+       "decisions": 9,
+       "died_within_s": null
+      }
+     ]
+    },
+    "looting_with_monsters_close": {
+     "count": 0,
+     "first": []
+    },
+    "low_health": {
+     "count": 0,
+     "first": []
+    },
+    "supplies": {
+     "bandages": {
+      "first": 30,
+      "last": 49,
+      "lowest": 30
+     },
+     "heal_potions": {
+      "first": 5,
+      "last": 4,
+      "lowest": 4
+     },
+     "cure_potions": {
+      "first": 5,
+      "last": 4,
+      "lowest": 4
+     }
+    },
+    "session": {
+     "hunts": [
+      {
+       "area": "Britain Graveyard",
+       "minutes": 1.2,
+       "kills": 3,
+       "deaths": 0,
+       "bandages_used": 5,
+       "stopped_because": "left the area: 2 coming at once: 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: too many to fight at once",
+       "ended": "23:36:51"
+      },
+      {
+       "area": "wilderness near 1600,1400",
+       "minutes": 0.3,
+       "kills": 0,
+       "deaths": 0,
+       "bandages_used": 0,
+       "stopped_because": "left the area: 2 coming at once: an ogre (a fair fight) and an ettin (a fair fight); together stronger than you: a hard fight",
+       "ended": "23:45:36"
+      },
+      {
+       "area": "north of Britain Suburbs",
+       "minutes": 15.0,
+       "kills": 19,
+       "deaths": 0,
+       "bandages_used": 5,
+       "stopped_because": "15.0 minutes up",
+       "ended": "00:10:17"
+      }
+     ],
+     "failed_goals": [
+      "23:29:12 travel_to: did not reach Britain healer: stuck, 3 tiles short",
+      "23:30:35 travel_to: did not reach 1474,1610: stuck, 3 tiles short",
+      "23:31:55 travel_to: did not reach Britain healer: stuck, 3 tiles short",
+      "23:37:05 hunt: not going back near Britain Graveyard yet: it left there 0 min ago (2 coming at once: 2 gargoyles (a fair fight and a spellcaster each)); choose somew",
+      "23:38:34 buy: Britain alchemist: bought 20 of 30 blood moss for 100 gold (bought 20 Blood Moss, gold -100; the world store knows no other alchemist selling blood mo"
+     ]
+    }
+   },
+   "reviews": [
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "try": 1,
+     "cost": 0.000844,
+     "prompt_tokens": 3054,
+     "completion_tokens": 1015,
+     "latency_s": 5.5,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If two or more gargoyles, ogres or ettins come at you at once, leave the area at any health rather than fighting them.",
+       "evidence": "Three leaves at full health (23:36:29 with two gargoyles adjacent, 23:45:18 and 23:45:41 after the ogre and ettin pair). Two hunts ended on this rule and none ended in a death. The current strategy only sets a fleeing threshold for undead below 50% health, so this makes the stronger-creature case explicit.",
+       "confidence": 0.4
+      },
+      {
+       "n": 2,
+       "line": "If no creature is in view and you are unhurt, rest where you stand instead of seeking one out.",
+       "evidence": "Seek decisions averaged 0.5 confidence, with 16 of 30 below 0.5 (rest averaged 0.85 over 1448 decisions). Three travel_to attempts got stuck 3 tiles short (23:29:12, 23:30:35, 23:31:55), so the wandering in search of targets was low-value.",
+       "confidence": 0.25
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-sonnet-5.5",
+     "try": 1,
+     "cost": 0.012929,
+     "prompt_tokens": 3054,
+     "completion_tokens": 919,
+     "latency_s": 7.5,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When no enemy is close and I'm unhurt or only lightly wounded, seek the nearest undead right away instead of resting.",
+       "evidence": "1448 of 1664 decisions were rest (115 below 0.5 confidence), against 140 fights and only 30 seeks. Of those seeks, 16 were below 0.5 confidence and 7 decisions were gated for low confidence. The 15-minute hunt north of Britain got 19 kills, and no health problems showed up in the digest (0 deaths, 0 low-health moments). That suggests the time spent resting was mostly idle.",
+       "confidence": 0.4
+      },
+      {
+       "n": 2,
+       "line": "Rest only when I'm wounded or worse; if I'm unhurt, seek a creature instead.",
+       "evidence": "Rest was the intent in 87% of decisions, but low_health shows 0 incidents and only 12 bandages were used in 45 minutes. Resting while healthy looks like wasted time. This tightens when to rest and doesn't touch the healing thresholds.",
+       "confidence": 0.3
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -362,6 +362,16 @@ namespace ClassicUO.UnitTests.Agent
             new AgentAction { Verb = "cast", Spell = spell }.Behavior.Name().Should().Be(behavior);
         }
 
+        [Theory]
+        [InlineData("disengage", "move")]
+        [InlineData("flee", "move")]
+        [InlineData("attack", "fight")]
+        public void Letting_a_fight_go_is_moving_on(string verb, string behavior)
+        {
+            // A leave on a trip lets the creature go so the walk goes on (cuo-1ts): move authority, like a flee.
+            new AgentAction { Verb = verb }.Behavior.Name().Should().Be(behavior);
+        }
+
         [Fact]
         public void Parses_a_brain_decision()
         {
@@ -433,6 +443,18 @@ namespace ClassicUO.UnitTests.Agent
             AgentCall c = AgentCall.FromJson(call.RootElement);
             c.Cost.Should().BeApproximately(0.00004f, 1e-8f);
             c.Spent.Budget.Should().Be(-1);
+        }
+
+        [Fact]
+        public void Parses_a_decision_jev_was_not_asked_for()
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(
+                "{\"intent\": \"rest\", \"cost\": 0, \"latency_ms\": 0, \"not_asked\": \"same state as the last call\"}");
+
+            AgentDecision.FromJson(doc.RootElement).NotAsked.Should().Be("same state as the last call");
+
+            using var asked = System.Text.Json.JsonDocument.Parse("{\"intent\": \"rest\", \"latency_ms\": 380}");
+            AgentDecision.FromJson(asked.RootElement).NotAsked.Should().BeEmpty();
         }
 
         [Fact]

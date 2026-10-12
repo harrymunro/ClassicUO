@@ -16,10 +16,13 @@ namespace ClassicUO.Agent
         public uint Target;
         public int X, Y;
         public int Distance = 1;
+        public bool HasDistance;              // given, not the default: a follow keeps within 2 unless told
         public int Range = 1;
         public int Tiles = 8;
         public bool On = true;
         public bool Queue;
+        public bool Run = true;               // walk_to: false walks
+        public string Pace = string.Empty;    // travel, follow: "walk" or "run"
         public string Kind = string.Empty;
         public string Text = string.Empty;
         public string Direction = string.Empty;
@@ -79,10 +82,12 @@ namespace ClassicUO.Agent
 
                     case "walk_to":
                     case "travel":
+                    case "follow":
                     case "move":
                     case "flee":
                     case "kite":
                     case "stop":
+                    case "disengage":
                         return AgentBehavior.Move;
 
                     default:
@@ -105,13 +110,15 @@ namespace ClassicUO.Agent
                     case "target": a.Target = ReadSerial(v); break;
                     case "x": a.X = v.GetInt32(); break;
                     case "y": a.Y = v.GetInt32(); break;
-                    case "distance": a.Distance = v.GetInt32(); break;
+                    case "distance": a.Distance = v.GetInt32(); a.HasDistance = true; break;
                     case "range": a.Range = v.GetInt32(); break;
                     case "spell": a.Spell = v.ValueKind == JsonValueKind.Number ? v.GetInt32().ToString() : v.GetString() ?? string.Empty; break;
                     case "name": a.Name = v.GetString() ?? string.Empty; break;
                     case "tiles": a.Tiles = v.GetInt32(); break;
                     case "on": a.On = v.GetBoolean(); break;
                     case "queue": a.Queue = v.GetBoolean(); break;
+                    case "run": a.Run = ReadBool(v, true); break;
+                    case "pace": a.Pace = v.GetString() ?? string.Empty; break;
                     case "kind": a.Kind = v.GetString() ?? string.Empty; break;
                     case "text": a.Text = v.GetString() ?? string.Empty; break;
                     case "dir": a.Direction = v.GetString() ?? string.Empty; break;
@@ -156,6 +163,37 @@ namespace ClassicUO.Agent
             return v.GetUInt32();
         }
 
+        // A flag as a boolean, or as a word from a command line ("false", "no", "off", "0").
+        public static bool ReadBool(JsonElement v, bool otherwise)
+        {
+            switch (v.ValueKind)
+            {
+                case JsonValueKind.True: return true;
+                case JsonValueKind.False: return false;
+                case JsonValueKind.Number: return v.GetDouble() != 0;
+                case JsonValueKind.String:
+                    string s = (v.GetString() ?? string.Empty).Trim().ToLowerInvariant();
+
+                    return s == "true" || s == "yes" || s == "on" || s == "1" || (s != "false" && s != "no" && s != "off" && s != "0" && otherwise);
+
+                default: return otherwise;
+            }
+        }
+
+        // The pace asked: true for a walk. A trip runs unless a walk is asked, a follow walks
+        // unless a run is.
+        public bool WalkPace(bool otherwise) => Pace == "walk" || (otherwise && Pace != "run");
+
+        public bool BadPace => Pace.Length != 0 && Pace != "walk" && Pace != "run";
+
+        // An emote as it is said: between asterisks, as the client's own emote key writes it.
+        public static string EmoteText(string text)
+        {
+            string t = (text ?? string.Empty).Trim();
+
+            return t.Length >= 2 && t[0] == '*' && t[t.Length - 1] == '*' ? t : "*" + t.Trim('*').Trim() + "*";
+        }
+
         // Short text for the overlay and the journal, e.g. "attack an orc".
         public string Describe(World world)
         {
@@ -172,11 +210,13 @@ namespace ClassicUO.Agent
                 case "flee": return Target != 0 ? $"flee from {target}" : "flee";
                 case "walk_to": return $"walk to {X},{Y}";
                 case "travel": return $"travel to {X},{Y}";
+                case "follow": return $"follow {target}";
                 case "kite": return "step back";
+                case "disengage": return "let the fight go";
                 case "pet": return Kind == "kill" ? $"set the pet on {target}" : Kind == "follow" ? "call the pet back" : $"pet: {Kind}";
                 case "move": return $"move {Direction}";
                 case "war_mode": return On ? "war mode on" : "peace mode";
-                case "say": return $"say \"{Text}\"";
+                case "say": return Kind == "emote" ? $"emote {EmoteText(Text)}" : $"say \"{Text}\"";
                 case "use": return $"use {target}";
                 case "cast":
                     string spell = AgentSpells.Find(Spell)?.Name ?? Spell;

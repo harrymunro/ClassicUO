@@ -1,0 +1,439 @@
+{
+ "what": "After-action review by Claude Opus 5.5 on the five logs of cuo-twd (cuo-vpi, 2026-10-10), to read against Haiku's and Sonnet's (bench/2026-10-09-haiku-sonnet-review.json). The digests are the same, token for token (3,466, 3,099, 4,149, 3,867 and 3,054 prompt tokens, as then). Tries 1 and 2 follow cuo-twd's schedule (8 reviews); try 3 is five more, run to see how often the tool call comes back malformed.",
+ "command": "uv run uo-brain review <copy of LOG> --again --planner-model anthropic/claude-opus-5.5 --cost-log logs/vpi/review-opus.jsonl (try 3: --cost-log logs/vpi/review-opus-extra.jsonl)",
+ "summary": {
+  "opus": {
+   "reviews": 13,
+   "usable": 11,
+   "scheduled": {
+    "reviews": 8,
+    "usable": 6,
+    "lines_read_by_code": 11,
+    "lines_as_sent": 17,
+    "cost": [
+     0.019157,
+     0.035617
+    ],
+    "cost_total": 0.2127,
+    "latency_s": [
+     9.3,
+     23.2
+    ],
+    "latency_s_median": 13.2
+   },
+   "cost_total": 0.3354
+  },
+  "haiku": {
+   "reviews": 8,
+   "usable": 8,
+   "lines": 23,
+   "cost": [
+    0.000844,
+    0.001115
+   ],
+   "cost_total": 0.0077,
+   "latency_s": [
+    4.9,
+    7.1
+   ],
+   "latency_s_median": 6.199999999999999
+  },
+  "sonnet": {
+   "reviews": 8,
+   "usable": 8,
+   "lines": 25,
+   "cost": [
+    0.012929,
+    0.022117
+   ],
+   "cost_total": 0.1345,
+   "latency_s": [
+    4.8,
+    11.9
+   ],
+   "latency_s_median": 7.95
+  }
+ },
+ "read": {
+  "how": "Each claim checked against the digest; the two marked (log) against the decisions log too.",
+  "what_sonnet_found_and_haiku_missed": {
+   "soak-goal1d: a leave at full health from a ratman, a lizardman and an orc that lasted 94 decisions": {
+    "sonnet": "2 of 2 tries, as its first and its second line (confidence 0.5, 0.4)",
+    "haiku": "0 of 2",
+    "opus": "2 of 3 tries (1 and 2), each time as its last line (0.35, 0.3); try 1 is one of the malformed calls, so code read it in 1 of 3"
+   },
+   "planners-2: the journal (potion not ready, fingers slipping)": {
+    "sonnet": "2 of 2",
+    "haiku": "0 of 2",
+    "opus": "3 of 3"
+   },
+   "soak-packs5: bone knights are skeletons, which the strategy says to prefer": {
+    "sonnet": "1 of 1",
+    "haiku": "0 of 1",
+    "opus": "0 of 2"
+   }
+  },
+  "what_neither_found": [
+   "soak-packs5 try 1: the damage at 16:14 came from range. \"By 16:14:19 health was 24% with every hostile listed as far away, so the damage came from range, probably the gargoyle and ghoul spellcasters.\" (log): at 16:14:16 health was 58% with two gargoyles nearby, none adjacent, each marked as attacking with spells from a distance; at 16:14:19 it was 24% with all six far away. Sonnet proposed leaving with three in view from the same moment without the cause. Not in try 3.",
+   "planners-2, all 3 tries: the gargoyle being finished went from near death back to badly wounded (20:24:55), so finishing it was not working. In the digest's decisions before the death."
+  ],
+  "against_the_goal": "None like Haiku's \"rest where you stand instead of seeking\". One weak line (soak-goal1d try 3, 0.3): look for \"weaker creatures like the harpy, pig, cougar or bull\" after fleeing bone knights.",
+  "slips": "None found in the 8 scheduled reviews (17 lines as sent). One in try 3: soak-goal1d \"only 0-3 bandages used\" over seven hunts that each used none.",
+  "lines": "Fewer: 17 in 8 reviews as sent (11 as code read them), against 25 for Sonnet and 23 for Haiku."
+ },
+ "logs": {
+  "arena-jev": {
+   "digest": "the same as in bench/2026-10-09-haiku-sonnet-review.json (compared, 2026-10-10)",
+   "reviews": [
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 1,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.033171,
+     "prompt_tokens": 3466,
+     "completion_tokens": 903,
+     "cached_tokens": 0,
+     "latency_s": 23.2,
+     "proposals": [],
+     "tool_call_malformed": "three propose calls, each with lines as a string holding '<parameter name=\"line\">' and the line, and evidence and confidence beside it: review.lines_from read no lines and the review was saved as \"No lines proposed\"",
+     "as_sent": [
+      {
+       "line": "If I'm badly wounded and three or more monsters are adjacent, flee instead of fighting.",
+       "evidence": "The one death (18:00:01) came with 6 hostiles adjacent, 5 of them unhurt. Jev kept choosing to fight from 39% health (17:59:57) down to 9% and never fled. There were 0 flees in the whole session, even though the default reading is \"flees when losing\". At 17:58:41 the same thing happened (23% health, 5 adjacent) and it survived only by luck.",
+       "confidence": 0.7
+      },
+      {
+       "line": "Don't stay to finish off a nearly dead target when I'm near death myself and other unhurt monsters are adjacent. Get out first.",
+       "evidence": "In the 4 decisions before the death (17:59:59 to 18:00:01), Jev kept attacking Kukgilug, who was near death, while its own health fell from 32% to 9%. Its confidence dropped to 0.38-0.42, and 3 of its fight decisions were below 0.5. At 17:58:41 it did the same with Oggha (near death) at 23% health.",
+       "confidence": 0.6
+      },
+      {
+       "line": "When five or more monsters are adjacent, leave the area rather than trading blows.",
+       "evidence": "Both low-health moments happened with 5-6 hostiles adjacent (17:58:41 and 18:00:00), and the second one ended in the only death. At 18:00:01 the journal shows bandages \"barely help\" in that situation.",
+       "confidence": 0.45
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 2,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.021725,
+     "prompt_tokens": 3466,
+     "completion_tokens": 630,
+     "cached_tokens": 1247,
+     "latency_s": 10.6,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I'm near death and more than one monster is adjacent, flee instead of finishing off my target.",
+       "evidence": "The one death (18:00:01) came after 3 decisions at near death (23%, 9%, 9%). Each time Jev chose to keep fighting the near-dead orc Kukgilug, with confidence falling to 0.38\u20130.42, while 5 unhurt monsters stood adjacent. Flees were 0 for the whole session, so 'flees when losing' never fired. At 17:58:41 the same situation (near death at 23%, 4 unhurt monsters adjacent) only recovered by luck.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "When four or more monsters are adjacent and I'm badly wounded, leave the area rather than keep trading hits.",
+       "evidence": "Both low-health moments happened with 5\u20136 monsters adjacent: 17:58:41 (5 adjacent) and 17:59:57\u201318:00:01 (6 adjacent). In the second, health fell from 39% to 9% in about 3 seconds while bandages 'barely help', and the character died. Being badly wounded at 39% was the last point where getting out was realistic.",
+       "confidence": 0.5
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 3,
+     "scheduled_as_cuo_twd": false,
+     "cost": 0.025905,
+     "prompt_tokens": 3466,
+     "completion_tokens": 839,
+     "cached_tokens": 1247,
+     "latency_s": 14.9,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I'm badly wounded or worse and three or more monsters are adjacent, flee instead of finishing off my target.",
+       "evidence": "The one death (18:00:01) came with 6 hostiles adjacent. I kept fighting a near-death orc while my health fell 39% \u2192 32% \u2192 23% \u2192 9% over 4 seconds. There were 0 flees all session, even though the default is supposed to flee when losing. At 17:58:41 I was at 23% with 5 adjacent and survived only by luck.",
+       "confidence": 0.6
+      },
+      {
+       "n": 2,
+       "line": "When five or more monsters are adjacent and most are unhurt, leave the area instead of trading blows.",
+       "evidence": "Both low-health moments came while I was surrounded: 5 adjacent at 17:58:41 (4 of them unhurt) and 6 adjacent before the death at 18:00:01 (5 of them unhurt). Bandages were barely helping, and the journal says 'they barely help'.",
+       "confidence": 0.45
+      },
+      {
+       "n": 3,
+       "line": "If I'm near death and not sure fighting is right, flee.",
+       "evidence": "All 3 fight decisions below 0.5 confidence (0.40, 0.42, 0.38) came in the last 2 seconds before the death at 18:00:01, while I was near death at 23%, then 9%, then 9%.",
+       "confidence": 0.4
+      }
+     ]
+    }
+   ]
+  },
+  "planners-2": {
+   "digest": "the same as in bench/2026-10-09-haiku-sonnet-review.json (compared, 2026-10-10)",
+   "reviews": [
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 1,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.019157,
+     "prompt_tokens": 3099,
+     "completion_tokens": 575,
+     "cached_tokens": 1247,
+     "latency_s": 9.3,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I'm near death and my heal potion isn't ready, flee from the creatures close by, even if my target is almost dead.",
+       "evidence": "The one death (20:24:55): health fell from 58% to 20% in one second at 20:24:51. After that Jev picked 'keep fighting' four more times while near death (20:24:51 to 20:24:55), with the heal potion still on cooldown and a bandage slipping. The adjacent gargoyle never died, and it was back up to 'badly wounded' at the end. The default 'flee when losing' never fired because the target looked near death, and there were 0 flees in the whole session.",
+       "confidence": 0.45
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 2,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.020857,
+     "prompt_tokens": 3099,
+     "completion_tokens": 660,
+     "cached_tokens": 1247,
+     "latency_s": 12.7,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I'm near death, flee from the adjacent creature even if it is nearly dead, and come back once I've healed.",
+       "evidence": "The only death (20:24:55): health fell from 58% to 20% in one second (20:24:50 to 20:24:51) against an adjacent gargoyle that was near death. Jev chose to keep fighting at 20-21% four times in a row (confidence 0.71-0.77). The heal potion was still on cooldown, a bandage failed ('Your fingers slip!'), and the gargoyle went from near death back to badly wounded instead of dying. The other two gargoyles were far away, so the way out was open. The default 'flees when losing' never triggered, because Jev saw a near-death target as a fight it was winning. Weak evidence: one incident.",
+       "confidence": 0.45
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 3,
+     "scheduled_as_cuo_twd": false,
+     "cost": 0.021457,
+     "prompt_tokens": 3099,
+     "completion_tokens": 690,
+     "cached_tokens": 1247,
+     "latency_s": 9.8,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "If I'm near death and my heal potion isn't ready yet, flee from the creatures close by, even if my target is nearly dead.",
+       "evidence": "The one death (20:24:55) came after 4 decisions in a row at near death (20-21%, 20:24:51-20:24:55). Each time Jev chose to keep fighting an adjacent gargoyle that was near death, at confidence 0.71-0.77, while the heal potion was still 6 to 2 seconds away. The gargoyle never died; by 20:24:55 it was back up to badly wounded. Zero flees in the whole session, even though the default reads as 'flees when losing'.",
+       "confidence": 0.55
+      },
+      {
+       "n": 2,
+       "line": "Gargoyles hit hard: once I'm wounded with one adjacent, back off and let the bandages work before closing in again.",
+       "evidence": "At 20:24:50 to 20:24:51, health dropped from 58% (wounded) to 20% (near death) in one second while fighting an adjacent gargoyle. That swing was too fast to bandage through: the journal shows 'Your fingers slip!' and the bandage restarting. Only one incident.",
+       "confidence": 0.35
+      }
+     ]
+    }
+   ]
+  },
+  "planners-a-3": {
+   "digest": "the same as in bench/2026-10-09-haiku-sonnet-review.json (compared, 2026-10-10)",
+   "reviews": [
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 1,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.021937,
+     "prompt_tokens": 3054,
+     "completion_tokens": 723,
+     "cached_tokens": 1247,
+     "latency_s": 13.3,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When no enemy is in sight and I'm unhurt, seek the nearest creature instead of resting.",
+       "evidence": "Seek was the least certain intent: 30 seek decisions averaging 0.5 confidence, 16 of them below 0.5. Rest made up 1448 of 1664 decisions, 115 of them below 0.5, and 7 decisions were gated for low confidence. The strategy says nothing about when to seek, so Jev has no guide for it.",
+       "confidence": 0.35
+      },
+      {
+       "n": 2,
+       "line": "If two strong non-undead (gargoyles, ogres, ettins) come at me at once, leave the area; fight them only one at a time.",
+       "evidence": "Two hunts ended early, both at 100% health with no deaths, when two non-undead came at once: 2 gargoyles at 23:36:29 and an ogre plus an ettin around 23:45:18\u201323:45:41. The strategy only covers undead and only allows fleeing below 50% health. Writing down what already worked makes it more reliable.",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 3,
+     "scheduled_as_cuo_twd": false,
+     "cost": 0.019837,
+     "prompt_tokens": 3054,
+     "completion_tokens": 618,
+     "cached_tokens": 1247,
+     "latency_s": 9.7,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When I'm unhurt and nothing is in sight, seek the nearest lone creature instead of resting.",
+       "evidence": "Rest was 1448 of 1664 decisions (115 below 0.5 confidence), yet health never got low (0 low-health moments, 0 deaths). Seek averaged only 0.5 confidence, with 16 of 30 below 0.5, so Jev was unsure when to go hunting. 22 kills in 45 minutes.",
+       "confidence": 0.4
+      },
+      {
+       "n": 2,
+       "line": "Leave the area when two or more strong non-undead (gargoyles, ogres, ettins) come at me together, even at full health.",
+       "evidence": "Both hunts that ended early stopped for this reason: 2 gargoyles at 23:36:29 and an ogre plus an ettin at 23:45:18. Both times I was at 100% health and got away without dying. The strategy only mentions undead and only flees below 50% health, so this line makes the exit Jev actually took a stated rule.",
+       "confidence": 0.35
+      }
+     ]
+    }
+   ]
+  },
+  "soak-goal1d": {
+   "digest": "the same as in bench/2026-10-09-haiku-sonnet-review.json (compared, 2026-10-10)",
+   "reviews": [
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 1,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.035617,
+     "prompt_tokens": 4149,
+     "completion_tokens": 1188,
+     "cached_tokens": 1247,
+     "latency_s": 15.4,
+     "proposals": [],
+     "tool_call_malformed": "three propose calls, each with lines as a string holding '<parameter name=\"line\">' and the line, and evidence and confidence beside it: review.lines_from read no lines and the review was saved as \"No lines proposed\"",
+     "as_sent": [
+      {
+       "line": "When no hostile creature is in sight, seek one instead of resting, unless I'm wounded.",
+       "evidence": "Rest was the intent in 943 of 1112 decisions, and seek in only 9. Seven Britain Graveyard hunts (ended 03:58:57 through 04:28:15) each lasted about 1.4 min and got 0 kills and used 0 bandages. Each was handed back with \"nothing hostile in sight for 80 seconds\", while Jev was unsure about staying (0.45 to 0.53). There were only 4 kills in 62 minutes.",
+       "confidence": 0.6
+      },
+      {
+       "line": "Never fight two bone knights at once. If a second one comes close, leave right away.",
+       "evidence": "At 04:30:21 I left at 63% health with one bone knight close. At 04:31:11 I left at 28% with two bone knights close. At 04:31:17 I hit near death (9%) with two bone knights close and only got away by fleeing. This is the one low-health moment of the session (a single incident).",
+       "confidence": 0.45
+      },
+      {
+       "line": "When I'm unhurt, fight ratmen, lizardmen and orcs instead of leaving. Only leave once I'm badly wounded.",
+       "evidence": "At 04:32:15 I fled at 100% health from a ratman, a lizardman and an orc, and kept leaving for 94 decisions. There were 100 flees in total against 4 kills, so the default \"flees when losing\" is fleeing from fights a warrior could win.",
+       "confidence": 0.35
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 2,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.031377,
+     "prompt_tokens": 4149,
+     "completion_tokens": 976,
+     "cached_tokens": 1247,
+     "latency_s": 17.2,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When I'm unhurt and nothing hostile is in sight, seek a creature instead of resting.",
+       "evidence": "943 of 1112 decisions were rest and only 9 were seek. Seven Britain Graveyard hunts in a row (03:58 to 04:28) ended after 1.3-1.4 min with no kills because nothing hostile was in sight for about 80 seconds. Each time health and supplies were full (44-48 bandages, 5 heal potions).",
+       "confidence": 0.55
+      },
+      {
+       "n": 2,
+       "line": "Don't fight bone knights while badly wounded or when two are close; leave as soon as a second one closes in.",
+       "evidence": "Fighting bone knights, I fled at 63% health at 04:30:21. At 04:31:11 I fled again at 28% with two bone knights close, and dropped to 9% (near death) at 04:31:17 before getting away. This was the only low-health moment of the session.",
+       "confidence": 0.4
+      },
+      {
+       "n": 3,
+       "line": "When I'm unhurt, fight lone ratmen, lizardmen and orcs instead of leaving.",
+       "evidence": "At 04:32:15 I fled at 100% health from a ratman, a lizardman and an orc, and kept leaving for 94 decisions. The session had 100 flees and only 4 kills in 62 minutes. This is one incident, though a long one.",
+       "confidence": 0.3
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 3,
+     "scheduled_as_cuo_twd": false,
+     "cost": 0.030097,
+     "prompt_tokens": 4149,
+     "completion_tokens": 912,
+     "cached_tokens": 1247,
+     "latency_s": 12.2,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "When nothing hostile is in sight, seek a creature instead of resting while unhurt.",
+       "evidence": "Rest made up 943 of 1112 decisions, seek only 9. Seven Britain Graveyard hunts in a row (03:58 to 04:28) were handed back with 0 kills after 'nothing hostile in sight for 80 seconds', each time with Jev unsure about staying (0.45\u20130.53) and only 0\u20133 bandages used.",
+       "confidence": 0.55
+      },
+      {
+       "n": 2,
+       "line": "Fight one bone knight at a time; if a second bone knight comes close, leave right away, before health drops below half.",
+       "evidence": "At 04:30:21 Jev fled one bone knight at 63% health and then went back in. At 04:31:11 two bone knights were close at 28%, and health bottomed out near death (9%) at 04:31:17 before it recovered. That was the only low-health moment of the session.",
+       "confidence": 0.4
+      },
+      {
+       "n": 3,
+       "line": "Once I've fled bone knights, don't go back to them on the same hunt; look for weaker creatures like the harpy, pig, cougar or bull instead.",
+       "evidence": "The second flee came 50 seconds after the first (04:30:21, then 04:31:11) and against more bone knights, which ended at 9% health. A harpy, pig, cougar and bull were in sight at the time. The hunt ended at 04:31:23 as 'not worth staying' with 0 kills. Only 4 kills in the whole 62 minutes.",
+       "confidence": 0.3
+      }
+     ]
+    }
+   ]
+  },
+  "soak-packs5": {
+   "digest": "the same as in bench/2026-10-09-haiku-sonnet-review.json (compared, 2026-10-10)",
+   "reviews": [
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 1,
+     "scheduled_as_cuo_twd": true,
+     "cost": 0.028869,
+     "prompt_tokens": 3867,
+     "completion_tokens": 907,
+     "cached_tokens": 1247,
+     "latency_s": 13.1,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Count gargoyles and bone knights as moderate creatures: if two or more of them approach, flee and leave.",
+       "evidence": "Both area-leaves involved gargoyles, which the current flee rule doesn't list (it names only ghouls, wraiths, spectres, lich). At 15:43:47 two gargoyles came in together. At 16:14:16 two gargoyles came with 3 skeletons/bone knights and a ghoul. On that second visit health fell to near death (24%) at 16:14:19. This line adds to the existing flee list.",
+       "confidence": 0.5
+      },
+      {
+       "n": 2,
+       "line": "Against gargoyles or other spellcasters, leave as soon as two are in sight, even far away. Don't wait for them to get close.",
+       "evidence": "At 16:14:16 the leave started at 58% health with nothing close. By 16:14:19 health was 24% with every hostile listed as far away, so the damage came from range, probably the gargoyle and ghoul spellcasters. It took 10 decisions to get out. This was the only low-health moment of the session.",
+       "confidence": 0.4
+      }
+     ]
+    },
+    {
+     "model": "anthropic/claude-opus-5.5",
+     "try": 3,
+     "scheduled_as_cuo_twd": false,
+     "cost": 0.025389,
+     "prompt_tokens": 3867,
+     "completion_tokens": 733,
+     "cached_tokens": 1247,
+     "latency_s": 11.1,
+     "proposals": [
+      {
+       "n": 1,
+       "line": "Count gargoyles and bone knights as moderate creatures: leave as soon as two of them, or any mix of two moderates, are in sight, before they get close.",
+       "evidence": "The current flee rule names only ghouls, wraiths, spectres and lich. Both flees at Britain Graveyard were set off by gargoyles: 2 gargoyles at 15:43:47, and at 16:14:16 a group of 2 gargoyles, 2 bone knights, a skeleton and a wraith. The 16:14 leave began at 58% health and took 10 decisions. Health fell to 24% (near death) at 16:14:19, the only low-health moment of the session. Leaving earlier would have avoided that hit.",
+       "confidence": 0.55
+      },
+      {
+       "n": 2,
+       "line": "If I'm already wounded when a group of three or more appears, leave right away. Don't trade blows first.",
+       "evidence": "At 16:14:16 the leave started at 58% health, with 6 hostiles coming at once. Health then dropped to 24% at 16:14:19, while heal potions were still on cooldown. This happened once, so the evidence is weak.",
+       "confidence": 0.35
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,1057 @@
+{
+  "started": "2026-10-09T12:26:46",
+  "rounds": 4,
+  "lane": 0,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "planner": "anthropic/claude-sonnet-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-sonnet-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "sight-wall-archer": {
+      "bead": "cuo-ehm",
+      "right": "An orc stands still behind a wall 6 tiles north of an archer, another in the open 8 tiles east: shoot the one in sight, then go round the wall to shoot the other; kill both.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Malthu (orc)",
+                "Zogugbu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 23.3,
+              "seconds": 41.3,
+              "player_died": false,
+              "engaged": [
+                "Malthu (orc)",
+                "Zogugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 31,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sbghat (orc)",
+                "Quordud (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 42.4,
+              "seconds": 61.3,
+              "player_died": false,
+              "engaged": [
+                "Sbghat (orc)",
+                "Quordud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sunodagh (orc)",
+                "Zombilge (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 42.1,
+              "seconds": 61.0,
+              "player_died": false,
+              "engaged": [
+                "Sunodagh (orc)",
+                "Zombilge (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zulgha (orc)",
+                "Gilaktug (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 27.2,
+              "seconds": 46.5,
+              "player_died": false,
+              "engaged": [
+                "Zulgha (orc)",
+                "Gilaktug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 35,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "heuristic/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Gujjab (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": 21.0,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Vegum (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 91,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic_nosight-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Hogug (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": 21.4,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Wubdagog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 91,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic_nosight-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Xokuk (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": 32.3,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Kurmbag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 92,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic_nosight-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Sildud (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": 21.2,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Isagubat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 92,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-heuristic_nosight-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Varfu (orc)",
+                "Sogugbu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 23.3,
+              "seconds": 41.2,
+              "player_died": false,
+              "engaged": [
+                "Varfu (orc)",
+                "Sogugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 26,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev-01.jsonl",
+              "input_tokens": 53261,
+              "cost_usd": 0.002237,
+              "cost_by_kind": {
+                "fight": 0.002237
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 249.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gutjja (orc)",
+                "Wuglat (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 19.5,
+              "seconds": 39.5,
+              "player_died": false,
+              "engaged": [
+                "Gutjja (orc)",
+                "Wuglat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 23,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev-02.jsonl",
+              "input_tokens": 46643,
+              "cost_usd": 0.001959,
+              "cost_by_kind": {
+                "fight": 0.001959
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 261.6
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zilug (orc)",
+                "Aghed (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 30.8,
+              "seconds": 50.9,
+              "player_died": false,
+              "engaged": [
+                "Zilug (orc)",
+                "Aghed (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 32,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev-03.jsonl",
+              "input_tokens": 65012,
+              "cost_usd": 0.002731,
+              "cost_by_kind": {
+                "fight": 0.002731
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 265.2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Krothu (orc)",
+                "Buordud (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 45.8,
+              "seconds": 64.6,
+              "player_died": false,
+              "engaged": [
+                "Krothu (orc)",
+                "Buordud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 44,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev-04.jsonl",
+              "input_tokens": 90885,
+              "cost_usd": 0.003817,
+              "cost_by_kind": {
+                "fight": 0.003817
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 258.8
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01074,
+          "cost_per_round_usd": 0.00268,
+          "latency_ms_avg": 258.6,
+          "errors": 0
+        },
+        "jev/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Duiltag (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.5,
+              "last_kill_s": 21.4,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Varthurg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 74,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev_nosight-01.jsonl",
+              "input_tokens": 151190,
+              "cost_usd": 0.00635,
+              "cost_by_kind": {
+                "fight": 0.00635
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 245.0
+            },
+            {
+              "success": false,
+              "kills": [
+                "Vurbag (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.6,
+              "last_kill_s": 43.6,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Bog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 74,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev_nosight-02.jsonl",
+              "input_tokens": 148925,
+              "cost_usd": 0.006255,
+              "cost_by_kind": {
+                "fight": 0.006255
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 238.5
+            },
+            {
+              "success": false,
+              "kills": [
+                "Zulgha (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.4,
+              "last_kill_s": 36.0,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Turge (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 73,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev_nosight-03.jsonl",
+              "input_tokens": 148945,
+              "cost_usd": 0.006256,
+              "cost_by_kind": {
+                "fight": 0.006256
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 248.6
+            },
+            {
+              "success": false,
+              "kills": [
+                "Wudgh (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.6,
+              "last_kill_s": 17.2,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Gujarek (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 70,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-wall-archer-jev_nosight-04.jsonl",
+              "input_tokens": 144294,
+              "cost_usd": 0.00606,
+              "cost_by_kind": {
+                "fight": 0.00606
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 302.8
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02492,
+          "cost_per_round_usd": 0.00623,
+          "latency_ms_avg": 258.7,
+          "errors": 0
+        }
+      }
+    },
+    "sight-hut-archer": {
+      "bead": "cuo-ehm",
+      "right": "An orc stands still in a hut 8 tiles north of an archer, its doorway on the far side: go round to where it can be seen through the doorway and shoot it dead.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Vrikdarok (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 19.8,
+              "seconds": 30.7,
+              "player_died": false,
+              "engaged": [
+                "Vrikdarok (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 25,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Tog (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 16.2,
+              "seconds": 27.0,
+              "player_died": false,
+              "engaged": [
+                "Tog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 22,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zogugbu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 19.7,
+              "seconds": 30.8,
+              "player_died": false,
+              "engaged": [
+                "Zogugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 25,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sogorim (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 27.4,
+              "seconds": 39.3,
+              "player_died": false,
+              "engaged": [
+                "Sogorim (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 33,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "heuristic/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 90.0,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Umruigig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic_nosight-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Vambag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic_nosight-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Derthag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic_nosight-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.9,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Puiltag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-heuristic_nosight-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Zulmthu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 31.2,
+              "seconds": 42.7,
+              "player_died": false,
+              "engaged": [
+                "Zulmthu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 31,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev-01.jsonl",
+              "input_tokens": 58066,
+              "cost_usd": 0.002439,
+              "cost_by_kind": {
+                "fight": 0.002439
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 231.5
+            },
+            {
+              "success": true,
+              "kills": [
+                "Komarod (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 16.8,
+              "seconds": 29.3,
+              "player_died": false,
+              "engaged": [
+                "Komarod (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 19,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev-02.jsonl",
+              "input_tokens": 35583,
+              "cost_usd": 0.001494,
+              "cost_by_kind": {
+                "fight": 0.001494
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 320.9
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gnoth (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 20.5,
+              "seconds": 30.8,
+              "player_died": false,
+              "engaged": [
+                "Gnoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 22,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev-03.jsonl",
+              "input_tokens": 41016,
+              "cost_usd": 0.001723,
+              "cost_by_kind": {
+                "fight": 0.001723
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 240.2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Xugug (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 16.6,
+              "seconds": 27.0,
+              "player_died": false,
+              "engaged": [
+                "Xugug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 19,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev-04.jsonl",
+              "input_tokens": 35109,
+              "cost_usd": 0.001475,
+              "cost_by_kind": {
+                "fight": 0.001475
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 271.5
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00713,
+          "cost_per_round_usd": 0.00178,
+          "latency_ms_avg": 266.0,
+          "errors": 0
+        },
+        "jev/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.6,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Wapkagut (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 72,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev_nosight-01.jsonl",
+              "input_tokens": 134069,
+              "cost_usd": 0.005631,
+              "cost_by_kind": {
+                "fight": 0.005631
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 256.8
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.6,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Almthu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 73,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev_nosight-02.jsonl",
+              "input_tokens": 137024,
+              "cost_usd": 0.005755,
+              "cost_by_kind": {
+                "fight": 0.005755
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 244.5
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.5,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Yukgnath (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 72,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev_nosight-03.jsonl",
+              "input_tokens": 136084,
+              "cost_usd": 0.005716,
+              "cost_by_kind": {
+                "fight": 0.005716
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 258.6
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 89.4,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Hokulk (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 71,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646/sight-hut-archer-jev_nosight-04.jsonl",
+              "input_tokens": 133912,
+              "cost_usd": 0.005624,
+              "cost_by_kind": {
+                "fight": 0.005624
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 273.8
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02273,
+          "cost_per_round_usd": 0.00568,
+          "latency_ms_avg": 258.4,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.065521,
+    "cost_per_hour_usd": 0.1052,
+    "calls": 795,
+    "by_role": {
+      "system1": 0.065521
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 795,
+        "input_tokens": 1560018,
+        "output_tokens": 94711,
+        "cost_usd": 0.065521,
+        "latency_ms_avg": 258.6
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 795,
+        "input_tokens": 1560018,
+        "output_tokens": 94711,
+        "cost_usd": 0.065521,
+        "latency_ms_avg": 258.6
+      }
+    },
+    "cost_per_decision_usd": 8.24e-05
+  },
+  "openrouter_key_spent_usd": 0.939088
+}

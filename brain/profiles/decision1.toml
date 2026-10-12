@@ -1,0 +1,19 @@
+# Microsoft's Decision 1 in every system-one call, the rest as the default profile (cuo-79x). Since
+# 2026-10-12 the default is Decision 1 too, but with Jev for routine and strategy (cuo-3ni).
+# A decisions model of Jev's own kind (the same request, a probability for each option), at the same
+# price a token; a request costs about 30% less because it counts fewer tokens, and takes about 100 ms
+# longer. On the judgment benchmark of 2026-10-10 it won 139 rounds of 150 to Jev's 128 (README, Results,
+# "Jev and Microsoft's Decision 1"). Not the default: the policy's cuts were tuned on Jev's numbers, its
+# routine "move to another spot" says yes 2% of the time where Jev says 36% (offline), and in a soak hour
+# (2026-10-11, cuo-o6p) it hunted less than Jev (13 kills to 31): its "stay here" fell under the cut 20 s
+# into 5 hunts of 10.
+#   uo-brain session "..." --profile decision1
+
+[models]
+system1 = "microsoft/microsoft-decision-1"
+system2 = "anthropic/claude-haiku-5.5"
+review = "anthropic/claude-sonnet-5.5"
+guide = "anthropic/claude-sonnet-5.5"
+
+[aliases]
+decision1 = "microsoft/microsoft-decision-1"

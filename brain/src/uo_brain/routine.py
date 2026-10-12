@@ -34,7 +34,7 @@ from typing import Any
 from . import calls, costs
 from .judge import Answers, Judge
 from .spells import ATTACK_SPELLS, NECRO_ATTACK_SPELLS, mana_words
-from .state import archetype_of, coming_at, health_words, reagents_of
+from .state import archetype_of, coming_at, health_words, reagents_of, threatening
 
 
 @dataclass
@@ -92,6 +92,7 @@ class HuntWatch:
     log: Callable[[dict[str, Any]], None] = lambda _: None
     archetype: str | None = None
     radius: int = 0  # how far the spawn spreads, in tiles, when known
+    bestiary: dict[int, dict[str, Any]] | None = None  # to tell birds and deer, which never start a fight
     clock: Callable[[], float] = time.monotonic
 
     def __post_init__(self) -> None:
@@ -144,7 +145,7 @@ class HuntWatch:
         self.kills_seen = kills
         if killed:
             self.last_kill = now
-        hostile = any(m.get("monster") and not m.get("dead") for m in snap["mobiles"])
+        hostile = any(threatening(m, self.bestiary) for m in snap["mobiles"])
         busy = snap["agent"].get("engaged") or snap["agent"].get("looting")
         if hostile or busy:
             self.last_hostile = now

@@ -1,0 +1,18 @@
+# Sonnet for the planner (the default before 2026-10-09), system one as profiles/default.toml.
+# Sonnet follows more of the player's goal (banking, restocking) and searches harder for
+# somewhere else to hunt, at about forty times Haiku's cost an hour (cuo-08x).
+# uo-brain run --profile sonnet
+
+[models]
+system1 = "decision1"   # with Jev for routine and strategy, as in default.toml (cuo-3ni)
+routine = "jev"
+strategy = "jev"
+system2 = "anthropic/claude-sonnet-5.5"
+
+# Used while over a budget whose `over` is "cheaper".
+[cheaper]
+system2 = "anthropic/claude-haiku-5.5"
+
+# [budget]
+# per_hour = 0.60
+# over = "cheaper"

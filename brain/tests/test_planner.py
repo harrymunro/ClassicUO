@@ -19,11 +19,15 @@ class FakeSession:
     async def snap(self, **_):
         return json.loads(json.dumps(SNAPSHOT))
 
+    async def pack_read(self, timeout_s=10.0):
+        return True
+
     async def call(self, method, **params):
-        self.goals.append((method, params))
+        if method != "long_goals":  # the panel's view of the long goals, sent at every step
+            self.goals.append((method, params))
         return {}
 
-    async def travel_to(self, place=None, x=None, y=None, distance=2):
+    async def travel_to(self, place=None, x=None, y=None, distance=2, **_):
         self.goals.append(("travel_to", place or (x, y)))
         return Result(True, f"arrived at {place}")
 
@@ -62,14 +66,28 @@ def reply(*calls, content=None, cost=0.001):
                           llm.LlmUsage(model="fake", prompt_tokens=1000, completion_tokens=50, cost=cost))
 
 
+HOUSEKEEPING = {"fold": {"summary": "the session so far", "keep": []},
+                "reflect": {"lessons": [], "focus": "keep at it"},
+                "digest": {"day": "a day"}}
+
+
 def scripted(*turns):
-    """A chat function that answers with the given turns in order and records what it was sent."""
+    """A chat function that answers with the given turns in order and records what it was sent. The
+    planner's own housekeeping calls (folding the summary, the heartbeat, the daily digest) get a
+    canned answer and are kept apart in `chat.housekeeping`, so tests script only planner turns."""
     seen = []
+    housekeeping = []
     queue = list(turns)
 
     async def chat(messages, tools=None, **_):
-        seen.append({"messages": messages, "tools": [t["function"]["name"] for t in tools or []]})
+        names = [t["function"]["name"] for t in tools or []]
+        if len(names) == 1 and names[0] in HOUSEKEEPING:
+            housekeeping.append({"messages": messages, "tool": names[0]})
+            return reply(call(names[0], HOUSEKEEPING[names[0]]))
+        seen.append({"messages": messages, "tools": names})
         return queue.pop(0)
+
+    chat.housekeeping = housekeeping
 
     chat.seen = seen
     return chat
@@ -126,22 +144,90 @@ def test_a_reply_without_a_tool_is_asked_again(tmp_path):
     assert chat.seen[1]["messages"][-1]["content"].startswith("Answer by calling exactly one tool")
 
 
-def test_a_dead_character_ends_the_session(tmp_path):
+def test_a_plan_that_came_cut_off_or_as_text_is_handled(tmp_path):
+    # Haiku's set_machine came with empty arguments when the 600-token cap cut it off, and sent plans as
+    # JSON strings with a stray closing brace (cuo-twd).
     s = FakeSession(world(tmp_path))
-    dead = json.loads(json.dumps(SNAPSHOT))
-    dead["player"]["dead"] = True
+    plan = {"name": "pull one", "start": "pull",
+            "states": {"pull": {"says": "Take on the nearest.", "allow": ["fight"]}}}
+    sent = []
+    turns = scripted(reply(call("set_machine", {})),
+                     reply(call("set_machine", {"why": "one at a time", "machine": json.dumps(plan) + "}"}, "c2")))
+
+    async def chat(messages, tools=None, **kw):
+        if len(tools) > 1:  # a planner turn, not housekeeping
+            sent.append(kw.get("max_tokens"))
+        return await turns(messages, tools, **kw)
+
+    p = planner.Planner(s, "hunt", chat_fn=chat)
+    first, second = asyncio.run(p.step()), asyncio.run(p.step())
+    assert not first.result["ok"] and "came without a machine" in first.result["result"]
+    assert second.result["ok"] and p.machine.machine.name == "pull one"
+    assert sent == [planner.MAX_TOKENS] * 2 and planner.MAX_TOKENS >= 1600  # a plan takes up to ~1,550
+
+
+def test_a_dead_character_is_resurrected_and_goes_back_for_its_corpse(tmp_path):
+    s = FakeSession(world(tmp_path))
+    state = json.loads(json.dumps(SNAPSHOT))
+    state["player"]["dead"] = True
 
     async def snap(**_):
-        return dead
+        return state
 
-    s.snap = snap
-    result = asyncio.run(planner.Planner(s, "x", chat_fn=scripted()).run(hours=1))
-    assert result["finished"] == "the character died" and result["goals"] == 0
+    async def resurrect():
+        state["player"]["dead"] = False
+        return Result(True, "resurrected at the Britain healer in 40 s", {"seconds": 40})
+
+    async def recover_corpse(**_):
+        return Result(True, "took everything back from the corpse in 30 s", {"seconds": 30})
+
+    s.snap, s.resurrect, s.recover_corpse = snap, resurrect, recover_corpse
+    chat = scripted(reply(call("resurrect", {"why": "dead"})), reply(call("recover_corpse", {"why": "my things"})),
+                    reply(call("finish", {"summary": "back on its feet", "why": "done"})))
+    result = asyncio.run(planner.Planner(s, "x", chat_fn=chat, memory=False, escalate=False).run(hours=1))
+    assert '"dead": true' in chat.seen[0]["messages"][1]["content"]
+    assert "your_corpse" in chat.seen[1]["messages"][1]["content"]  # alive, the corpse still to fetch
+    assert "your_corpse" not in chat.seen[2]["messages"][1]["content"]
+    assert result["finished"] == "back on its feet" and result["goals_by_kind"]["resurrect"] == 1
+    assert (result["deaths"], result["resurrections"], result["corpses_recovered"]) == (1, 1, 1)
 
 
 def test_describe_puts_the_situation_in_words():
     d = describe(json.loads(json.dumps(SNAPSHOT)))
     assert d["health"] == "60/100" and d["bandages"] == 40 and d["hostiles_in_sight"] == 2
+
+
+def test_a_bird_is_not_a_hostile(tmp_path):
+    """cuo-s9p: resurrected at the healer, the planner rested 'with a hostile in sight': a crossbill."""
+    w = world(tmp_path)
+    w.insert("creatures", {"type": "Crossbill", "name": "a crossbill", "body": 6, "hits_min": 3, "hits_max": 6,
+                           "fight_mode": "Aggressor", "source": "test", "last_seen": "2026-10-11"})
+    snap = json.loads(json.dumps(SNAPSHOT))
+    snap["mobiles"] = [dict(snap["mobiles"][0], serial=0x200, name="a crossbill", body=6, war_mode=False, distance=14),
+                       snap["mobiles"][2]]
+    d = describe(snap, w)
+    assert d["hostiles_in_sight"] == 0 and d["harmless_wildlife_in_sight"] == ["a crossbill"]
+    snap["mobiles"][0]["war_mode"] = True  # one that is fighting counts, whatever its kind
+    assert describe(snap, w)["hostiles_in_sight"] == 1
+    snap["mobiles"][0].update(body=17, name="an orc", war_mode=False)  # a kind the store doesn't know counts
+    assert describe(snap, w)["hostiles_in_sight"] == 1
+
+
+def test_the_first_plan_waits_for_the_pack_to_be_read(tmp_path):
+    """cuo-pz9: the first planner call came before the client had looked into the mage's reagent bag."""
+    class Counting(FakeSession):
+        reads = 0
+
+        async def pack_read(self, timeout_s=10.0):
+            self.reads += 1
+            return True
+
+    s = Counting(world(tmp_path))
+    chat = scripted(reply(call("rest", {"seconds": 30, "why": "w"})), reply(call("rest", {"seconds": 30, "why": "w"}, "c2")))
+    p = planner.Planner(s, "hunt the graveyard", chat_fn=chat)
+    asyncio.run(p.step())
+    asyncio.run(p.step())
+    assert s.reads == 1
 
 
 def test_the_planner_only_works_in_auto_mode_with_an_unpaused_goal():

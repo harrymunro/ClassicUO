@@ -229,3 +229,26 @@ def test_cli_reviews_once_then_shows_the_saved_review(tmp_path, monkeypatch, cap
     monkeypatch.setattr(sys, "argv", ["uo-brain", "review", str(log), "--digest"])
     cli.main()
     assert json.loads(capsys.readouterr().out)["totals"]["deaths"] == 1
+
+
+def test_lines_sent_one_a_call_as_a_string_are_read(tmp_path):
+    """cuo-0am: Opus, through OpenRouter, sent three propose calls for one review, each with `lines` as a
+    string holding a leaked parameter tag and the line, its evidence and confidence beside it. Read as a
+    list the string became characters, and the review was saved as "No lines proposed"."""
+    def call(line, evidence, confidence):
+        args = {"lines": f'\n<parameter name="line">{line}', "evidence": evidence, "confidence": confidence}
+        return llm.ToolCall("1", "propose", args, json.dumps(args))
+
+    res = llm.ChatResult({}, None, [call("If I'm badly wounded and three or more are adjacent, flee.", "died at 18:00:01", 0.7),
+                                    call("Get out before finishing a nearly dead target.", "17:59:59", 0.55)])
+    lines = review.lines_from(res)
+    assert [(ln["line"], ln["evidence"], ln["confidence"]) for ln in lines] == [
+        ("If I'm badly wounded and three or more are adjacent, flee.", "died at 18:00:01", 0.7),
+        ("Get out before finishing a nearly dead target.", "17:59:59", 0.55)]
+    # Tool calls nobody can read are asked again, not saved as an empty review.
+    bad = llm.ChatResult({}, None, [llm.ToolCall("1", "propose", {"lines": 7}, "{}")])
+    assert review.lines_from(bad) is None
+    junk = llm.ChatResult({}, None, [llm.ToolCall("1", "propose", {"lines": ["a", "b"]}, "{}")])
+    assert review.lines_from(junk) is None
+    # An honest "nothing to propose" is still that.
+    assert review.lines_from(llm.ChatResult({}, None, [llm.ToolCall("1", "propose", {"lines": []}, "{}")])) == []

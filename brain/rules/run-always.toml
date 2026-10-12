@@ -1,0 +1,9 @@
+# Run always: every trip at a run and talk only when there is something to say, as fast as the
+# game allows. A set of rules for `uo-brain session --rules run-always` or `rules = "run-always"`
+# in a fleet file; any one of them set on its own wins over the set.
+description = "every trip at a run, a party's members each make their own way, lines said the moment they are written, no small talk or gestures"
+travel = "run"
+walk = false
+pace = false
+small_talk = false
+roleplay = false

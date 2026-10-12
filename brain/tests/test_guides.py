@@ -64,12 +64,12 @@ def test_cache_marks_go_on_the_system_prompt_only():
 def test_request_shape(monkeypatch):
     monkeypatch.delenv("PLANNER_MODEL", raising=False)
     body = llm.build_request([{"role": "user", "content": "x"}], tools=[guides.ADD_NOTES], tool_choice="add_notes")
-    assert body["model"] == "anthropic/claude-sonnet-5.5"
+    assert body["model"] == "anthropic/claude-haiku-5.5"
     assert body["usage"] == {"include": True}
     assert body["tool_choice"] == {"type": "function", "function": {"name": "add_notes"}}
     assert llm.build_request([], tool_choice="auto")["tool_choice"] == "auto"
-    monkeypatch.setenv("PLANNER_MODEL", "anthropic/claude-haiku-4.5")
-    assert llm.build_request([])["model"] == "anthropic/claude-haiku-4.5"
+    monkeypatch.setenv("PLANNER_MODEL", "anthropic/claude-opus-5.5")
+    assert llm.build_request([])["model"] == "anthropic/claude-opus-5.5"
     assert llm.build_request([], model="x/y")["model"] == "x/y"
 
 
@@ -151,14 +151,19 @@ def test_cli_import_guide_without_network(w, tmp_path, monkeypatch, capsys):
     page = tmp_path / "notes.txt"
     page.write_text("Liches in Covetous level 3 cast Energy Bolt.")
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test")
-    monkeypatch.setattr(llm, "_post", lambda body, key, timeout, retries: openrouter_reply(
-        [{"text": "Liches on Covetous level 3 cast Energy Bolt.", "area": "Covetous", "tags": ["creature"]}]))
+    models = []
+    note = {"text": "Liches on Covetous level 3 cast Energy Bolt.", "area": "Covetous", "tags": ["creature"]}
+    monkeypatch.setattr(llm, "_post", lambda body, key, timeout, retries:
+                        models.append(body["model"]) or openrouter_reply([note]))
     monkeypatch.setattr(sys, "argv", ["uo-brain", "world", "--shard", "test", "--root", str(tmp_path / "worlds"),
-                                      "import-guide", str(page)])
+                                      "import-guide", str(page), "--cost-log", str(tmp_path / "costs.jsonl")])
     cli.main()
     out = json.loads(capsys.readouterr().out)
     assert out["notes"][0]["area"] == "Covetous" and out["title"] == "notes"
     assert w.notes(keywords="lich")[0]["source"].startswith("guide:file://")
+    assert models == ["anthropic/claude-sonnet-5.5"]  # guides are Sonnet's unless named (cuo-twd)
+    [rec] = [json.loads(line) for line in (tmp_path / "costs.jsonl").read_text().splitlines()]
+    assert rec["type"] == "ai_cost" and rec["kind"] == "guide" and rec["cost"] == 0.0123
 
 
 def test_forced_tool_falls_back_to_auto(monkeypatch):

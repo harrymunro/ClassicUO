@@ -1,7 +1,7 @@
 """A small OpenRouter chat client for the planner model.
 
-Jev answers typed questions through typesafe-sdk. The planner (Claude Sonnet through
-OpenRouter) needs ordinary chat with tool calling instead, so this is a second, plain
+Jev answers typed questions through typesafe-sdk. The planner (Claude Haiku by default,
+through OpenRouter) needs ordinary chat with tool calling instead, so this is a second, plain
 client. It uses only the standard library: urllib, run in a worker thread so the asyncio
 loop that also talks to the game isn't blocked.
 
@@ -22,6 +22,7 @@ import asyncio
 import json
 import os
 import time
+import http.client
 import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
@@ -32,7 +33,8 @@ from . import costs
 from .judge import load_dotenv
 
 OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions"
-PLANNER_MODEL = "anthropic/claude-sonnet-5.5"
+# Haiku since 2026-10-09 (Harry, cuo-9zx); the sonnet profile keeps Sonnet.
+PLANNER_MODEL = "anthropic/claude-haiku-5.5"
 BRAIN_DIR = Path(__file__).resolve().parents[2]
 RETRY_STATUS = (408, 429, 500, 502, 503, 504)
 _AUTO_ONLY: set[str] = set()  # models seen refusing a forced tool_choice
@@ -96,7 +98,7 @@ ChatFn = Callable[..., Awaitable[ChatResult]]
 
 def planner_model(model: str | None = None) -> str:
     """The model given, else the one the active profile names for the kind of call being made
-    (models.py: the profile, then PLANNER_MODEL, then Sonnet)."""
+    (models.py: the profile, then $PLANNER_MODEL, then Haiku)."""
     if model:
         return model
     from . import models
@@ -201,11 +203,14 @@ def _post(body: dict[str, Any], key: str, timeout: float, retries: int) -> dict[
                 time.sleep(2 ** attempt)
                 continue
             raise LlmError(f"OpenRouter HTTP {e.code}: {detail}", e.code) from None
-        except (urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError, http.client.HTTPException) as e:
+            # OSError covers an ssl.SSLError or a reset connection while reading the answer (a fleet's
+            # brain died of SSLV3_ALERT_BAD_RECORD_MAC, cuo-15e); ValueError a reply cut off mid-JSON;
+            # HTTPException (IncompleteRead) a body cut off, as a dropped TLS connection usually ends.
             if attempt < retries:
                 time.sleep(2 ** attempt)
                 continue
-            raise LlmError(f"OpenRouter unreachable: {e}") from None
+            raise LlmError(f"OpenRouter unreachable: {type(e).__name__}: {e}") from None
     raise LlmError("OpenRouter: out of retries")
 
 
@@ -232,6 +237,7 @@ async def chat(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | Non
         data = await asyncio.to_thread(_post, {**body, "tool_choice": "auto"}, key, timeout, retries)
     res = parse_response(data, body["model"], (time.perf_counter() - started) * 1000)
     u = res.usage
+    costs.check_served(body["model"], u.model)
     call = costs.ledger.record(costs.make_call(costs.current_kind("other"), u.model, u.prompt_tokens,
                                                u.completion_tokens, u.cached_tokens, u.latency_ms, u.cost))
     u.cost = call.cost  # the table's estimate when OpenRouter didn't say

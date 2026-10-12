@@ -1,5 +1,5 @@
 # Five warriors on the local test server (cuo-m70.4): the player's character on the default profile
-# (Jev and Sonnet) and four smart NPCs on the npc profile (Jev and Haiku, capped at $0.15/h), with
+# (Jev and Haiku; Sonnet in the 2026-10-08 runs) and four smart NPCs on the npc profile (Jev and Haiku, capped at $0.50/h), with
 # goals that spread them about Britain. Needs the server's accountHandler.maxAccountsPerIP above the
 # accounts already made (tools/modernuo/README.md). Run from brain/: uv run uo-brain fleet fleets/britain-five.toml
 name = "britain-five"

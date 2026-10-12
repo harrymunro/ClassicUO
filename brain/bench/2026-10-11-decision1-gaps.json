@@ -1,0 +1,2717 @@
+{
+  "started": "2026-10-11T14:37:41",
+  "rounds": 10,
+  "lane": 2,
+  "headless": true,
+  "clients_at_start": 2,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5",
+      "table": "anthropic/claude-haiku-5.5",
+      "huddle": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {
+    "decision1": "microsoft/microsoft-decision-1"
+  },
+  "scenarios": {
+    "bard-provoke": {
+      "bead": "cuo-cvl.3",
+      "right": "An ogre and two orcs come at a bard: set them on each other and calm whatever reaches the bard; survive while at least two of them die.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Zaraugug (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 2,
+                "Discordance": 1
+              },
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                60,
+                61,
+                96,
+                99,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 60,
+              "decisions": 41,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-01.jsonl",
+              "input_tokens": 101782,
+              "cost_usd": 0.004275,
+              "cost_by_kind": {
+                "fight": 0.004275
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 266.1,
+              "decisions_made": 98,
+              "input_tokens_per_call": 2482,
+              "cost_per_call_usd": 0.0001043,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 18.0,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.3,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Sulmthu (orc)",
+                "Zulmthu (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 4,
+                "Provocation": 3
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                71
+              ],
+              "min_hp": 51,
+              "decisions": 62,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-02.jsonl",
+              "input_tokens": 157755,
+              "cost_usd": 0.006626,
+              "cost_by_kind": {
+                "fight": 0.006626
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 227.4,
+              "decisions_made": 106,
+              "input_tokens_per_call": 2544,
+              "cost_per_call_usd": 0.0001069,
+              "moves": {
+                "runs": 1,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": 19.6,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 2
+              },
+              "seconds": 95.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                66,
+                68,
+                98,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 66,
+              "decisions": 27,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-03.jsonl",
+              "input_tokens": 65626,
+              "cost_usd": 0.002756,
+              "cost_by_kind": {
+                "fight": 0.002756
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 259.9,
+              "decisions_made": 63,
+              "input_tokens_per_call": 2431,
+              "cost_per_call_usd": 0.0001021,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 3.0,
+                "ran_at_s": 19.1,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.3,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Magdud (orc)",
+                "Ig (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 4,
+                "Provocation": 3
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                65
+              ],
+              "min_hp": 55,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-04.jsonl",
+              "input_tokens": 124580,
+              "cost_usd": 0.005232,
+              "cost_by_kind": {
+                "fight": 0.005232
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 247.5,
+              "decisions_made": 112,
+              "input_tokens_per_call": 2492,
+              "cost_per_call_usd": 0.0001046,
+              "moves": {
+                "runs": 1,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": 18.4,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Farod (orc)",
+                "Aguk (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 3
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                78,
+                70,
+                66
+              ],
+              "min_hp": 58,
+              "decisions": 52,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-05.jsonl",
+              "input_tokens": 127146,
+              "cost_usd": 0.00534,
+              "cost_by_kind": {
+                "fight": 0.00534
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 251.2,
+              "decisions_made": 68,
+              "input_tokens_per_call": 2445,
+              "cost_per_call_usd": 0.0001027,
+              "moves": {
+                "runs": 3,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 28.9,
+                "ran_at_s": 16.8,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [
+                "Gnorl (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Provocation": 3
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                78,
+                61,
+                98,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 35,
+              "decisions": 63,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-06.jsonl",
+              "input_tokens": 155307,
+              "cost_usd": 0.006523,
+              "cost_by_kind": {
+                "fight": 0.006523
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 224.6,
+              "decisions_made": 91,
+              "input_tokens_per_call": 2465,
+              "cost_per_call_usd": 0.0001035,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 48.9,
+                "ran_at_s": 17.0,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 41.0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 1,
+                "Discordance": 1
+              },
+              "seconds": 96.7,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                58,
+                59,
+                60,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 22,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-07.jsonl",
+              "input_tokens": 52573,
+              "cost_usd": 0.002208,
+              "cost_by_kind": {
+                "fight": 0.002208
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 274.4,
+              "decisions_made": 63,
+              "input_tokens_per_call": 2390,
+              "cost_per_call_usd": 0.0001004,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 16.1,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.6,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [
+                "Sumhug (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Provocation": 3
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                78,
+                41,
+                42,
+                89,
+                91,
+                95,
+                99
+              ],
+              "min_hp": 41,
+              "decisions": 51,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-08.jsonl",
+              "input_tokens": 122545,
+              "cost_usd": 0.005147,
+              "cost_by_kind": {
+                "fight": 0.005147
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 237.6,
+              "decisions_made": 87,
+              "input_tokens_per_call": 2403,
+              "cost_per_call_usd": 0.0001009,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 36.6,
+                "ran_at_s": 15.5,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 41.1,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [
+                "Valthurg (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 2
+              },
+              "seconds": 82.9,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                65,
+                66,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 65,
+              "decisions": 20,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-09.jsonl",
+              "input_tokens": 49122,
+              "cost_usd": 0.002063,
+              "cost_by_kind": {
+                "fight": 0.002063
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 283.1,
+              "decisions_made": 47,
+              "input_tokens_per_call": 2456,
+              "cost_per_call_usd": 0.0001032,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 16.9,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.4,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [
+                "Hebub (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Provocation": 4
+              },
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                76,
+                46,
+                60,
+                61,
+                100
+              ],
+              "min_hp": 46,
+              "decisions": 45,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-jev-10.jsonl",
+              "input_tokens": 108114,
+              "cost_usd": 0.004541,
+              "cost_by_kind": {
+                "fight": 0.004541
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 235.2,
+              "decisions_made": 73,
+              "input_tokens_per_call": 2403,
+              "cost_per_call_usd": 0.0001009,
+              "moves": {
+                "runs": 5,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 34.9,
+                "ran_at_s": 15.5,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 14.1,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            }
+          ],
+          "n": 10,
+          "successes": 3,
+          "rate": 0.3,
+          "ci95": [
+            0.108,
+            0.603
+          ],
+          "deaths": 0,
+          "cost_usd": 0.04471,
+          "cost_per_round_usd": 0.00447,
+          "latency_ms_avg": 250.7,
+          "decisions_per_round": 43.3,
+          "moves": {
+            "runs": 52,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "to_spot_kept": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 28.9,
+            "broke_contact": 8,
+            "leaves": 7,
+            "leave_s": 257.8,
+            "caught_again": 0
+          },
+          "input_tokens_per_call": 2451,
+          "cost_per_call_usd": 0.000103,
+          "errors": 0
+        },
+        "decision1": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Orgha (orc)"
+              ],
+              "songs": {
+                "Provocation": 3
+              },
+              "seconds": 30.6,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                64,
+                65
+              ],
+              "min_hp": 64,
+              "decisions": 17,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-01.jsonl",
+              "input_tokens": 31546,
+              "cost_usd": 0.001325,
+              "cost_by_kind": {
+                "fight": 0.001325
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 347.1,
+              "decisions_made": 22,
+              "input_tokens_per_call": 1856,
+              "cost_per_call_usd": 7.79e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 1.5,
+                "ran_at_s": 22.1,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 3.3,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Rakgu (orc)",
+                "Zog (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 4
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                62,
+                54,
+                45
+              ],
+              "min_hp": 45,
+              "decisions": 62,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-02.jsonl",
+              "input_tokens": 104058,
+              "cost_usd": 0.00437,
+              "cost_by_kind": {
+                "fight": 0.00437
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 330.0,
+              "decisions_made": 78,
+              "input_tokens_per_call": 1678,
+              "cost_per_call_usd": 7.05e-05,
+              "moves": {
+                "runs": 3,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 69.4,
+                "ran_at_s": 20.6,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [
+                "Jokgagu (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 2,
+                "Provocation": 4
+              },
+              "seconds": 118.0,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                62,
+                58,
+                46,
+                50,
+                32
+              ],
+              "min_hp": 32,
+              "decisions": 70,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-03.jsonl",
+              "input_tokens": 116907,
+              "cost_usd": 0.00491,
+              "cost_by_kind": {
+                "fight": 0.00491
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 320.2,
+              "decisions_made": 84,
+              "input_tokens_per_call": 1670,
+              "cost_per_call_usd": 7.01e-05,
+              "moves": {
+                "runs": 5,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 77.7,
+                "ran_at_s": 20.4,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Xugha (orc)",
+                "Smegugh (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 3
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                62,
+                64
+              ],
+              "min_hp": 62,
+              "decisions": 35,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-04.jsonl",
+              "input_tokens": 62148,
+              "cost_usd": 0.00261,
+              "cost_by_kind": {
+                "fight": 0.00261
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 399.7,
+              "decisions_made": 64,
+              "input_tokens_per_call": 1776,
+              "cost_per_call_usd": 7.46e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 73.3,
+                "ran_at_s": 19.2,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Fupgugh (orc)",
+                "Gnarlug (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 4
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                60,
+                61,
+                69,
+                60
+              ],
+              "min_hp": 60,
+              "decisions": 57,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-05.jsonl",
+              "input_tokens": 102413,
+              "cost_usd": 0.004301,
+              "cost_by_kind": {
+                "fight": 0.004301
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 353.5,
+              "decisions_made": 95,
+              "input_tokens_per_call": 1797,
+              "cost_per_call_usd": 7.55e-05,
+              "moves": {
+                "runs": 4,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 84.6,
+                "ran_at_s": 32.4,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Julakgh (orc)",
+                "Paghorim (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 4
+              },
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                62,
+                59
+              ],
+              "min_hp": 59,
+              "decisions": 67,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-06.jsonl",
+              "input_tokens": 114851,
+              "cost_usd": 0.004824,
+              "cost_by_kind": {
+                "fight": 0.004824
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 359.0,
+              "decisions_made": 100,
+              "input_tokens_per_call": 1714,
+              "cost_per_call_usd": 7.2e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": 21.1,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Yughragh (orc)",
+                "Rogan (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 3
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                71,
+                41
+              ],
+              "min_hp": 41,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-07.jsonl",
+              "input_tokens": 87677,
+              "cost_usd": 0.003682,
+              "cost_by_kind": {
+                "fight": 0.003682
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 359.1,
+              "decisions_made": 100,
+              "input_tokens_per_call": 1754,
+              "cost_per_call_usd": 7.36e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": 24.6,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Ulmrougha (orc)",
+                "Viggu (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 3,
+                "Provocation": 4,
+                "Discordance": 1
+              },
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                71
+              ],
+              "min_hp": 65,
+              "decisions": 58,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-08.jsonl",
+              "input_tokens": 101922,
+              "cost_usd": 0.004281,
+              "cost_by_kind": {
+                "fight": 0.004281
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 366.3,
+              "decisions_made": 105,
+              "input_tokens_per_call": 1757,
+              "cost_per_call_usd": 7.38e-05,
+              "moves": {
+                "runs": 1,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": 19.2,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zogugbu (orc)",
+                "Hebub (orc)"
+              ],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 6
+              },
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                46,
+                26
+              ],
+              "min_hp": 26,
+              "decisions": 83,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-09.jsonl",
+              "input_tokens": 145708,
+              "cost_usd": 0.00612,
+              "cost_by_kind": {
+                "fight": 0.00612
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 340.4,
+              "decisions_made": 95,
+              "input_tokens_per_call": 1756,
+              "cost_per_call_usd": 7.37e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 79.0,
+                "ran_at_s": 34.0,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "kills": [],
+              "songs": {
+                "Peacemaking": 1,
+                "Provocation": 3
+              },
+              "seconds": 113.8,
+              "player_died": false,
+              "engaged": [],
+              "flees_at_hp": [
+                51,
+                85,
+                86,
+                89,
+                91,
+                94,
+                96
+              ],
+              "min_hp": 51,
+              "decisions": 32,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/bard-provoke-decision1-10.jsonl",
+              "input_tokens": 54153,
+              "cost_usd": 0.002274,
+              "cost_by_kind": {
+                "fight": 0.002274
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 348.1,
+              "decisions_made": 57,
+              "input_tokens_per_call": 1692,
+              "cost_per_call_usd": 7.11e-05,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 26.2,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 41.2,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            }
+          ],
+          "n": 10,
+          "successes": 7,
+          "rate": 0.7,
+          "ci95": [
+            0.397,
+            0.892
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0387,
+          "cost_per_round_usd": 0.00387,
+          "latency_ms_avg": 352.3,
+          "decisions_per_round": 53.1,
+          "moves": {
+            "runs": 30,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "to_spot_kept": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 73.3,
+            "broke_contact": 7,
+            "leaves": 2,
+            "leave_s": 44.5,
+            "caught_again": 0
+          },
+          "input_tokens_per_call": 1745,
+          "cost_per_call_usd": 7.33e-05,
+          "errors": 0
+        }
+      }
+    },
+    "priority": {
+      "bead": "cuo-46e.3",
+      "right": "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 81.4,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                88,
+                88,
+                91,
+                93,
+                95,
+                96,
+                99,
+                100
+              ],
+              "min_hp": 47,
+              "decisions": 34,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-01.jsonl",
+              "input_tokens": 60128,
+              "cost_usd": 0.002525,
+              "cost_by_kind": {
+                "fight": 0.002525
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 284.1,
+              "decisions_made": 55,
+              "input_tokens_per_call": 1768,
+              "cost_per_call_usd": 7.43e-05,
+              "moves": {
+                "runs": 8,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 3.5,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 42.8,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 60.0,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 75,
+              "decisions": 31,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-02.jsonl",
+              "input_tokens": 60176,
+              "cost_usd": 0.002527,
+              "cost_by_kind": {
+                "fight": 0.002527
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 271.5,
+              "decisions_made": 35,
+              "input_tokens_per_call": 1941,
+              "cost_per_call_usd": 8.15e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 70.8,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                47
+              ],
+              "min_hp": 45,
+              "decisions": 42,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-03.jsonl",
+              "input_tokens": 82567,
+              "cost_usd": 0.003468,
+              "cost_by_kind": {
+                "fight": 0.003468
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 234.7,
+              "decisions_made": 45,
+              "input_tokens_per_call": 1966,
+              "cost_per_call_usd": 8.26e-05,
+              "moves": {
+                "runs": 1,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 25.1,
+                "ran_at_s": 12.6,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 90.7,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                89,
+                91,
+                93,
+                94,
+                96,
+                53,
+                54,
+                94,
+                19,
+                20
+              ],
+              "min_hp": 19,
+              "decisions": 47,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-04.jsonl",
+              "input_tokens": 85127,
+              "cost_usd": 0.003575,
+              "cost_by_kind": {
+                "fight": 0.003575
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 246.1,
+              "decisions_made": 61,
+              "input_tokens_per_call": 1811,
+              "cost_per_call_usd": 7.61e-05,
+              "moves": {
+                "runs": 10,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.5,
+                "ran_at_s": 3.4,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 41.3,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 120.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                100,
+                95,
+                85,
+                88,
+                91,
+                92,
+                72,
+                74,
+                23,
+                40,
+                42,
+                78,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 23,
+              "decisions": 56,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-05.jsonl",
+              "input_tokens": 98343,
+              "cost_usd": 0.00413,
+              "cost_by_kind": {
+                "fight": 0.00413
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 250.1,
+              "decisions_made": 75,
+              "input_tokens_per_call": 1756,
+              "cost_per_call_usd": 7.38e-05,
+              "moves": {
+                "runs": 16,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 3.3,
+                "jev_stayed": 0,
+                "leaves": 2,
+                "leave_s": 82.4,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 79.4,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                100,
+                81,
+                83,
+                100,
+                100,
+                82,
+                83,
+                100
+              ],
+              "min_hp": 27,
+              "decisions": 39,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-06.jsonl",
+              "input_tokens": 69658,
+              "cost_usd": 0.002926,
+              "cost_by_kind": {
+                "fight": 0.002926
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 250.8,
+              "decisions_made": 49,
+              "input_tokens_per_call": 1786,
+              "cost_per_call_usd": 7.5e-05,
+              "moves": {
+                "runs": 8,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 3.4,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.4,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": true,
+              "seconds": 120.2,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                60,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 43,
+              "decisions": 71,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-07.jsonl",
+              "input_tokens": 138605,
+              "cost_usd": 0.005821,
+              "cost_by_kind": {
+                "fight": 0.005821
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 236.6,
+              "decisions_made": 78,
+              "input_tokens_per_call": 1952,
+              "cost_per_call_usd": 8.2e-05,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.3,
+                "ran_at_s": 7.4,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.3,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 76.9,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                81,
+                82,
+                83,
+                100,
+                100,
+                100,
+                54,
+                100
+              ],
+              "min_hp": 54,
+              "decisions": 39,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-08.jsonl",
+              "input_tokens": 69091,
+              "cost_usd": 0.002902,
+              "cost_by_kind": {
+                "fight": 0.002902
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 236.3,
+              "decisions_made": 48,
+              "input_tokens_per_call": 1772,
+              "cost_per_call_usd": 7.44e-05,
+              "moves": {
+                "runs": 8,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 3.6,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.3,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 75.7,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                56,
+                61,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 32,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-09.jsonl",
+              "input_tokens": 58049,
+              "cost_usd": 0.002438,
+              "cost_by_kind": {
+                "fight": 0.002438
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 257.7,
+              "decisions_made": 45,
+              "input_tokens_per_call": 1814,
+              "cost_per_call_usd": 7.62e-05,
+              "moves": {
+                "runs": 8,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.8,
+                "ran_at_s": 3.5,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.0,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 120.2,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                76,
+                78,
+                74,
+                76,
+                100,
+                97,
+                87,
+                89,
+                70,
+                71,
+                100,
+                100,
+                100,
+                95,
+                97
+              ],
+              "min_hp": 69,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-jev-10.jsonl",
+              "input_tokens": 90175,
+              "cost_usd": 0.003787,
+              "cost_by_kind": {
+                "fight": 0.003787
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 260.1,
+              "decisions_made": 73,
+              "input_tokens_per_call": 1804,
+              "cost_per_call_usd": 7.57e-05,
+              "moves": {
+                "runs": 15,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.5,
+                "ran_at_s": 3.4,
+                "jev_stayed": 0,
+                "leaves": 2,
+                "leave_s": 81.1,
+                "caught_again": 2
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            }
+          ],
+          "n": 10,
+          "successes": 8,
+          "rate": 0.8,
+          "ci95": [
+            0.49,
+            0.943
+          ],
+          "deaths": 0,
+          "cost_usd": 0.0341,
+          "cost_per_round_usd": 0.00341,
+          "latency_ms_avg": 252.8,
+          "decisions_per_round": 44.1,
+          "moves": {
+            "runs": 81,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "to_spot_kept": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 2.8,
+            "broke_contact": 9,
+            "leaves": 10,
+            "leave_s": 408.6,
+            "caught_again": 9
+          },
+          "input_tokens_per_call": 1837,
+          "cost_per_call_usd": 7.72e-05,
+          "errors": 0
+        },
+        "decision1": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 65.7,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 43,
+              "decisions": 32,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-01.jsonl",
+              "input_tokens": 41871,
+              "cost_usd": 0.001759,
+              "cost_by_kind": {
+                "fight": 0.001759
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 361.3,
+              "decisions_made": 37,
+              "input_tokens_per_call": 1308,
+              "cost_per_call_usd": 5.5e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 72.4,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                65,
+                58
+              ],
+              "min_hp": 51,
+              "decisions": 39,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-02.jsonl",
+              "input_tokens": 51581,
+              "cost_usd": 0.002166,
+              "cost_by_kind": {
+                "fight": 0.002166
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 363.2,
+              "decisions_made": 43,
+              "input_tokens_per_call": 1323,
+              "cost_per_call_usd": 5.55e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 32.9,
+                "ran_at_s": 5.6,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 70.5,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                59
+              ],
+              "min_hp": 59,
+              "decisions": 39,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-03.jsonl",
+              "input_tokens": 50846,
+              "cost_usd": 0.002136,
+              "cost_by_kind": {
+                "fight": 0.002136
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 352.1,
+              "decisions_made": 42,
+              "input_tokens_per_call": 1304,
+              "cost_per_call_usd": 5.48e-05,
+              "moves": {
+                "runs": 1,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 30.8,
+                "ran_at_s": 6.7,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": false,
+              "seconds": 44.8,
+              "player_died": false,
+              "kills": [
+                "a zombie"
+              ],
+              "engaged": [
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                35,
+                17,
+                17,
+                33,
+                68
+              ],
+              "min_hp": 17,
+              "decisions": 32,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-04.jsonl",
+              "input_tokens": 43237,
+              "cost_usd": 0.001816,
+              "cost_by_kind": {
+                "fight": 0.001816
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 335.1,
+              "decisions_made": 34,
+              "input_tokens_per_call": 1351,
+              "cost_per_call_usd": 5.67e-05,
+              "moves": {
+                "runs": 5,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 18.8,
+                "ran_at_s": 12.3,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 8.7,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 120.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "a zombie",
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                65,
+                62,
+                64,
+                100,
+                100,
+                100,
+                100,
+                100,
+                49,
+                69,
+                100,
+                95,
+                97,
+                99,
+                100
+              ],
+              "min_hp": 49,
+              "decisions": 58,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-05.jsonl",
+              "input_tokens": 69876,
+              "cost_usd": 0.002935,
+              "cost_by_kind": {
+                "fight": 0.002935
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 293.3,
+              "decisions_made": 80,
+              "input_tokens_per_call": 1205,
+              "cost_per_call_usd": 5.06e-05,
+              "moves": {
+                "runs": 15,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.3,
+                "ran_at_s": 11.6,
+                "jev_stayed": 0,
+                "leaves": 2,
+                "leave_s": 84.8,
+                "caught_again": 2
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 70.3,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                68,
+                45
+              ],
+              "min_hp": 45,
+              "decisions": 43,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-06.jsonl",
+              "input_tokens": 56467,
+              "cost_usd": 0.002372,
+              "cost_by_kind": {
+                "fight": 0.002372
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 321.5,
+              "decisions_made": 46,
+              "input_tokens_per_call": 1313,
+              "cost_per_call_usd": 5.52e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 34.5,
+                "ran_at_s": 8.4,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 100.8,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                55,
+                37,
+                46,
+                66,
+                63,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 8,
+              "decisions": 53,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-07.jsonl",
+              "input_tokens": 65892,
+              "cost_usd": 0.002767,
+              "cost_by_kind": {
+                "fight": 0.002767
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 340.6,
+              "decisions_made": 71,
+              "input_tokens_per_call": 1243,
+              "cost_per_call_usd": 5.22e-05,
+              "moves": {
+                "runs": 10,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 20.0,
+                "ran_at_s": 6.2,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.9,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 120.1,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                32,
+                13,
+                58,
+                60,
+                100,
+                100,
+                100,
+                95,
+                55
+              ],
+              "min_hp": 13,
+              "decisions": 81,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-08.jsonl",
+              "input_tokens": 103192,
+              "cost_usd": 0.004334,
+              "cost_by_kind": {
+                "fight": 0.004334
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 304.7,
+              "decisions_made": 86,
+              "input_tokens_per_call": 1274,
+              "cost_per_call_usd": 5.35e-05,
+              "moves": {
+                "runs": 9,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.0,
+                "ran_at_s": 8.9,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.9,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 120.3,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                67,
+                56,
+                26,
+                43,
+                44,
+                43,
+                77,
+                100,
+                100,
+                91,
+                61,
+                58,
+                93,
+                95,
+                97,
+                99,
+                100
+              ],
+              "min_hp": 25,
+              "decisions": 66,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-09.jsonl",
+              "input_tokens": 86473,
+              "cost_usd": 0.003632,
+              "cost_by_kind": {
+                "fight": 0.003632
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 343.8,
+              "decisions_made": 78,
+              "input_tokens_per_call": 1310,
+              "cost_per_call_usd": 5.5e-05,
+              "moves": {
+                "runs": 17,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 18.1,
+                "ran_at_s": 5.7,
+                "jev_stayed": 0,
+                "leaves": 2,
+                "leave_s": 80.7,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            },
+            {
+              "success": false,
+              "first_kill": "a zombie",
+              "caster_killed": false,
+              "seconds": 101.8,
+              "player_died": false,
+              "kills": [
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                59,
+                60,
+                97,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 59,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261011-143741-lane2/priority-decision1-10.jsonl",
+              "input_tokens": 60770,
+              "cost_usd": 0.002552,
+              "cost_by_kind": {
+                "fight": 0.002552
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 374.1,
+              "decisions_made": 59,
+              "input_tokens_per_call": 1215,
+              "cost_per_call_usd": 5.1e-05,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.5,
+                "ran_at_s": 7.7,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 41.7,
+                "caught_again": 1
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 2
+            }
+          ],
+          "n": 10,
+          "successes": 6,
+          "rate": 0.6,
+          "ci95": [
+            0.313,
+            0.832
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02647,
+          "cost_per_round_usd": 0.00265,
+          "latency_ms_avg": 339.0,
+          "decisions_per_round": 49.3,
+          "moves": {
+            "runs": 68,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "to_spot_kept": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 18.8,
+            "broke_contact": 9,
+            "leaves": 8,
+            "leave_s": 297.7,
+            "caught_again": 6
+          },
+          "input_tokens_per_call": 1285,
+          "cost_per_call_usd": 5.4e-05,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.143978,
+    "cost_per_hour_usd": 0.1246,
+    "calls": 1898,
+    "by_role": {
+      "system1": 0.143978
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 1898,
+        "input_tokens": 3428057,
+        "output_tokens": 137189,
+        "cost_usd": 0.143978,
+        "latency_ms_avg": 298.9
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 874,
+        "input_tokens": 1876469,
+        "output_tokens": 133113,
+        "cost_usd": 0.078812,
+        "latency_ms_avg": 247.8
+      },
+      "microsoft/microsoft-decision-1-20261009": {
+        "calls": 1024,
+        "input_tokens": 1551588,
+        "output_tokens": 4076,
+        "cost_usd": 0.065167,
+        "latency_ms_avg": 342.5
+      }
+    },
+    "cost_per_decision_usd": 7.59e-05
+  },
+  "openrouter_key_spent_usd": 0.143795
+}

@@ -1,0 +1,2614 @@
+{
+ "date": "2026-10-09",
+ "bead": "cuo-3jt",
+ "marker_file": "UOAM Common.MAP from https://uoam.net/uoam.zip (copyright Steve Blanding; not redistributed)",
+ "import": {
+  "commands": [
+   "uv run uo-brain world --shard markers-check import-modernuo",
+   "uv run uo-brain world --shard markers-check import-markers Common.MAP --maps Felucca"
+  ],
+  "files": [
+   {
+    "source": "markers:Common.MAP",
+    "format": "uoam",
+    "facets": "uoam",
+    "markers": 870,
+    "places": 579,
+    "by_map": {
+     "Felucca": 579
+    },
+    "by_kind": {
+     "landmark": 181,
+     "guildmaster": 44,
+     "teleporter": 28,
+     "inn": 24,
+     "mage_shop": 23,
+     "dungeon_entrance": 21,
+     "arms_shop": 20,
+     "bank": 18,
+     "provisioner": 18,
+     "tailor": 17,
+     "town": 17,
+     "healer": 17,
+     "docks": 16,
+     "tavern": 14,
+     "baker": 12,
+     "butcher": 12,
+     "stable": 11,
+     "blacksmith": 11,
+     "shipwright": 10,
+     "moongate": 10,
+     "carpenter": 9,
+     "shrine": 9,
+     "tanner": 8,
+     "graveyard": 8,
+     "jeweller": 8,
+     "bowyer": 7,
+     "tinker": 6
+    },
+    "skipped": {
+     "marble patio": 1
+    },
+    "landmarks_by_type": {
+     "point of interest": 30,
+     "exit": 18,
+     "champion": 17,
+     "other": 15,
+     "terrain": 11,
+     "body of water": 10,
+     "bridge": 9,
+     "gate": 9,
+     "library": 7,
+     "scenic": 7,
+     "ruins": 5,
+     "market": 5,
+     "theater": 4,
+     "painter": 3,
+     "customs": 3,
+     "bard": 2,
+     "stairs": 1,
+     "island": 1,
+     "beekeeper": 1,
+     "minax's fortress": 1
+    },
+    "error_count": 0
+   }
+  ],
+  "agreement_within_10_tiles": {
+   "bank": {
+    "Felucca": {
+     "markers": 18,
+     "matched": 18,
+     "store_places": 20,
+     "store_places_with_a_marker": 18,
+     "median_tiles_when_matched": 0,
+     "max_tiles_when_matched": 5,
+     "markers_without_a_match": [],
+     "store_places_without_a_marker": [
+      {
+       "place": "Magincia Bank",
+       "at": [
+        3730,
+        2161
+       ],
+       "nearest_marker": "Bank of Magincia",
+       "tiles": 12,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "bank wilderness (4500, 2300)",
+       "at": [
+        4551,
+        2323
+       ],
+       "nearest_marker": "Bank of Magincia",
+       "tiles": 817,
+       "source": "modernuo:Distribution/Data/Spawns/post-uoml/felucca/Vendors.json"
+      }
+     ]
+    }
+   },
+   "healer": {
+    "Felucca": {
+     "markers": 17,
+     "matched": 17,
+     "store_places": 199,
+     "store_places_with_a_marker": 17,
+     "median_tiles_when_matched": 0,
+     "max_tiles_when_matched": 8,
+     "markers_without_a_match": [],
+     "store_places_without_a_marker": [
+      {
+       "place": "wandering healer south-west of Moonglow Docks",
+       "at": [
+        4336,
+        1130
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 56,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Moonglow Docks",
+       "at": [
+        4326,
+        1046
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 66,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Ocllo at (3555, 2525)",
+       "at": [
+        3555,
+        2525
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 83,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Moonglow Docks",
+       "at": [
+        4468,
+        1006
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 83,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Magincia moongate",
+       "at": [
+        3608,
+        2140
+       ],
+       "nearest_marker": "Healer of Magincia",
+       "tiles": 87,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Ocllo",
+       "at": [
+        3736,
+        2512
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 107,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Minoc Mining Camp",
+       "at": [
+        2688,
+        524
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 111,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Buccaneers Den Bathhouse",
+       "at": [
+        2744,
+        2014
+       ],
+       "nearest_marker": "Healer of Buccaneer's Den",
+       "tiles": 116,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Yew Cemetery",
+       "at": [
+        771,
+        1013
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 124,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Ocllo Docks",
+       "at": [
+        3718,
+        2736
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 128,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Moonglow",
+       "at": [
+        4384,
+        1218
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 129,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Solen Hives Area B Entrance",
+       "at": [
+        2643,
+        728
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 129,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Ocllo at (3506, 2477)",
+       "at": [
+        3506,
+        2477
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 131,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Moonglow Docks",
+       "at": [
+        4526,
+        986
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 134,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Yew Cemetery at (782, 1156)",
+       "at": [
+        782,
+        1156
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 135,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Skara Brae moongate",
+       "at": [
+        559,
+        2081
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 137,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Trinsic moongate",
+       "at": [
+        1894,
+        2942
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 137,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Magincia Park",
+       "at": [
+        3650,
+        2080
+       ],
+       "nearest_marker": "Healer of Magincia",
+       "tiles": 147,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Buccaneer's Den moongate",
+       "at": [
+        2786,
+        2282
+       ],
+       "nearest_marker": "Healer of Buccaneer's Den",
+       "tiles": 152,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Moonglow",
+       "at": [
+        4544,
+        1128
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 152,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Minoc moongate",
+       "at": [
+        2765,
+        754
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 155,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Buccaneer's Den moongate",
+       "at": [
+        2654,
+        2286
+       ],
+       "nearest_marker": "Healer of Buccaneer's Den",
+       "tiles": 156,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Skara Brae West",
+       "at": [
+        464,
+        2059
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 159,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Serpents Hold Guard Post",
+       "at": [
+        2998,
+        3590
+       ],
+       "nearest_marker": "Serpent's Hold Healer",
+       "tiles": 162,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Minoc moongate",
+       "at": [
+        2748,
+        660
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 171,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Cove Cemetery",
+       "at": [
+        2416,
+        1172
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 171,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Moonglow moongate",
+       "at": [
+        4510,
+        1262
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 173,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Ocllo at (3452, 2563)",
+       "at": [
+        3452,
+        2563
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 177,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Ocllo Docks",
+       "at": [
+        3449,
+        2737
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 180,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Minoc Mining Camp",
+       "at": [
+        2735,
+        417
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 182,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Solen Hives Area B Entrance",
+       "at": [
+        2513,
+        782
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 183,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Serpents Hold South",
+       "at": [
+        2814,
+        3500
+       ],
+       "nearest_marker": "Serpent's Hold Healer",
+       "tiles": 183,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Solen Hives Area C Entrance at (1727, 2702)",
+       "at": [
+        1727,
+        2702
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 184,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Solen Hives Area C Entrance at (1724, 2781)",
+       "at": [
+        1724,
+        2781
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 187,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Ocllo North",
+       "at": [
+        3607,
+        2417
+       ],
+       "nearest_marker": "Healer of Magincia",
+       "tiles": 190,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Yew Cemetery at (802, 1280)",
+       "at": [
+        802,
+        1280
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 193,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Ocllo Docks at (3662, 2802)",
+       "at": [
+        3662,
+        2802
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 194,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Ocllo Docks at (3596, 2804)",
+       "at": [
+        3596,
+        2804
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 196,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Yew Cemetery at (846, 1071)",
+       "at": [
+        846,
+        1071
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 199,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Ocllo",
+       "at": [
+        3429,
+        2650
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 200,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Ocllo Docks",
+       "at": [
+        3546,
+        2812
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 204,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Yew moongate",
+       "at": [
+        689,
+        753
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 205,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Yew Fort of the Damned at (855, 934)",
+       "at": [
+        855,
+        934
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 208,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Minoc South",
+       "at": [
+        2367,
+        748
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 210,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Solen Hives Area B Entrance",
+       "at": [
+        2672,
+        814
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 215,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Trinsic moongate",
+       "at": [
+        1824,
+        3027
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 222,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Covetous Entrance",
+       "at": [
+        2418,
+        999
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 232,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Yew moongate",
+       "at": [
+        764,
+        822
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 232,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Vesper North",
+       "at": [
+        2814,
+        492
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 237,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Moonglow Cemetery",
+       "at": [
+        4590,
+        1326
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 237,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Buccaneers Den Docks",
+       "at": [
+        2946,
+        2168
+       ],
+       "nearest_marker": "Healer of Buccaneer's Den",
+       "tiles": 237,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Yew Cemetery at (887, 1223)",
+       "at": [
+        887,
+        1223
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 240,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Moonglow Telescope",
+       "at": [
+        4632,
+        1164
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 240,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Solen Hives Area A Entrance",
+       "at": [
+        623,
+        1328
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 241,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Britain Cemetery",
+       "at": [
+        1231,
+        1462
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 241,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Cove Guard Post",
+       "at": [
+        2338,
+        989
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 242,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "Britain wandering healer",
+       "at": [
+        1229,
+        1655
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 243,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Shrine of Spirituality at (1699, 2560)",
+       "at": [
+        1699,
+        2560
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 245,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Moonglow moongate",
+       "at": [
+        4448,
+        1334
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 245,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Britain Cemetery",
+       "at": [
+        1351,
+        1359
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 248,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Yew Orc Fort at (398, 1305)",
+       "at": [
+        398,
+        1305
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 249,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Vesper East",
+       "at": [
+        2669,
+        922
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 251,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Vesper East",
+       "at": [
+        2668,
+        1020
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 252,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Vesper Docks",
+       "at": [
+        3172,
+        664
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 252,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Covetous Entrance",
+       "at": [
+        2495,
+        978
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 253,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Britain Suburbs at (1725, 1447)",
+       "at": [
+        1725,
+        1447
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 253,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Yew Fort of the Damned at (895, 830)",
+       "at": [
+        895,
+        830
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 257,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Ocllo Docks at (3654, 2866)",
+       "at": [
+        3654,
+        2866
+       ],
+       "nearest_marker": "Healer of Ocllo",
+       "tiles": 258,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Solen Hives Area C Entrance at (1650, 2796)",
+       "at": [
+        1650,
+        2796
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 261,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Skara Brae East at (883, 2129)",
+       "at": [
+        883,
+        2129
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 263,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Cove Cemetery",
+       "at": [
+        2512,
+        1066
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 267,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Yew Cemetery at (916, 1159)",
+       "at": [
+        916,
+        1159
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 269,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Solen Hives Area C Entrance at (1634, 2645)",
+       "at": [
+        1634,
+        2645
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 277,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Cove Orc Fort",
+       "at": [
+        1958,
+        1305
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 287,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Yew moongate at (748, 669)",
+       "at": [
+        748,
+        669
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 289,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Yew Cemetery at (940, 1028)",
+       "at": [
+        940,
+        1028
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 293,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Britain Blackthorn Castle",
+       "at": [
+        1769,
+        1330
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 297,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Shrine of Spirituality at (1612, 2526)",
+       "at": [
+        1612,
+        2526
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 299,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Yew moongate",
+       "at": [
+        834,
+        751
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 302,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Britain moongate",
+       "at": [
+        1377,
+        1911
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 304,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Britain Blackthorn Castle",
+       "at": [
+        1486,
+        1301
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 306,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Solen Hives Area A Entrance",
+       "at": [
+        727,
+        1394
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 307,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Cove Cemetery",
+       "at": [
+        2554,
+        1142
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 309,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Vesper North at (2914, 547)",
+       "at": [
+        2914,
+        547
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 309,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Vesper North at (2888, 391)",
+       "at": [
+        2888,
+        391
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 311,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Yew Orc Fort at (485, 1398)",
+       "at": [
+        485,
+        1398
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 311,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Vesper North",
+       "at": [
+        3092,
+        542
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 314,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Cove Guard Post",
+       "at": [
+        2289,
+        917
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 314,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Britain Blackthorn Castle",
+       "at": [
+        1666,
+        1290
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 317,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Trinsic moongate",
+       "at": [
+        1932,
+        3125
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 320,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Britain Suburbs at (1798, 1471)",
+       "at": [
+        1798,
+        1471
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 326,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Solen Hives Area C Entrance",
+       "at": [
+        1582,
+        2722
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 329,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Moonglow Zoo",
+       "at": [
+        4592,
+        1424
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 335,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Covetous Entrance",
+       "at": [
+        2583,
+        993
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 337,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Skara Brae East at (958, 2074)",
+       "at": [
+        958,
+        2074
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 338,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Moonglow Zoo",
+       "at": [
+        4470,
+        1430
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 341,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Yew Fort of the Damned",
+       "at": [
+        937,
+        743
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 344,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Skara Brae East",
+       "at": [
+        964,
+        2214
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 344,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (900, 1100)",
+       "at": [
+        993,
+        1130
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 346,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Shrine of Sacrifice",
+       "at": [
+        3232,
+        510
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 346,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Skara Brae South",
+       "at": [
+        968,
+        2476
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 348,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Britain moongate at (1459, 1963)",
+       "at": [
+        1459,
+        1963
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 356,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Yew Fort of the Damned",
+       "at": [
+        890,
+        657
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 358,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Yew Fort of the Damned",
+       "at": [
+        1011,
+        896
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 364,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Moonglow Zoo",
+       "at": [
+        4540,
+        1454
+       ],
+       "nearest_marker": "Moonglow Healer",
+       "tiles": 365,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Shrine of Spirituality",
+       "at": [
+        1722,
+        2435
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 370,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (3200, 500)",
+       "at": [
+        3292,
+        570
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 372,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Orc Cave Entrance at (1020, 1360)",
+       "at": [
+        1020,
+        1360
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 373,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Skara Brae South at (994, 2361)",
+       "at": [
+        994,
+        2361
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 374,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Orc Cave Entrance at (1024, 1244)",
+       "at": [
+        1024,
+        1244
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 377,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1800, 1200)",
+       "at": [
+        1867,
+        1244
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 378,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Shrine of Spirituality at (1602, 2426)",
+       "at": [
+        1602,
+        2426
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 379,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Yew-Britain Brigand Camp",
+       "at": [
+        999,
+        1839
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 379,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Britain Suburbs at (1865, 1379)",
+       "at": [
+        1865,
+        1379
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 380,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Yew moongate at (805, 576)",
+       "at": [
+        805,
+        576
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 382,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Shrine of Spirituality at (1527, 2609)",
+       "at": [
+        1527,
+        2609
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 384,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1700, 1900)",
+       "at": [
+        1709,
+        1992
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 385,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Britain Farmlands",
+       "at": [
+        1011,
+        1945
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 391,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Solen Hives Area A Entrance",
+       "at": [
+        725,
+        1483
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 396,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1000, 1000)",
+       "at": [
+        1047,
+        1071
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 400,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Shrine of Spirituality",
+       "at": [
+        1505,
+        2445
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 406,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Yew Fort of the Damned",
+       "at": [
+        1057,
+        765
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 410,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Britain moongate",
+       "at": [
+        1268,
+        2018
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 411,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Britain moongate at (1387, 2023)",
+       "at": [
+        1387,
+        2023
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 416,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Yew moongate",
+       "at": [
+        951,
+        542
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 419,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Destard Entrance",
+       "at": [
+        1005,
+        2647
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 429,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Britain moongate at (1498, 2040)",
+       "at": [
+        1498,
+        2040
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 433,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (200, 1400)",
+       "at": [
+        210,
+        1447
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 437,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Despise Entrance",
+       "at": [
+        1092,
+        1010
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 445,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Yew-Britain Brigand Camp",
+       "at": [
+        851,
+        1770
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 448,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (2800, 100)",
+       "at": [
+        2864,
+        150
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 449,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1000, 2000)",
+       "at": [
+        1070,
+        2069
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 450,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Shrine of Spirituality at (1531, 2351)",
+       "at": [
+        1531,
+        2351
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 454,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Yew-Britain Brigand Camp at (1017, 1726)",
+       "at": [
+        1017,
+        1726
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 455,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Yew Fort of the Damned at (1018, 629)",
+       "at": [
+        1018,
+        629
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 458,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Skara Brae South at (1087, 2401)",
+       "at": [
+        1087,
+        2401
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 467,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Shrine of Spirituality at (1628, 2334)",
+       "at": [
+        1628,
+        2334
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 471,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Shrine of Sacrifice",
+       "at": [
+        3392,
+        424
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 472,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (3300, 600)",
+       "at": [
+        3394,
+        628
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 474,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Shrine of Compassion at (1973, 751)",
+       "at": [
+        1973,
+        751
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 480,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Sanctuary Entrance",
+       "at": [
+        805,
+        1570
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 483,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Shrine of Spirituality at (1426, 2615)",
+       "at": [
+        1426,
+        2615
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 485,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer west of Shrine of Sacrifice",
+       "at": [
+        3206,
+        366
+       ],
+       "nearest_marker": "Healer of Vesper",
+       "tiles": 490,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Shrine of Compassion at (2085, 658)",
+       "at": [
+        2085,
+        658
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 492,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Yew-Britain Brigand Camp at (977, 1638)",
+       "at": [
+        977,
+        1638
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 495,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Britain moongate",
+       "at": [
+        1173,
+        2103
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 496,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Shrine of Compassion",
+       "at": [
+        1884,
+        735
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 496,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Britain moongate at (1439, 2104)",
+       "at": [
+        1439,
+        2104
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 497,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Shrine of Spirituality",
+       "at": [
+        1715,
+        2307
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 498,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Hyloth Fire Pit",
+       "at": [
+        4692,
+        3494
+       ],
+       "nearest_marker": "a Healer",
+       "tiles": 499,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (3000, 100)",
+       "at": [
+        3076,
+        150
+       ],
+       "nearest_marker": "The Healing Hand (Minoc)",
+       "tiles": 499,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Yew-Britain Brigand Camp",
+       "at": [
+        919,
+        1718
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 500,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Shrine of Justice",
+       "at": [
+        1152,
+        812
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 505,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Hyloth Fire Pit",
+       "at": [
+        4682,
+        3662
+       ],
+       "nearest_marker": "a Healer",
+       "tiles": 509,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (2100, 1900)",
+       "at": [
+        2188,
+        1986
+       ],
+       "nearest_marker": "Healer of Buccaneer's Den",
+       "tiles": 521,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Despise Entrance",
+       "at": [
+        1172,
+        974
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 525,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Shrine of Spirituality at (1563, 2277)",
+       "at": [
+        1563,
+        2277
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 528,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Yew Fort of the Damned at (1063, 541)",
+       "at": [
+        1063,
+        541
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 531,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Solen Hives Area D Entrance",
+       "at": [
+        1728,
+        691
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 540,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer near Solen Hives Area D Entrance",
+       "at": [
+        1695,
+        809
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 550,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Yew-Britain Brigand Camp",
+       "at": [
+        876,
+        1639
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 552,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1300, 2300)",
+       "at": [
+        1334,
+        2311
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 577,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Hyloth Fire Pit at (4612, 3424)",
+       "at": [
+        4612,
+        3424
+       ],
+       "nearest_marker": "a Healer",
+       "tiles": 579,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (900, 300)",
+       "at": [
+        974,
+        374
+       ],
+       "nearest_marker": "Healer of Yew",
+       "tiles": 584,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south of Britain moongate",
+       "at": [
+        1315,
+        2192
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 585,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (2100, 2100)",
+       "at": [
+        2122,
+        2108
+       ],
+       "nearest_marker": "Healer of Buccaneer's Den",
+       "tiles": 587,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Britain moongate at (1503, 2207)",
+       "at": [
+        1503,
+        2207
+       ],
+       "nearest_marker": "Trinsic Healer",
+       "tiles": 598,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1200, 2300)",
+       "at": [
+        1222,
+        2378
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 602,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Destard Entrance",
+       "at": [
+        1222,
+        2499
+       ],
+       "nearest_marker": "Healer of Skara Brae",
+       "tiles": 602,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (2000, 1900)",
+       "at": [
+        2074,
+        1972
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 602,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "Huntsman's Forest wandering healer",
+       "at": [
+        1631,
+        640
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 614,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north of Hyloth Fire Pit at (4560, 3504)",
+       "at": [
+        4560,
+        3504
+       ],
+       "nearest_marker": "a Healer",
+       "tiles": 631,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-east of Solen Hives Area D Entrance",
+       "at": [
+        1857,
+        600
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 631,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-east of Shrine of Chaos",
+       "at": [
+        1526,
+        960
+       ],
+       "nearest_marker": "Healer of Britain",
+       "tiles": 647,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer east of Shrine of Chaos",
+       "at": [
+        1545,
+        813
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 700,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (1800, 400)",
+       "at": [
+        1802,
+        495
+       ],
+       "nearest_marker": "The Healing Hand (Cove)",
+       "tiles": 736,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer north-west of Shrine of Chaos",
+       "at": [
+        1388,
+        784
+       ],
+       "nearest_marker": "Deep Forest Healing",
+       "tiles": 741,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer south-west of Hyloth Fire Pit",
+       "at": [
+        4446,
+        3706
+       ],
+       "nearest_marker": "a Healer",
+       "tiles": 745,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (4400, 3200)",
+       "at": [
+        4478,
+        3218
+       ],
+       "nearest_marker": "a Healer",
+       "tiles": 771,
+       "source": "modernuo:Distribution/Data/Spawns/shared/felucca/WildLife.json"
+      },
+      {
+       "place": "wandering healer wilderness (4500, 2300) at (4550, 2307)",
+       "at": [
+        4550,
+        2307
+       ],
+       "nearest_marker": "Healer of Magincia",
+       "tiles": 863,
+       "source": "modernuo:Distribution/Data/Spawns/post-uoml/felucca/Vendors.json"
+      },
+      {
+       "place": "wandering healer wilderness (4500, 2300) at (4551, 2381)",
+       "at": [
+        4551,
+        2381
+       ],
+       "nearest_marker": "Healer of Magincia",
+       "tiles": 864,
+       "source": "modernuo:Distribution/Data/Spawns/post-uoml/felucca/Vendors.json"
+      },
+      {
+       "place": "wandering healer wilderness (4500, 2300) at (4552, 2349)",
+       "at": [
+        4552,
+        2349
+       ],
+       "nearest_marker": "Healer of Magincia",
+       "tiles": 865,
+       "source": "modernuo:Distribution/Data/Spawns/post-uoml/felucca/Vendors.json"
+      }
+     ]
+    }
+   },
+   "moongate": {
+    "Felucca": {
+     "markers": 10,
+     "matched": 9,
+     "store_places": 9,
+     "store_places_with_a_marker": 9,
+     "median_tiles_when_matched": 1,
+     "max_tiles_when_matched": 2,
+     "markers_without_a_match": [
+      {
+       "marker": "Standard-Moongate",
+       "at": [
+        5153,
+        1760
+       ],
+       "nearest": "Moonglow moongate",
+       "nearest_at": [
+        4467,
+        1283
+       ],
+       "tiles": 686,
+       "source": "modernuo:Projects/UOContent/Items/Misc/PublicMoongate.cs"
+      }
+     ],
+     "store_places_without_a_marker": []
+    }
+   },
+   "dungeon_entrance": {
+    "Felucca": {
+     "markers": 21,
+     "matched": 13,
+     "store_places": 25,
+     "store_places_with_a_marker": 13,
+     "median_tiles_when_matched": 3,
+     "max_tiles_when_matched": 8,
+     "markers_without_a_match": [
+      {
+       "marker": "Wrong (dungeon)",
+       "at": [
+        2042,
+        226
+       ],
+       "nearest": "Wrong Entrance",
+       "nearest_at": [
+        2043,
+        238
+       ],
+       "tiles": 12,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "Terathan Keep (dungeon)",
+       "at": [
+        5426,
+        3120
+       ],
+       "nearest": "Terathan Keep Entrance",
+       "nearest_at": [
+        5451,
+        3143
+       ],
+       "tiles": 25,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "Wind (dungeon)",
+       "at": [
+        1361,
+        890
+       ],
+       "nearest": "Despise Entrance",
+       "nearest_at": [
+        1298,
+        1080
+       ],
+       "tiles": 190,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "passage to Delucia",
+       "at": [
+        1628,
+        3318
+       ],
+       "nearest": "Painted Caves Entrance",
+       "nearest_at": [
+        1716,
+        2993
+       ],
+       "tiles": 325,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "passage to Trinsic",
+       "at": [
+        5138,
+        3665
+       ],
+       "nearest": "Hythloth Entrance",
+       "nearest_at": [
+        4721,
+        3822
+       ],
+       "tiles": 417,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "passage to Britain",
+       "at": [
+        6075,
+        3330
+       ],
+       "nearest": "Fire Entrance",
+       "nearest_at": [
+        5760,
+        2908
+       ],
+       "tiles": 422,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "passage to Trinsic (Delucia)",
+       "at": [
+        5150,
+        4063
+       ],
+       "nearest": "Hythloth Entrance",
+       "nearest_at": [
+        4721,
+        3822
+       ],
+       "tiles": 429,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "marker": "sewer entrance",
+       "at": [
+        1492,
+        1641
+       ],
+       "nearest": "Orc Cave Entrance",
+       "nearest_at": [
+        1019,
+        1431
+       ],
+       "tiles": 473,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      }
+     ],
+     "store_places_without_a_marker": [
+      {
+       "place": "Wrong Entrance",
+       "at": [
+        2043,
+        238
+       ],
+       "nearest_marker": "Wrong (dungeon)",
+       "tiles": 12,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Terathan Keep Entrance",
+       "at": [
+        5451,
+        3143
+       ],
+       "nearest_marker": "Terathan Keep (dungeon)",
+       "tiles": 25,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Blighted Grove Entrance",
+       "at": [
+        586,
+        1643
+       ],
+       "nearest_marker": "Shame (dungeon)",
+       "tiles": 84,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Palace of Paroxysmus Entrance",
+       "at": [
+        5576,
+        3018
+       ],
+       "nearest_marker": "Terathan Keep (dungeon)",
+       "tiles": 150,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Solen Hives Area B Entrance",
+       "at": [
+        2607,
+        763
+       ],
+       "nearest_marker": "Covetous (dungeon)",
+       "tiles": 153,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Solen Hives Area A Entrance",
+       "at": [
+        729,
+        1451
+       ],
+       "nearest_marker": "Shame (dungeon)",
+       "tiles": 217,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Sanctuary Entrance",
+       "at": [
+        764,
+        1646
+       ],
+       "nearest_marker": "Orc Cave",
+       "tiles": 250,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Painted Caves Entrance",
+       "at": [
+        1716,
+        2993
+       ],
+       "nearest_marker": "passage to Delucia",
+       "tiles": 325,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Solen Hives Area D Entrance",
+       "at": [
+        1723,
+        814
+       ],
+       "nearest_marker": "Wind (dungeon)",
+       "tiles": 362,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Solen Hives Area C Entrance",
+       "at": [
+        1689,
+        2789
+       ],
+       "nearest_marker": "Destard (dungeon)",
+       "tiles": 513,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Solen Hives Area E Entrance",
+       "at": [
+        5732,
+        1858
+       ],
+       "nearest_marker": "Ice at (5203, 2328)",
+       "tiles": 529,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      },
+      {
+       "place": "Prism of Light Entrance",
+       "at": [
+        3784,
+        1097
+       ],
+       "nearest_marker": "Deceit (dungeon)",
+       "tiles": 668,
+       "source": "modernuo:Distribution/Data/Locations/felucca.json"
+      }
+     ]
+    }
+   }
+  }
+ },
+ "plan_probe": {
+  "what": "smallest travel distance the client could plan a walk to, from Britain centre, for each Common.MAP marker in (1280,1450)-(1760,1800) on Felucca; doors count as open",
+  "start": [
+   1495,
+   1629
+  ],
+  "markers": 67,
+  "by_distance_needed": {
+   "0": 59,
+   "2": 1,
+   "1": 6,
+   "7": 1
+  },
+  "needing_more_than_0": [
+   {
+    "kind": "arms_shop",
+    "name": "Heavy Metal Armorer",
+    "x": 1437,
+    "y": 1647,
+    "distance_needed": 2
+   },
+   {
+    "kind": "bank",
+    "name": "East Britain Bank",
+    "x": 1655,
+    "y": 1606,
+    "distance_needed": 1
+   },
+   {
+    "kind": "carpenter",
+    "name": "The Saw Horse",
+    "x": 1430,
+    "y": 1597,
+    "distance_needed": 1
+   },
+   {
+    "kind": "dungeon_entrance",
+    "name": "sewer entrance",
+    "x": 1492,
+    "y": 1641,
+    "distance_needed": 1
+   },
+   {
+    "kind": "healer",
+    "name": "Healer of Britain",
+    "x": 1472,
+    "y": 1607,
+    "distance_needed": 1
+   },
+   {
+    "kind": "jeweller",
+    "name": "A Girl's Best Friend",
+    "x": 1655,
+    "y": 1642,
+    "distance_needed": 1
+   },
+   {
+    "kind": "landmark",
+    "name": "Britannia Animal Care",
+    "x": 1507,
+    "y": 1567,
+    "distance_needed": 1
+   },
+   {
+    "kind": "landmark",
+    "name": "East Side Park",
+    "x": 1608,
+    "y": 1622,
+    "distance_needed": 7
+   }
+  ]
+ },
+ "travel": {
+  "command": "uv run uo-brain --port 5630 do --shard markers-only travel NAME --distance 2 (markers-only: a store with nothing but Common.MAP's Felucca places), after [AgentGo START; local ModernUO test server 127.0.0.1:2593",
+  "clients_running": 6,
+  "trips": [
+   {
+    "marker": "Heavy Metal Armorer",
+    "marker_at": [
+     1437,
+     1647
+    ],
+    "server_place": "West Britain armourer at (1447, 1647)",
+    "server_at": [
+     1447,
+     1647
+    ],
+    "marker_to_server": 10,
+    "start": [
+     1425,
+     1688
+    ],
+    "start_to_marker": 41,
+    "result": {
+     "ok": true,
+     "result": "arrived at Heavy Metal Armorer in 19 s",
+     "seconds": 19,
+     "replans": 0
+    },
+    "seconds": 19,
+    "end": [
+     1439,
+     1649
+    ],
+    "end_z": 10,
+    "end_to_marker": 2,
+    "end_to_server": 8,
+    "people_within_12": [
+     [
+      9,
+      "Ravi The Weaponsmith",
+      1448,
+      1647
+     ],
+     [
+      11,
+      "Pauline The Armorer",
+      1450,
+      1648
+     ]
+    ]
+   },
+   {
+    "marker": "Healer of Britain",
+    "marker_at": [
+     1472,
+     1607
+    ],
+    "server_place": "Britain healer",
+    "server_at": [
+     1471,
+     1611
+    ],
+    "marker_to_server": 4,
+    "start": [
+     1425,
+     1688
+    ],
+    "start_to_marker": 81,
+    "result": {
+     "ok": true,
+     "result": "arrived at Healer of Britain in 27 s",
+     "seconds": 27,
+     "replans": 0
+    },
+    "seconds": 27,
+    "end": [
+     1474,
+     1609
+    ],
+    "end_z": 20,
+    "end_to_marker": 2,
+    "end_to_server": 3,
+    "people_within_12": [
+     [
+      2,
+      "Devaki The Healer Guildmistress",
+      1472,
+      1610
+     ],
+     [
+      5,
+      "Minerva The Healer",
+      1469,
+      1611
+     ],
+     [
+      11,
+      "Bane The Merchant Guildmaster",
+      1477,
+      1598
+     ]
+    ]
+   },
+   {
+    "marker": "East Britain Bank",
+    "marker_at": [
+     1655,
+     1606
+    ],
+    "server_place": "East Britain bank",
+    "server_at": [
+     1650,
+     1608
+    ],
+    "marker_to_server": 5,
+    "start": [
+     1425,
+     1688
+    ],
+    "start_to_marker": 230,
+    "result": {
+     "ok": true,
+     "result": "arrived at East Britain Bank in 55 s",
+     "seconds": 55,
+     "replans": 0
+    },
+    "seconds": 55,
+    "end": [
+     1656,
+     1608
+    ],
+    "end_z": 20,
+    "end_to_marker": 2,
+    "end_to_server": 6,
+    "people_within_12": [
+     [
+      4,
+      "Wesley The Minter",
+      1652,
+      1607
+     ],
+     [
+      5,
+      "Angus The Town Crier",
+      1661,
+      1610
+     ],
+     [
+      5,
+      "Dylan The Banker",
+      1651,
+      1608
+     ]
+    ]
+   },
+   {
+    "marker": "Britain Moongate",
+    "marker_at": [
+     1336,
+     1997
+    ],
+    "server_place": "Britain moongate",
+    "server_at": [
+     1336,
+     1997
+    ],
+    "marker_to_server": 0,
+    "start": [
+     1425,
+     1688
+    ],
+    "start_to_marker": 309,
+    "result": {
+     "ok": true,
+     "result": "arrived at Britain Moongate in 82 s",
+     "seconds": 82,
+     "replans": 0
+    },
+    "seconds": 82,
+    "end": [
+     1336,
+     1995
+    ],
+    "end_z": 3,
+    "end_to_marker": 2,
+    "end_to_server": 2,
+    "people_within_12": []
+   },
+   {
+    "marker": "Orc Cave",
+    "marker_at": [
+     1014,
+     1434
+    ],
+    "server_place": "Orc Cave Entrance",
+    "server_at": [
+     1019,
+     1431
+    ],
+    "marker_to_server": 5,
+    "start": [
+     1050,
+     1431
+    ],
+    "start_to_marker": 36,
+    "result": {
+     "ok": true,
+     "result": "arrived at Orc Cave in 9 s",
+     "seconds": 9,
+     "replans": 0
+    },
+    "seconds": 9,
+    "end": [
+     1016,
+     1433
+    ],
+    "end_z": 0,
+    "end_to_marker": 2,
+    "end_to_server": 3,
+    "people_within_12": []
+   },
+   {
+    "marker": "Despise (dungeon)",
+    "marker_at": [
+     1296,
+     1082
+    ],
+    "server_place": "Despise Entrance",
+    "server_at": [
+     1298,
+     1080
+    ],
+    "marker_to_server": 2,
+    "start": [
+     1296,
+     1115
+    ],
+    "start_to_marker": 33,
+    "result": {
+     "ok": false,
+     "result": "could not set off for Despise (dungeon): no route"
+    },
+    "seconds": 0,
+    "end": [
+     1296,
+     1115
+    ],
+    "end_z": 47,
+    "end_to_marker": 33,
+    "end_to_server": 35,
+    "people_within_12": []
+   },
+   {
+    "marker": "Wrong (dungeon)",
+    "marker_at": [
+     2042,
+     226
+    ],
+    "server_place": "Wrong Entrance",
+    "server_at": [
+     2043,
+     238
+    ],
+    "marker_to_server": 12,
+    "start": [
+     2043,
+     265
+    ],
+    "start_to_marker": 39,
+    "result": {
+     "ok": true,
+     "result": "arrived at Wrong (dungeon) in 9 s",
+     "seconds": 9,
+     "replans": 0
+    },
+    "seconds": 9,
+    "end": [
+     2042,
+     228
+    ],
+    "end_z": 14,
+    "end_to_marker": 2,
+    "end_to_server": 10,
+    "people_within_12": []
+   },
+   {
+    "marker": "Despise (dungeon)",
+    "marker_at": [
+     1296,
+     1082
+    ],
+    "server_place": "Despise Entrance",
+    "server_at": [
+     1298,
+     1080
+    ],
+    "marker_to_server": 2,
+    "start": [
+     1330,
+     1090
+    ],
+    "start_to_marker": 34,
+    "result": {
+     "ok": true,
+     "result": "arrived at Despise (dungeon) in 8 s",
+     "seconds": 8,
+     "replans": 0
+    },
+    "seconds": 8,
+    "end": [
+     1298,
+     1081
+    ],
+    "end_z": 0,
+    "end_to_marker": 2,
+    "end_to_server": 1,
+    "people_within_12": []
+   }
+  ]
+ },
+ "bank_errand": {
+  "command": "uv run uo-brain --port 5630 do --shard markers-only bank --deposit gold (from Britain centre)",
+  "result": "The First Bank of Britain: walked 71 tiles in 17 s, moved 2 items, deposited 1,050 gold"
+ }
+}

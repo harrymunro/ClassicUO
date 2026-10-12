@@ -1,0 +1,3166 @@
+{
+  "date": "2026-10-09",
+  "model": "anthropic/claude-haiku-5.5",
+  "character": "Brutus",
+  "command": "uv run uo-brain replay-planner logs/LOG.jsonl --planner-model anthropic/claude-haiku-5.5 --memories Brutus --root <scratch> --limit 60",
+  "noise_command": "the same with --memories Nobody (no memories: the two answers to a moment differ by chance only)",
+  "store": "a copy of brain/worlds/local with Brutus's 27 session logs of 2026-10-07/08 imported (uo-brain memory import, oldest first)",
+  "note": "second run, after the review fixes: ages measured from the moment, bad places by when first seen if seen again later",
+  "logs": {
+    "planners-a-1": {
+      "moments": 18,
+      "same_tool": 0.556,
+      "same_call": 0.111,
+      "repeats_without": 0,
+      "repeats_with": 2,
+      "tokens_added_avg": 471,
+      "memory_picks": 18,
+      "memory_cost_usd": 0.00461,
+      "planner_cost_usd": 0.01603,
+      "rows": [
+        {
+          "t": 1791508746.574721,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=30)",
+          "without_tokens": 9269,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30)",
+          "with_tokens": 9640,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508754.52588,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9318,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which undead here are weak enough for a warrior to fight one at a time, and which are too strong or come in packs?', limit=10)",
+          "with_tokens": 9689,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508894.446959,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are active now and where should the character stand to find undead?', limit=8)",
+          "without_tokens": 9522,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10125,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508954.329707,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are active and closest to the character, and what undead do they spawn?', limit=8)",
+          "without_tokens": 9739,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Where are the active undead spawners in the Britain graveyard, and which are closest to my position?', near='1382,1489', limit=8)",
+          "with_tokens": 10257,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509045.124853,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are undead (skeletons, zombies, ghouls) and how often do they respawn?', limit=8)",
+          "without_tokens": 9914,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which spawners here are close to the character and what undead are they, and how strong are they for a warrior with 95 health?', limit=10)",
+          "with_tokens": 10398,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509135.476535,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are undead, and how often do they respawn?', limit=10)",
+          "without_tokens": 10110,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', near='1382,1489', limit=10, question='Which spawners here are close to me and what undead do they bring, and how often do they respawn?')",
+          "with_tokens": 10598,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509290.652404,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are active and what undead do they produce, and where exactly are they?', limit=10)",
+          "without_tokens": 10158,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10751,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791509397.8635252,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(deposit='gold, loot', withdraw='')",
+          "without_tokens": 10351,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10984,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791509404.829725,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10466,
+          "without_repeats": null,
+          "with": "bank(deposit='gold,loot', withdraw='gold:200')",
+          "with_tokens": 10833,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509488.647326,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=1500)",
+          "without_tokens": 10549,
+          "without_repeats": null,
+          "with": "rest(seconds=1800)",
+          "with_tokens": 10916,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509609.011337,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which undead spawners are near the Britain graveyard, and which are weakest for a warrior?', limit=10)",
+          "without_tokens": 10745,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead-rich area near Britain is good for a warrior, away from the gargoyle and lich spawns of the Britain Graveyard?', limit=6)",
+          "with_tokens": 11161,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509615.85045,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=1560)",
+          "without_tokens": 10860,
+          "without_repeats": null,
+          "with": "rest(seconds=900)",
+          "with_tokens": 11301,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509891.776112,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which undead spawns at the Britain graveyard are moderate or trivial, not gargoyle packs, so a warrior can fight them one at a time?', limit=10)",
+          "without_tokens": 11068,
+          "without_repeats": null,
+          "with": "rest(seconds=1200)",
+          "with_tokens": 11436,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510200.248254,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(deposit='gold', withdraw='')",
+          "without_tokens": 11051,
+          "without_repeats": null,
+          "with": "rest(seconds=900)",
+          "with_tokens": 11582,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510205.73237,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=1030)",
+          "without_tokens": 10970,
+          "without_repeats": null,
+          "with": "rest(seconds=1020)",
+          "with_tokens": 11501,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510212.42337,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=1000)",
+          "without_tokens": 10851,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11334,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510220.079509,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=1000)",
+          "without_tokens": 10770,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11224,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510528.351566,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=600)",
+          "without_tokens": 10622,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11086,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-b-1": {
+      "moments": 13,
+      "same_tool": 0.385,
+      "same_call": 0.154,
+      "repeats_without": 4,
+      "repeats_with": 2,
+      "tokens_added_avg": 370,
+      "memory_picks": 13,
+      "memory_cost_usd": 0.00329,
+      "planner_cost_usd": 0.010684,
+      "rows": [
+        {
+          "t": 1791508745.766248,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=30)",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "with_tokens": 9619,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508910.366465,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "without_tokens": 9345,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 9716,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508928.5471501,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9423,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9858,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508993.777971,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(deposit='gold', withdraw='')",
+          "without_tokens": 9612,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 10006,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509300.670662,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=900)",
+          "without_tokens": 9661,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='')",
+          "with_tokens": 10045,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509610.039328,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=900)",
+          "without_tokens": 9710,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which undead here are weak enough for a warrior with 95 HP, and where do the lich and skeletons spawn relative to the zombies?', limit=10)",
+          "with_tokens": 10017,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509913.787593,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='Britain graveyard', limit=6, question='Which undead spawns near Britain graveyard are safe for a warrior, avoiding the lich and skeleton group that just chased me off?')",
+          "without_tokens": 9759,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10180,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791510216.766738,
+          "logged": "outcomes",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9807,
+          "without_repeats": "britain graveyard",
+          "with": "rest(seconds=600)",
+          "with_tokens": 10228,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510221.707325,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns (zombies, skeletons, ghouls) are good for a new warrior, away from the Britain graveyard lich?', limit=8)",
+          "without_tokens": 9931,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which undead hunting areas near Britain avoid liches and skeleton packs, at least 30 tiles from Britain Graveyard?', limit=8)",
+          "with_tokens": 10233,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510526.1728718,
+          "logged": "set_strategy",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9979,
+          "without_repeats": "britain graveyard",
+          "with": "rest(seconds=540)",
+          "with_tokens": 10358,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510529.374557,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 10009,
+          "without_repeats": "britain graveyard",
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10335,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791510538.1840599,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10087,
+          "without_repeats": "britain graveyard",
+          "with": "rest(seconds=540)",
+          "with_tokens": 10483,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510540.3277912,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=240)",
+          "without_tokens": 10211,
+          "without_repeats": null,
+          "with": "rest(seconds=240)",
+          "with_tokens": 10513,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-a-2": {
+      "moments": 15,
+      "same_tool": 0.467,
+      "same_call": 0.133,
+      "repeats_without": 6,
+      "repeats_with": 2,
+      "tokens_added_avg": 520,
+      "memory_picks": 15,
+      "memory_cost_usd": 0.00382,
+      "planner_cost_usd": 0.012875,
+      "rows": [
+        {
+          "t": 1791510662.29014,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "with_tokens": 9669,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510718.0833158,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9318,
+          "without_repeats": "britain graveyard",
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9739,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791510780.215586,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=90)",
+          "without_tokens": 9517,
+          "without_repeats": null,
+          "with": "rest(seconds=120)",
+          "with_tokens": 10006,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510874.430589,
+          "logged": "what_spawns",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9565,
+          "without_repeats": "britain graveyard",
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which nearby area has undead (zombies, skeletons) that a moderate warrior can fight one or two at a time, not packs of liches or gargoyles?', limit=6)",
+          "with_tokens": 10044,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510944.931328,
+          "logged": "set_strategy",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "recall(query='Britain Graveyard zombie fights warrior health left the area')",
+          "without_tokens": 9764,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', limit=6, question='Which undead or nearby hunting area suits a new warrior around Britain, with fewer strong spellcasters than the Britain Graveyard?')",
+          "with_tokens": 10253,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510947.504988,
+          "logged": "outcomes",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=60)",
+          "without_tokens": 9912,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10412,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791511460.226186,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10211,
+          "without_repeats": "britain graveyard",
+          "with": "bank(withdraw='', deposit='gold')",
+          "with_tokens": 10686,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511753.355644,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10421,
+          "without_repeats": "britain graveyard",
+          "with": "bank(deposit='gold,loot', withdraw='')",
+          "with_tokens": 10930,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511815.851347,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(withdraw='bandage:0', deposit='gold')",
+          "without_tokens": 10469,
+          "without_repeats": null,
+          "with": "bank(withdraw='', deposit='gold,loot')",
+          "with_tokens": 11084,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511870.619254,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(withdraw='', deposit='gold, loot')",
+          "without_tokens": 10668,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='gold:200')",
+          "with_tokens": 11219,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511963.387082,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='Britain Graveyard', limit=5, question='Which nearby area has undead (zombies, skeletons) spawning steadily for a warrior, since the Britain Graveyard has gone quiet?')",
+          "without_tokens": 10716,
+          "without_repeats": null,
+          "with": "bank(withdraw='', deposit='gold')",
+          "with_tokens": 11287,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512191.902567,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(withdraw='bandage:50', deposit='gold')",
+          "without_tokens": 10908,
+          "without_repeats": null,
+          "with": "bank(withdraw='', deposit='gold, loot')",
+          "with_tokens": 11517,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512314.7154272,
+          "logged": "bank",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10956,
+          "without_repeats": "britain graveyard",
+          "with": "bank(withdraw='', deposit='gold,loot')",
+          "with_tokens": 11522,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512377.3999019,
+          "logged": "bank",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "bank(deposit='gold', withdraw='')",
+          "without_tokens": 11065,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='')",
+          "with_tokens": 11678,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512387.0481658,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10956,
+          "without_repeats": "britain graveyard",
+          "with": "bank(deposit='all', withdraw='')",
+          "with_tokens": 11455,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-b-2": {
+      "moments": 13,
+      "same_tool": 0.462,
+      "same_call": 0.0,
+      "repeats_without": 4,
+      "repeats_with": 1,
+      "tokens_added_avg": 406,
+      "memory_picks": 13,
+      "memory_cost_usd": 0.00324,
+      "planner_cost_usd": 0.010167,
+      "rows": [
+        {
+          "t": 1791510810.4154491,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "with_tokens": 9669,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510821.439517,
+          "logged": "travel_to",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9318,
+          "without_repeats": "britain graveyard",
+          "with": "what_spawns(area='Britain Graveyard', question='Which undead here are weak enough for a warrior with 95 health, and how many spawn at once?', limit=8)",
+          "with_tokens": 9765,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510874.2659671,
+          "logged": "travel_to",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9376,
+          "without_repeats": "britain graveyard",
+          "with": "outcomes(area='Britain Graveyard', kit='warrior')",
+          "with_tokens": 9802,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510882.30731,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9476,
+          "without_repeats": "britain graveyard",
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 9878,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510965.027477,
+          "logged": "travel_to",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9661,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='Britain graveyard', question='Which undead spawns near Britain are weak enough to fight without a lich or a pack joining in?', limit=8)",
+          "with_tokens": 10070,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510983.8750029,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=120)",
+          "without_tokens": 9729,
+          "without_repeats": null,
+          "with": "rest(seconds=300)",
+          "with_tokens": 10114,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511024.635926,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which nearby spawns have undead (zombies, skeletons, ghouls) that are weak enough to fight one at a time, away from the lich at Britain Graveyard?', limit=8)",
+          "without_tokens": 9777,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which undead hunting area near Britain is safe for a warrior without liches or packs?', limit=6)",
+          "with_tokens": 10162,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511060.4980679,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "1385,1492",
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "rest(seconds=1680)",
+          "without_tokens": 9901,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', limit=8, question='Which undead spawns (zombies, skeletons, ghouls) are reachable at least 30 tiles from Britain Graveyard, without liches?')",
+          "with_tokens": 10253,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511378.6565409,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', limit=8, question='Which undead spawns (zombies, skeletons, ghouls) are near West Britain that a warrior can fight at 30 tiles or more from Britain Graveyard?', near='West Britain bank')",
+          "without_tokens": 9950,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns are safe to hunt away from the Britain Graveyard lich, at least 30 tiles from it?', limit=8)",
+          "with_tokens": 10302,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511689.7727292,
+          "logged": "bank",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which spots near Britain have undead (zombies, skeletons) that a new warrior can fight safely, avoiding liches?', limit=8)",
+          "without_tokens": 9999,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Where can this warrior hunt undead near Britain, away from the lich at Britain Graveyard?', limit=6)",
+          "with_tokens": 10381,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511704.551957,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead-spawning area is at least 30 tiles from Britain Graveyard and suits a warrior with 95 health?', limit=8)",
+          "without_tokens": 10087,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which nearby area has undead (zombies, skeletons, ghouls) without liches, at least 30 tiles from Britain Graveyard?', limit=8)",
+          "with_tokens": 10528,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512015.2901802,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "what_spawns(area='Britain Graveyard', question='Which undead spawn near Britain graveyard, and where is a spot away from the lich?', limit=8)",
+          "without_tokens": 10136,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10577,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791512330.542788,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10185,
+          "without_repeats": "britain graveyard",
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which undead spawns (zombies, skeletons, ghouls) near Britain are good for a moderate warrior, away from the lich at Britain Graveyard?', limit=8)",
+          "with_tokens": 10626,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-a-3": {
+      "moments": 17,
+      "same_tool": 0.412,
+      "same_call": 0.176,
+      "repeats_without": 6,
+      "repeats_with": 3,
+      "tokens_added_avg": 448,
+      "memory_picks": 17,
+      "memory_cost_usd": 0.00425,
+      "planner_cost_usd": 0.015228,
+      "rows": [
+        {
+          "t": 1791512714.952273,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=30)",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30)",
+          "with_tokens": 9719,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512826.373028,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9352,
+          "without_repeats": "britain graveyard",
+          "with": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "with_tokens": 9807,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512891.117853,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400"
+          ],
+          "without": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "without_tokens": 9471,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=20, vendor_kind='healer')",
+          "with_tokens": 9912,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512961.080662,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9590,
+          "without_repeats": "britain graveyard",
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10031,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513041.503823,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9710,
+          "without_repeats": "britain graveyard",
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10165,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513119.5144808,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9829,
+          "without_repeats": "britain graveyard",
+          "with": "find_place(kind='bandages', near='1471,1609', limit=5)",
+          "with_tokens": 10284,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513182.099794,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "buy(item='bandage', count=20, vendor_kind='healer')",
+          "without_tokens": 9923,
+          "without_repeats": null,
+          "with": "find_place(kind='bandages', near='1425,1690', limit=5)",
+          "with_tokens": 10378,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513207.3875399,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "find_place(kind='bandages', near='Britain bank', limit=5)",
+          "without_tokens": 9971,
+          "without_repeats": null,
+          "with": "find_place(kind='bandages', near='1425,1690', limit=5)",
+          "with_tokens": 10382,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513253.132683,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 10029,
+          "without_repeats": "britain graveyard",
+          "with": "find_place(kind='bandages', near='Britain', limit=5)",
+          "with_tokens": 10470,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513332.8741498,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10107,
+          "without_repeats": "britain graveyard",
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10562,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791513424.9113212,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Where can I hunt undead (skeletons, zombies, ghouls) near Britain, avoiding gargoyles?', limit=8)",
+          "without_tokens": 10385,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which undead spawn near Britain is manageable for a warrior without gargoyles, liches or bone knights?', limit=8)",
+          "with_tokens": 10896,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513526.896391,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=600)",
+          "without_tokens": 10625,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns (zombies, skeletons, ghouls) are reachable near Britain, at least 30 tiles from Britain graveyard?', limit=8)",
+          "with_tokens": 10974,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513838.6096,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which undead-heavy area near Britain is good for a warrior, away from the gargoyle pack at Britain Graveyard?', limit=6)",
+          "without_tokens": 10575,
+          "without_repeats": null,
+          "with": "rest(seconds=1500)",
+          "with_tokens": 10984,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513947.816032,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10661,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 11027,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514055.748241,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=1500)",
+          "without_tokens": 10629,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=12)",
+          "with_tokens": 11107,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791514378.297295,
+          "logged": "find_place",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=1200)",
+          "without_tokens": 10558,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 11036,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791514419.910794,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=1200)",
+          "without_tokens": 10507,
+          "without_repeats": null,
+          "with": "rest(seconds=1200)",
+          "with_tokens": 11047,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-b-3": {
+      "moments": 22,
+      "same_tool": 0.727,
+      "same_call": 0.545,
+      "repeats_without": 1,
+      "repeats_with": 1,
+      "tokens_added_avg": 374,
+      "memory_picks": 22,
+      "memory_cost_usd": 0.00546,
+      "planner_cost_usd": 0.020156,
+      "rows": [
+        {
+          "t": 1791512654.682368,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30)",
+          "with_tokens": 9719,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512677.638367,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9366,
+          "without_repeats": "britain graveyard",
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9807,
+          "with_repeats": "britain graveyard"
+        },
+        {
+          "t": 1791512731.535816,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns near Britain are manageable for a warrior, away from the bone knights at Britain Graveyard?', limit=8)",
+          "without_tokens": 9564,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which spawners at Britain Graveyard hold only weak undead (zombies, skeletons) and where, away from the bone knights and liches?')",
+          "with_tokens": 9991,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512821.501772,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9758,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10134,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512915.171572,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9962,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10418,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513026.939062,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10159,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10575,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513032.7024589,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10302,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10702,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513140.1335502,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10505,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10875,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513146.343273,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10649,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10955,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513152.575587,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10773,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 11123,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513231.376317,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10972,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 11278,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513238.076666,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 11106,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 11427,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513390.856964,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns near Britain are fit for a warrior at this level, away from the bone knights at Britain Graveyard?', limit=8)",
+          "without_tokens": 11165,
+          "without_repeats": null,
+          "with": "rest(seconds=1200)",
+          "with_tokens": 11552,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513396.4087858,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns near Britain are weaker than bone knights and ghouls, suitable for a warrior fighting one at a time?', limit=8)",
+          "without_tokens": 11194,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11590,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513710.49119,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "buy(item='bandage', count=20)",
+          "without_tokens": 11044,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11510,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513717.96304,
+          "logged": "buy",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=840)",
+          "without_tokens": 10983,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=10)",
+          "with_tokens": 11319,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513823.30118,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=840)",
+          "without_tokens": 10898,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11278,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513826.453221,
+          "logged": "hunting_spots",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=720)",
+          "without_tokens": 10835,
+          "without_repeats": null,
+          "with": "rest(seconds=720)",
+          "with_tokens": 11141,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514133.27703,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=720)",
+          "without_tokens": 10740,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which area near Britain has undead (skeletons, zombies) that a moderate warrior can fight, at least 30 tiles from the Britain Graveyard?', limit=8)",
+          "with_tokens": 11076,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514135.8797739,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=420)",
+          "without_tokens": 10671,
+          "without_repeats": null,
+          "with": "rest(seconds=420)",
+          "with_tokens": 10977,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514440.29895,
+          "logged": "hunt",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=420)",
+          "without_tokens": 10575,
+          "without_repeats": null,
+          "with": "rest(seconds=420)",
+          "with_tokens": 10911,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514444.9294899,
+          "logged": "rest",
+          "shown": 5,
+          "bad_places": [
+            "britain graveyard",
+            "britain sewer",
+            "cove healer",
+            "east yew healer",
+            "wilderness (1800, 1300)",
+            "wilderness near 1350,1400",
+            "wilderness near 1400,1400",
+            "wilderness near 1600,1400",
+            "wilderness near 1650,1450",
+            "wilderness near 1800,1450"
+          ],
+          "without": "rest(seconds=60)",
+          "without_tokens": 10585,
+          "without_repeats": null,
+          "with": "rest(seconds=90)",
+          "with_tokens": 10935,
+          "with_repeats": null
+        }
+      ]
+    }
+  },
+  "noise": {
+    "planners-a-1": {
+      "moments": 18,
+      "same_tool": 0.833,
+      "same_call": 0.111,
+      "rows": [
+        {
+          "t": 1791508746.574721,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30)",
+          "without_tokens": 9269,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "with_tokens": 9269,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508754.52588,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9318,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9318,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508894.446959,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are close to the character and how often do undead respawn?', limit=8)",
+          "without_tokens": 9522,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which spawners here hold undead, and how far from the graveyard centre are they?', limit=10)",
+          "with_tokens": 9522,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508954.329707,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are undead, and how far from the graveyard centre are they?', limit=10)",
+          "without_tokens": 9739,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which spawners here are active now, and what undead do they spawn?', limit=10)",
+          "with_tokens": 9739,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509045.124853,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here produce undead, and where are they relative to the graveyard center?', limit=10)",
+          "without_tokens": 9914,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which spawners here are active now and where exactly are the undead (skeletons, zombies, ghouls) relative to the graveyard?', limit=10)",
+          "with_tokens": 9914,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509135.476535,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are close to the character and what undead do they spawn, and how long is the respawn?', limit=8)",
+          "without_tokens": 10110,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Where are the undead spawners in the Britain graveyard, and what are they (skeletons, zombies, ghosts)?', limit=10)",
+          "with_tokens": 10110,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509290.652404,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Where are the undead spawners in the Britain graveyard, and how far are they from the character at 1377,1488?', limit=10)",
+          "without_tokens": 10158,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which spawners here hold the undead (skeletons, zombies, ghouls) and where is the best one to hunt from?', limit=8)",
+          "with_tokens": 10158,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509397.8635252,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(deposit='gold, loot', withdraw='gold:200')",
+          "without_tokens": 10351,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='')",
+          "with_tokens": 10351,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509404.829725,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10466,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10466,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509488.647326,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawn areas near Britain are at least 30 tiles from Britain Graveyard and suitable for a new warrior?', limit=8)",
+          "without_tokens": 10549,
+          "without_repeats": null,
+          "with": "rest(seconds=1800)",
+          "with_tokens": 10549,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509609.011337,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Where exactly are the undead spawners at the Britain graveyard, and what are they (skeletons, zombies, gargoyles)?', limit=10)",
+          "without_tokens": 10745,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Where are the best undead spawners at the Britain graveyard for a warrior, and their exact coordinates?', limit=8)",
+          "with_tokens": 10745,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509615.85045,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1560)",
+          "without_tokens": 10860,
+          "without_repeats": null,
+          "with": "rest(seconds=1500)",
+          "with_tokens": 10860,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509891.776112,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "place(name='Britain graveyard', limit=3)",
+          "without_tokens": 11068,
+          "without_repeats": null,
+          "with": "hunt(area='1250,1400', minutes=15)",
+          "with_tokens": 11068,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510200.248254,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are undead (skeletons, zombies, ghouls) and which are gargoyles or other dangers?', limit=10)",
+          "without_tokens": 11051,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 11051,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510205.73237,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1020)",
+          "without_tokens": 10970,
+          "without_repeats": null,
+          "with": "rest(seconds=1000)",
+          "with_tokens": 10970,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510212.42337,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1000)",
+          "without_tokens": 10851,
+          "without_repeats": null,
+          "with": "rest(seconds=1050)",
+          "with_tokens": 10851,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510220.079509,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=600)",
+          "without_tokens": 10770,
+          "without_repeats": null,
+          "with": "rest(seconds=1000)",
+          "with_tokens": 10770,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510528.351566,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=300)",
+          "without_tokens": 10622,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 10622,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-b-1": {
+      "moments": 13,
+      "same_tool": 0.769,
+      "same_call": 0.462,
+      "rows": [
+        {
+          "t": 1791508745.766248,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30)",
+          "with_tokens": 9248,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508910.366465,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=20, vendor_kind='healer')",
+          "without_tokens": 9345,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=20, vendor_kind='healer')",
+          "with_tokens": 9345,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508928.5471501,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9423,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9423,
+          "with_repeats": null
+        },
+        {
+          "t": 1791508993.777971,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which nearby area has undead (skeletons, zombies) that a warrior can fight without a lich, outside the Britain graveyard?', limit=8)",
+          "without_tokens": 9612,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which nearby area has undead (skeletons, zombies) that a warrior can fight without a lich, away from the Britain Graveyard?', limit=8)",
+          "with_tokens": 9612,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509300.670662,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1500)",
+          "without_tokens": 9661,
+          "without_repeats": null,
+          "with": "rest(seconds=1500)",
+          "with_tokens": 9661,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509610.039328,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which undead spawns here are weak enough for a warrior with 95 health, and where is the lich relative to them?', limit=10)",
+          "without_tokens": 9710,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', limit=8, question='Which nearby areas have undead (zombies, skeletons, ghouls) that a warrior can fight, avoiding the lich at the Britain Graveyard?')",
+          "with_tokens": 9710,
+          "with_repeats": null
+        },
+        {
+          "t": 1791509913.787593,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which spawners here are safe for a warrior with about 95 health, and where is the lich?', limit=10)",
+          "without_tokens": 9759,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 9759,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510216.766738,
+          "logged": "outcomes",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9807,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9807,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510221.707325,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=540)",
+          "without_tokens": 9931,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead-heavy area is at least 30 tiles from Britain Graveyard and suits a warrior with 47 bandages?', limit=8)",
+          "with_tokens": 9931,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510526.1728718,
+          "logged": "set_strategy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=12)",
+          "without_tokens": 9979,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9979,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510529.374557,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10009,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10009,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510538.1840599,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10087,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10087,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510540.3277912,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=240)",
+          "without_tokens": 10211,
+          "without_repeats": null,
+          "with": "rest(seconds=240)",
+          "with_tokens": 10211,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-a-2": {
+      "moments": 15,
+      "same_tool": 0.733,
+      "same_call": 0.333,
+      "rows": [
+        {
+          "t": 1791510662.29014,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "with_tokens": 9248,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510718.0833158,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9318,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9318,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510780.215586,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=60)",
+          "without_tokens": 9517,
+          "without_repeats": null,
+          "with": "rest(seconds=90)",
+          "with_tokens": 9517,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510874.430589,
+          "logged": "what_spawns",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9565,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9565,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510944.931328,
+          "logged": "set_strategy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "recall(query='Britain graveyard zombie hunt warrior health left the area', limit=5)",
+          "without_tokens": 9764,
+          "without_repeats": null,
+          "with": "recall(query='Britain Graveyard zombies warrior health left the area')",
+          "with_tokens": 9764,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510947.504988,
+          "logged": "outcomes",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=60)",
+          "without_tokens": 9912,
+          "without_repeats": null,
+          "with": "rest(seconds=60)",
+          "with_tokens": 9912,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511460.226186,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10211,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10211,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511753.355644,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(deposit='gold', withdraw='gold:200')",
+          "without_tokens": 10421,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10421,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511815.851347,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10469,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='gold:200')",
+          "with_tokens": 10469,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511870.619254,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(deposit='gold', withdraw='gold:200')",
+          "without_tokens": 10668,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='')",
+          "with_tokens": 10668,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511963.387082,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10716,
+          "without_repeats": null,
+          "with": "bank(withdraw='bandage:50', deposit='gold')",
+          "with_tokens": 10716,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512191.902567,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(withdraw='bandage:20', deposit='gold')",
+          "without_tokens": 10908,
+          "without_repeats": null,
+          "with": "bank(withdraw='', deposit='gold')",
+          "with_tokens": 10908,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512314.7154272,
+          "logged": "bank",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(withdraw='bandage:50', deposit='gold, loot')",
+          "without_tokens": 10956,
+          "without_repeats": null,
+          "with": "bank(withdraw='', deposit='gold')",
+          "with_tokens": 10956,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512377.3999019,
+          "logged": "bank",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(withdraw='', deposit='gold, loot')",
+          "without_tokens": 11065,
+          "without_repeats": null,
+          "with": "bank(deposit='gold', withdraw='')",
+          "with_tokens": 11065,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512387.0481658,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(deposit='all', withdraw='')",
+          "without_tokens": 10956,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10956,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-b-2": {
+      "moments": 13,
+      "same_tool": 0.846,
+      "same_call": 0.538,
+      "rows": [
+        {
+          "t": 1791510810.4154491,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "with_tokens": 9248,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510821.439517,
+          "logged": "travel_to",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9318,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9318,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510874.2659671,
+          "logged": "travel_to",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9376,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9376,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510882.30731,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9476,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9476,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510965.027477,
+          "logged": "travel_to",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9661,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 9661,
+          "with_repeats": null
+        },
+        {
+          "t": 1791510983.8750029,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=120)",
+          "without_tokens": 9729,
+          "without_repeats": null,
+          "with": "rest(seconds=120)",
+          "with_tokens": 9729,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511024.635926,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which nearby area has undead (zombies, skeletons, ghouls) without liches or other strong creatures?', limit=8)",
+          "without_tokens": 9777,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns (zombies, skeletons, ghouls) near Britain graveyard are weak enough to hunt without a lich?', limit=8)",
+          "with_tokens": 9777,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511060.4980679,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Where can I hunt undead (zombies, skeletons, ghouls) away from the Britain graveyard lich?', limit=8)",
+          "without_tokens": 9901,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns (zombies, skeletons, ghouls) are near Britain, at least 30 tiles from Britain Graveyard?')",
+          "with_tokens": 9901,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511378.6565409,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1320)",
+          "without_tokens": 9950,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 9950,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511689.7727292,
+          "logged": "bank",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1100)",
+          "without_tokens": 9999,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', question='Which area near Britain has undead (zombies, skeletons) that a warrior can fight, away from the lich at Britain Graveyard?', limit=8)",
+          "with_tokens": 9999,
+          "with_repeats": null
+        },
+        {
+          "t": 1791511704.551957,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='moderate', near='West Britain bank', limit=8, question='Which nearby area has undead (zombies, skeletons, ghouls) that a moderate warrior can fight, away from the lich at Britain Graveyard?')",
+          "without_tokens": 10087,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns are safe for a warrior with no lich-level fighters, away from Britain Graveyard?', limit=8)",
+          "with_tokens": 10087,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512015.2901802,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns are near Britain, avoiding the lich at Britain Graveyard?', limit=8)",
+          "without_tokens": 10136,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10136,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512330.542788,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10185,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 10185,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-a-3": {
+      "moments": 17,
+      "same_tool": 0.647,
+      "same_call": 0.294,
+      "rows": [
+        {
+          "t": 1791512714.952273,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "with_tokens": 9248,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512826.373028,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "without_tokens": 9352,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "with_tokens": 9352,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512891.117853,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=25, vendor_kind='healer')",
+          "without_tokens": 9471,
+          "without_repeats": null,
+          "with": "find_place(kind='bandages', near='1471,1609', limit=5)",
+          "with_tokens": 9471,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512961.080662,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9590,
+          "without_repeats": null,
+          "with": "find_place(kind='bandages', near='1471,1609', limit=5)",
+          "with_tokens": 9590,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513041.503823,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9710,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 9710,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513119.5144808,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=10)",
+          "without_tokens": 9829,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9829,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513182.099794,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "find_place(kind='bandages', near='Britain bank', limit=5)",
+          "without_tokens": 9923,
+          "without_repeats": null,
+          "with": "find_place(kind='bandages', near='1425,1690', limit=5)",
+          "with_tokens": 9923,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513207.3875399,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "find_place(kind='bandages', near='Britain bank', limit=5)",
+          "without_tokens": 9971,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 9971,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513253.132683,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "find_place(kind='bandages', near='Britain bank', limit=5)",
+          "without_tokens": 10029,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=10)",
+          "with_tokens": 10029,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513332.8741498,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 10107,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=12)",
+          "with_tokens": 10107,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513424.9113212,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead spawns near Britain are fightable by a warrior without gargoyles or packs?', limit=8)",
+          "without_tokens": 10385,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which undead-heavy area near Britain is safe for a new warrior, avoiding gargoyles and pairs of strong creatures?', limit=6)",
+          "with_tokens": 10385,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513526.896391,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "bank(deposit='gold, loot', withdraw='')",
+          "without_tokens": 10625,
+          "without_repeats": null,
+          "with": "buy(item='sulfurous ash', count=20, vendor_kind='reagent_vendor')",
+          "with_tokens": 10625,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513838.6096,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1500)",
+          "without_tokens": 10575,
+          "without_repeats": null,
+          "with": "rest(seconds=1500)",
+          "with_tokens": 10575,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513947.816032,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10661,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10661,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514055.748241,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1500)",
+          "without_tokens": 10629,
+          "without_repeats": null,
+          "with": "rest(seconds=1500)",
+          "with_tokens": 10629,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514378.297295,
+          "logged": "find_place",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=1200)",
+          "without_tokens": 10558,
+          "without_repeats": null,
+          "with": "rest(seconds=1200)",
+          "with_tokens": 10558,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514419.910794,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=900)",
+          "without_tokens": 10507,
+          "without_repeats": null,
+          "with": "rest(seconds=600)",
+          "with_tokens": 10507,
+          "with_repeats": null
+        }
+      ]
+    },
+    "planners-b-3": {
+      "moments": 22,
+      "same_tool": 0.909,
+      "same_call": 0.727,
+      "rows": [
+        {
+          "t": 1791512654.682368,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=30)",
+          "without_tokens": 9248,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=30, vendor_kind='healer')",
+          "with_tokens": 9248,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512677.638367,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunt(area='Britain Graveyard', minutes=15)",
+          "without_tokens": 9366,
+          "without_repeats": null,
+          "with": "hunt(area='Britain Graveyard', minutes=15)",
+          "with_tokens": 9366,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512731.535816,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "hunting_spots(archetype='warrior', level='new', near='Britain graveyard', question='Where can this character hunt undead (skeletons, zombies, ghouls) near Britain without bone knights or other creatures stronger than it?', limit=8)",
+          "without_tokens": 9564,
+          "without_repeats": null,
+          "with": "hunting_spots(archetype='warrior', level='new', near='West Britain bank', question='Which nearby areas have undead (skeletons, zombies) that a new warrior can fight safely?', limit=8)",
+          "with_tokens": 9564,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512821.501772,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9758,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 9758,
+          "with_repeats": null
+        },
+        {
+          "t": 1791512915.171572,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 9962,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 9962,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513026.939062,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10159,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10159,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513032.7024589,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10302,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10302,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513140.1335502,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10505,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10505,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513146.343273,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10649,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10649,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513152.575587,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10773,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10773,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513231.376317,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 10972,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 10972,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513238.076666,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "travel_to(place='West Britain bank')",
+          "without_tokens": 11106,
+          "without_repeats": null,
+          "with": "travel_to(place='West Britain bank')",
+          "with_tokens": 11106,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513390.856964,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "what_spawns(area='Britain Graveyard', question='Which undead here are weak enough for a new warrior, and how often do they respawn?', limit=10)",
+          "without_tokens": 11165,
+          "without_repeats": null,
+          "with": "what_spawns(area='Britain Graveyard', question='Which undead here are weak enough for a warrior with 95 health, and how often do they respawn?')",
+          "with_tokens": 11165,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513396.4087858,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "buy(item='bandage', count=15)",
+          "without_tokens": 11194,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=15)",
+          "with_tokens": 11194,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513710.49119,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=600)",
+          "without_tokens": 11044,
+          "without_repeats": null,
+          "with": "buy(item='bandage', count=15)",
+          "with_tokens": 11044,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513717.96304,
+          "logged": "buy",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=840)",
+          "without_tokens": 10983,
+          "without_repeats": null,
+          "with": "rest(seconds=840)",
+          "with_tokens": 10983,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513823.30118,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=840)",
+          "without_tokens": 10898,
+          "without_repeats": null,
+          "with": "bank(deposit='gold,loot', withdraw='')",
+          "with_tokens": 10898,
+          "with_repeats": null
+        },
+        {
+          "t": 1791513826.453221,
+          "logged": "hunting_spots",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=720)",
+          "without_tokens": 10835,
+          "without_repeats": null,
+          "with": "rest(seconds=720)",
+          "with_tokens": 10835,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514133.27703,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=720)",
+          "without_tokens": 10740,
+          "without_repeats": null,
+          "with": "rest(seconds=720)",
+          "with_tokens": 10740,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514135.8797739,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=420)",
+          "without_tokens": 10671,
+          "without_repeats": null,
+          "with": "rest(seconds=420)",
+          "with_tokens": 10671,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514440.29895,
+          "logged": "hunt",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=420)",
+          "without_tokens": 10575,
+          "without_repeats": null,
+          "with": "rest(seconds=420)",
+          "with_tokens": 10575,
+          "with_repeats": null
+        },
+        {
+          "t": 1791514444.9294899,
+          "logged": "rest",
+          "shown": 0,
+          "bad_places": [],
+          "without": "rest(seconds=60)",
+          "without_tokens": 10585,
+          "without_repeats": null,
+          "with": "rest(seconds=90)",
+          "with_tokens": 10585,
+          "with_repeats": null
+        }
+      ]
+    }
+  },
+  "totals": {
+    "moments": 98,
+    "repeats_without": 21,
+    "repeats_with": 11,
+    "noise_repeats": [
+      17,
+      19
+    ],
+    "same_tool_with_vs_without": 0.52,
+    "same_tool_noise": 0.8,
+    "planner_cost_usd": 0.0851,
+    "memory_cost_usd": 0.0247
+  }
+}

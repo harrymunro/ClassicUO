@@ -1,0 +1,58 @@
+# The lich scene with the leader down first (cuo-e1p): party-lich.toml's five, but Roland is staged where the
+# wave spawns, 26 tiles ahead of the others, so he meets the lich and its bone knights alone and dies while the
+# others are still walking up. What is measured is what the others do then: before cuo-e1p they waited through
+# his resurrection and his walk back; now they carry on the hunt he last set, in spells of three minutes.
+# Measure with: uv run python scripts/party_scene.py logs/fleet/RUN, and each follower's session summary
+# (carried_on_without_leader) and goals.
+# The graveyard's own spawns are cleared for the run (the leader's prep: [AgentDisrupt despawn, 36 tiles round
+# its centre for 15 minutes), so what is fought is the wave: on 2026-10-10, after an evening without hunts, the
+# graveyard had filled with wraiths, spectres and zombies, and a party that walked in met them and the wave at
+# once and was wiped in two and a half minutes whatever it did. Runs before that date had whatever stood there.
+name = "party-leader-down"
+server_port = 2593
+hours = 0.15
+headless = true
+talk = false
+party = true
+leader = "Roland"
+
+[[agent]]
+name = "Roland"
+account = "life1"
+password = "life1"
+port = 5661
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentDisrupt restore quiet", "[AgentReset", "[AgentGo 1384 1508", "[AgentDisrupt despawn 1384 1492 36 15 quiet", "[AgentKit warrior", "[AgentSupplies bandages 150"]
+
+[[agent]]
+name = "Isolde"
+account = "life2"
+password = "life2"
+port = 5662
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1394 1528", "[AgentKit mage", "[AgentSupplies bandages 40 gold 200"]
+
+[[agent]]
+name = "Wystan"
+account = "life3"
+password = "life3"
+port = 5663
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1390 1528", "[AgentKit archer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Thea"
+account = "talk1"
+password = "talk1"
+port = 5664
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1392 1530", "[AgentKit tamer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Corwin"
+account = "talk2"
+password = "talk2"
+port = 5665
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1394 1530", "[AgentKit bard", "[AgentSupplies bandages 100", "[AgentDisrupt strong 1380 1500 Lich 1 quiet", "[AgentDisrupt strong 1378 1502 BoneKnight 2 quiet", "[AgentDisrupt strong 1382 1502 Skeleton 4 quiet"]

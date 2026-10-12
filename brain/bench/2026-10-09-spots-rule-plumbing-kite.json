@@ -1,0 +1,550 @@
+{
+  "started": "2026-10-09T20:23:07",
+  "rounds": 1,
+  "lane": 1,
+  "headless": true,
+  "clients_at_start": 4,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "archer-kite": {
+      "bead": "cuo-cvl.1",
+      "right": "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, and kill all four without dying.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Golag (orc)",
+                "Squagan (orc)",
+                "Welub (orc)",
+                "Vabugbu (orc)"
+              ],
+              "kites": 11,
+              "seconds": 84.8,
+              "player_died": false,
+              "engaged": [
+                "Golag (orc)",
+                "Squagan (orc)",
+                "Welub (orc)",
+                "Vabugbu (orc)"
+              ],
+              "flees_at_hp": [
+                21
+              ],
+              "min_hp": 21,
+              "decisions": 70,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-202307-lane1/archer-kite-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 77,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 1,
+                "steps_back": 11,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 50.6,
+                "ran_at_s": 10.7,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 70.0,
+          "moves": {
+            "runs": 1,
+            "steps_back": 11,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 50.6,
+            "broke_contact": 1
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        },
+        "heuristic/spots": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Dilug (orc)",
+                "Womkug (orc)"
+              ],
+              "kites": 13,
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Gujarek (orc)",
+                "Dilug (orc)",
+                "Womkug (orc)",
+                "Bumhug (orc)"
+              ],
+              "flees_at_hp": [
+                26,
+                71,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 26,
+              "decisions": 104,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-202307-lane1/archer-kite-heuristic_spots-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 114,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 8,
+                "steps_back": 13,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 21
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.6,
+                "ran_at_s": 22.9,
+                "jev_stayed": 0
+              },
+              "spot_walks": 21,
+              "spot_fallbacks": 0,
+              "stand_asked": 88,
+              "clients": 4
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 104.0,
+          "moves": {
+            "runs": 8,
+            "steps_back": 13,
+            "to_spot_jev": 0,
+            "to_spot_rule": 21,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 2.6,
+            "broke_contact": 1
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        }
+      }
+    },
+    "swarm": {
+      "bead": "cuo-46e.6",
+      "right": "Six melee monsters on a mage: survive and kill at least four.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Vevitavi (ratman)",
+                "a mongbat"
+              ],
+              "seconds": 41.0,
+              "player_died": true,
+              "engaged": [
+                "Vevitavi (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 53,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-202307-lane1/swarm-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 54,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 2,
+                "steps_back": 3,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 2,
+                "cornered": 1,
+                "died_moving": true,
+                "break_contact_s": null,
+                "ran_at_s": 35.2,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 1,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 53.0,
+          "moves": {
+            "runs": 2,
+            "steps_back": 3,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 2,
+            "cornered": 1,
+            "died_moving": 1,
+            "jev_stayed": 0,
+            "break_contact_s_median": null,
+            "broke_contact": 0
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        },
+        "heuristic/spots": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 44.7,
+              "player_died": true,
+              "engaged": [
+                "Frecckeki (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-202307-lane1/swarm-heuristic_spots-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 51,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 2,
+                "steps_back": 1,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 3
+                },
+                "no_path_to_spot": 2,
+                "failed_runs": 2,
+                "cornered": 1,
+                "died_moving": true,
+                "break_contact_s": null,
+                "ran_at_s": 39.5,
+                "jev_stayed": 0
+              },
+              "spot_walks": 1,
+              "spot_fallbacks": 2,
+              "stand_asked": 44,
+              "clients": 4
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 1,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 50.0,
+          "moves": {
+            "runs": 2,
+            "steps_back": 1,
+            "to_spot_jev": 0,
+            "to_spot_rule": 3,
+            "no_path_to_spot": 2,
+            "failed_runs": 2,
+            "cornered": 1,
+            "died_moving": 1,
+            "jev_stayed": 0,
+            "break_contact_s_median": null,
+            "broke_contact": 0
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        }
+      }
+    },
+    "sight-wall-mage": {
+      "bead": "cuo-ehm",
+      "right": "An orc stands still behind a wall 6 tiles north of a mage, another in the open 8 tiles east: cast at the one in sight, then go round the wall to cast at the other; kill both.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Zilge (orc)",
+                "Fodagog (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 44.8,
+              "seconds": 61.9,
+              "player_died": false,
+              "engaged": [
+                "Zilge (orc)",
+                "Fodagog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 51,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-202307-lane1/sight-wall-mage-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 53,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 51.0,
+          "moves": {
+            "runs": 0,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": null,
+            "broke_contact": 0
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        },
+        "heuristic/spots": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Oodagh (orc)",
+                "Ikgnath (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.6,
+              "last_kill_s": 34.7,
+              "seconds": 51.8,
+              "player_died": false,
+              "engaged": [
+                "Oodagh (orc)",
+                "Ikgnath (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 41,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-202307-lane1/sight-wall-mage-heuristic_spots-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 43,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 41.0,
+          "moves": {
+            "runs": 0,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": null,
+            "broke_contact": 0
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0,
+    "cost_per_hour_usd": 0.0,
+    "calls": 0,
+    "by_role": {},
+    "by_kind": {},
+    "by_model": {}
+  }
+}

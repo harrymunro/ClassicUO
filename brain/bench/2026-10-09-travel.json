@@ -1,0 +1,1372 @@
+{
+ "bead": "cuo-d3i",
+ "date": "2026-10-09",
+ "server": "local ModernUO, 127.0.0.1:2593, Felucca",
+ "clients": "before: the agent branch at 4f653589f; after: this branch. Each route run in turn before, after, before, after; 6 to 8 clients running on the machine (other agents' too).",
+ "before_counts": {
+  "command": "uv run python scripts/travel_counts.py /Users/harry/Workspace/ClassicUO/brain/logs --until 1791518400",
+  "result": {
+   "files": 39,
+   "set_off": {
+    "walked": 222,
+    "too far": 31,
+    "blocked: move is off": 2,
+    "failed: no route": 2
+   },
+   "walks": 216,
+   "ends": {
+    "arrived": 202,
+    "no route": 1,
+    "stopped": 2,
+    "too far": 1,
+    "stuck": 7,
+    "timed out": 3
+   },
+   "walk_minutes": 142.3,
+   "stuck_walks": 26,
+   "stuck_spots": 61,
+   "stuck_seconds_at_least": 488,
+   "one_step_plans_stuck": {
+    "walks": 7,
+    "seconds": 338
+   },
+   "stuck_spots_where": [
+    [
+     [
+      1471,
+      1609
+     ],
+     24
+    ],
+    [
+     [
+      1371,
+      1479
+     ],
+     18
+    ],
+    [
+     [
+      1442,
+      1691
+     ],
+     8
+    ],
+    [
+     [
+      1502,
+      1648
+     ],
+     2
+    ],
+    [
+     [
+      1495,
+      1532
+     ],
+     2
+    ],
+    [
+     [
+      1471,
+      1613
+     ],
+     1
+    ],
+    [
+     [
+      1499,
+      1640
+     ],
+     1
+    ],
+    [
+     [
+      1568,
+      1334
+     ],
+     1
+    ]
+   ],
+   "doors_opened": 54,
+   "doors": 6,
+   "door_retries_within_60s": 3
+  }
+ },
+ "routes": {
+  "bank_to_healer_two_doors": {
+   "command": "scripts/travel_trip.py PORT 1473,1611,2 --go 1425,1690 --park 1400,1700 (3 rounds)",
+   "runs": [
+    {
+     "label": "before: bank to healer #1",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      1473,
+      1611,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "110 tiles"
+     },
+     "set_off_ms": 3.0,
+     "state": "arrived",
+     "seconds": 27.0,
+     "still_s": 2.8,
+     "end": [
+      1475,
+      1612
+     ],
+     "doors": 2,
+     "stuck": 0,
+     "events": [
+      "travelling to 1473,1611",
+      "opening a door at 1439,1692",
+      "an unknown player is 7 tiles away",
+      "opening a door at 1479,1611",
+      "arrived at 1473,1611"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: bank to healer #1",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      1473,
+      1611,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "110 tiles"
+     },
+     "set_off_ms": 6.0,
+     "state": "arrived",
+     "seconds": 26.0,
+     "still_s": 2.8,
+     "end": [
+      1475,
+      1612
+     ],
+     "doors": 2,
+     "stuck": 0,
+     "events": [
+      "travelling to 1473,1611",
+      "opening a door at 1438,1692",
+      "opening a door at 1479,1612",
+      "arrived at 1473,1611"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 4.8,
+      "known": {
+       "doors": 27,
+       "locked_doors": 0,
+       "houses": 0
+      },
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "before: bank to healer #2",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      1473,
+      1611,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "110 tiles"
+     },
+     "set_off_ms": 2.2,
+     "state": "arrived",
+     "seconds": 26.4,
+     "still_s": 2.9,
+     "end": [
+      1475,
+      1611
+     ],
+     "doors": 2,
+     "stuck": 0,
+     "events": [
+      "travelling to 1473,1611",
+      "opening a door at 1439,1692",
+      "opening a door at 1479,1611",
+      "arrived at 1473,1611"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: bank to healer #2",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      1473,
+      1611,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "110 tiles"
+     },
+     "set_off_ms": 8.2,
+     "state": "arrived",
+     "seconds": 26.0,
+     "still_s": 2.5,
+     "end": [
+      1475,
+      1612
+     ],
+     "doors": 2,
+     "stuck": 0,
+     "events": [
+      "travelling to 1473,1611",
+      "opening a door at 1438,1692",
+      "opening a door at 1479,1612",
+      "arrived at 1473,1611"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 7.1,
+      "known": {
+       "doors": 27,
+       "locked_doors": 0,
+       "houses": 0
+      },
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "before: bank to healer #3",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      1473,
+      1611,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "110 tiles"
+     },
+     "set_off_ms": 2.3,
+     "state": "arrived",
+     "seconds": 26.2,
+     "still_s": 2.3,
+     "end": [
+      1475,
+      1611
+     ],
+     "doors": 2,
+     "stuck": 0,
+     "events": [
+      "travelling to 1473,1611",
+      "opening a door at 1439,1692",
+      "opening a door at 1479,1611",
+      "arrived at 1473,1611"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: bank to healer #3",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      1473,
+      1611,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "110 tiles"
+     },
+     "set_off_ms": 6.9,
+     "state": "arrived",
+     "seconds": 26.1,
+     "still_s": 2.3,
+     "end": [
+      1475,
+      1612
+     ],
+     "doors": 2,
+     "stuck": 0,
+     "events": [
+      "travelling to 1473,1611",
+      "opening a door at 1438,1692",
+      "opening a door at 1479,1612",
+      "arrived at 1473,1611"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 5.8,
+      "known": {
+       "doors": 27,
+       "locked_doors": 0,
+       "houses": 0
+      },
+      "stuck_at": []
+     }
+    }
+   ],
+   "final_build_check": {
+    "client": "after (57b6572e3)",
+    "state": "arrived",
+    "seconds": 26.2,
+    "still_s": 2.3,
+    "doors": 2
+   }
+  },
+  "through_a_small_house": {
+   "setup": "a stone-and-plaster house placed with its deed by a staff character, centre 1445,1323; removed afterwards",
+   "command": "scripts/travel_trip.py PORT 1445,1365,1 --go 1445,1280 --park 1405,1305 (2 rounds; after client restarted first, so round 1 is its first sight of the house)",
+   "runs": [
+    {
+     "label": "before: through a house #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1365,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "84 tiles"
+     },
+     "set_off_ms": 1.4,
+     "state": "arrived",
+     "seconds": 20.2,
+     "still_s": 2.0,
+     "end": [
+      1446,
+      1364
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1445,1365",
+      "arrived at 1445,1365"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: through a house #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1365,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "84 tiles"
+     },
+     "set_off_ms": 5.2,
+     "state": "arrived",
+     "seconds": 20.0,
+     "still_s": 2.0,
+     "end": [
+      1446,
+      1364
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1445,1365",
+      "something in the way ahead; planning round it",
+      "arrived at 1445,1365"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 2,
+      "plan_ms_max": 4.2,
+      "known": {
+       "doors": 1,
+       "locked_doors": 0,
+       "houses": 1
+      },
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "before: through a house #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1365,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "84 tiles"
+     },
+     "set_off_ms": 1.4,
+     "state": "arrived",
+     "seconds": 20.2,
+     "still_s": 1.5,
+     "end": [
+      1446,
+      1364
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1445,1365",
+      "arrived at 1445,1365"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: through a house #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1365,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "84 tiles"
+     },
+     "set_off_ms": 4.3,
+     "state": "arrived",
+     "seconds": 20.5,
+     "still_s": 1.5,
+     "end": [
+      1445,
+      1364
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1445,1365",
+      "arrived at 1445,1365"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 3.2,
+      "known": {
+       "doors": 1,
+       "locked_doors": 0,
+       "houses": 1
+      },
+      "stuck_at": []
+     }
+    }
+   ]
+  },
+  "past_a_small_house_west_to_east": {
+   "command": "scripts/travel_trip.py PORT 1485,1323,1 --go 1405,1323 (2 rounds; the old plan only clipped the house's corner)",
+   "runs": [
+    {
+     "label": "before: past a house #1",
+     "from": [
+      1405,
+      1323
+     ],
+     "goal": [
+      1485,
+      1323,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "79 tiles"
+     },
+     "set_off_ms": 1.6,
+     "state": "arrived",
+     "seconds": 19.7,
+     "still_s": 1.5,
+     "end": [
+      1484,
+      1324
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1485,1323",
+      "arrived at 1485,1323"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: past a house #1",
+     "from": [
+      1405,
+      1323
+     ],
+     "goal": [
+      1485,
+      1323,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "79 tiles"
+     },
+     "set_off_ms": 5.9,
+     "state": "arrived",
+     "seconds": 19.2,
+     "still_s": 1.3,
+     "end": [
+      1484,
+      1322
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1485,1323",
+      "arrived at 1485,1323"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 4.6,
+      "known": {
+       "doors": 9,
+       "locked_doors": 0,
+       "houses": 1
+      },
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "before: past a house #2",
+     "from": [
+      1405,
+      1323
+     ],
+     "goal": [
+      1485,
+      1323,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "79 tiles"
+     },
+     "set_off_ms": 1.4,
+     "state": "arrived",
+     "seconds": 19.7,
+     "still_s": 2.0,
+     "end": [
+      1484,
+      1324
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1485,1323",
+      "arrived at 1485,1323"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: past a house #2",
+     "from": [
+      1405,
+      1323
+     ],
+     "goal": [
+      1485,
+      1323,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "79 tiles"
+     },
+     "set_off_ms": 4.0,
+     "state": "arrived",
+     "seconds": 20.7,
+     "still_s": 1.3,
+     "end": [
+      1484,
+      1322
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1485,1323",
+      "arrived at 1485,1323"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 2.9,
+      "known": {
+       "doors": 9,
+       "locked_doors": 0,
+       "houses": 1
+      },
+      "stuck_at": []
+     }
+    }
+   ]
+  },
+  "round_a_tower_in_a_valley": {
+   "setup": "a tower placed with its deed, centre 1261,1274, filling a valley between hills; removed afterwards",
+   "command": "scripts/travel_trip.py PORT 1261,1255,1 --go 1261,1320 --park 1300,1320 (2 rounds; first sight for the after client in round 1)",
+   "runs": [
+    {
+     "label": "before: round a tower #1",
+     "from": [
+      1261,
+      1320
+     ],
+     "goal": [
+      1261,
+      1255,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "64 tiles"
+     },
+     "set_off_ms": 1.4,
+     "state": "arrived",
+     "seconds": 15.5,
+     "still_s": 1.0,
+     "end": [
+      1261,
+      1256
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1261,1255",
+      "arrived at 1261,1255"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: round a tower #1",
+     "from": [
+      1261,
+      1320
+     ],
+     "goal": [
+      1261,
+      1255,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "64 tiles"
+     },
+     "set_off_ms": 2.6,
+     "state": "arrived",
+     "seconds": 14.2,
+     "still_s": 0.5,
+     "end": [
+      1262,
+      1256
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1261,1255",
+      "something in the way ahead; planning round it",
+      "arrived at 1261,1255"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 2,
+      "plan_ms_max": 1.3,
+      "known": {
+       "doors": 6,
+       "locked_doors": 0,
+       "houses": 2
+      },
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "before: round a tower #2",
+     "from": [
+      1261,
+      1320
+     ],
+     "goal": [
+      1261,
+      1255,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "64 tiles"
+     },
+     "set_off_ms": 1.3,
+     "state": "arrived",
+     "seconds": 15.3,
+     "still_s": 1.3,
+     "end": [
+      1261,
+      1256
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1261,1255",
+      "arrived at 1261,1255"
+     ],
+     "travel": {
+      "replans": 0,
+      "stuck_at": []
+     }
+    },
+    {
+     "label": "after: round a tower #2",
+     "from": [
+      1261,
+      1320
+     ],
+     "goal": [
+      1261,
+      1255,
+      1
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "64 tiles"
+     },
+     "set_off_ms": 2.4,
+     "state": "arrived",
+     "seconds": 14.7,
+     "still_s": 1.8,
+     "end": [
+      1260,
+      1256
+     ],
+     "doors": 0,
+     "stuck": 0,
+     "events": [
+      "travelling to 1261,1255",
+      "arrived at 1261,1255"
+     ],
+     "travel": {
+      "replans": 0,
+      "hops": 0,
+      "plans": 1,
+      "plan_ms_max": 1.1,
+      "known": {
+       "doors": 6,
+       "locked_doors": 0,
+       "houses": 2
+      },
+      "stuck_at": []
+     }
+    }
+   ]
+  },
+  "one_step_at_the_healer": {
+   "command": "scripts/travel_trip.py PORT 1474,1610,2 --go 1471,1609 (single runs)",
+   "runs": [
+    {
+     "client": "before",
+     "set_off": "1 tiles",
+     "state": "stuck",
+     "seconds": 48.1,
+     "stuck": 6,
+     "still_s": 48.1
+    },
+    {
+     "client": "after",
+     "set_off": "1 tiles",
+     "state": "arrived",
+     "seconds": 0.5,
+     "stuck": 0,
+     "still_s": 0.3
+    }
+   ]
+  },
+  "one_step_at_the_graveyard": {
+   "command": "scripts/travel_trip.py PORT 1369,1475,3 --go 1371,1479 (single runs)",
+   "runs": [
+    {
+     "client": "before",
+     "set_off": "1 tiles",
+     "state": "stopped after standing still 9.3 s (stuck once)",
+     "seconds": 9.3,
+     "stuck": 1
+    },
+    {
+     "client": "after",
+     "set_off": "1 tiles",
+     "state": "arrived",
+     "seconds": 0.5,
+     "stuck": 0
+    }
+   ]
+  },
+  "bank_to_cove_healer": {
+   "command": "scripts/travel_trip.py PORT 2245,1231,2 --go 1425,1690 --timeout 500 (single runs)",
+   "runs": [
+    {
+     "client": "before",
+     "set_off": "no route (state 'too far')",
+     "seconds": 0.0
+    },
+    {
+     "label": "after: bank to Cove healer",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      2245,
+      1231,
+      2
+     ],
+     "set_off": {
+      "status": "done",
+      "detail": "323 tiles, the first hop of 820"
+     },
+     "set_off_ms": 8.0,
+     "state": "stuck",
+     "seconds": 236.6,
+     "still_s": 13.1,
+     "end": [
+      2100,
+      985
+     ],
+     "doors": 1,
+     "stuck": 6,
+     "events": [
+      "travelling to 2245,1231",
+      "opening a door at 1439,1692",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "next hop, 348 tiles to go",
+      "stuck at 1880,1437 on the way to 2245,1231",
+      "next hop, 134 tiles to go",
+      "stuck at 2079,1226 on the way to 2245,1231",
+      "stuck at 2050,1195 on the way to 2245,1231",
+      "stuck at 2016,1158 on the way to 2245,1231",
+      "stuck at 2096,1022 on the way to 2245,1231",
+      "stuck at 2100,986 on the way to 2245,1231"
+     ],
+     "travel": {
+      "replans": 6,
+      "hops": 5,
+      "plans": 11,
+      "plan_ms_max": 59.9,
+      "known": {
+       "doors": 43,
+       "locked_doors": 0,
+       "houses": 2
+      },
+      "stuck_at": [
+       [
+        1880,
+        1437
+       ],
+       [
+        2079,
+        1226
+       ],
+       [
+        2050,
+        1195
+       ],
+       [
+        2016,
+        1158
+       ],
+       [
+        2096,
+        1022
+       ],
+       [
+        2100,
+        986
+       ]
+      ]
+     }
+    }
+   ]
+  },
+  "into_a_strangers_house": {
+   "command": "scripts/travel_trip.py PORT 1445,1322,1 --go 1445,1340 (single runs; the stone house above, its door locked to the character)",
+   "runs": [
+    {
+     "client": "before",
+     "state": "timed out",
+     "seconds": 90.2,
+     "still_s": 87.9,
+     "door_clicks": 10,
+     "stuck": 0
+    },
+    {
+     "client": "after (57b6572e3)",
+     "state": "no route",
+     "seconds": 6.3,
+     "still_s": 4.0,
+     "door_clicks": 1,
+     "why": "the door at 1445,1326 stays shut; going round, then no way there on the map"
+    }
+   ]
+  }
+ },
+ "planning_time": {
+  "command": "set off with act travel from the West Britain bank and stop at once; round_trip_ms is the RPC round trip, which runs the plan on the game thread; plan_ms is the client's own timing (after only)",
+  "runs": [
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1369,
+     1475,
+     2
+    ],
+    "status": "done",
+    "detail": "245 tiles",
+    "round_trip_ms": 3.6,
+    "plan_ms": null,
+    "state": "stopped"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1650,
+     2150,
+     2
+    ],
+    "status": "done",
+    "detail": "670 tiles",
+    "round_trip_ms": 34.0,
+    "plan_ms": null,
+    "state": "stopped"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1900,
+     1650,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 22.5,
+    "plan_ms": null,
+    "state": "no route"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1700,
+     1700,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 50.2,
+    "plan_ms": null,
+    "state": "no route"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1055,
+     1442,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 42.8,
+    "plan_ms": null,
+    "state": "no route"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1100,
+     1900,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 33.8,
+    "plan_ms": null,
+    "state": "no route"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1500,
+     1250,
+     0
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 28.7,
+    "plan_ms": null,
+    "state": "no route"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     2245,
+     1231,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 1.1,
+    "plan_ms": null,
+    "state": "too far"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     643,
+     1083,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 1.2,
+    "plan_ms": null,
+    "state": "too far"
+   },
+   {
+    "client": "before",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     6052,
+     1463,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route",
+    "round_trip_ms": 1.3,
+    "plan_ms": null,
+    "state": "too far"
+   },
+   {
+    "client": "after",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1369,
+     1475,
+     2
+    ],
+    "status": "done",
+    "detail": "245 tiles",
+    "round_trip_ms": 8.2,
+    "plan_ms": 6.9,
+    "state": "stopped"
+   },
+   {
+    "client": "after",
+    "from": [
+     1425,
+     1690
+    ],
+    "goal": [
+     1650,
+     2150,
+     2
+    ],
+    "status": "done",
+    "detail": "339 tiles, the first hop of 460",
+    "round_trip_ms": 7.3,
+    "plan_ms": 6,
+    "state": "stopped"
+   },
+   {
+    "client": "after",
+    "from": [
+     1426,
+     1690
+    ],
+    "goal": [
+     1900,
+     1650,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route: nowhere to stand there, or closed off",
+    "round_trip_ms": 1.5,
+    "plan_ms": 0.3,
+    "state": "no route"
+   },
+   {
+    "client": "after",
+    "from": [
+     1426,
+     1690
+    ],
+    "goal": [
+     1700,
+     1700,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route: nowhere to stand there, or closed off",
+    "round_trip_ms": 1.7,
+    "plan_ms": 0.5,
+    "state": "no route"
+   },
+   {
+    "client": "after",
+    "from": [
+     1426,
+     1690
+    ],
+    "goal": [
+     1055,
+     1442,
+     2
+    ],
+    "status": "done",
+    "detail": "363 tiles, the first hop of 371",
+    "round_trip_ms": 29.6,
+    "plan_ms": 28.3,
+    "state": "stopped"
+   },
+   {
+    "client": "after",
+    "from": [
+     1427,
+     1690
+    ],
+    "goal": [
+     1100,
+     1900,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route: nowhere to stand there, or closed off",
+    "round_trip_ms": 1.9,
+    "plan_ms": 0.5,
+    "state": "no route"
+   },
+   {
+    "client": "after",
+    "from": [
+     1427,
+     1690
+    ],
+    "goal": [
+     1500,
+     1250,
+     0
+    ],
+    "status": "failed",
+    "detail": "no route: nowhere to stand there, or closed off",
+    "round_trip_ms": 1.7,
+    "plan_ms": 0.4,
+    "state": "no route"
+   },
+   {
+    "client": "after",
+    "from": [
+     1427,
+     1690
+    ],
+    "goal": [
+     2245,
+     1231,
+     2
+    ],
+    "status": "done",
+    "detail": "322 tiles, the first hop of 818",
+    "round_trip_ms": 7.8,
+    "plan_ms": 6.7,
+    "state": "stopped"
+   },
+   {
+    "client": "after",
+    "from": [
+     1428,
+     1690
+    ],
+    "goal": [
+     643,
+     1083,
+     2
+    ],
+    "status": "done",
+    "detail": "380 tiles, the first hop of 785",
+    "round_trip_ms": 29.0,
+    "plan_ms": 27.6,
+    "state": "stopped"
+   },
+   {
+    "client": "after",
+    "from": [
+     1429,
+     1690
+    ],
+    "goal": [
+     6052,
+     1463,
+     2
+    ],
+    "status": "failed",
+    "detail": "no route: the dungeons lie apart from the land; no walk goes there",
+    "round_trip_ms": 2.0,
+    "plan_ms": 0,
+    "state": "no route"
+   }
+  ]
+ },
+ "soak": {
+  "client": "this branch at bf794f172 (before the house-wall and door-approach fixes of 57b6572e3)",
+  "server": "local 2593, a warrior prepared like scripts/soak_prep.py (bank, kit, 30 bandages, 400 gold) without its [AgentDisrupt restore",
+  "runs": [
+   {
+    "log": "logs/d3i-soak.jsonl",
+    "goal": "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold.",
+    "command": "SOAK_PORT=5641 scripts/soak_run.sh d3i-soak 0.5 no \"<goal>\"",
+    "ended": "died at 1.3 min to a lich at the Britain graveyard (another agent's test, or a spawn)"
+   },
+   {
+    "log": "logs/d3i-soak2.jsonl",
+    "goal": "the same",
+    "command": "SOAK_PORT=5641 scripts/soak_run.sh d3i-soak2 0.5 no \"<goal>\"",
+    "ended": "died at 1.6 min to the same lich"
+   },
+   {
+    "log": "logs/d3i-soak3.jsonl",
+    "goal": "Earn gold hunting the open country north of Britain, not the Britain graveyard (a lich is there). Keep yourself supplied with bandages from the Britain healer and bank the gold at the West Britain bank.",
+    "command": "SOAK_PORT=5641 scripts/soak_run.sh d3i-soak3 0.5 no \"<goal>\"",
+    "ended": "died at 22.1 min on the way to the bank, leaving an ettin, a reaper and a gargoyle; 4 hunts, 16 kills, 315 gold banked, $0.17"
+   }
+  ],
+  "travel_counts": {
+   "command": "uv run python scripts/travel_counts.py logs (the three logs above)",
+   "result": {
+    "files": 3,
+    "set_off": {
+     "failed: no route": 2,
+     "walked": 10
+    },
+    "walks": 8,
+    "ends": {
+     "arrived": 8
+    },
+    "walk_minutes": 6.7,
+    "stuck_walks": 0,
+    "stuck_spots": 0,
+    "stuck_seconds_at_least": 0,
+    "one_step_plans_stuck": {
+     "walks": 0,
+     "seconds": 0
+    },
+    "stuck_spots_where": [],
+    "doors_opened": 4,
+    "doors": 2,
+    "door_retries_within_60s": 0
+   }
+  },
+  "planning_ms_max": 10.3,
+  "hops": "2 walks went in hops (376 and 409 tiles), 1 hop each"
+ }
+}

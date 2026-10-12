@@ -1,0 +1,13 @@
+# Markers for the client's world map: x,y,facet,name,icon,colour,zoom
+x,y,map,name,icon,color,zoom
+1425,1690,0,West Britain Bank,bank,yellow,3
+1472,1607,0,Britain Healer,healer,white
+1336,1997,0,Britain Moongate,moongate,blue,4
+1425,1690,1,Trammel Britain Bank,bank,yellow
+2499,916,0,Covetous Entrance,Dungeon,red
+1384,1497,0,Britain Graveyard
+1500,1600,0,Lord British, his castle,landmark,white,3,extra
+1500,1600
+15x,1600,0,Bad number,bank,white
+9000,100,0,Off the map,bank,white
+1300,1300,9,Unknown facet,bank,white

@@ -52,7 +52,9 @@ anything that is only an opinion.
 
 Rules:
 - One fact per note, at most two short sentences.
-- Say which era or ruleset a fact belongs to when the page does (for example pre-AOS or Trammel only).
+- When the page says a fact holds only on one facet, era or ruleset (a section headed Trammel or Felucca, \
+pre-AOS, since a publish), say so in the note itself, for example "Trammel only: ...". Every note in such a \
+section needs it, since each note is read alone.
 - Never include names of real players, guilds or staff.
 - Set the area to the town, dungeon or region the fact applies to; use null for general facts.
 - Record the facts by calling add_notes once."""

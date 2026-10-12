@@ -1,0 +1,228 @@
+{
+  "started": "2026-10-09T12:17:38",
+  "rounds": 4,
+  "lane": 1,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "planner": "anthropic/claude-sonnet-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-sonnet-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "sight-wall-mage": {
+      "bead": "cuo-ehm",
+      "right": "An orc stands still behind a wall 6 tiles north of a mage, another in the open 8 tiles east: cast at the one in sight, then go round the wall to cast at the other; kill both.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Kulgha (orc)",
+                "Ohomdud (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 34.2,
+              "seconds": 51.2,
+              "player_died": false,
+              "engaged": [
+                "Kulgha (orc)",
+                "Ohomdud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 45,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-121738-lane1/sight-wall-mage-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 1,
+          "successes": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.207,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "heuristic/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Grug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-121738-lane1/sight-wall-mage-heuristic_nosight-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Knorgh (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "last_kill_s": 11.9,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Knorgh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 69,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-121738-lane1/sight-wall-mage-jev-01.jsonl",
+              "input_tokens": 246101,
+              "cost_usd": 0.010336,
+              "cost_by_kind": {
+                "fight": 0.010336
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 254.2
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01034,
+          "cost_per_round_usd": 0.01034,
+          "latency_ms_avg": 254.2,
+          "errors": 0
+        },
+        "jev/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.1,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Xruul (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 72,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-121738-lane1/sight-wall-mage-jev_nosight-01.jsonl",
+              "input_tokens": 282898,
+              "cost_usd": 0.011882,
+              "cost_by_kind": {
+                "fight": 0.011882
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 278.5
+            }
+          ],
+          "n": 1,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.793
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01188,
+          "cost_per_round_usd": 0.01188,
+          "latency_ms_avg": 278.5,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.022218,
+    "cost_per_hour_usd": 0.2326,
+    "calls": 141,
+    "by_role": {
+      "system1": 0.022218
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 141,
+        "input_tokens": 528999,
+        "output_tokens": 54635,
+        "cost_usd": 0.022218,
+        "latency_ms_avg": 266.6
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 141,
+        "input_tokens": 528999,
+        "output_tokens": 54635,
+        "cost_usd": 0.022218,
+        "latency_ms_avg": 266.6
+      }
+    },
+    "cost_per_decision_usd": 0.0001576
+  }
+}

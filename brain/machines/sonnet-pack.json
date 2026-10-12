@@ -1,0 +1,86 @@
+{
+  "name": "hunt orcs, avoid strong packs",
+  "why": "Keep hunting beatable monsters one at a time, but disengage early from gargoyle trios or bone knights and heal before going back.",
+  "start": "hunt",
+  "states": {
+    "hunt": {
+      "says": "Fight the nearest beatable monster such as orcs, finish it, loot valuables, and seek the next one. Do not take on packs that outweigh the warrior.",
+      "allow": [
+        "fight",
+        "loot",
+        "seek",
+        "rest"
+      ],
+      "target": "closest_first",
+      "loot": "valuables",
+      "transitions": [
+        {
+          "to": "out",
+          "when": "A pack is coming that is too strong for the warrior: two or more bone knights, or three gargoyles together, or anything much stronger than the warrior is approaching.",
+          "requires": [
+            "2+ coming"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "regroup",
+          "when": "Health is getting low and falling, below about two thirds, and bandages are not keeping up.",
+          "requires": [
+            "health below 60"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "regroup": {
+      "says": "Back away from the fight and let bandages or potions heal; fight only what is directly on the warrior.",
+      "allow": [
+        "flee",
+        "rest",
+        "fight"
+      ],
+      "loot": "nothing",
+      "max_s": 25.0,
+      "then": "hunt",
+      "transitions": [
+        {
+          "to": "out",
+          "when": "Strong monsters such as bone knights or several gargoyles are coming at the warrior and health is not high.",
+          "requires": [
+            "2+ coming"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "hunt",
+          "when": "Health is back above three quarters, or nothing is attacking any more.",
+          "requires": [
+            "health above 75"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "out": {
+      "says": "Leave the area: run until nothing hostile is in sight, then recover health with bandages.",
+      "allow": [
+        "leave",
+        "flee",
+        "rest"
+      ],
+      "loot": "nothing",
+      "max_s": 40.0,
+      "then": "regroup",
+      "transitions": [
+        {
+          "to": "regroup",
+          "when": "Nothing is close and nothing is chasing the warrior any more.",
+          "requires": [
+            "none close"
+          ],
+          "at": 0.6
+        }
+      ]
+    }
+  }
+}

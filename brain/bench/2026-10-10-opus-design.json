@@ -1,0 +1,677 @@
+{
+ "what": "Fight plans designed by Claude Opus 5.5 for the two situations of cuo-twd (cuo-vpi, 2026-10-10), to read against Haiku's and Sonnet's (bench/2026-10-09-haiku-sonnet-design.json, machines/haiku-*.json, machines/sonnet-*.json). The design prompt, examples and tool are unchanged since then (machine.py is the same file; 3,547 and 3,563 input tokens, as then). Two designs of each situation. Not benched: the game machine was busy.",
+ "situations": {
+  "swarm": {
+   "archetype": "mage",
+   "text": "A mage (Magery 90, Evaluating Intelligence and Meditation 80, a full spellbook, plenty of reagents, a few heal potions, leather armour) hunting alone in open ground, where mixed groups of five or six weak to moderate melee monsters (orcs, ratmen, headless ones, mongbats) come at it together. It should survive and kill as many of them as it can."
+  },
+  "pack": {
+   "archetype": "warrior",
+   "text": "A warrior (Swords, Tactics, Healing and Anatomy 80, a weapon, ring and leather armour, bandages and a few heal potions) hunting orcs and similar monsters in open country. While it is already fighting, packs come at it from a distance: three gargoyles, each a fair fight alone and spellcasters, or two bone knights, each stronger than the warrior. It should survive above all and keep hunting what it can beat."
+  }
+ },
+ "command": "uv run uo-brain machine design \"<situation text>\" --archetype <archetype> --planner-model anthropic/claude-opus-5.5 --out machines/opus-<swarm|pack>.json --cost-log logs/vpi/design-opus<...>.jsonl",
+ "attempts": [
+  {
+   "situation": "swarm",
+   "model": "anthropic/claude-opus-5.5",
+   "run": "logs/vpi/design-opus.jsonl",
+   "plan": "opus-swarm",
+   "attempt": 1,
+   "cost": 0.039784,
+   "cost_with_nothing_cached": 0.039784,
+   "input_tokens": 3547,
+   "output_tokens": 1114,
+   "cached_tokens": 0,
+   "latency_s": 13.5,
+   "states_sent_as": "dict",
+   "valid_first_try": true
+  },
+  {
+   "situation": "pack",
+   "model": "anthropic/claude-opus-5.5",
+   "run": "logs/vpi/design-opus-pack.jsonl",
+   "plan": "opus-pack",
+   "attempt": 1,
+   "cost": 0.0227912,
+   "cost_with_nothing_cached": 0.038045,
+   "input_tokens": 3563,
+   "output_tokens": 1057,
+   "cached_tokens": 3316,
+   "latency_s": 15.9,
+   "states_sent_as": "dict",
+   "valid_first_try": true
+  },
+  {
+   "situation": "swarm",
+   "model": "anthropic/claude-opus-5.5",
+   "run": "logs/vpi/design-opus-swarm2.jsonl",
+   "plan": "opus-swarm-2",
+   "attempt": 1,
+   "cost": 0.0293472,
+   "cost_with_nothing_cached": 0.044601,
+   "input_tokens": 3547,
+   "output_tokens": 1388,
+   "cached_tokens": 3316,
+   "latency_s": 15.9,
+   "states_sent_as": "dict",
+   "valid_first_try": true
+  },
+  {
+   "situation": "pack",
+   "model": "anthropic/claude-opus-5.5",
+   "run": "logs/vpi/design-opus-pack2.jsonl",
+   "plan": "opus-pack-2",
+   "attempt": 1,
+   "cost": 0.0218912,
+   "cost_with_nothing_cached": 0.037145,
+   "input_tokens": 3563,
+   "output_tokens": 1012,
+   "cached_tokens": 3316,
+   "latency_s": 19.6,
+   "states_sent_as": "dict",
+   "valid_first_try": true
+  }
+ ],
+ "earlier": {
+  "haiku": {
+   "cost_a_plan": [
+    0.0006,
+    0.0012
+   ],
+   "latency_s": [
+    3.3,
+    6.8
+   ],
+   "note": "5 of 6 attempts sent states as a string (read since cuo-twd)"
+  },
+  "sonnet": {
+   "cost_a_plan": [
+    0.016,
+    0.02
+   ],
+   "latency_s": [
+    5.0,
+    7.3
+   ]
+  },
+  "from": "bench/2026-10-09-haiku-sonnet-design.json"
+ },
+ "read": {
+  "how": "By reading the saved plans side by side; nothing here was measured in a fight.",
+  "swarm": {
+   "exit_on_health_from_blast": {
+    "haiku-swarm": "none (mana below 25 only)",
+    "sonnet-swarm": "health below 45",
+    "opus-swarm": "health below 55",
+    "opus-swarm-2": "health below 45 and 2+ adjacent",
+    "mage-swarm (hand-written)": "none (mana below 25 only)"
+   },
+   "exit_on_health_from_finish": {
+    "haiku-swarm": "none (mana below 15 only)",
+    "sonnet-swarm": "health below 45",
+    "opus-swarm": "none on health alone (needs 2+ coming, then Jev judges health or mana)",
+    "opus-swarm-2": "none on health alone (needs 2+ coming)"
+   },
+   "exit_on_health_from_open": {
+    "haiku-swarm": "health below 50",
+    "sonnet-swarm": "health below 50",
+    "opus-swarm": "health below 50",
+    "opus-swarm-2": "none on health alone (needs 3+ coming)"
+   },
+   "back_into_the_fight": {
+    "haiku-swarm": "mana above 50 and none close, or after 30 s",
+    "sonnet-swarm": "none close, mana above 50 and health above 60, or after 30 s",
+    "opus-swarm": "none close, health above 70 and mana above 50, or after 40 s; or straight to blast when the group catches up (area spell ready, mana above 30, health above 50)",
+    "opus-swarm-2": "mana above 50, health above 65 and none close, or after 40 s"
+   },
+   "shape": "Haiku's and Sonnet's copy the example's four states. Opus's first adds a way from recover straight back to blast; its second has a fifth state, stall, which casts Paralyze Field for up to 8 s before blasting.",
+   "slips": [
+    "opus-swarm's why says \"walling and blasting\" and no state casts a wall",
+    "opus-swarm-2's blast says to stand and cast with kite true and flee allowed"
+   ],
+   "escapes_too_often": "Not measured. Sonnet's plan spent 38-93 s of each round in escape and died 3 times in 5 (bench/2026-10-09-design-swarm.json). opus-swarm leaves blast at a higher health (55 against 45) and comes back at a higher one (70 against 60), so by its thresholds it would escape at least as readily (inferred); opus-swarm-2 leaves blast later (45 with two adjacent) and has no exit on health from open."
+  },
+  "pack": {
+   "shape": "Haiku's and Sonnet's have three states. Both of Opus's have four: after out comes recover, which rests away from the pack until health is above 85 (90 in the second) and goes out again if anything comes.",
+   "leave_when": {
+    "haiku-pack": "pack (code's own test)",
+    "sonnet-pack": "2+ coming",
+    "opus-pack": "2+ coming, unless only weak creatures",
+    "opus-pack-2": "2+ coming"
+   },
+   "note": "cuo-twd found packs separate nothing: code leaves from a pack whatever the plan."
+  }
+ },
+ "to_bench": "uv run uo-brain bench --scenarios swarm --judges \"jev,jev#haiku-swarm,jev#sonnet-swarm,jev#opus-swarm,jev#opus-swarm-2\" --rounds 5 (as bench/2026-10-09-design-swarm.json was made), when the game machine is free",
+ "plans": {
+  "opus-swarm": {
+   "name": "mage vs mixed mob",
+   "why": "Thin out a group of five or six melee monsters by walling and blasting them while they bunch up, picking off the weak ones from range, and pulling back to recover mana or health before it gets dangerous.",
+   "start": "open",
+   "states": {
+    "open": {
+     "says": "Attack from range while the group is still coming. Kill fast, weak ones like mongbats with quick single-target spells, and step back from melee.",
+     "allow": [
+      "fight",
+      "seek",
+      "rest",
+      "loot"
+     ],
+     "target": "weakest_first",
+     "loot": "valuables",
+     "kite": true,
+     "transitions": [
+      {
+       "to": "blast",
+       "when": "Three or more creatures are bunched up close together near the mage.",
+       "requires": [
+        "area spell ready"
+       ],
+       "at": 0.5
+      },
+      {
+       "to": "recover",
+       "when": "Health is below half and creatures are still hitting the mage, or mana is nearly gone while several are still coming.",
+       "requires": [
+        "health below 50"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "recover",
+       "when": "Mana is nearly gone and two or more creatures are still coming.",
+       "requires": [
+        "mana below 20",
+        "2+ coming"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "blast": {
+     "says": "Stand and cast area spells at the bunch so every creature in it takes damage from each cast.",
+     "allow": [
+      "fight",
+      "rest"
+     ],
+     "kite": false,
+     "spell": "Chain Lightning",
+     "transitions": [
+      {
+       "to": "finish",
+       "when": "Only one or two creatures are left close, or most of the bunch is badly hurt.",
+       "unless": "Three or more fairly healthy creatures are still bunched together.",
+       "at": 0.6
+      },
+      {
+       "to": "recover",
+       "when": "Health is falling fast with several creatures on the mage, or it is already below half.",
+       "requires": [
+        "health below 55"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "recover",
+       "when": "Mana is nearly gone and several creatures are still fighting.",
+       "requires": [
+        "mana below 20"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "finish": {
+     "says": "Finish the creature with the least health left using quick single-target spells, stepping back from melee, then loot when it's clear.",
+     "allow": [
+      "fight",
+      "seek",
+      "rest",
+      "loot"
+     ],
+     "target": "weakest_first",
+     "loot": "valuables",
+     "kite": true,
+     "transitions": [
+      {
+       "to": "blast",
+       "when": "Three or more creatures are bunched up close together again.",
+       "requires": [
+        "area spell ready"
+       ],
+       "at": 0.5
+      },
+      {
+       "to": "recover",
+       "when": "Health is below half or mana is nearly gone while creatures are still fighting.",
+       "requires": [
+        "2+ coming"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "recover": {
+     "says": "Get away from the group, drink a heal potion if health is low, and meditate back mana at a distance. Fight only if cornered.",
+     "allow": [
+      "flee",
+      "leave",
+      "rest"
+     ],
+     "loot": "nothing",
+     "max_s": 40.0,
+     "then": "open",
+     "transitions": [
+      {
+       "to": "open",
+       "when": "Health is above three quarters and mana is back above half, with nothing close.",
+       "requires": [
+        "none close",
+        "health above 70",
+        "mana above 50"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "blast",
+       "when": "Three or more creatures have caught up, they are bunched up, and there is still mana for area spells.",
+       "requires": [
+        "area spell ready",
+        "mana above 30",
+        "health above 50"
+       ],
+       "at": 0.7
+      }
+     ]
+    }
+   }
+  },
+  "opus-pack": {
+   "name": "hunt and dodge packs",
+   "why": "hunt orcs and other monsters the warrior can beat, back off to heal in time, and leave before a gargoyle or bone knight pack catches it mid-fight",
+   "start": "hunt",
+   "states": {
+    "hunt": {
+     "says": "Fight the nearest creature the warrior can beat (orcs and similar) and finish it before looking for more; loot valuables when nothing is fighting.",
+     "allow": [
+      "fight",
+      "loot",
+      "seek",
+      "rest"
+     ],
+     "target": "current_first",
+     "loot": "valuables",
+     "transitions": [
+      {
+       "to": "out",
+       "when": "A group is coming at the warrior that together is too strong for it: two or more creatures each about as strong as the warrior or stronger (gargoyles, bone knights), or any creature much stronger than the warrior, while it is fighting or hurt.",
+       "unless": "Only weak creatures like orcs are coming, or the strong ones are far off and not heading toward the warrior.",
+       "requires": [
+        "2+ coming"
+       ],
+       "at": 0.5
+      },
+      {
+       "to": "regroup",
+       "when": "Health is below about half, or is falling faster than bandages bring it back.",
+       "requires": [
+        "health below 55"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "regroup": {
+     "says": "Step back from the fight and let bandages and potions work; only hit what is right on the warrior.",
+     "allow": [
+      "flee",
+      "fight",
+      "rest"
+     ],
+     "target": "weakest_first",
+     "loot": "nothing",
+     "max_s": 25.0,
+     "then": "hunt",
+     "transitions": [
+      {
+       "to": "hunt",
+       "when": "Health is back above three quarters, or nothing is attacking any more.",
+       "requires": [
+        "health above 70"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "Health keeps dropping while backing off, or more creatures are joining, or a strong creature (gargoyle, bone knight) is coming.",
+       "at": 0.5
+      }
+     ]
+    },
+    "out": {
+     "says": "Leave: run until nothing hostile is in sight, ignoring loot; spellcasters will keep hitting from range, so keep running instead of stopping to fight.",
+     "allow": [
+      "leave",
+      "rest"
+     ],
+     "loot": "nothing",
+     "max_s": 60.0,
+     "then": "recover",
+     "transitions": [
+      {
+       "to": "recover",
+       "when": "Nothing hostile is in sight or close any more.",
+       "requires": [
+        "none close"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "recover": {
+     "says": "Stay away from the pack, rest and bandage up until health is high before hunting again.",
+     "allow": [
+      "rest",
+      "flee",
+      "leave"
+     ],
+     "loot": "nothing",
+     "max_s": 40.0,
+     "then": "hunt",
+     "transitions": [
+      {
+       "to": "hunt",
+       "when": "Health is nearly full and no strong creature or pack is in sight.",
+       "requires": [
+        "health above 85"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "A pack or a strong creature is coming at the warrior again.",
+       "requires": [
+        "1+ coming"
+       ],
+       "at": 0.5
+      }
+     ]
+    }
+   }
+  },
+  "opus-swarm-2": {
+   "name": "mage versus mixed packs",
+   "why": "Survive mixed groups of five or six weak-to-moderate melee monsters by stalling them with walls and fields, hitting them with area spells while they're bunched up, finishing the weakest one by one, and backing off to recover mana or health.",
+   "start": "open",
+   "states": {
+    "open": {
+     "says": "While the group is still coming, hit the leading creature from range with strong single-target spells (Energy Bolt, Lightning) and keep stepping back so they arrive together.",
+     "allow": [
+      "fight",
+      "seek",
+      "rest",
+      "loot"
+     ],
+     "target": "closest_first",
+     "loot": "valuables",
+     "kite": true,
+     "transitions": [
+      {
+       "to": "blast",
+       "when": "Three or more creatures are bunched up close together near the mage.",
+       "requires": [
+        "area spell ready"
+       ],
+       "at": 0.5
+      },
+      {
+       "to": "stall",
+       "when": "Several creatures are about to reach the mage at once and none of them are hurt yet.",
+       "requires": [
+        "3+ close"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "Health is low or mana is nearly gone while creatures are still coming.",
+       "unless": "Health is above half and mana is above a third.",
+       "requires": [
+        "3+ coming"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "stall": {
+     "says": "Put a Paralyze Field between the mage and the group to stop them, then back away to range. Fight only what gets through.",
+     "allow": [
+      "fight",
+      "flee",
+      "rest"
+     ],
+     "loot": "nothing",
+     "kite": true,
+     "spell": "Paralyze Field",
+     "max_s": 8.0,
+     "then": "blast",
+     "transitions": [
+      {
+       "to": "blast",
+       "when": "The creatures are held or slowed and bunched together where an area spell can hit them.",
+       "requires": [
+        "area spell ready"
+       ],
+       "at": 0.5
+      }
+     ]
+    },
+    "blast": {
+     "says": "Cast area spells at the bunch so every creature there takes damage from each cast. Step back if two or more are hitting the mage.",
+     "allow": [
+      "fight",
+      "flee",
+      "rest"
+     ],
+     "loot": "nothing",
+     "kite": true,
+     "spell": "Chain Lightning",
+     "transitions": [
+      {
+       "to": "finish",
+       "when": "Only one or two creatures are left close, or most of them are badly hurt.",
+       "unless": "Three or more fairly healthy creatures are still bunched up together.",
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "Mana is nearly gone or health is falling fast with several creatures still fighting.",
+       "requires": [
+        "mana below 25"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "Health is low and several creatures are still hitting the mage.",
+       "requires": [
+        "health below 45",
+        "2+ adjacent"
+       ],
+       "at": 0.5
+      }
+     ]
+    },
+    "finish": {
+     "says": "Kill the creature with the least health left using quick single-target spells (Magic Arrow, Lightning, Energy Bolt), stepping back from melee. Loot once nothing is left fighting.",
+     "allow": [
+      "fight",
+      "flee",
+      "rest",
+      "loot",
+      "seek"
+     ],
+     "target": "weakest_first",
+     "loot": "valuables",
+     "kite": true,
+     "transitions": [
+      {
+       "to": "blast",
+       "when": "Three or more creatures are bunched up close together again.",
+       "requires": [
+        "area spell ready"
+       ],
+       "at": 0.5
+      },
+      {
+       "to": "out",
+       "when": "Mana is nearly gone or health is low while creatures are still fighting.",
+       "unless": "Health is above half and mana is above a fifth.",
+       "requires": [
+        "2+ coming"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "out": {
+     "says": "Get away from the fight. Run until nothing is close, then meditate and heal at a distance before fighting again.",
+     "allow": [
+      "leave",
+      "flee",
+      "rest"
+     ],
+     "loot": "nothing",
+     "max_s": 40.0,
+     "then": "open",
+     "transitions": [
+      {
+       "to": "open",
+       "when": "Mana is back above half, health is above two thirds, and nothing is close.",
+       "requires": [
+        "mana above 50",
+        "health above 65",
+        "none close"
+       ],
+       "at": 0.6
+      }
+     ]
+    }
+   }
+  },
+  "opus-pack-2": {
+   "name": "hunt and dodge packs",
+   "why": "hunt orcs one at a time, back off to heal when hurt, and leave early when gargoyle or bone knight packs come at the warrior together",
+   "start": "hunt",
+   "states": {
+    "hunt": {
+     "says": "Fight orcs and similar creatures the warrior can beat, one at a time. Finish the current one before looking for more. Loot valuables only when nothing is coming.",
+     "allow": [
+      "fight",
+      "loot",
+      "seek",
+      "rest"
+     ],
+     "target": "current_first",
+     "loot": "valuables",
+     "transitions": [
+      {
+       "to": "out",
+       "when": "A group is coming at the warrior that it cannot beat together: two or more creatures each about as strong as the warrior or stronger (like gargoyles or bone knights), or any creature clearly stronger than the warrior while it is already fighting.",
+       "unless": "The only creatures coming are weak orcs or similar creatures that are easy alone.",
+       "requires": [
+        "2+ coming"
+       ],
+       "at": 0.5
+      },
+      {
+       "to": "regroup",
+       "when": "Health is below about half, or falling faster than the bandages bring it back.",
+       "requires": [
+        "health below 55"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "regroup": {
+     "says": "Step back from the fight and let the bandages and potions work. Only fight what is right on the warrior.",
+     "allow": [
+      "flee",
+      "fight",
+      "rest"
+     ],
+     "target": "weakest_first",
+     "loot": "nothing",
+     "max_s": 20.0,
+     "then": "hunt",
+     "transitions": [
+      {
+       "to": "hunt",
+       "when": "Health is back above three quarters and only beatable creatures are near.",
+       "requires": [
+        "health above 75"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "Strong creatures are still coming, or health keeps falling even while backing off.",
+       "at": 0.5
+      }
+     ]
+    },
+    "out": {
+     "says": "Leave the area: run until nothing hostile is in sight. Don't stop to fight or loot. Spellcasters can hit from range, so keep moving.",
+     "allow": [
+      "leave",
+      "rest"
+     ],
+     "loot": "nothing",
+     "max_s": 60.0,
+     "then": "recover",
+     "transitions": [
+      {
+       "to": "recover",
+       "when": "No hostile creature is in sight any more.",
+       "requires": [
+        "none in sight"
+       ],
+       "at": 0.6
+      }
+     ]
+    },
+    "recover": {
+     "says": "Rest out of sight and heal to full with bandages before hunting again.",
+     "allow": [
+      "rest",
+      "flee",
+      "fight"
+     ],
+     "loot": "nothing",
+     "max_s": 40.0,
+     "then": "hunt",
+     "transitions": [
+      {
+       "to": "hunt",
+       "when": "Health is nearly full and nothing strong is in sight.",
+       "requires": [
+        "health above 90"
+       ],
+       "at": 0.6
+      },
+      {
+       "to": "out",
+       "when": "A strong creature or group is coming at the warrior again.",
+       "requires": [
+        "1+ coming"
+       ],
+       "at": 0.5
+      }
+     ]
+    }
+   }
+  }
+ }
+}

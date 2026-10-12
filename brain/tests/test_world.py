@@ -1,4 +1,5 @@
 import json
+import sqlite3
 import sys
 
 import pytest
@@ -77,6 +78,25 @@ def test_grades_follow_hits_damage_and_fame():
     assert grade_creature(None, None, None, None, None) is None
 
 
+def test_an_older_store_gets_the_columns_added_since(tmp_path):
+    """A store made before creatures had `rooted` (cuo-evh) gets the column when it is opened."""
+    path = tmp_path / "local" / "world.sqlite"
+    path.parent.mkdir(parents=True)
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE creatures (id INTEGER PRIMARY KEY, type TEXT NOT NULL, name TEXT, body INTEGER, "
+               "hits_min INTEGER, hits_max INTEGER, damage_min INTEGER, damage_max INTEGER, fame INTEGER, "
+               "karma INTEGER, difficulty TEXT, note TEXT, source TEXT NOT NULL, last_seen TEXT NOT NULL, "
+               "stale INTEGER NOT NULL DEFAULT 0)")
+    db.execute("INSERT INTO creatures (type, name, body, hits_min, hits_max, source, last_seen) "
+               "VALUES ('Reaper', 'a reaper', 47, 40, 129, 'modernuo:x', '2026-10-09')")
+    db.commit()
+    db.close()
+    w = World.open("local", root=tmp_path)
+    assert w.bestiary()[47]["rooted"] is False
+    w.close()
+    assert World.open("local", root=tmp_path).bestiary()[47]["hits"] == 129  # opening again changes nothing
+
+
 def test_store_lives_per_shard(tmp_path):
     with World.open("uor", root=tmp_path) as w:
         w.add_note("Reds camp the Britain moongate after dark.", area="Britain")
@@ -95,6 +115,14 @@ def test_place_resolves_loose_names(w):
     assert w.place("nowhere at all") == []
     hit = w.place("Covetous")[0]
     assert hit["type"] == "region" and hit["entrance"] == [2499, 916, 0]
+
+
+def test_a_made_up_wilderness_name_resolves_to_its_tile(w):
+    """Facts name a place outside any region "wilderness near 1800,1400"; the planner made up
+    "wilderness near 1693,1473" in a soak run and the hunt failed on it."""
+    assert w.resolve("wilderness near 1693,1473") == (1693, 1473, "wilderness near 1693,1473")
+    with pytest.raises(worlds.WorldError):
+        w.resolve("somewhere near the sea")
 
 
 def test_find_place_nearest_first(w):
@@ -266,3 +294,55 @@ def test_hunting_spots_put_an_area_with_danger_this_hour_last(w):
     w.db.execute("UPDATE notes SET last_seen = '2026-01-01T00:00:00+00:00'")
     again = w.hunting_spots("warrior", "moderate")
     assert again[0]["area"] == first and "recent_danger" not in again[0]
+
+
+@pytest.mark.parametrize("argv, shard", [
+    (["do", "--shard", "evh-check", "travel", "Cove healer", "--defend"], "evh-check"),
+    (["do", "--shard", "evh-check", "hunt", "Britain Graveyard"], "evh-check"),
+    (["do", "travel", "Cove healer"], "local"),
+])
+def test_do_goals_use_the_shard_given_to_do(monkeypatch, argv, shard):
+    """`do --shard X hunt` ran on local: the goal's own --shard default overwrote it."""
+    seen = {}
+
+    async def goal(rpc, args):
+        seen["shard"] = args.shard
+
+    async def connect(self, *a, **k):
+        return None
+
+    monkeypatch.setattr(sys, "argv", ["uo-brain", *argv])
+    monkeypatch.setattr(cli, "do_goal", goal)
+    monkeypatch.setattr(cli.AgentRpc, "connect", connect)
+    cli.main()
+    assert seen["shard"] == shard
+
+
+def test_a_bank_is_not_the_baker(tmp_path):
+    """Seen while filming (cuo-1kk's log): travel_to "Britain bank" went to the Britain baker, since
+    the typo rule folded "baker" into "banker", a synonym of bank."""
+    assert worlds.tokens("Britain baker") == ["britain", "baker"]
+    assert worlds.tokens("the Britain cemetary") == ["the", "britain", "graveyard"]  # a real typo still folds
+    w = World.open("local", root=tmp_path)
+    w.add_place("baker", "Britain baker", 1450, 1620, source="seen")
+    w.add_place("bank", "West Britain bank", 1425, 1690, source="seen")
+    assert w.place("Britain bank", limit=1)[0]["name"] == "West Britain bank"
+    assert w.place("Britain baker", limit=1)[0]["name"] == "Britain baker"
+    w.close()
+
+
+def test_a_dungeons_floor_is_said_to_be_out_of_a_walks_reach_and_listed_last(w):
+    """cuo-432: hunting_spots led with the Britain Sewer, which no walk goes to (its floor is east of x 5120,
+    apart from the land): `hunt Britain Sewer` failed 14 times of 14 in the logs."""
+    strong = w.hunting_spots("mage", "strong", near="Britain", limit=10)
+    names = [s["area"] for s in strong]
+    assert names[-1] == "Covetous Level 1" and strong[-1]["reach"].startswith("not on foot")
+    assert all("reach" not in s for s in strong[:-1])
+    # From inside the dungeons' part of the map it is the land that can't be walked to.
+    inside = {s["area"]: s for s in w.hunting_spots("mage", "strong", near="5456,1862", limit=10)}
+    assert "reach" not in inside["Covetous Level 1"] and inside["Britain Graveyard"]["reach"].startswith("not on foot")
+    # With nowhere to measure from, a spot over there is said to be so; what_spawns says it too.
+    assert {s["area"]: "reach" in s for s in w.hunting_spots("mage", "strong", limit=10)}["Covetous Level 1"]
+    assert w.what_spawns(area="Covetous Level 1")[0]["reach"].startswith("not on foot")
+    assert "reach" not in w.what_spawns(area="Britain Graveyard", near="Britain")[0]
+    assert worlds.no_walk("Ilshenar", 5500, 1000) is None  # only Felucca and Trammel keep their dungeons apart

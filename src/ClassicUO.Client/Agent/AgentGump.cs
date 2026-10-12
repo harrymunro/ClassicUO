@@ -101,20 +101,22 @@ namespace ClassicUO.Agent
             _entry.Add(new ClickLabel("clear", LINK, () => SetStrategy(string.Empty)) { X = INNER - 36, Y = 2 });
             Add(_entry);
 
-            // Goal entry (auto mode): a text field with "set".
+            // Goal entry (auto mode): a text field with "set" (this session's goal) and "long" (a long goal,
+            // kept across sessions).
             _goalEntry = new DataBox(PAD, 0, INNER, 24);
-            _goalEntry.Add(new ResizePic(ENTRY_BACKGROUND) { Width = INNER - 40, Height = 22 });
+            _goalEntry.Add(new ResizePic(ENTRY_BACKGROUND) { Width = INNER - 70, Height = 22 });
             _goalEntry.Add
             (
-                _goalBox = new StbTextBox(FONT, AgentController.MAX_STRATEGY_LENGTH, INNER - 50, true, FontStyle.None, 0x0386)
+                _goalBox = new StbTextBox(FONT, AgentController.MAX_STRATEGY_LENGTH, INNER - 80, true, FontStyle.None, 0x0386)
                 {
                     X = 5,
                     Y = 2,
-                    Width = INNER - 50,
+                    Width = INNER - 80,
                     Height = 18
                 }
             );
-            _goalEntry.Add(new ClickLabel("set", LINK, SetGoal) { X = INNER - 30, Y = 2 });
+            _goalEntry.Add(new ClickLabel("set", LINK, SetGoal) { X = INNER - 62, Y = 2 });
+            _goalEntry.Add(new ClickLabel("long", LINK, AddLongGoal) { X = INNER - 34, Y = 2 });
             Add(_goalEntry);
 
             Rebuild();
@@ -170,6 +172,7 @@ namespace ClassicUO.Agent
                 _agent.CallsOpen ? "o" : "-", "|",
                 AgentBrain.State, _hasKey ? "k" : "-", ThreatLine(), "|",
                 _agent.GoalRevision.ToString(), _agent.GoalStep, "|",
+                _agent.LongGoalsTime.ToString(), _agent.LongGoalRequests.Count.ToString(), "|",
                 _agent.BrainActive ? "b" : "-", _agent.HumanActive ? "h" : "-", "|",
                 Doing(), "|", _agent.DecisionSeq.ToString(), "|", _agent.StrategyRevision.ToString(), "|",
                 _agent.Suggestion?.Describe(World) ?? "", "|", d == null ? "" : Ago(d.Time), "|",
@@ -330,7 +333,9 @@ namespace ClassicUO.Agent
 
             if (_agent.Goal.Length == 0)
             {
-                return AddWrapped("none yet: type one, e.g. \"hunt the Britain graveyard, keep stocked, bank gold\", or pick one below", PAD, y, INNER, GREY) + 4;
+                y = AddWrapped("none yet: type one, e.g. \"hunt the Britain graveyard, keep stocked, bank gold\", and press set (this session) or long (kept across sessions), or pick one below", PAD, y, INNER, GREY) + 4;
+
+                return AddLongGoals(y);
             }
 
             y = AddWrapped("\"" + _agent.Goal.Replace('\n', ' ') + "\"", PAD, y, INNER, WHITE);
@@ -357,7 +362,33 @@ namespace ClassicUO.Agent
             _content.Add(pause);
             _content.Add(new ClickLabel("clear", LINK, () => _agent.SetGoal(string.Empty)) { X = PAD + pause.Width + 12, Y = y + 2 });
 
-            return y + 22;
+            return AddLongGoals(y + 22);
+        }
+
+        // The character's long goals with their progress, as the brain last sent them, each with
+        // "done"; requests the brain hasn't picked up yet are shown as waiting.
+        private int AddLongGoals(int y)
+        {
+            if (_agent.LongGoals.Count == 0 && _agent.LongGoalRequests.Count == 0)
+            {
+                return y;
+            }
+
+            y = AddHeader("long goals", y);
+
+            foreach (AgentController.LongGoal g in _agent.LongGoals)
+            {
+                AgentController.LongGoal goal = g;
+                y = AddWrapped($"{g.Text}: {g.Progress}", PAD, y, INNER - 40, WHITE);
+                _content.Add(new ClickLabel("done", LINK, () => _agent.RequestLongGoal("done", goal.Id, string.Empty)) { X = WIDTH - PAD - 36, Y = y - 16 });
+            }
+
+            foreach (AgentController.LongGoalRequest r in _agent.LongGoalRequests)
+            {
+                y = AddWrapped($"waiting for the brain: {r.Action} {(r.Action == "add" ? r.Text : "#" + r.Id)}", PAD, y, INNER, GREY);
+            }
+
+            return y + 4;
         }
 
         private int AddGoalTemplates(int y)
@@ -784,7 +815,8 @@ namespace ClassicUO.Agent
 
         private static string Conf(float c) => c >= 0 ? $"  {Pct(c)}" : string.Empty;
 
-        private static string Latency(AgentDecision d) => d.LatencyMs > 0 ? $"{Math.Round(d.LatencyMs)} ms · " : string.Empty;
+        private static string Latency(AgentDecision d) => d.NotAsked.Length != 0 ? $"not asked: {d.NotAsked} · "
+            : d.LatencyMs > 0 ? $"{Math.Round(d.LatencyMs)} ms · " : string.Empty;
 
         private static string Ago(uint time)
         {
@@ -832,6 +864,20 @@ namespace ClassicUO.Agent
             _agent.SetGoal(text);
             _goalBox.SetText(string.Empty);
             _agent.Print("goal: " + text);
+        }
+
+        private void AddLongGoal()
+        {
+            string text = _goalBox.Text?.Trim();
+
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            _agent.RequestLongGoal("add", 0, text);
+            _goalBox.SetText(string.Empty);
+            _agent.Print("long goal: " + text);
         }
 
         public override void OnKeyboardReturn(int textID, string text)

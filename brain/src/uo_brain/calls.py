@@ -28,6 +28,7 @@ TITLES = {
     "stay_here": "spot still worth it?", "move_spot": "walk elsewhere in the spawn?", "allows_flee": "strategy allows fleeing?",
     "aggression": "how aggressive?", "target_priority": "who first?", "looting": "how much to loot?",
     "opening_spell": "opening spell?", "main_spell": "main spell?", "ward": "wall or summon first?",
+    "stand": "where to go?",
 }
 
 
@@ -140,6 +141,8 @@ def did(sit: Any, actions: list[dict[str, Any]], results: list[dict[str, Any]]) 
             what = f"pet: all {a.get('kind')}" + (f" {who(a['target'])}" if a.get("target") else "")
         elif verb == "hint":
             what = f"say \"{a.get('text', '')}\""
+        elif verb == "disengage":
+            what = "let the fight go and walk on"
         else:
             what = verb.replace("_", " ")
         status = (r or {}).get("status", "")

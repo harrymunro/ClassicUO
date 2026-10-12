@@ -1,9 +1,9 @@
 import asyncio
 import copy
 
-from conftest import SNAPSHOT
+from conftest import SNAPSHOT, mage_snapshot
 
-from uo_brain.session import Session
+from uo_brain.session import NOT_COUNTED, Session, describe
 from uo_brain.world import World
 
 
@@ -32,6 +32,51 @@ def test_buying_skips_healers_known_not_to_sell_it_and_prefers_known_sellers(tmp
     assert place["name"] == "a healer we know nothing about"
     place, _ = asyncio.run(s.go_near("healer", 10))
     assert place["name"] == "wandering healer"  # without an item, the nearest of the kind
+    w.close()
+
+
+def healer_in_shop(snap):
+    snap["mobiles"] = [{"serial": 0x500, "name": "Lucy", "label": "Lucy the healer", "human": True, "monster": False,
+                        "notoriety": "invulnerable", "distance": 3, "dx": 3, "dy": 0}]
+    snap["agent"]["errand"] = {"state": "done", "detail": "the healer has none left", "gold_change": 0}
+    return snap
+
+
+def test_a_sold_out_shop_doesnt_send_the_buy_to_another_town(tmp_path):
+    """cuo-1kk: Britain's healer was sold out, and a fleet NPC's buy walked on to the Cove healer, 770
+    tiles and 6.6 minutes away. The buy ends instead, naming the next shop and how far it is."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("healer", "the Britain healer", 1006, 1000, sells=["bandages"])
+    w.add_place("healer", "the Cove healer", 1770, 1000, sells=["bandages"])
+    rpc = FakeRpc(healer_in_shop(copy.deepcopy(SNAPSHOT)))
+    res = asyncio.run(Session(rpc, w, None).buy("bandage", 25))
+    assert not res.ok and res.summary.startswith("the Britain healer: bought 0 of 25 bandage")
+    assert "the nearest other healer selling bandage is the Cove healer, 770 tiles away; travel_to it first" in res.summary
+    assert not any(m == "act" and p.get("verb") == "travel" for m, p in rpc.calls)
+    w.close()
+
+
+def test_a_guildmaster_in_the_shop_is_not_asked_for_its_goods(tmp_path):
+    """A soak run's buys at the Britain healer went to the healer guildmistress on the next tile, who
+    sells nothing, while the healer stood three tiles off."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("healer", "the Britain healer", 1006, 1000, sells=["bandages"])
+    snap = healer_in_shop(copy.deepcopy(SNAPSHOT))
+    snap["mobiles"].insert(0, {**snap["mobiles"][0], "serial": 0x501, "name": "Devaki",
+                               "label": "Devaki The Healer Guildmistress", "distance": 1})
+    _, serial, failed = asyncio.run(Session(FakeRpc(snap), w, None).vendor("healer", ()))
+    assert failed is None and serial == 0x500
+    w.close()
+
+
+def test_a_buy_doesnt_set_off_for_a_far_shop_either(tmp_path):
+    w = World.open("test", root=tmp_path)
+    w.add_place("healer", "the Cove healer", 1770, 1000, sells=["bandages"])
+    rpc = FakeRpc(copy.deepcopy(SNAPSHOT))
+    res = asyncio.run(Session(rpc, w, None).buy("bandage", 25))
+    assert not res.ok and res.summary == ("the nearest healer selling bandage is the Cove healer, 770 tiles away; "
+                                          "travel_to it first if the trip is worth it")
+    assert res.data["tiles"] == 770 and not any(m == "act" and p.get("verb") == "travel" for m, p in rpc.calls)
     w.close()
 
 
@@ -150,3 +195,61 @@ def test_goals_back_where_it_left_from_creatures_are_refused_for_a_while(tmp_pat
     s.left_from[0] = (1380, 1480, _time.monotonic() - 31 * 60, "Britain Graveyard", "old")
     assert s.avoided(1385, 1500) is None
     w.close()
+
+
+def test_the_walk_to_a_hunts_area_is_defended(tmp_path):
+    """cuo-sj2: the walk to a hunt had no fight loop beside it, and a warrior died 'on the way'."""
+    import asyncio
+    from uo_brain.session import Result, Session
+    from uo_brain.world import World
+    w = World(tmp_path / "w.sqlite")
+    w.add_place("graveyard", "Britain Graveyard", 1369, 1475, source="test")
+    s = Session(rpc=None, world=w)
+    seen = []
+
+    async def walk(*a, **kw):
+        seen.append("walking")
+        return Result(False, "died on the way")
+
+    async def defended(work):
+        seen.append("defended")
+        return await work
+
+    s.travel_to, s.defended = walk, defended
+    r = asyncio.run(s.hunt("Britain Graveyard", 5))
+    assert seen == ["defended", "walking"] and r.summary.startswith("could not get to Britain Graveyard")
+
+
+def test_a_mage_is_told_of_its_reagents_not_bandages():
+    """cuo-pz9: a new mage (reagents in a bag, no bandages) was told "bandages 0" and nothing of reagents,
+    and its planner sent it to buy both before the party's fight."""
+    mage = mage_snapshot()
+    told = describe(mage)
+    assert told["plays_as"] == "mage" and "bandages" not in told and told["reagents"]["black pearl"] == 90
+    unread = mage_snapshot()
+    unread["player"]["supplies"]["reagents"] = dict.fromkeys(unread["player"]["supplies"]["reagents"], 0)
+    unread["player"]["supplies"]["unread_bags"] = 1
+    assert describe(unread)["reagents"] == NOT_COUNTED
+    unread["player"]["supplies"]["unread_bags"] = 0
+    assert describe(unread)["reagents"] == "none"
+    warrior = describe(copy.deepcopy(SNAPSHOT))
+    assert warrior["plays_as"] == "warrior" and "bandages" in warrior and "reagents" not in warrior
+
+
+def test_the_pack_is_read_before_the_first_plan():
+    class Reading(FakeRpc):
+        def __init__(self, snap, unread):
+            super().__init__(snap)
+            self.unread = list(unread)
+
+        async def call(self, method, **params):
+            if method == "snapshot":
+                snap = copy.deepcopy(self.snap)
+                snap["player"]["supplies"]["unread_bags"] = self.unread.pop(0) if len(self.unread) > 1 else self.unread[0]
+                return snap
+            return await super().call(method, **params)
+
+    w = World(":memory:")
+    assert asyncio.run(Session(Reading(mage_snapshot(), [2, 1, 0]), w, None).pack_read(timeout_s=5)) is True
+    assert asyncio.run(Session(Reading(mage_snapshot(), [1]), w, None).pack_read(timeout_s=0.6)) is False
+    assert asyncio.run(Session(FakeRpc(copy.deepcopy(SNAPSHOT)), w, None).pack_read()) is True  # an older client

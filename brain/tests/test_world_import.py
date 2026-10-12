@@ -146,9 +146,54 @@ namespace Server.Mobiles
         }
     }
 
+    public partial class Bird : BaseCreature
+    {
+        public Bird() : base(AIType.AI_Animal, FightMode.Aggressor)
+        {
+            Body = 6;
+            SetHits(3, 6);
+            SetDamage(1, 1);
+            Fame = 25;
+        }
+
+        public override string DefaultName => "a bird";
+    }
+
+    public class Unicorn : BaseMount
+    {
+        public Unicorn() : base(0x7A, 0x3EB4, AIType.AI_Mage, FightMode.Evil)
+        {
+            SetHits(191, 210);
+            SetDamage(16, 22);
+        }
+    }
+
     public class Banker : BaseVendor
     {
         public Banker() : base("the banker") { }
+    }
+}
+'''
+
+PLANTS = '''
+namespace Server.Mobiles
+{
+    public partial class Reaper : BaseCreature
+    {
+        public Reaper() : base(AIType.AI_Mage)
+        {
+            Body = 47;
+            SetHits(40, 129);
+            SetDamage(9, 11);
+            Fame = 3500;
+        }
+        public override string DefaultName => "a reaper";
+        public override bool DisallowAllMoves => true;
+    }
+
+    public partial class AncientReaper : Reaper
+    {
+        public override string DefaultName => "an ancient reaper";
     }
 }
 '''
@@ -185,6 +230,7 @@ def modernuo(tmp_path) -> Path:
         data / "teleporters.json": json.dumps(TELEPORTERS),
         root / "Distribution" / "Configuration" / "expansion.json": json.dumps({"Id": 11, "Name": "Endless Journey"}),
         root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Undead.cs": MOBILES,
+        root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Plant" / "Magic" / "Reaper.cs": PLANTS,
         root / "Projects" / "UOContent" / "Items" / "Misc" / "PublicMoongate.cs": MOONGATES,
     }
     for rel, spawners in SPAWNS.items():
@@ -304,6 +350,30 @@ def test_creature_parsing(modernuo):
     assert rows["Rat"]["hits_min"] == rows["Rat"]["hits_max"] == 9 and rows["Rat"]["note"] == "hits taken from strength"
     assert rows["Lich"]["difficulty"] == "strong" and rows["Lich"]["name"] is None
     assert rows["Zombie"]["source"] == "modernuo:Projects/UOContent/Mobiles/Monsters/Undead.cs"
+
+
+def test_creatures_that_cannot_move(modernuo, tmp_path):
+    """cuo-evh: a reaper never moves (DisallowAllMoves), and the walks to Cove stood fighting one by the road."""
+    rows = {r["type"]: r for r in parse_creatures(modernuo / "Projects" / "UOContent" / "Mobiles", modernuo)}
+    assert rows["Reaper"]["rooted"] == 1 and rows["AncientReaper"]["rooted"] == 1  # inherited
+    assert rows["Zombie"]["rooted"] == 0
+    with World.open("local", root=tmp_path / "rooted") as w:
+        import_modernuo(w, modernuo)
+        beasts = w.bestiary()
+        assert beasts[47]["rooted"] and beasts[47]["caster"] and not beasts[3]["rooted"]
+
+
+def test_creatures_that_only_fight_back(modernuo, tmp_path):
+    """cuo-s9p: a crossbill counted as a hostile in sight. FightMode.Aggressor only fights back; the default
+    (Closest) attacks on sight; a subclass takes its base's."""
+    rows = {r["type"]: r for r in parse_creatures(modernuo / "Projects" / "UOContent" / "Mobiles", modernuo)}
+    assert rows["Bird"]["fight_mode"] == "Aggressor" and rows["Unicorn"]["fight_mode"] == "Evil"
+    assert rows["Skeleton"]["fight_mode"] == "Closest" and rows["Spectre"]["fight_mode"] == "Closest"
+    assert rows["Lich"]["fight_mode"] is None  # no base(AIType...) to read
+    with World.open("local", root=tmp_path / "calm") as w:
+        import_modernuo(w, modernuo)
+        beasts = w.bestiary()
+        assert beasts[6]["peaceful"] is True and beasts[50]["peaceful"] is False and beasts[0x18]["peaceful"] is None
 
 
 def test_missing_folder_is_reported(tmp_path):

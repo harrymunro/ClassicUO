@@ -1,0 +1,1779 @@
+{
+  "started": "2026-10-09T15:06:30",
+  "rounds": 5,
+  "lane": 7,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-haiku-5.5",
+      "guide": "anthropic/claude-haiku-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "mismatch": {
+      "bead": "cuo-46e.2",
+      "right": "An ogre lord walks up while four weak monsters fight the warrior: leave, or at least don't engage it.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Oggugat (orc)",
+                "a headless one"
+              ],
+              "engaged": [
+                "Oggugat (orc)",
+                "a headless one",
+                "Fackek (ratman)"
+              ],
+              "flees_at_hp": [
+                79,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 46,
+              "decisions": 49,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev-01.jsonl",
+              "input_tokens": 96534,
+              "cost_usd": 0.004054,
+              "cost_by_kind": {
+                "fight": 0.004054
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 278.9,
+              "decisions_made": 57
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Ouhgan (orc)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Ouhgan (orc)",
+                "a mongbat",
+                "a headless one",
+                "Iki (ratman)"
+              ],
+              "flees_at_hp": [
+                78,
+                79,
+                80,
+                81,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 55,
+              "decisions": 40,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev-02.jsonl",
+              "input_tokens": 74156,
+              "cost_usd": 0.003115,
+              "cost_by_kind": {
+                "fight": 0.003115
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 261.9,
+              "decisions_made": 58
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "Sugigoth (orc)",
+                "Fetckiki (ratman)"
+              ],
+              "flees_at_hp": [
+                24,
+                25,
+                49,
+                98,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 23,
+              "decisions": 44,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev-03.jsonl",
+              "input_tokens": 86328,
+              "cost_usd": 0.003626,
+              "cost_by_kind": {
+                "fight": 0.003626
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 276.4,
+              "decisions_made": 56
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "Nofhug (orc)",
+                "Wecckak (ratman)"
+              ],
+              "flees_at_hp": [
+                83,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 79,
+              "decisions": 43,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev-04.jsonl",
+              "input_tokens": 83752,
+              "cost_usd": 0.003518,
+              "cost_by_kind": {
+                "fight": 0.003518
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 279.9,
+              "decisions_made": 57
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Olaghig (orc)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Olaghig (orc)",
+                "a mongbat",
+                "a headless one",
+                "Fitcheki (ratman)"
+              ],
+              "flees_at_hp": [
+                87,
+                88,
+                91,
+                93,
+                95,
+                97,
+                99
+              ],
+              "min_hp": 86,
+              "decisions": 42,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev-05.jsonl",
+              "input_tokens": 78063,
+              "cost_usd": 0.003279,
+              "cost_by_kind": {
+                "fight": 0.003279
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 252.9,
+              "decisions_made": 58
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01759,
+          "cost_per_round_usd": 0.00352,
+          "latency_ms_avg": 270.0,
+          "decisions_per_round": 43.6,
+          "errors": 0
+        },
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Ritikituk (ratman)",
+                "a headless one",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Ritikituk (ratman)",
+                "a headless one",
+                "a mongbat",
+                "Turbag (orc)"
+              ],
+              "flees_at_hp": [
+                93,
+                94,
+                96,
+                98,
+                100,
+                100
+              ],
+              "min_hp": 47,
+              "decisions": 60,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev_everytick-01.jsonl",
+              "input_tokens": 116514,
+              "cost_usd": 0.004894,
+              "cost_by_kind": {
+                "fight": 0.004894
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 250.0,
+              "decisions_made": 60
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Wikchichoki (ratman)",
+                "a mongbat",
+                "a headless one"
+              ],
+              "engaged": [
+                "Wikchichoki (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Quomaugh (orc)"
+              ],
+              "flees_at_hp": [
+                65,
+                66,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 60,
+              "decisions": 57,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev_everytick-02.jsonl",
+              "input_tokens": 102057,
+              "cost_usd": 0.004286,
+              "cost_by_kind": {
+                "fight": 0.004286
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 257.0,
+              "decisions_made": 57
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Kakhoki (ratman)"
+              ],
+              "engaged": [
+                "Kakhoki (ratman)",
+                "Vitgurat (orc)"
+              ],
+              "flees_at_hp": [
+                48,
+                48,
+                49,
+                88,
+                91,
+                93,
+                95,
+                97
+              ],
+              "min_hp": 48,
+              "decisions": 56,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev_everytick-03.jsonl",
+              "input_tokens": 106087,
+              "cost_usd": 0.004456,
+              "cost_by_kind": {
+                "fight": 0.004456
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 280.5,
+              "decisions_made": 56
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Tulgan (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Tulgan (orc)",
+                "a headless one",
+                "Kaki (ratman)"
+              ],
+              "flees_at_hp": [
+                91,
+                92,
+                93,
+                95,
+                97,
+                99,
+                100,
+                100
+              ],
+              "min_hp": 49,
+              "decisions": 57,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev_everytick-04.jsonl",
+              "input_tokens": 105972,
+              "cost_usd": 0.004451,
+              "cost_by_kind": {
+                "fight": 0.004451
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 243.3,
+              "decisions_made": 57
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Almthu (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Almthu (orc)",
+                "a mongbat",
+                "Firchik (ratman)"
+              ],
+              "flees_at_hp": [
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 57,
+              "decisions": 50,
+              "log": "logs/bench/20261009-150630-lane7/mismatch-jev_everytick-05.jsonl",
+              "input_tokens": 93801,
+              "cost_usd": 0.00394,
+              "cost_by_kind": {
+                "fight": 0.00394
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 246.9,
+              "decisions_made": 50
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02203,
+          "cost_per_round_usd": 0.00441,
+          "latency_ms_avg": 255.5,
+          "decisions_per_round": 56.0,
+          "errors": 0
+        }
+      }
+    },
+    "priority": {
+      "bead": "cuo-46e.3",
+      "right": "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 100.6,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                52,
+                53,
+                89,
+                92,
+                94,
+                96,
+                98
+              ],
+              "min_hp": 52,
+              "decisions": 53,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev-01.jsonl",
+              "input_tokens": 95940,
+              "cost_usd": 0.004029,
+              "cost_by_kind": {
+                "fight": 0.004029
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 280.0,
+              "decisions_made": 69
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 72.3,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [
+                42
+              ],
+              "min_hp": 42,
+              "decisions": 44,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev-02.jsonl",
+              "input_tokens": 86573,
+              "cost_usd": 0.003636,
+              "cost_by_kind": {
+                "fight": 0.003636
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 299.0,
+              "decisions_made": 47
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 92.8,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                58,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 51,
+              "decisions": 54,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev-03.jsonl",
+              "input_tokens": 97483,
+              "cost_usd": 0.004094,
+              "cost_by_kind": {
+                "fight": 0.004094
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 252.1,
+              "decisions_made": 68
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 26.7,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                53,
+                54,
+                100
+              ],
+              "min_hp": 53,
+              "decisions": 17,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev-04.jsonl",
+              "input_tokens": 33791,
+              "cost_usd": 0.001419,
+              "cost_by_kind": {
+                "fight": 0.001419
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 268.6,
+              "decisions_made": 19
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 120.0,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                68,
+                52,
+                84,
+                86,
+                100,
+                100,
+                100,
+                59,
+                61,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 36,
+              "decisions": 51,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev-05.jsonl",
+              "input_tokens": 90335,
+              "cost_usd": 0.003794,
+              "cost_by_kind": {
+                "fight": 0.003794
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 241.1,
+              "decisions_made": 76
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01697,
+          "cost_per_round_usd": 0.00339,
+          "latency_ms_avg": 268.2,
+          "decisions_per_round": 43.8,
+          "errors": 0
+        },
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 65.3,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 55,
+              "decisions": 40,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev_everytick-01.jsonl",
+              "input_tokens": 78031,
+              "cost_usd": 0.003277,
+              "cost_by_kind": {
+                "fight": 0.003277
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 268.3,
+              "decisions_made": 40
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 68.1,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 44,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev_everytick-02.jsonl",
+              "input_tokens": 85621,
+              "cost_usd": 0.003596,
+              "cost_by_kind": {
+                "fight": 0.003596
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 274.3,
+              "decisions_made": 44
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 73.8,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 56,
+              "decisions": 50,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev_everytick-03.jsonl",
+              "input_tokens": 97261,
+              "cost_usd": 0.004085,
+              "cost_by_kind": {
+                "fight": 0.004085
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 263.8,
+              "decisions_made": 50
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 79.3,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                62,
+                67,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 61,
+              "decisions": 54,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev_everytick-04.jsonl",
+              "input_tokens": 93321,
+              "cost_usd": 0.003919,
+              "cost_by_kind": {
+                "fight": 0.003919
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 255.7,
+              "decisions_made": 54
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 68.5,
+              "player_died": true,
+              "kills": [],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                54,
+                52,
+                99,
+                100,
+                100,
+                100,
+                100,
+                12
+              ],
+              "min_hp": 0,
+              "decisions": 43,
+              "log": "logs/bench/20261009-150630-lane7/priority-jev_everytick-05.jsonl",
+              "input_tokens": 76362,
+              "cost_usd": 0.003207,
+              "cost_by_kind": {
+                "fight": 0.003207
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 239.3,
+              "decisions_made": 43
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.01808,
+          "cost_per_round_usd": 0.00362,
+          "latency_ms_avg": 260.3,
+          "decisions_per_round": 46.2,
+          "errors": 0
+        }
+      }
+    },
+    "pack-gargoyles": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; three gargoyles (a fair fight each, and spellcasters) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (87%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Zugbu (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 65,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Zugbu (orc)",
+                "Auhgan (orc)"
+              ],
+              "flees_at_hp": [
+                87,
+                88,
+                92,
+                94,
+                96,
+                98,
+                100,
+                100,
+                100,
+                65,
+                67,
+                100
+              ],
+              "decisions": 52,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev-01.jsonl",
+              "input_tokens": 97563,
+              "cost_usd": 0.004098,
+              "cost_by_kind": {
+                "fight": 0.004098
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 266.8,
+              "decisions_made": 66
+            },
+            {
+              "success": false,
+              "left": true,
+              "left_at_hp": "lightly wounded (83%)",
+              "why": "4 coming at once: 3 gargoyles (a fair fight and a spellcaster each) and an orc (weak); together far stronger than you: t",
+              "kills": [
+                "Farod (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 0,
+              "seconds": 25.3,
+              "player_died": true,
+              "engaged": [
+                "Farod (orc)",
+                "a gargoyle"
+              ],
+              "flees_at_hp": [
+                83,
+                55
+              ],
+              "decisions": 21,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev-02.jsonl",
+              "input_tokens": 44993,
+              "cost_usd": 0.00189,
+              "cost_by_kind": {
+                "fight": 0.00189
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 333.6,
+              "decisions_made": 21
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (54%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Naghat (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 53,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Naghat (orc)",
+                "Zoughat (orc)"
+              ],
+              "flees_at_hp": [
+                54,
+                55,
+                56,
+                58,
+                60,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 39,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev-03.jsonl",
+              "input_tokens": 74170,
+              "cost_usd": 0.003115,
+              "cost_by_kind": {
+                "fight": 0.003115
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 262.9,
+              "decisions_made": 61
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "badly wounded (46%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Otugbu (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 45,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Otugbu (orc)",
+                "Zurgha (orc)",
+                "a gargoyle",
+                "Zurgha (orc)"
+              ],
+              "flees_at_hp": [
+                46,
+                46,
+                88,
+                89,
+                92,
+                94,
+                96,
+                98,
+                100,
+                61,
+                62,
+                63,
+                100
+              ],
+              "decisions": 49,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev-04.jsonl",
+              "input_tokens": 91649,
+              "cost_usd": 0.003849,
+              "cost_by_kind": {
+                "fight": 0.003849
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 266.7,
+              "decisions_made": 61
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (58%)",
+              "why": "3 coming at once: 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: too many to fight a",
+              "kills": [
+                "Magdud (orc)",
+                "Agugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 7,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Magdud (orc)",
+                "Agugh (orc)"
+              ],
+              "flees_at_hp": [
+                58,
+                8,
+                58,
+                60,
+                100,
+                100,
+                100,
+                100,
+                100,
+                77,
+                78,
+                100
+              ],
+              "decisions": 47,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev-05.jsonl",
+              "input_tokens": 89093,
+              "cost_usd": 0.003742,
+              "cost_by_kind": {
+                "fight": 0.003742
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 280.4,
+              "decisions_made": 61
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 1,
+          "cost_usd": 0.01669,
+          "cost_per_round_usd": 0.00334,
+          "latency_ms_avg": 282.1,
+          "decisions_per_round": 41.6,
+          "errors": 0
+        },
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "badly wounded (45%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Verthag (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 45,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Verthag (orc)",
+                "Vrothu (orc)"
+              ],
+              "flees_at_hp": [
+                45,
+                80,
+                82,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev_everytick-01.jsonl",
+              "input_tokens": 109728,
+              "cost_usd": 0.004609,
+              "cost_by_kind": {
+                "fight": 0.004609
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 229.2,
+              "decisions_made": 61
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (88%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Ulmrougha (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 41,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Ulmrougha (orc)",
+                "Apaugh (orc)",
+                "a gargoyle"
+              ],
+              "flees_at_hp": [
+                89,
+                91,
+                92,
+                94,
+                96,
+                98,
+                100
+              ],
+              "decisions": 73,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev_everytick-02.jsonl",
+              "input_tokens": 136772,
+              "cost_usd": 0.005744,
+              "cost_by_kind": {
+                "fight": 0.005744
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 228.6,
+              "decisions_made": 73
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Sogugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 58,
+              "seconds": 90.4,
+              "player_died": false,
+              "engaged": [
+                "Sogugh (orc)",
+                "Slaugh (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                59,
+                60,
+                95,
+                96,
+                98
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev_everytick-03.jsonl",
+              "input_tokens": 108511,
+              "cost_usd": 0.004557,
+              "cost_by_kind": {
+                "fight": 0.004557
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 249.8,
+              "decisions_made": 61
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (81%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 62,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Wurgoth (orc)",
+                "Romarod (orc)"
+              ],
+              "flees_at_hp": [
+                81,
+                82,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                88,
+                89,
+                91,
+                92,
+                94
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev_everytick-04.jsonl",
+              "input_tokens": 106538,
+              "cost_usd": 0.004475,
+              "cost_by_kind": {
+                "fight": 0.004475
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 223.6,
+              "decisions_made": 60
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (93%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Ginug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 54,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Ginug (orc)",
+                "Olmthu (orc)"
+              ],
+              "flees_at_hp": [
+                94,
+                95,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-150630-lane7/pack-gargoyles-jev_everytick-05.jsonl",
+              "input_tokens": 107126,
+              "cost_usd": 0.004499,
+              "cost_by_kind": {
+                "fight": 0.004499
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 225.8,
+              "decisions_made": 60
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02388,
+          "cost_per_round_usd": 0.00478,
+          "latency_ms_avg": 231.4,
+          "decisions_per_round": 63.0,
+          "errors": 0
+        }
+      }
+    },
+    "pack-bone-knights": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; two bone knights (each stronger than it) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (61%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Ikkath (orc)",
+                "Jughog (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 45,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Ikkath (orc)",
+                "Jughog (orc)"
+              ],
+              "flees_at_hp": [
+                61,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 42,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev-01.jsonl",
+              "input_tokens": 75747,
+              "cost_usd": 0.003181,
+              "cost_by_kind": {
+                "fight": 0.003181
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 280.3,
+              "decisions_made": 60
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (72%)",
+              "why": "2 coming at once: 2 skeletons (stronger than you each); together far stronger than you: too many to fight at once",
+              "kills": [
+                "Kubub (orc)",
+                "Zarod (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 63,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Kubub (orc)",
+                "Zarod (orc)"
+              ],
+              "flees_at_hp": [
+                72,
+                73,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 39,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev-02.jsonl",
+              "input_tokens": 71805,
+              "cost_usd": 0.003016,
+              "cost_by_kind": {
+                "fight": 0.003016
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 274.3,
+              "decisions_made": 56
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (76%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Pakgu (orc)",
+                "Pofhug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 74,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Pakgu (orc)",
+                "Pofhug (orc)"
+              ],
+              "flees_at_hp": [
+                76,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 36,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev-03.jsonl",
+              "input_tokens": 65162,
+              "cost_usd": 0.002737,
+              "cost_by_kind": {
+                "fight": 0.002737
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 277.3,
+              "decisions_made": 58
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (91%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Epkagut (orc)",
+                "Farghed (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 57,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Epkagut (orc)",
+                "Farghed (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                80,
+                81,
+                83,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 45,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev-04.jsonl",
+              "input_tokens": 80756,
+              "cost_usd": 0.003392,
+              "cost_by_kind": {
+                "fight": 0.003392
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 278.1,
+              "decisions_made": 65
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (78%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Bidgug (orc)",
+                "Torug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 77,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Bidgug (orc)",
+                "Torug (orc)"
+              ],
+              "flees_at_hp": [
+                78,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 43,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev-05.jsonl",
+              "input_tokens": 75949,
+              "cost_usd": 0.00319,
+              "cost_by_kind": {
+                "fight": 0.00319
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 320.7,
+              "decisions_made": 62
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01552,
+          "cost_per_round_usd": 0.0031,
+          "latency_ms_avg": 286.1,
+          "decisions_per_round": 41.0,
+          "errors": 0
+        },
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (79%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Wakgut (orc)",
+                "Cubub (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 66,
+              "seconds": 90.4,
+              "player_died": false,
+              "engaged": [
+                "Wakgut (orc)",
+                "Cubub (orc)"
+              ],
+              "flees_at_hp": [
+                79,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev_everytick-01.jsonl",
+              "input_tokens": 104421,
+              "cost_usd": 0.004386,
+              "cost_by_kind": {
+                "fight": 0.004386
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 241.2,
+              "decisions_made": 61
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (87%)",
+              "why": "3 coming at once: 2 orcs (weak each) and a skeleton (stronger than you); together far stronger than you: too many to fig",
+              "kills": [
+                "Xutjja (orc)",
+                "Zurbag (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 53,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Zurbag (orc)",
+                "Xutjja (orc)",
+                "Zurbag (orc)"
+              ],
+              "flees_at_hp": [
+                87,
+                88,
+                91,
+                93,
+                94,
+                96,
+                98
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev_everytick-02.jsonl",
+              "input_tokens": 112408,
+              "cost_usd": 0.004721,
+              "cost_by_kind": {
+                "fight": 0.004721
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 227.4,
+              "decisions_made": 61
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (89%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Xagu (orc)",
+                "Wrukaog (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 68,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Xagu (orc)",
+                "Wrukaog (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                91,
+                92,
+                93,
+                95,
+                97,
+                98,
+                100,
+                100
+              ],
+              "decisions": 62,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev_everytick-03.jsonl",
+              "input_tokens": 109118,
+              "cost_usd": 0.004583,
+              "cost_by_kind": {
+                "fight": 0.004583
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 239.3,
+              "decisions_made": 62
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (88%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Yolmar (orc)",
+                "Jugag (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 51,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Yolmar (orc)",
+                "Jugag (orc)"
+              ],
+              "flees_at_hp": [
+                88,
+                89,
+                91,
+                92,
+                94,
+                96,
+                98,
+                100
+              ],
+              "decisions": 59,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev_everytick-04.jsonl",
+              "input_tokens": 103364,
+              "cost_usd": 0.004341,
+              "cost_by_kind": {
+                "fight": 0.004341
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 279.3,
+              "decisions_made": 59
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (62%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Vabugbu (orc)",
+                "Zaraugug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 47,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Vabugbu (orc)",
+                "Zaraugug (orc)"
+              ],
+              "flees_at_hp": [
+                62,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 52,
+              "log": "logs/bench/20261009-150630-lane7/pack-bone-knights-jev_everytick-05.jsonl",
+              "input_tokens": 93916,
+              "cost_usd": 0.003944,
+              "cost_by_kind": {
+                "fight": 0.003944
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 289.2,
+              "decisions_made": 52
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02198,
+          "cost_per_round_usd": 0.0044,
+          "latency_ms_avg": 255.3,
+          "decisions_per_round": 59.0,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.152744,
+    "cost_per_hour_usd": 0.161,
+    "calls": 1971,
+    "by_role": {
+      "system1": 0.152744
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 1971,
+        "input_tokens": 3636771,
+        "output_tokens": 233220,
+        "cost_usd": 0.152744,
+        "latency_ms_avg": 260.3
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 1971,
+        "input_tokens": 3636771,
+        "output_tokens": 233220,
+        "cost_usd": 0.152744,
+        "latency_ms_avg": 260.3
+      }
+    },
+    "cost_per_decision_usd": 7.75e-05
+  },
+  "openrouter_key_spent_usd": 0.454166
+}

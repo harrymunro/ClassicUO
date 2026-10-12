@@ -1,0 +1,1561 @@
+{
+ "beads": [
+  "cuo-06u",
+  "cuo-ql6"
+ ],
+ "date": "2026-10-09",
+ "server": "local ModernUO, 127.0.0.1:2593, Felucca",
+ "clients": "pre-d3i: the agent branch at 4f653589f (before cuo-d3i's doors and houses); base: 27942907e, the coordinator's working state with cuo-d3i; after: base plus this change (progress along the path counts). Warriors with [AgentKit. Clients took turns on each route; clients_running is pgrep -x cuo at the start of each pair.",
+ "cove": {
+  "diagnosis": "nav check (the client's own pathfinder walked out from the player, compared with the planner's reach), radius 180 from 2060,1200: 65,502 tiles reached by both, 74 by the planner only and 1 by the client only, scattered (creatures, items), none a way through. The mountains west of Cove are closed to both; the strip at x 2170-2178, y 1207-1242 is a closed canyon. Cove opens to the north (x 2212-2240, y 1149) and east (its gate at 2283,1210). From 2079,1226 the plan to the healer is 779 tiles round the north of the range.",
+  "command": "#1: uv run python scripts/travel_trip.py PORT 2245,1231,2 --go 2105,1235 --timeout 600, with the rule judge's defend-only fight loop beside it (what --defend now does); #2: uv run python scripts/travel_trip.py PORT 2245,1231,2 --go 2079,1226 --timeout 600 --defend. Run 2 of both clients died at 2098,986 (a named creature, a bog thing) before Cove.",
+  "stretch_runs": [
+   {
+    "label": "base: hop end to Cove healer #1",
+    "from": [
+     2105,
+     1235
+    ],
+    "goal": [
+     2245,
+     1231,
+     2
+    ],
+    "state": "stuck",
+    "seconds": 82.8,
+    "still_s": 12.4,
+    "end": [
+     2111,
+     931
+    ],
+    "stuck": 6,
+    "doors": 0,
+    "clients_running": 15,
+    "stuck_at": [
+     [
+      2070,
+      1220
+     ],
+     [
+      2040,
+      1185
+     ],
+     [
+      2016,
+      1148
+     ],
+     [
+      2087,
+      1021
+     ],
+     [
+      2095,
+      992
+     ],
+     [
+      2110,
+      931
+     ]
+    ],
+    "replans": 6,
+    "plans": 6,
+    "plan_ms_max": 61.3,
+    "houses_known": 0,
+    "set_off": "803 tiles",
+    "set_off_ms": 62.2,
+    "events": [
+     "travelling to 2245,1231",
+     "stuck at 2070,1220 on the way to 2245,1231",
+     "stuck at 2040,1185 on the way to 2245,1231",
+     "stuck at 2016,1148 on the way to 2245,1231",
+     "stuck at 2087,1021 on the way to 2245,1231",
+     "stuck at 2095,992 on the way to 2245,1231",
+     "following your target 0x000021BC",
+     "killed 0x00001DCC",
+     "stuck at 2110,931 on the way to 2245,1231"
+    ]
+   },
+   {
+    "label": "after: hop end to Cove healer #1",
+    "from": [
+     2105,
+     1235
+    ],
+    "goal": [
+     2245,
+     1231,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 190.1,
+    "still_s": 18.4,
+    "end": [
+     2247,
+     1229
+    ],
+    "stuck": 0,
+    "doors": 2,
+    "clients_running": 15,
+    "stuck_at": [],
+    "replans": 0,
+    "plans": 1,
+    "plan_ms_max": 46.5,
+    "houses_known": 0,
+    "set_off": "803 tiles",
+    "set_off_ms": 47.5,
+    "events": [
+     "travelling to 2245,1231",
+     "following your target 0x00001AF8",
+     "killed 0x00001AF8",
+     "opening a door at 2283,1210",
+     "opening a door at 2247,1229",
+     "arrived at 2245,1231"
+    ]
+   },
+   {
+    "label": "after: west of Cove to the healer #2",
+    "from": [
+     2079,
+     1226
+    ],
+    "goal": [
+     2245,
+     1231,
+     2
+    ],
+    "state": "stopped",
+    "seconds": 63.5,
+    "still_s": 11.9,
+    "end": [
+     2098,
+     986
+    ],
+    "stuck": 0,
+    "doors": 0,
+    "clients_running": 13,
+    "stuck_at": [],
+    "replans": 0,
+    "plans": 1,
+    "plan_ms_max": 40.2,
+    "houses_known": 6,
+    "set_off": "777 tiles",
+    "set_off_ms": 41.4,
+    "events": [
+     "travelling to 2245,1231",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "this fight is going badly, get out",
+     "following your target 0x000060F5",
+     "attack Slahyisass",
+     "following your target 0x000060F5",
+     "player died"
+    ]
+   },
+   {
+    "label": "base: west of Cove to the healer #2",
+    "from": [
+     2079,
+     1226
+    ],
+    "goal": [
+     2245,
+     1231,
+     2
+    ],
+    "state": "stopped",
+    "seconds": 55.9,
+    "still_s": 4.6,
+    "end": [
+     2099,
+     986
+    ],
+    "stuck": 3,
+    "doors": 0,
+    "clients_running": 13,
+    "stuck_at": [
+     [
+      2050,
+      1195
+     ],
+     [
+      2017,
+      1161
+     ],
+     [
+      2092,
+      1022
+     ]
+    ],
+    "replans": 3,
+    "plans": 4,
+    "plan_ms_max": 55.1,
+    "houses_known": 6,
+    "set_off": "777 tiles",
+    "set_off_ms": 42.9,
+    "events": [
+     "travelling to 2245,1231",
+     "stuck at 2050,1195 on the way to 2245,1231",
+     "stuck at 2017,1161 on the way to 2245,1231",
+     "stuck at 2092,1022 on the way to 2245,1231",
+     "attack A Bog Thing",
+     "player died"
+    ]
+   }
+  ],
+  "whole_trip_attempts": {
+   "command": "uv run python scripts/travel_trip.py PORT 2245,1231,2 --go 1425,1690 --timeout 600-900",
+   "note": "No attempt from the bank got past the wilds east of Britain: a new character without a kit died at 1806,1523 (base); kitted, without a fight loop, the after client died at 1968,1309 (paralysed, reapers near) and the base one was held by a reaper's fight at 1996,1324 until stopped at 299 s (stuck once before, at 1880,1434); with the defend loop the after client died at 1789,1504 to two ettins and an ogre. One first attempt of the after client is left out: its character was a ghost from an earlier test.",
+   "runs": [
+    {
+     "label": "base: bank to Cove healer",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      2245,
+      1231,
+      2
+     ],
+     "state": "stopped",
+     "seconds": 118.4,
+     "still_s": 35.8,
+     "end": [
+      1806,
+      1523
+     ],
+     "stuck": 0,
+     "doors": 1,
+     "clients_running": null,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 4,
+     "plan_ms_max": 10.8,
+     "houses_known": 0,
+     "set_off": "323 tiles, the first hop of 820",
+     "set_off_ms": 11.9,
+     "events": [
+      "travelling to 2245,1231",
+      "opening a door at 1439,1692",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "following your target 0x000026C2",
+      "player died"
+     ]
+    },
+    {
+     "label": "after: bank to Cove healer",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      2245,
+      1231,
+      2
+     ],
+     "state": "stopped",
+     "seconds": 219.2,
+     "still_s": 80.5,
+     "end": [
+      1968,
+      1309
+     ],
+     "stuck": 0,
+     "doors": 1,
+     "clients_running": null,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 5,
+     "plan_ms_max": 72.8,
+     "houses_known": 0,
+     "set_off": "323 tiles, the first hop of 820",
+     "set_off_ms": 10.7,
+     "events": [
+      "travelling to 2245,1231",
+      "opening a door at 1439,1692",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "following your target 0x000026C2",
+      "an unknown player is 8 tiles away",
+      "next hop, 352 tiles to go",
+      "following your target 0x00004C4F",
+      "killed 0x00004C4F",
+      "following your target 0x0000263F",
+      "player died"
+     ]
+    },
+    {
+     "label": "base: bank to Cove healer",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      2245,
+      1231,
+      2
+     ],
+     "state": "stopped",
+     "seconds": 298.6,
+     "still_s": 159.3,
+     "end": [
+      1996,
+      1324
+     ],
+     "stuck": 1,
+     "doors": 0,
+     "clients_running": null,
+     "stuck_at": [
+      [
+       1880,
+       1434
+      ]
+     ],
+     "replans": 1,
+     "plans": 6,
+     "plan_ms_max": 61.5,
+     "houses_known": 0,
+     "set_off": "323 tiles, the first hop of 820",
+     "set_off_ms": 9.1,
+     "events": [
+      "travelling to 2245,1231",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "an unknown player is 7 tiles away",
+      "gave up on 0x000026C2: out of reach",
+      "following your target 0x000026C3",
+      "killed 0x000026C3",
+      "next hop, 352 tiles to go",
+      "killed 0x00004C3F",
+      "stuck at 1880,1434 on the way to 2245,1231",
+      "following your target 0x00002643",
+      "following your target 0x00002643"
+     ]
+    },
+    {
+     "label": "after: bank to Cove healer #1",
+     "from": [
+      1425,
+      1690
+     ],
+     "goal": [
+      2245,
+      1231,
+      2
+     ],
+     "state": "stopped",
+     "seconds": 93.7,
+     "still_s": 13.6,
+     "end": [
+      1789,
+      1504
+     ],
+     "stuck": 0,
+     "doors": 1,
+     "clients_running": 16,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 4,
+     "plan_ms_max": 10.7,
+     "houses_known": 0,
+     "set_off": "323 tiles, the first hop of 820",
+     "set_off_ms": 11.8,
+     "events": [
+      "travelling to 2245,1231",
+      "opening a door at 1439,1692",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "following your target 0x000026C4",
+      "this fight is going badly, get out",
+      "player died"
+     ]
+    }
+   ]
+  }
+ },
+ "house_rows": {
+  "setup": "Small houses (stone-and-plaster, field stone, small brick, wood, wood-and-plaster, thatched cottage; each 8 tiles square) placed with deeds by a staff character in a row across y 1327-1334, centres at y 1330, in the forest north of Britain; removed afterwards. Route across the row: 1445,1280 to within 1 of 1445,1385 (the row comes into view on the way). Route just behind it: 1445,1312 to within 1 of 1445,1345 (the row in view from the start). Round 1 is each d3i client's first sight of the row; round 2 knows it.",
+  "command": "uv run python scripts/travel_trip.py PORT 1445,1385,1 --go 1445,1280 --park X,Y --timeout 180; uv run python scripts/travel_trip.py PORT 1445,1345,1 --go 1445,1312 --park X,Y --timeout 180 (each client in turn, with the defend-only fight loop beside it)",
+  "solid_row": {
+   "layout": "7 houses, centres x 1424-1466, 7 apart: neighbours share a column, a solid row x 1421-1470",
+   "runs": [
+    {
+     "label": "pre-d3i: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "stuck",
+     "seconds": 66.6,
+     "still_s": 49.5,
+     "end": [
+      1468,
+      1334
+     ],
+     "stuck": 6,
+     "doors": 0,
+     "clients_running": 9,
+     "stuck_at": [
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ]
+     ],
+     "replans": 6,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "104 tiles",
+     "set_off_ms": 1.8,
+     "events": [
+      "travelling to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385"
+     ]
+    },
+    {
+     "label": "pre-d3i: just behind the row #1",
+     "from": [
+      1442,
+      1315
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "timed out",
+     "seconds": 180.1,
+     "still_s": 169.7,
+     "end": [
+      1468,
+      1334
+     ],
+     "stuck": 3,
+     "doors": 16,
+     "clients_running": 9,
+     "stuck_at": [
+      [
+       1463,
+       1326
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ]
+     ],
+     "replans": 3,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "29 tiles",
+     "set_off_ms": 1.3,
+     "events": [
+      "travelling to 1445,1345",
+      "stuck at 1463,1326 on the way to 1445,1345",
+      "stuck at 1468,1334 on the way to 1445,1345",
+      "stuck at 1468,1334 on the way to 1445,1345",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "following your target 0x00001AED",
+      "killed 0x00001AED",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333"
+     ]
+    },
+    {
+     "label": "base: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 166.0,
+     "still_s": 133.6,
+     "end": [
+      1446,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 3,
+     "plan_ms_max": 4.6,
+     "houses_known": 7,
+     "set_off": "104 tiles",
+     "set_off_ms": 5.8,
+     "events": [
+      "travelling to 1445,1385",
+      "following your target 0x00001A5F",
+      "killed 0x00001A5F",
+      "killed 0x00001A62",
+      "something in the way ahead; planning round it",
+      "something in the way ahead; planning round it",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "following your target 0x00001AEF",
+      "attack Lyissisis",
+      "killed 0x000060DB",
+      "following your target 0x00001AEF",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "base: just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 15.2,
+     "still_s": 1.5,
+     "end": [
+      1444,
+      1345
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 2.1,
+     "houses_known": 7,
+     "set_off": "58 tiles",
+     "set_off_ms": 3.2,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "after: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 140.9,
+     "still_s": 115.8,
+     "end": [
+      1446,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 2,
+     "plan_ms_max": 8,
+     "houses_known": 7,
+     "set_off": "104 tiles",
+     "set_off_ms": 9.1,
+     "events": [
+      "travelling to 1445,1385",
+      "something in the way ahead; planning round it",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "attack Bilge",
+      "following your target 0x00001AEF",
+      "killed 0x00004BDF",
+      "killed 0x00001AEF",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "after: just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 14.9,
+     "still_s": 1.3,
+     "end": [
+      1444,
+      1345
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 3.1,
+     "houses_known": 7,
+     "set_off": "58 tiles",
+     "set_off_ms": 4.3,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "pre-d3i: across the row #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "stuck",
+     "seconds": 66.5,
+     "still_s": 49.1,
+     "end": [
+      1468,
+      1334
+     ],
+     "stuck": 6,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ]
+     ],
+     "replans": 6,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "104 tiles",
+     "set_off_ms": 2.0,
+     "events": [
+      "travelling to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385",
+      "stuck at 1468,1334 on the way to 1445,1385"
+     ]
+    },
+    {
+     "label": "pre-d3i: just behind the row #2",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "timed out",
+     "seconds": 180.1,
+     "still_s": 154.1,
+     "end": [
+      1468,
+      1334
+     ],
+     "stuck": 3,
+     "doors": 17,
+     "clients_running": 13,
+     "stuck_at": [
+      [
+       1451,
+       1326
+      ],
+      [
+       1468,
+       1334
+      ],
+      [
+       1468,
+       1334
+      ]
+     ],
+     "replans": 3,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "32 tiles",
+     "set_off_ms": 1.2,
+     "events": [
+      "travelling to 1445,1345",
+      "stuck at 1451,1326 on the way to 1445,1345",
+      "stuck at 1468,1334 on the way to 1445,1345",
+      "stuck at 1468,1334 on the way to 1445,1345",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333",
+      "opening a door at 1466,1333"
+     ]
+    },
+    {
+     "label": "base: across the row #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 25.3,
+     "still_s": 1.8,
+     "end": [
+      1444,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 10,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 4.3,
+     "houses_known": 7,
+     "set_off": "106 tiles",
+     "set_off_ms": 5.5,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "base: just behind the row #2",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 15.2,
+     "still_s": 1.5,
+     "end": [
+      1444,
+      1345
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 10,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 3.6,
+     "houses_known": 7,
+     "set_off": "58 tiles",
+     "set_off_ms": 4.7,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "after: across the row #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 25.3,
+     "still_s": 2.3,
+     "end": [
+      1444,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 10,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 6.1,
+     "houses_known": 7,
+     "set_off": "106 tiles",
+     "set_off_ms": 7.3,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "after: just behind the row #2",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 14.9,
+     "still_s": 1.3,
+     "end": [
+      1444,
+      1345
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 10,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 4.8,
+     "houses_known": 7,
+     "set_off": "58 tiles",
+     "set_off_ms": 6.0,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    }
+   ]
+  },
+  "no_houses": {
+   "layout": "the row removed; base still remembered it",
+   "runs": [
+    {
+     "label": "no houses, pre-d3i: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 24.0,
+     "still_s": 2.3,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 14,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "104 tiles",
+     "set_off_ms": 1.6,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "no houses, pre-d3i: just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 7.6,
+     "still_s": 0.5,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 14,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "32 tiles",
+     "set_off_ms": 1.4,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "no houses, base (remembers the row): across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 25.3,
+     "still_s": 2.0,
+     "end": [
+      1444,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 14,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 6.4,
+     "houses_known": 5,
+     "set_off": "106 tiles",
+     "set_off_ms": 7.6,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "no houses, base (remembers the row): just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 8.6,
+     "still_s": 0.8,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 14,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 2.4,
+     "houses_known": 3,
+     "set_off": "35 tiles",
+     "set_off_ms": 3.6,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    }
+   ]
+  },
+  "alleys": {
+   "layout": "7 houses, centres x 1418-1472, 9 apart: a one-tile alley between each pair (x 1423, 1432, 1441, 1450, 1459, 1468), x 1415-1476",
+   "runs": [
+    {
+     "label": "alleys, pre-d3i: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 71.8,
+     "still_s": 48.8,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 12,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "104 tiles",
+     "set_off_ms": 1.6,
+     "events": [
+      "travelling to 1445,1385",
+      "following your target 0x000061D8",
+      "killed 0x000061D8",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "alleys, pre-d3i: just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 58.7,
+     "still_s": 50.6,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 12,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "32 tiles",
+     "set_off_ms": 1.5,
+     "events": [
+      "travelling to 1445,1345",
+      "killed 0x000061B0",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "alleys, base: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 23.5,
+     "still_s": 1.8,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 12,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 2,
+     "plan_ms_max": 3.9,
+     "houses_known": 6,
+     "set_off": "104 tiles",
+     "set_off_ms": 5.1,
+     "events": [
+      "travelling to 1445,1385",
+      "something in the way ahead; planning round it",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "alleys, base: just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 7.6,
+     "still_s": 0.5,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 12,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 1,
+     "houses_known": 6,
+     "set_off": "33 tiles",
+     "set_off_ms": 2.0,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "alleys, after: across the row #1",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 23.5,
+     "still_s": 1.5,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 14,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 2,
+     "plan_ms_max": 12.6,
+     "houses_known": 6,
+     "set_off": "104 tiles",
+     "set_off_ms": 13.8,
+     "events": [
+      "travelling to 1445,1385",
+      "something in the way ahead; planning round it",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "alleys, after: just behind the row #1",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 7.6,
+     "still_s": 0.5,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 14,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 1,
+     "houses_known": 6,
+     "set_off": "33 tiles",
+     "set_off_ms": 2.1,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "alleys, pre-d3i: across the row #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 24.5,
+     "still_s": 1.5,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "104 tiles",
+     "set_off_ms": 1.4,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "alleys, pre-d3i: just behind the row #2",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 8.3,
+     "still_s": 1.0,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": null,
+     "plan_ms_max": null,
+     "houses_known": null,
+     "set_off": "32 tiles",
+     "set_off_ms": 1.1,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "alleys, base: across the row #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 24.0,
+     "still_s": 1.8,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 4.2,
+     "houses_known": 6,
+     "set_off": "104 tiles",
+     "set_off_ms": 5.3,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "alleys, base: just behind the row #2",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 7.6,
+     "still_s": 0.5,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 1.1,
+     "houses_known": 6,
+     "set_off": "33 tiles",
+     "set_off_ms": 2.5,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    },
+    {
+     "label": "alleys, after: across the row #2",
+     "from": [
+      1445,
+      1280
+     ],
+     "goal": [
+      1445,
+      1385,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 24.0,
+     "still_s": 1.8,
+     "end": [
+      1445,
+      1384
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 5.9,
+     "houses_known": 6,
+     "set_off": "104 tiles",
+     "set_off_ms": 6.2,
+     "events": [
+      "travelling to 1445,1385",
+      "arrived at 1445,1385"
+     ]
+    },
+    {
+     "label": "alleys, after: just behind the row #2",
+     "from": [
+      1445,
+      1312
+     ],
+     "goal": [
+      1445,
+      1345,
+      1
+     ],
+     "state": "arrived",
+     "seconds": 7.6,
+     "still_s": 0.5,
+     "end": [
+      1446,
+      1344
+     ],
+     "stuck": 0,
+     "doors": 0,
+     "clients_running": 13,
+     "stuck_at": [],
+     "replans": 0,
+     "plans": 1,
+     "plan_ms_max": 1.4,
+     "houses_known": 6,
+     "set_off": "33 tiles",
+     "set_off_ms": 2.6,
+     "events": [
+      "travelling to 1445,1345",
+      "arrived at 1445,1345"
+     ]
+    }
+   ]
+  }
+ }
+}

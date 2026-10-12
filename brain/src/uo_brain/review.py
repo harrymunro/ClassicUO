@@ -4,8 +4,8 @@ strategy lines, each with the evidence for it.
 A decision log holds every state, question and probability, far more than the model needs.
 Code builds a digest instead: totals, each death with the decisions just before it, flees,
 looting while monsters were close, low-health moments, supplies used, judge errors, how
-sure Jev was of each intent, and the strategy in use. The planner model (Sonnet 5.5
-through OpenRouter, llm.py) reads it and calls propose() with up to five lines, each with
+sure Jev was of each intent, and the strategy in use. The planner model (Haiku 5.5
+by default, through OpenRouter, llm.py) reads it and calls propose() with up to five lines, each with
 its evidence and how sure it is.
 
 Nothing changes until the player accepts. The proposals are saved to <log>.review.json and
@@ -273,9 +273,21 @@ def session_part(records: list[dict[str, Any]]) -> dict[str, Any]:
 def lines_from(result: llm.ChatResult) -> list[dict[str, Any]] | None:
     """The proposed lines, from the tool call or from JSON in the reply; None when there are neither."""
     found: list[Any] | None = None
+    unread = 0
     for call in result.tool_calls:
         if call.name == "propose":
-            found = (found or []) + list(call.arguments.get("lines") or [])
+            lines = call.arguments.get("lines")
+            if isinstance(lines, str):
+                # One line a call, sent as a string with a parameter tag leaked into it and its evidence
+                # and confidence beside it (Opus through OpenRouter, 2 reviews of 13; cuo-0am): read
+                # as a list it became single characters, and the review was saved as "No lines proposed".
+                text = re.sub(r"<\s*/?\s*parameter[^>]*>", " ", lines)
+                lines = [{"line": text, "evidence": call.arguments.get("evidence", ""),
+                          "confidence": call.arguments.get("confidence")}] if text.strip() else []
+            elif not isinstance(lines, list):
+                unread += lines is not None
+                lines = []
+            found = (found or []) + lines
     if found is None and result.content and "{" in result.content:
         try:
             data = json.loads(result.content[result.content.index("{"): result.content.rindex("}") + 1])
@@ -294,6 +306,8 @@ def lines_from(result: llm.ChatResult) -> list[dict[str, Any]] | None:
             conf = None  # not given: shown as such rather than guessed
         out.append({"line": " ".join(str(item["line"]).split()), "evidence": " ".join(str(item.get("evidence", "")).split()),
                     "confidence": conf})
+    if not out and (unread or any(not isinstance(i, dict) for i in found)):
+        return None  # tool calls came and none could be read: ask again rather than save an empty review
     return out[:MAX_LINES]
 
 
@@ -370,8 +384,10 @@ def choose(rv: dict[str, Any], numbers: list[int], strategy: str) -> tuple[list[
     return add, skipped
 
 
-async def accept(rpc: Any, log: Path, numbers: list[int]) -> tuple[list[str], str]:
-    """Add the chosen saved proposals to the character's strategy. Returns what was done, and the strategy now."""
+async def accept(rpc: Any, log: Path, numbers: list[int], memory: Any = None) -> tuple[list[str], str]:
+    """Add the chosen saved proposals to the character's strategy. Returns what was done, and the strategy now.
+    With the character's memory (memory.Memory), each line added is also kept there as a lesson, with its
+    evidence, so the planner can recall why the strategy says it."""
     path = review_path(log)
     rv = load(path)
     strategy = (await rpc.call("strategy")).get("strategy") or ""
@@ -380,6 +396,9 @@ async def accept(rpc: Any, log: Path, numbers: list[int]) -> tuple[list[str], st
         strategy = (await rpc.call("strategy", add=p["line"])).get("strategy") or strategy
         p["accepted"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
         said.append(f"{p['n']}. added: {p['line']}")
+        if memory is not None and memory.character:
+            memory.add(f"{p['line']} (the after-action review of {Path(log).name}: {str(p.get('evidence', ''))[:240]})",
+                       kind="lesson", tags=("review", "strategy"), source="review", importance=3)
     save(rv, path)
     return said, strategy
 

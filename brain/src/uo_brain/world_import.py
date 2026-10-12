@@ -18,7 +18,7 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
-from .world import TABLES, Region, RegionIndex, World, compass, grade_creature, now, tiles
+from .world import PEACEFUL_MODES, TABLES, Region, RegionIndex, World, compass, grade_creature, now, tiles
 
 DEFAULT_MODERNUO = Path.home() / "Workspace" / "ModernUO"
 SA_EXPANSION_ID = 8  # ModernUO's Expansion.SA; from here on it loads Spawns/post-uoml
@@ -502,10 +502,16 @@ _FAME = re.compile(r"\bFame\s*=\s*(-?\d+)\s*;")
 _KARMA = re.compile(r"\bKarma\s*=\s*(-?\d+)\s*;")
 _BODY = re.compile(r"\bBody\s*=\s*(?:Utility\.RandomList\(\s*)?(0x[0-9A-Fa-f]+|\d+)")
 _NAME = re.compile(r"\bDefaultName\s*=>\s*\"([^\"]+)\"|\bName\s*=\s*\"([^\"]+)\"\s*;")
+_ROOTED = re.compile(r"\bDisallowAllMoves\s*=>\s*true\b")  # a reaper, a corpser: never moves from its spot
+# How it picks a fight: the constructor's base(..., AIType.X, FightMode.Y), Closest when left out, or a
+# FightMode set in the body (a healer). Aggressor (birds, deer) and None only fight back; Evil only goes
+# for characters with negative karma; the rest attack on sight.
+_AI = re.compile(r":\s*base\([^;{]*?\bAIType\.\w+\s*(?:,\s*FightMode\.(\w+))?")  # a mount's name and body first
+_FIGHT_MODE = re.compile(r"\bFightMode\s*=\s*FightMode\.(\w+)\s*;")
 
 
 def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
-    """Hits, damage, fame, karma and body per creature class, by regex over the C#.
+    """Hits, damage, fame, karma, body, whether it can move and how it picks fights per creature class, by regex over the C#.
     Best effort: what doesn't parse is left out, and a class without its own numbers
     takes its base class's. With no SetHits, hits are the strength range, which is how
     BaseCreature works it out."""
@@ -528,6 +534,10 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
                 c["body"] = int(hit.group(1), 0)
             if hit := _NAME.search(body):
                 c["name"] = hit.group(1) or hit.group(2)
+            if _ROOTED.search(body):
+                c["rooted"] = True
+            if hit := _FIGHT_MODE.search(body) or _AI.search(body):
+                c["fight_mode"] = hit.group(1) or "Closest"
             found.setdefault(c["type"], c)
 
     def resolved(t: str, depth: int = 0) -> dict[str, Any]:
@@ -535,7 +545,7 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
         base = c.get("base")
         if depth < 8 and base in found and base != t:
             b = resolved(base, depth + 1)
-            for k in ("hits", "str", "damage", "fame", "karma", "body", "name"):
+            for k in ("hits", "str", "damage", "fame", "karma", "body", "name", "rooted", "fight_mode"):
                 c.setdefault(k, b.get(k))
         return c
 
@@ -552,5 +562,6 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
                      "hits_min": hits[0], "hits_max": hits[1], "damage_min": dmg[0], "damage_max": dmg[1],
                      "fame": c.get("fame"), "karma": c.get("karma"),
                      "difficulty": grade_creature(hits[0], hits[1], dmg[0], dmg[1], c.get("fame")),
+                     "rooted": int(bool(c.get("rooted"))), "fight_mode": c.get("fight_mode"),
                      "note": note, "source": c["source"]})
     return rows

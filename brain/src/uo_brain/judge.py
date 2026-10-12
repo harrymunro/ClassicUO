@@ -13,6 +13,19 @@ from . import costs, spells
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api"
 OPENROUTER_MODEL = "~typesafe/jev-latest"
+# Models that take Jev's request as it is (typed questions in, a probability for every option out),
+# by the start of their id. Microsoft's Decision 1 answers the same call on OpenRouter (cuo-79x).
+DECISION_MODELS = ("typesafe/jev", "jev", "microsoft/microsoft-decision")
+
+
+def speaks_decisions(model: str) -> bool:
+    return model.removeprefix("~").lower().startswith(DECISION_MODELS)
+
+
+def family(model: str | None) -> str:
+    """"jev" for Jev (or no model named), else the model's own short name ("microsoft-decision-1")."""
+    m = (model or "").removeprefix("~").lower()
+    return "jev" if not m or m.startswith(DECISION_MODELS[:2]) else m.split("/")[-1]
 
 
 @dataclass
@@ -68,6 +81,8 @@ def load_dotenv(path: Path) -> None:
 
 
 class JevJudge:
+    """Jev, or another model that answers the same decisions call (speaks_decisions)."""
+
     def __init__(self, provider: str = "auto", model: str | None = None, timeout: float = 5.0):
         from typesafe_sdk import AsyncTypeSafeClient
 
@@ -87,12 +102,14 @@ class JevJudge:
                 raise SystemExit("TYPESAFE_API_KEY is not set")
             self.client = AsyncTypeSafeClient(api_key=ts_key, model=model or os.environ.get("JEV_MODEL"),
                                               timeout=timeout)
-        self.name = f"jev/{provider}"
+        self.model = model or os.environ.get("JEV_MODEL") or (OPENROUTER_MODEL if provider == "openrouter" else "")
+        self.name = f"{family(self.model)}/{provider}"
 
     async def ask(self, state, questions) -> Answers:
         t = time.perf_counter()
         r = await self.client.system_one(state=state, questions=questions)
         latency = (time.perf_counter() - t) * 1000
+        costs.check_served(getattr(self, "model", ""), r.model)
         call = costs.ledger.record(costs.make_call(
             costs.current_kind("other"), r.model, r.usage.input_tokens or 0, r.usage.output_tokens or 0,
             latency_ms=latency, reported=reported_cost(r)))
@@ -138,12 +155,13 @@ class HeuristicJudge:
         mage = "mana" in you
         supplies = you.get("bandages_left", 0) + you["heal_potions_left"]
         danger = hp < 30 and (len(close) >= 2 or supplies == 0)
-        in_range = [h for h in hostiles if h.get("in_spell_range")]
+        # In reach from where it stands: spells, or an archer's arrows.
+        in_range = [h for h in hostiles if h.get("in_spell_range") or h.get("in_shooting_range")]
         mana = int(you["mana"].split("(")[-1].rstrip("%)")) if mage else 100
 
         if danger and close:
             intent = "flee"  # the rule baseline never leaves an area: it has no idea of a creature's strength
-        elif close or (mage and in_range and mana >= 15):
+        elif close or (in_range and mana >= 15):
             intent = "fight"
         elif state["corpses_not_yet_looted"]:
             intent = "loot"
@@ -214,11 +232,11 @@ def one_hot(choice: str, options: dict[str, Any]) -> ChoiceResult:
 
 
 def make(kind: str, provider: str = "auto", model: str | None = None) -> Judge:
-    """The rule judge, Jev, or (for a model that isn't Jev) any chat model asked Jev's questions."""
+    """The rule judge, Jev (or a model of its kind), or any chat model asked Jev's questions."""
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
     if kind == "heuristic":
         return HeuristicJudge()
     from . import models
-    if model and not models.is_jev(model):
-        return models.ChatJudge(models.active.resolve(model))
-    return JevJudge(provider, model)
+    if model and (model := models.active.resolve(model)) != models.JEV and not speaks_decisions(model):
+        return models.ChatJudge(model)
+    return JevJudge(provider, None if model == models.JEV else model)

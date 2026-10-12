@@ -1,0 +1,9 @@
+# Realistic: people walk, talk at a human pace, chat when they have time, and gesture.
+# A set of rules for `uo-brain session --rules realistic` or `rules = "realistic"` in a fleet file;
+# any one of them set on its own (a flag, a fleet setting, --set) wins over the set.
+description = "people walk their trips (a run only with danger in view, to catch up, as a ghost or for a corpse), a party walks together, talk goes at a human pace with small talk, and characters emote and gesture"
+travel = "walk"      # every trip at a walk, the character's own errands too
+walk = true          # a party walks its trips together, the others beside the leader
+pace = true          # lines said at a human pace, one speaker at a time
+small_talk = true    # chit chat when there is time
+roleplay = true      # emotes and gestures in character

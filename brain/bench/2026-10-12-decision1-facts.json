@@ -1,0 +1,1481 @@
+{
+  "started": "2026-10-12T08:13:20",
+  "rounds": 10,
+  "lane": 2,
+  "headless": true,
+  "clients_at_start": 2,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5",
+      "table": "anthropic/claude-haiku-5.5",
+      "huddle": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {
+    "decision1": "microsoft/microsoft-decision-1"
+  },
+  "scenarios": {
+    "wisp-leave-alone": {
+      "bead": "cuo-5of.7",
+      "right": "A wisp floats nearby while two orcs attack. The store says wisps never attack first and kill this kit when attacked: kill the orcs, never attack the wisp.",
+      "judges": {
+        "jev@jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Buimghig (orc)",
+                "Xoruk (orc)"
+              ],
+              "engaged": [
+                "Buimghig (orc)",
+                "Xoruk (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 29,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-01.jsonl",
+              "input_tokens": 78835,
+              "cost_usd": 0.003311,
+              "cost_by_kind": {
+                "fight": 0.002829,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 229.6,
+              "decisions_made": 65,
+              "input_tokens_per_call": 2718,
+              "cost_per_call_usd": 0.0001142,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11474,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Hugolm (orc)",
+                "Zlughig (orc)"
+              ],
+              "engaged": [
+                "Hugolm (orc)",
+                "Zlughig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 87,
+              "decisions": 46,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-02.jsonl",
+              "input_tokens": 125999,
+              "cost_usd": 0.005292,
+              "cost_by_kind": {
+                "fight": 0.00481,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 249.4,
+              "decisions_made": 66,
+              "input_tokens_per_call": 2739,
+              "cost_per_call_usd": 0.000115,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11475,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Zlog (orc)",
+                "Ambilge (orc)"
+              ],
+              "engaged": [
+                "Zlog (orc)",
+                "Ambilge (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 40,
+              "decisions": 50,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-03.jsonl",
+              "input_tokens": 128812,
+              "cost_usd": 0.00541,
+              "cost_by_kind": {
+                "fight": 0.004928,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 229.1,
+              "decisions_made": 59,
+              "input_tokens_per_call": 2576,
+              "cost_per_call_usd": 0.0001082,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11469,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Quomaugh (orc)",
+                "Gunug (orc)"
+              ],
+              "engaged": [
+                "Quomaugh (orc)",
+                "Gunug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 63,
+              "decisions": 29,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-04.jsonl",
+              "input_tokens": 78785,
+              "cost_usd": 0.003309,
+              "cost_by_kind": {
+                "fight": 0.002827,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 270.4,
+              "decisions_made": 40,
+              "input_tokens_per_call": 2717,
+              "cost_per_call_usd": 0.0001141,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11470,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.4,
+              "player_died": false,
+              "kills": [
+                "Garekk (orc)",
+                "Xothkug (orc)"
+              ],
+              "engaged": [
+                "Garekk (orc)",
+                "Xothkug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 39,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-05.jsonl",
+              "input_tokens": 109427,
+              "cost_usd": 0.004596,
+              "cost_by_kind": {
+                "fight": 0.004114,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 233.0,
+              "decisions_made": 45,
+              "input_tokens_per_call": 2806,
+              "cost_per_call_usd": 0.0001178,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11474,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Golub (orc)",
+                "Boghat (orc)"
+              ],
+              "engaged": [
+                "Golub (orc)",
+                "Boghat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 61,
+              "decisions": 27,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-06.jsonl",
+              "input_tokens": 74470,
+              "cost_usd": 0.003128,
+              "cost_by_kind": {
+                "fight": 0.002646,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 267.6,
+              "decisions_made": 62,
+              "input_tokens_per_call": 2758,
+              "cost_per_call_usd": 0.0001159,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11466,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Lamgugh (orc)",
+                "Surbag (orc)"
+              ],
+              "engaged": [
+                "Lamgugh (orc)",
+                "Surbag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 61,
+              "decisions": 30,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-07.jsonl",
+              "input_tokens": 87209,
+              "cost_usd": 0.003663,
+              "cost_by_kind": {
+                "fight": 0.003181,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 262.3,
+              "decisions_made": 33,
+              "input_tokens_per_call": 2907,
+              "cost_per_call_usd": 0.0001221,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11472,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Gurukk (orc)",
+                "Duiltag (orc)"
+              ],
+              "engaged": [
+                "Gurukk (orc)",
+                "Duiltag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 31,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-08.jsonl",
+              "input_tokens": 83348,
+              "cost_usd": 0.003501,
+              "cost_by_kind": {
+                "fight": 0.003019,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 247.1,
+              "decisions_made": 63,
+              "input_tokens_per_call": 2689,
+              "cost_per_call_usd": 0.0001129,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11472,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Xoroku (orc)",
+                "Apaugh (orc)"
+              ],
+              "engaged": [
+                "Xoroku (orc)",
+                "Apaugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 74,
+              "decisions": 28,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-09.jsonl",
+              "input_tokens": 76964,
+              "cost_usd": 0.003232,
+              "cost_by_kind": {
+                "fight": 0.002751,
+                "facts": 0.000482
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 253.4,
+              "decisions_made": 37,
+              "input_tokens_per_call": 2749,
+              "cost_per_call_usd": 0.0001154,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11470,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Tulgan (orc)",
+                "Xorakk (orc)"
+              ],
+              "engaged": [
+                "Tulgan (orc)",
+                "Xorakk (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 72,
+              "decisions": 27,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-jev_jev-10.jsonl",
+              "input_tokens": 73179,
+              "cost_usd": 0.003074,
+              "cost_by_kind": {
+                "fight": 0.002592,
+                "facts": 0.000481
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 255.0,
+              "decisions_made": 33,
+              "input_tokens_per_call": 2710,
+              "cost_per_call_usd": 0.0001139,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 11464,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here."
+              ],
+              "clients": 2
+            }
+          ],
+          "n": 10,
+          "successes": 10,
+          "rate": 1.0,
+          "ci95": [
+            0.722,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.03852,
+          "cost_per_round_usd": 0.00385,
+          "latency_ms_avg": 249.7,
+          "decisions_per_round": 33.6,
+          "moves": {
+            "runs": 0,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "to_spot_kept": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": null,
+            "broke_contact": 0,
+            "leaves": 0,
+            "leave_s": 0,
+            "caught_again": 0
+          },
+          "input_tokens_per_call": 2737,
+          "cost_per_call_usd": 0.0001149,
+          "errors": 0
+        },
+        "decision1@jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Eagungad (orc)",
+                "Mergigoth (orc)"
+              ],
+              "engaged": [
+                "Eagungad (orc)",
+                "Mergigoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 36,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-01.jsonl",
+              "input_tokens": 69540,
+              "cost_usd": 0.002921,
+              "cost_by_kind": {
+                "fight": 0.002501,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 338.9,
+              "decisions_made": 58,
+              "input_tokens_per_call": 1932,
+              "cost_per_call_usd": 8.11e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10004,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Otugbu (orc)",
+                "Opeghat (orc)"
+              ],
+              "engaged": [
+                "Otugbu (orc)",
+                "Opeghat (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 66,
+              "decisions": 28,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-02.jsonl",
+              "input_tokens": 56205,
+              "cost_usd": 0.002361,
+              "cost_by_kind": {
+                "fight": 0.00194,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 336.4,
+              "decisions_made": 53,
+              "input_tokens_per_call": 2007,
+              "cost_per_call_usd": 8.43e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10009,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Oodagh (orc)",
+                "Ambilge (orc)"
+              ],
+              "engaged": [
+                "Oodagh (orc)",
+                "Ambilge (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 43,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-03.jsonl",
+              "input_tokens": 81789,
+              "cost_usd": 0.003435,
+              "cost_by_kind": {
+                "fight": 0.003015,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 317.0,
+              "decisions_made": 61,
+              "input_tokens_per_call": 1902,
+              "cost_per_call_usd": 7.99e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10007,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Dakgorim (orc)",
+                "Umragig (orc)"
+              ],
+              "engaged": [
+                "Dakgorim (orc)",
+                "Umragig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 62,
+              "decisions": 34,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-04.jsonl",
+              "input_tokens": 66109,
+              "cost_usd": 0.002777,
+              "cost_by_kind": {
+                "fight": 0.002356,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 324.3,
+              "decisions_made": 46,
+              "input_tokens_per_call": 1944,
+              "cost_per_call_usd": 8.17e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10011,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Yahigig (orc)",
+                "Igmut (orc)"
+              ],
+              "engaged": [
+                "Yahigig (orc)",
+                "Igmut (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 68,
+              "decisions": 28,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-05.jsonl",
+              "input_tokens": 55623,
+              "cost_usd": 0.002336,
+              "cost_by_kind": {
+                "fight": 0.001916,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 322.7,
+              "decisions_made": 61,
+              "input_tokens_per_call": 1987,
+              "cost_per_call_usd": 8.34e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10009,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Orgha (orc)",
+                "Urag (orc)"
+              ],
+              "engaged": [
+                "Orgha (orc)",
+                "Urag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 61,
+              "decisions": 27,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-06.jsonl",
+              "input_tokens": 56133,
+              "cost_usd": 0.002358,
+              "cost_by_kind": {
+                "fight": 0.001937,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 328.2,
+              "decisions_made": 34,
+              "input_tokens_per_call": 2079,
+              "cost_per_call_usd": 8.73e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10005,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Vegum (orc)",
+                "Pigdug (orc)"
+              ],
+              "engaged": [
+                "Vegum (orc)",
+                "Pigdug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 43,
+              "decisions": 46,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-07.jsonl",
+              "input_tokens": 88175,
+              "cost_usd": 0.003703,
+              "cost_by_kind": {
+                "fight": 0.003283,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 337.2,
+              "decisions_made": 56,
+              "input_tokens_per_call": 1917,
+              "cost_per_call_usd": 8.05e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10009,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Nargulg (orc)",
+                "Yagnar (orc)"
+              ],
+              "engaged": [
+                "Nargulg (orc)",
+                "Yagnar (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 32,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-08.jsonl",
+              "input_tokens": 63688,
+              "cost_usd": 0.002675,
+              "cost_by_kind": {
+                "fight": 0.002255,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 365.0,
+              "decisions_made": 39,
+              "input_tokens_per_call": 1990,
+              "cost_per_call_usd": 8.36e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10002,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            },
+            {
+              "success": true,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 2,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Futgarek (orc)",
+                "Gutjja (orc)"
+              ],
+              "engaged": [
+                "Futgarek (orc)",
+                "Gutjja (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 42,
+              "decisions": 31,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-09.jsonl",
+              "input_tokens": 63106,
+              "cost_usd": 0.00265,
+              "cost_by_kind": {
+                "fight": 0.00223,
+                "facts": 0.000421
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 331.3,
+              "decisions_made": 37,
+              "input_tokens_per_call": 2036,
+              "cost_per_call_usd": 8.55e-05,
+              "moves": {
+                "runs": 0,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0,
+                "leaves": 0,
+                "leave_s": 0,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10016,
+              "facts_in_state": 3,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic.",
+                "Orcs at the test field are an easy kill for the warrior kit: about 1 bandage a fight over 25 fights."
+              ],
+              "clients": 2
+            },
+            {
+              "success": false,
+              "attacked_wisp": false,
+              "wisp_seen": true,
+              "orcs_killed": 1,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Xomoku (orc)"
+              ],
+              "engaged": [
+                "Xomoku (orc)",
+                "Xuk (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100
+              ],
+              "min_hp": 74,
+              "decisions": 24,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261012-081320-lane2/wisp-leave-alone-decision1_jev-10.jsonl",
+              "input_tokens": 50141,
+              "cost_usd": 0.002106,
+              "cost_by_kind": {
+                "fight": 0.001686,
+                "facts": 0.00042
+              },
+              "models": [
+                "microsoft/microsoft-decision-1-20261009"
+              ],
+              "latency_ms_avg": 363.1,
+              "decisions_made": 35,
+              "input_tokens_per_call": 2089,
+              "cost_per_call_usd": 8.77e-05,
+              "moves": {
+                "runs": 2,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0,
+                  "kept": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 2.3,
+                "ran_at_s": 28.7,
+                "jev_stayed": 0,
+                "leaves": 1,
+                "leave_s": 40.4,
+                "caught_again": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "facts": "jev",
+              "fact_selections": 2,
+              "fact_input_tokens": 10007,
+              "facts_in_state": 2,
+              "facts_chosen": [
+                "Wisps at the test field never attack first: leave one alone and it leaves you alone. Attacked, a wisp hits for 17 to 18, casts spells and has about 130 hits; it killed the warrior kit in 3 of 3 fights here.",
+                "New characters should leave wisps alone: a wisp only fights when attacked, and then it hits harder than an ogre and heals itself with magic."
+              ],
+              "clients": 2
+            }
+          ],
+          "n": 10,
+          "successes": 9,
+          "rate": 0.9,
+          "ci95": [
+            0.596,
+            0.982
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02732,
+          "cost_per_round_usd": 0.00273,
+          "latency_ms_avg": 336.4,
+          "decisions_per_round": 32.9,
+          "moves": {
+            "runs": 2,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "to_spot_kept": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 2.3,
+            "broke_contact": 1,
+            "leaves": 1,
+            "leave_s": 40.4,
+            "caught_again": 0
+          },
+          "input_tokens_per_call": 1988,
+          "cost_per_call_usd": 8.35e-05,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.065837,
+    "cost_per_hour_usd": 0.1497,
+    "calls": 705,
+    "by_role": {
+      "system1": 0.065837
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 665,
+        "input_tokens": 1352752,
+        "output_tokens": 48686,
+        "cost_usd": 0.056816,
+        "latency_ms_avg": 291.1
+      },
+      "facts": {
+        "calls": 40,
+        "input_tokens": 214785,
+        "output_tokens": 8830,
+        "cost_usd": 0.009021,
+        "latency_ms_avg": 442.9
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 356,
+        "input_tokens": 917028,
+        "output_tokens": 55705,
+        "cost_usd": 0.038515,
+        "latency_ms_avg": 252.7
+      },
+      "microsoft/microsoft-decision-1-20261009": {
+        "calls": 349,
+        "input_tokens": 650509,
+        "output_tokens": 1811,
+        "cost_usd": 0.027321,
+        "latency_ms_avg": 347.7
+      }
+    },
+    "cost_per_decision_usd": 9.9e-05
+  },
+  "openrouter_key_spent_usd": 0.066629
+}

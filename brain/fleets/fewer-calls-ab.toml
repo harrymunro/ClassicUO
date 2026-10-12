@@ -1,0 +1,47 @@
+# Fewer fight calls, old loop against new (cuo-df8): four NPC warriors on the npc profile, two goals,
+# each played by one brain on the fight loop as it was (Jev asked at every tick, UO_BRAIN_ASK_EVERY_TICK)
+# and one on the new loop, side by side on the local test server. Run from brain/:
+#   uv run uo-brain fleet fleets/fewer-calls-ab.toml
+name = "fewer-calls-ab"
+server_port = 2593
+hours = 0.5
+
+[[agent]]
+name = "Tickgrave"
+account = "df8a"
+password = "df8a"
+port = 5671
+profile = "npc"
+env = { UO_BRAIN_ASK_EVERY_TICK = "1" }
+goal = "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied with bandages. Bank your gold and loot when the bag gets heavy."
+# The first agent also restocks the Britain healer and shops, so no run starts against an earlier one's purchases.
+prep = ["[AgentReset", "[AgentGo 1471 1609", "[AgentRestock 60", "[AgentGo 1425 1690", "[AgentKit warrior",
+        "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Sparegrave"
+account = "df8b"
+password = "df8b"
+port = 5672
+profile = "npc"
+goal = "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied with bandages. Bank your gold and loot when the bag gets heavy."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Tickroam"
+account = "df8c"
+password = "df8c"
+port = 5673
+profile = "npc"
+env = { UO_BRAIN_ASK_EVERY_TICK = "1" }
+goal = "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Spareroam"
+account = "df8d"
+password = "df8d"
+port = 5674
+profile = "npc"
+goal = "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]

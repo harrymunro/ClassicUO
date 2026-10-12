@@ -1,0 +1,36 @@
+{
+  "started": "2026-10-09T13:05:51",
+  "per_spot": 200,
+  "radius": 12,
+  "seed": 3,
+  "spots": [
+    {
+      "x": 5445,
+      "y": 1153,
+      "from": [
+        5445,
+        1153,
+        14
+      ],
+      "pairs": 400,
+      "agree": 400,
+      "in_sight_by_server": 116
+    }
+  ],
+  "disagreements": [],
+  "pairs": 400,
+  "agree": 400,
+  "rate": 1.0,
+  "by_kind": {
+    "mobile": {
+      "agree": 200,
+      "pairs": 200,
+      "rate": 1.0
+    },
+    "ground": {
+      "agree": 200,
+      "pairs": 200,
+      "rate": 1.0
+    }
+  }
+}

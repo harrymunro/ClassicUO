@@ -1,17 +1,38 @@
-# The player's character: Jev for every system-one call, Sonnet for the planner.
+# The player's character: Haiku for the planner (Harry, 2026-10-09: in six soaks Haiku kept the
+# character alive as well as Sonnet at a fortieth of the cost, cuo-08x). System one is Microsoft's
+# Decision 1, with Jev for the calls Jev measured better at (Harry, 2026-10-12: "keep Jev for the bits
+# it's objectively better at and use Decision 1 for the bits where it's objectively better at or it is
+# inconclusive", cuo-3ni; README Results, "Jev and Microsoft's Decision 1"):
+# - fight: Decision 1 won the benchmark, 139 rounds of 150 to 128, and held its gaps on a quiet machine.
+# - routine: Jev. In a soak hour each Decision 1's "stay here" fell under the cut 20 s into 5 hunts of 10
+#   (13 kills to Jev's 31).
+# - strategy: Jev. Told "finish the creature off with Lightning", Decision 1 said no preference.
+# - facts, rerank, memory, recorder, chat: Decision 1; nothing measured either way beyond agreement.
+# `--profile jev` is Jev in every system-one call, as before.
+# For Sonnet's planning, which follows more of a goal (banking, restocking): --profile sonnet.
 # Copy this file to make another profile, then: uo-brain run --profile <name>
-# Kinds: system one = fight, routine, facts, rerank, strategy, recorder;
-#        system two = planner, review, guide, design. A kind's own line beats its system's.
+# Kinds: system one = fight, routine, facts, rerank, strategy, recorder, memory;
+#        system two = planner, review, guide, design, escalate, compact, heartbeat, daily.
+#        A kind's own line beats its system's. escalate (the planner's hard moments), review and guide
+#        are Sonnet unless named, here or in any profile; the lines below say so for this one.
 
 [models]
-system1 = "jev"
-system2 = "anthropic/claude-sonnet-5.5"
-
-# Used while over a budget whose `over` is "cheaper".
-[cheaper]
+system1 = "decision1"
+routine = "jev"
+strategy = "jev"
 system2 = "anthropic/claude-haiku-5.5"
+# Sonnet where Haiku fell short (cuo-twd, 2026-10-09, README Results). Each is a one-off call, a few
+# cents, not an hourly cost:
+# - review: on the same logs Haiku missed the main problem Sonnet found (a 94-decision flee at full
+#   health from weak monsters, 2 tries of 2) and once proposed resting instead of seeking where seeking
+#   got 19 kills in 15 minutes. About $0.017 a review against $0.001.
+# - guide: Haiku left a Trammel-only system unmarked in 3 of 5 imports of a page (0 of 23 notes with the
+#   old prompt), so a Felucca character would read it as its own; Sonnet marked it in both imports with
+#   the prompt now used. About $0.028 a page against $0.0013.
+review = "anthropic/claude-sonnet-5.5"
+guide = "anthropic/claude-sonnet-5.5"
 
 # No budget by default. Uncomment for a cap on what the AI calls cost an hour:
 # [budget]
 # per_hour = 0.60
-# over = "cheaper"   # slow, cheaper or stop
+# over = "slow"   # slow, cheaper or stop (cheaper needs a [cheaper] table, as in sonnet.toml)

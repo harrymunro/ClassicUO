@@ -1,0 +1,142 @@
+{
+  "name": "mage vs mixed melee group",
+  "why": "Kill weak melee groups with area spells while they bunch up, kite and finish stragglers, and retreat to recover mana or health before things turn dangerous.",
+  "start": "open",
+  "states": {
+    "open": {
+      "says": "Hit the nearest approaching monster with strong single-target spells (Energy Bolt/Flamestrike) from range, stepping back from melee. Loot only when nothing is close.",
+      "allow": [
+        "fight",
+        "seek",
+        "loot",
+        "rest"
+      ],
+      "target": "closest_first",
+      "kite": true,
+      "spell": "Energy Bolt",
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more monsters are bunched up close to the mage and an area spell would hit them together.",
+          "requires": [
+            "area spell ready",
+            "3+ coming"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "escape",
+          "when": "Health is low, or the group is too strong or too many for the mage to handle and they are reaching it.",
+          "requires": [
+            "health below 50"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "escape",
+          "when": "Mana is nearly gone and several monsters are still coming.",
+          "requires": [
+            "mana below 15",
+            "2+ coming"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "blast": {
+      "says": "Stand and cast area spells (Explosion or Chain Lightning) at the bunched-up monsters so each cast hurts them all.",
+      "allow": [
+        "fight",
+        "rest"
+      ],
+      "kite": false,
+      "spell": "Chain Lightning",
+      "transitions": [
+        {
+          "to": "finish",
+          "when": "Only one or two monsters are left close, or most are badly hurt.",
+          "unless": "Three or more fairly healthy monsters are still bunched together.",
+          "at": 0.6
+        },
+        {
+          "to": "escape",
+          "when": "Health is getting low with monsters still on the mage, or mana is nearly gone.",
+          "requires": [
+            "health below 45"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "escape",
+          "when": "Mana is nearly gone and several monsters are still fighting.",
+          "requires": [
+            "mana below 20",
+            "2+ coming"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "finish": {
+      "says": "Kill the weakest monsters first with quick single-target spells, backing away from melee while casting.",
+      "allow": [
+        "fight",
+        "rest",
+        "loot"
+      ],
+      "target": "weakest_first",
+      "kite": true,
+      "spell": "Energy Bolt",
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more monsters are bunched up close together again.",
+          "requires": [
+            "area spell ready",
+            "3+ close"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "escape",
+          "when": "Health is low or mana is nearly gone while monsters are still fighting.",
+          "requires": [
+            "health below 45"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "open",
+          "when": "No monsters are close or coming at the mage.",
+          "requires": [
+            "none close"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "escape": {
+      "says": "Run away from the monsters to get distance, then recover health and mana (potion if needed) before returning.",
+      "allow": [
+        "flee",
+        "leave",
+        "rest"
+      ],
+      "loot": "nothing",
+      "max_s": 30.0,
+      "then": "open",
+      "transitions": [
+        {
+          "to": "open",
+          "when": "Nothing hostile is close and health and mana have recovered to a comfortable level.",
+          "requires": [
+            "none close",
+            "mana above 50",
+            "health above 60"
+          ],
+          "at": 0.6
+        }
+      ]
+    }
+  }
+}

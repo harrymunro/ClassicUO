@@ -119,18 +119,35 @@ class Machine:
         return "\n".join(lines)
 
 
+def _from_text(text: str) -> Any:
+    """The JSON value a model's text starts with, when nothing but closing braces follows it: Haiku 5.5
+    sends nested objects as strings, at times with the outer object's closing brace inside (cuo-twd)."""
+    text = text.strip()
+    value, end = json.JSONDecoder().raw_decode(text)
+    if text[end:].strip("} \n\t"):
+        raise ValueError(f"extra text after the JSON at {end}")
+    return value
+
+
 def parse(data: dict[str, Any] | str) -> Machine:
     """A machine from JSON, checked: every state reachable by name, allowed intents and settings
     from the fixed lists, conditions code knows how to check, at most MAX_STATES states and
     MAX_TRANSITIONS transitions each. Raises MachineError saying what is wrong."""
     if isinstance(data, str):
         try:
-            data = json.loads(data)
+            data = _from_text(data)
         except ValueError as e:
             raise MachineError(f"not JSON: {e}") from None
     if not isinstance(data, dict):
         raise MachineError("a machine is a JSON object")
     raw_states = data.get("states")
+    if isinstance(raw_states, str):  # Haiku 5.5 often sends the states as a JSON string (cuo-twd)
+        try:
+            raw_states = _from_text(raw_states)
+        except ValueError:
+            pass
+    if isinstance(raw_states, str):
+        raise MachineError("'states' came as a string: send it as a JSON object of named states, not a string")
     if not isinstance(raw_states, dict) or not raw_states:
         raise MachineError("'states' must be an object of named states")
     if len(raw_states) > MAX_STATES:

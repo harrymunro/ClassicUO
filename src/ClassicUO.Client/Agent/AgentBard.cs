@@ -94,6 +94,7 @@ namespace ClassicUO.Agent
             else
             {
                 uint t = _songTargets.Dequeue();
+                Aimed(t == uint.MaxValue ? 0 : t);
                 _world.TargetManager.Target(t == uint.MaxValue ? _world.Player.Serial : t);
             }
 

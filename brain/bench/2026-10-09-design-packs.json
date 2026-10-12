@@ -1,0 +1,1583 @@
+{
+  "started": "2026-10-09T13:39:01",
+  "rounds": 5,
+  "lane": 8,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "pack-gargoyles": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; three gargoyles (a fair fight each, and spellcasters) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (92%)",
+              "why": "5 coming at once: 2 orcs (weak each) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 73,
+              "seconds": 90.5,
+              "player_died": false,
+              "engaged": [
+                "Varguk (orc)",
+                "Romarod (orc)"
+              ],
+              "flees_at_hp": [
+                92,
+                93,
+                94,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev-01.jsonl",
+              "input_tokens": 112704,
+              "cost_usd": 0.004734,
+              "cost_by_kind": {
+                "fight": 0.004734
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 250.7
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "badly wounded (46%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Bulgan (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 36,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Bulgan (orc)",
+                "Wudugog (orc)",
+                "a gargoyle",
+                "Wudugog (orc)",
+                "a gargoyle",
+                "Wudugog (orc)",
+                "a gargoyle"
+              ],
+              "flees_at_hp": [
+                47,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 72,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev-02.jsonl",
+              "input_tokens": 132253,
+              "cost_usd": 0.005555,
+              "cost_by_kind": {
+                "fight": 0.005555
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 222.2
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (81%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Zumhug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 51,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Zumhug (orc)",
+                "Yughragh (orc)"
+              ],
+              "flees_at_hp": [
+                81,
+                82,
+                83,
+                100,
+                100,
+                100,
+                100,
+                100,
+                91,
+                92,
+                93,
+                95,
+                97
+              ],
+              "decisions": 56,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev-03.jsonl",
+              "input_tokens": 100865,
+              "cost_usd": 0.004236,
+              "cost_by_kind": {
+                "fight": 0.004236
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 278.1
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Xegug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 74,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Xegug (orc)",
+                "Nildud (orc)"
+              ],
+              "flees_at_hp": [
+                93,
+                94,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                91,
+                92,
+                93,
+                95,
+                97
+              ],
+              "decisions": 61,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev-04.jsonl",
+              "input_tokens": 108830,
+              "cost_usd": 0.004571,
+              "cost_by_kind": {
+                "fight": 0.004571
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 264.7
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (66%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Numhug (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 48,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Numhug (orc)",
+                "Ikgnath (orc)",
+                "a gargoyle",
+                "Ikgnath (orc)"
+              ],
+              "flees_at_hp": [
+                66,
+                67,
+                69,
+                100,
+                100,
+                100,
+                100,
+                89,
+                49,
+                83,
+                84,
+                100,
+                100,
+                96,
+                91,
+                86
+              ],
+              "decisions": 58,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev-05.jsonl",
+              "input_tokens": 105231,
+              "cost_usd": 0.00442,
+              "cost_by_kind": {
+                "fight": 0.00442
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 250.9
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02352,
+          "cost_per_round_usd": 0.0047,
+          "latency_ms_avg": 253.3,
+          "errors": 0
+        },
+        "jev#haiku-pack": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (93%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Knurigig (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 62,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Knurigig (orc)",
+                "Zombilge (orc)"
+              ],
+              "flees_at_hp": [
+                93,
+                94,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#haiku-pack-01.jsonl",
+              "input_tokens": 125467,
+              "cost_usd": 0.00527,
+              "cost_by_kind": {
+                "fight": 0.00527
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 264.2,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 64.9,
+                  "leave_area": 25.1
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "badly wounded (48%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Wraog (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 48,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Wraog (orc)",
+                "Varbuk (orc)"
+              ],
+              "flees_at_hp": [
+                48,
+                49,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                94
+              ],
+              "decisions": 67,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#haiku-pack-02.jsonl",
+              "input_tokens": 144252,
+              "cost_usd": 0.006059,
+              "cost_by_kind": {
+                "fight": 0.006059
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 255.9,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 73.1,
+                  "pull_back": 8.3,
+                  "leave_area": 8.8
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (59%)",
+              "why": "5 coming at once: 3 gargoyles (a fair fight and a spellcaster each) and 2 orcs (weak each); together far stronger than y",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 40,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Ysagubar (orc)"
+              ],
+              "flees_at_hp": [
+                58,
+                49,
+                100,
+                40,
+                42,
+                89,
+                91,
+                93,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 67,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#haiku-pack-03.jsonl",
+              "input_tokens": 145834,
+              "cost_usd": 0.006125,
+              "cost_by_kind": {
+                "fight": 0.006125
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 297.4,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 64.9,
+                  "pull_back": 16.3,
+                  "leave_area": 8.9
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (94%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [
+                "Ougigoth (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 52,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Gubdagog (orc)"
+              ],
+              "flees_at_hp": [
+                52,
+                95,
+                96,
+                97,
+                98,
+                99,
+                95,
+                85,
+                87,
+                88,
+                91,
+                93,
+                95,
+                97,
+                98,
+                78,
+                62,
+                100
+              ],
+              "decisions": 54,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#haiku-pack-04.jsonl",
+              "input_tokens": 121218,
+              "cost_usd": 0.005091,
+              "cost_by_kind": {
+                "fight": 0.005091
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 254.9,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 8,
+                "seconds_in": {
+                  "hunt": 41.2,
+                  "pull_back": 10.9,
+                  "leave_area": 38.0
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (92%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Vetorkag (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 58,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Vetorkag (orc)",
+                "Woggugat (orc)"
+              ],
+              "flees_at_hp": [
+                92,
+                93,
+                94,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 58,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#haiku-pack-05.jsonl",
+              "input_tokens": 123858,
+              "cost_usd": 0.005202,
+              "cost_by_kind": {
+                "fight": 0.005202
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 272.0,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 61.9,
+                  "leave_area": 28.2
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02775,
+          "cost_per_round_usd": 0.00555,
+          "latency_ms_avg": 268.9,
+          "errors": 0
+        },
+        "jev#sonnet-pack": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (70%)",
+              "why": "Jev: leave (0.53)",
+              "kills": [
+                "Faugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 59,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Bandagh (orc)",
+                "Faugh (orc)"
+              ],
+              "flees_at_hp": [
+                71,
+                72,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 62,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#sonnet-pack-01.jsonl",
+              "input_tokens": 121889,
+              "cost_usd": 0.005119,
+              "cost_by_kind": {
+                "fight": 0.005119
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 260.7,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 3,
+                "seconds_in": {
+                  "hunt": 77.3,
+                  "out": 12.1,
+                  "regroup": 0.7
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "Jev: leave (0.71)",
+              "kills": [
+                "Wilaktug (orc)",
+                "Retituki (ratman)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 89,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Surgug (orc)",
+                "Wilaktug (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#sonnet-pack-02.jsonl",
+              "input_tokens": 119298,
+              "cost_usd": 0.005011,
+              "cost_by_kind": {
+                "fight": 0.005011
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 242.1,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 3,
+                "seconds_in": {
+                  "hunt": 60.7,
+                  "out": 29.1,
+                  "regroup": 0.5
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "badly wounded (49%)",
+              "why": "Jev: leave (0.97)",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 49,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Zarfu (orc)"
+              ],
+              "flees_at_hp": [
+                49,
+                100,
+                100,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#sonnet-pack-03.jsonl",
+              "input_tokens": 125474,
+              "cost_usd": 0.00527,
+              "cost_by_kind": {
+                "fight": 0.00527
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 236.0,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 6,
+                "seconds_in": {
+                  "hunt": 68.0,
+                  "out": 21.0,
+                  "regroup": 1.2
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (85%)",
+              "why": "Jev: leave (1.00)",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 45,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Xurug (orc)"
+              ],
+              "flees_at_hp": [
+                45,
+                85,
+                86,
+                87,
+                89,
+                91,
+                92,
+                87,
+                80,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 58,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#sonnet-pack-04.jsonl",
+              "input_tokens": 122080,
+              "cost_usd": 0.005127,
+              "cost_by_kind": {
+                "fight": 0.005127
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 232.2,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 9,
+                "seconds_in": {
+                  "hunt": 57.8,
+                  "out": 30.1,
+                  "regroup": 2.2
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (88%)",
+              "why": "Jev: leave (0.73)",
+              "kills": [
+                "Furbog (orc)",
+                "Hoknath (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 68,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Hoknath (orc)",
+                "Furbog (orc)",
+                "Hoknath (orc)"
+              ],
+              "flees_at_hp": [
+                88,
+                89,
+                91,
+                92,
+                94,
+                96,
+                98,
+                100
+              ],
+              "decisions": 64,
+              "log": "logs/bench/20261009-133901-lane8/pack-gargoyles-jev#sonnet-pack-05.jsonl",
+              "input_tokens": 133560,
+              "cost_usd": 0.00561,
+              "cost_by_kind": {
+                "fight": 0.00561
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 261.0,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 3,
+                "seconds_in": {
+                  "hunt": 73.3,
+                  "out": 16.4,
+                  "regroup": 0.5
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02614,
+          "cost_per_round_usd": 0.00523,
+          "latency_ms_avg": 246.4,
+          "errors": 0
+        }
+      }
+    },
+    "pack-bone-knights": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; two bone knights (each stronger than it) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (77%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Pergu (orc)",
+                "Umruigig (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 74,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Pergu (orc)",
+                "Umruigig (orc)"
+              ],
+              "flees_at_hp": [
+                77,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 65,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev-01.jsonl",
+              "input_tokens": 112670,
+              "cost_usd": 0.004732,
+              "cost_by_kind": {
+                "fight": 0.004732
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 237.5
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (95%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Zabghat (orc)",
+                "Sogugh (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 60,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Zabghat (orc)",
+                "Sogugh (orc)"
+              ],
+              "flees_at_hp": [
+                95,
+                88,
+                89,
+                92,
+                94,
+                96,
+                98
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev-02.jsonl",
+              "input_tokens": 103948,
+              "cost_usd": 0.004366,
+              "cost_by_kind": {
+                "fight": 0.004366
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 227.1
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (71%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Hebub (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 69,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Mazhug (orc)",
+                "Hebub (orc)"
+              ],
+              "flees_at_hp": [
+                71,
+                73,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 62,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev-03.jsonl",
+              "input_tokens": 105796,
+              "cost_usd": 0.004443,
+              "cost_by_kind": {
+                "fight": 0.004443
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 253.2
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (98%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Magdud (orc)",
+                "Pomgulg (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 54,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Magdud (orc)",
+                "Pomgulg (orc)"
+              ],
+              "flees_at_hp": [
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 50,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev-04.jsonl",
+              "input_tokens": 88552,
+              "cost_usd": 0.003719,
+              "cost_by_kind": {
+                "fight": 0.003719
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 253.3
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (91%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Zornaraugh (orc)",
+                "Ombilge (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 63,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Zornaraugh (orc)",
+                "Ombilge (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                92,
+                93,
+                95,
+                96,
+                98,
+                100,
+                100
+              ],
+              "decisions": 62,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev-05.jsonl",
+              "input_tokens": 107854,
+              "cost_usd": 0.00453,
+              "cost_by_kind": {
+                "fight": 0.00453
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 273.2
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02179,
+          "cost_per_round_usd": 0.00436,
+          "latency_ms_avg": 248.9,
+          "errors": 0
+        },
+        "jev#haiku-pack": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (72%)",
+              "why": "3 coming at once: 2 orcs (weak each) and a skeleton (stronger than you); together far stronger than you: too many to fig",
+              "kills": [
+                "Teldgulg (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 52,
+              "seconds": 90.4,
+              "player_died": false,
+              "engaged": [
+                "Dilug (orc)",
+                "Teldgulg (orc)",
+                "Dilug (orc)"
+              ],
+              "flees_at_hp": [
+                72,
+                73,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 68,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#haiku-pack-01.jsonl",
+              "input_tokens": 142864,
+              "cost_usd": 0.006,
+              "cost_by_kind": {
+                "fight": 0.006
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 278.0,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 79.3,
+                  "pull_back": 0.5,
+                  "leave_area": 10.6
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (85%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Urg (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 83,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Urg (orc)",
+                "Ertguth (orc)"
+              ],
+              "flees_at_hp": [
+                85,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 53,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#haiku-pack-02.jsonl",
+              "input_tokens": 108420,
+              "cost_usd": 0.004554,
+              "cost_by_kind": {
+                "fight": 0.004554
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 236.6,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 80.1,
+                  "leave_area": 10.1
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (67%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Vakgar (orc)",
+                "Grung (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 51,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Vakgar (orc)",
+                "Grung (orc)"
+              ],
+              "flees_at_hp": [
+                58,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 68,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#haiku-pack-03.jsonl",
+              "input_tokens": 139570,
+              "cost_usd": 0.005862,
+              "cost_by_kind": {
+                "fight": 0.005862
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 244.7,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 4,
+                "seconds_in": {
+                  "hunt": 79.4,
+                  "pull_back": 1.7,
+                  "leave_area": 9.0
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (74%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Sugarod (orc)",
+                "Prutha (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 64,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Sugarod (orc)",
+                "Prutha (orc)"
+              ],
+              "flees_at_hp": [
+                74,
+                75,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 59,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#haiku-pack-04.jsonl",
+              "input_tokens": 118961,
+              "cost_usd": 0.004996,
+              "cost_by_kind": {
+                "fight": 0.004996
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 272.7,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 2,
+                "seconds_in": {
+                  "hunt": 66.2,
+                  "leave_area": 23.9
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (86%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 skeletons (stronger than you each); together far stronger than you: too many ",
+              "kills": [
+                "Orpigig (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 46,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Kugbu (orc)",
+                "Orpigig (orc)",
+                "Kugbu (orc)"
+              ],
+              "flees_at_hp": [
+                48,
+                75,
+                76,
+                77,
+                79,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 66,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#haiku-pack-05.jsonl",
+              "input_tokens": 141576,
+              "cost_usd": 0.005946,
+              "cost_by_kind": {
+                "fight": 0.005946
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 262.4,
+              "plan": {
+                "machine": "warrior holds against packs",
+                "state": "hunt",
+                "moves": 6,
+                "seconds_in": {
+                  "hunt": 70.9,
+                  "pull_back": 10.1,
+                  "leave_area": 9.1
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02736,
+          "cost_per_round_usd": 0.00547,
+          "latency_ms_avg": 258.9,
+          "errors": 0
+        },
+        "jev#sonnet-pack": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (75%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Jughragh (orc)",
+                "Parfu (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 49,
+              "seconds": 90.4,
+              "player_died": false,
+              "engaged": [
+                "Jughragh (orc)",
+                "Parfu (orc)",
+                "Dilug (orc)"
+              ],
+              "flees_at_hp": [
+                65,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 67,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#sonnet-pack-01.jsonl",
+              "input_tokens": 142002,
+              "cost_usd": 0.005964,
+              "cost_by_kind": {
+                "fight": 0.005964
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 267.5,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 5,
+                "seconds_in": {
+                  "hunt": 73.6,
+                  "regroup": 4.9,
+                  "out": 11.9
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (84%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Xago (orc)",
+                "Zugorim (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 52,
+              "seconds": 90.4,
+              "player_died": false,
+              "engaged": [
+                "Xago (orc)",
+                "Zugorim (orc)"
+              ],
+              "flees_at_hp": [
+                84,
+                78,
+                79,
+                81,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#sonnet-pack-02.jsonl",
+              "input_tokens": 126493,
+              "cost_usd": 0.005313,
+              "cost_by_kind": {
+                "fight": 0.005313
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 324.1,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 3,
+                "seconds_in": {
+                  "hunt": 78.6,
+                  "out": 10.5,
+                  "regroup": 1.3
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (80%)",
+              "why": "3 coming at once: 2 orcs (weak each) and a skeleton (stronger than you); together far stronger than you: too many to fig",
+              "kills": [
+                "Wumanok (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 55,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Naghat (orc)",
+                "Wumanok (orc)"
+              ],
+              "flees_at_hp": [
+                67,
+                68,
+                69,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 57,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#sonnet-pack-03.jsonl",
+              "input_tokens": 120283,
+              "cost_usd": 0.005052,
+              "cost_by_kind": {
+                "fight": 0.005052
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 250.8,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 3,
+                "seconds_in": {
+                  "hunt": 73.4,
+                  "out": 9.6,
+                  "regroup": 7.1
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (88%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Slaugh (orc)",
+                "Wholug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 61,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Slaugh (orc)",
+                "Wholug (orc)"
+              ],
+              "flees_at_hp": [
+                88,
+                89,
+                92,
+                94,
+                96,
+                97,
+                99
+              ],
+              "decisions": 65,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#sonnet-pack-04.jsonl",
+              "input_tokens": 136158,
+              "cost_usd": 0.005719,
+              "cost_by_kind": {
+                "fight": 0.005719
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 232.5,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 3,
+                "seconds_in": {
+                  "hunt": 77.8,
+                  "out": 11.8,
+                  "regroup": 0.5
+                }
+              }
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (68%)",
+              "why": "The warrior's health fell 32 points in the last few seconds, to 68%, fighting a bone knight (a skeleton).",
+              "kills": [
+                "Xoruk (orc)",
+                "Futgarek (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 58,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Xoruk (orc)",
+                "Futgarek (orc)"
+              ],
+              "flees_at_hp": [
+                68,
+                69,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 60,
+              "log": "logs/bench/20261009-133901-lane8/pack-bone-knights-jev#sonnet-pack-05.jsonl",
+              "input_tokens": 129989,
+              "cost_usd": 0.00546,
+              "cost_by_kind": {
+                "fight": 0.00546
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 254.8,
+              "plan": {
+                "machine": "hunt orcs, avoid strong packs",
+                "state": "hunt",
+                "moves": 5,
+                "seconds_in": {
+                  "hunt": 74.4,
+                  "regroup": 4.4,
+                  "out": 11.5
+                }
+              }
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02751,
+          "cost_per_round_usd": 0.0055,
+          "latency_ms_avg": 265.9,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.154054,
+    "cost_per_hour_usd": 0.1964,
+    "calls": 1840,
+    "by_role": {
+      "system1": 0.154054
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 1840,
+        "input_tokens": 3667949,
+        "output_tokens": 214059,
+        "cost_usd": 0.154054,
+        "latency_ms_avg": 257.1
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 1840,
+        "input_tokens": 3667949,
+        "output_tokens": 214059,
+        "cost_usd": 0.154054,
+        "latency_ms_avg": 257.1
+      }
+    },
+    "cost_per_decision_usd": 8.37e-05
+  },
+  "openrouter_key_spent_usd": 1.340906
+}

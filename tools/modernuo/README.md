@@ -79,11 +79,13 @@ Green Acres stays empty, so the arena tests are unaffected.
   - All: stats locked, 5 greater heal and 5 greater cure potions. Removes Young status.
   - Wipes the old equipment and backpack first.
 - **`[AgentArena [count] [mix|orc|ratman|headless|mongbat|zombie|skeleton|<type>]`:** clears your last arena, then spawns monsters in a ring 6–10 tiles out.
-- **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, cancels pending spawns, and removes your arena monsters and the corpses around you.
+- **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, cancels pending spawns, and removes your arena monsters, the corpses around you and what you built with `[AgentBuild`.
 - **`[AgentGo [lane | x y]`:** lanes 1-9 are copies of the test spot 60 tiles east of each other; `x y` goes to any tile of the test map.
-- **`[AgentSpawn <kind> [count] [distance] [direction] [delay]`:** creatures at a bearing and distance, optionally after a delay.
+- **`[AgentSpawn <kind> [count] [distance] [direction] [delay] [still]`:** creatures at a bearing and distance, optionally after a delay; `still` anywhere makes them stay where they are (they never walk).
 - **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]`:** sets supplies.
 - **`[AgentLoot [distance] [direction]`:** an orc's corpse with three valuables and five pieces of junk.
-- **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall of blockers, for stuck tests.
+- **`[AgentWall x1 y1 x2 y2 | clear`:** an invisible wall of blockers, for stuck tests (blockers don't block sight).
+- **`[AgentBuild wall <distance> <direction> [length] [stone|window|fence|los] | hut <distance> <direction> [size] | clear`:** real wall pieces (`Static` items named "agent test wall") for line-of-sight tests: a straight wall across the way (stone 0x001C and window 0x005D block sight, a wooden fence 0x085D doesn't, `los` is ModernUO's invisible LOSBlocker), or a square hut of stone walls with a doorway on its far side. `clear` and `[AgentReset` remove them, and pieces left from before a restart too.
+- **`[AgentSight x1 y1 z1 x2 y2 z2 | sample [count] [radius] [seed]`:** the server's `Map.LineOfSight` for two points, or for `count` random tiles around you (a mobile standing there, and the ground there as a field is aimed), written to your journal for `uo-brain sight-check`.
 - **`[AgentRestock [amount]`:** stocks nearby vendors.
 - **`[AgentRunes`:** a runebook and two runes marked to the test field and Britain.

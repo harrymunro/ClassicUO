@@ -69,3 +69,27 @@ def test_named_monsters_get_their_kind(snapshot):
 def test_no_looting_questions_mid_fight(snapshot):
     qs = questions.build(build(snapshot))
     assert set(qs) == {"intent", "in_danger", "target"}
+
+
+def test_a_creature_given_up_as_out_of_reach_is_no_target_unless_it_attacks():
+    import copy
+    from conftest import SNAPSHOT
+    from uo_brain import state
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["mobiles"][0]["unreachable"] = True
+    sit = state.build(snap, set(), [])
+    assert snap["mobiles"][0]["serial"] not in [h.serial for h in sit.hostiles]
+    snap["mobiles"][0]["attacking_me"] = True
+    assert snap["mobiles"][0]["serial"] in [h.serial for h in state.build(snap, set(), []).hostiles]
+
+
+def test_a_creature_that_only_fights_back_is_no_threat(snapshot):
+    """cuo-s9p: birds and deer stay targets but don't count as something hostile about."""
+    snapshot["mobiles"][1].update(name="a crossbill", body=6, war_mode=False)
+    beasts = {6: {"name": "a crossbill", "hits": 6, "peaceful": True}, 17: {"name": "an orc", "hits": 60, "peaceful": False}}
+    sit = state.build(snapshot, set(), [], bestiary=beasts)
+    bird = sit.hostile_by_serial(0x101)
+    assert bird.info["peaceful"] == state.PEACEFUL_WORDS and bird in sit.hostiles
+    assert [h.serial for h in sit.threats] == [0x100]
+    snapshot["mobiles"][1]["war_mode"] = True  # one fighting is a threat, whatever its kind
+    assert len(state.build(snapshot, set(), [], bestiary=beasts).threats) == 2

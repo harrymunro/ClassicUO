@@ -138,11 +138,11 @@ def test_the_fight_loop_slows_or_stops_over_its_budget(tmp_path):
     costs.ledger.budget = costs.Budget(0.50, "slow")
     rpc = FakeRpc(snap)
     slow = asyncio.run(loop.run(rpc, FactJudge(), cfg, policy.PolicyConfig(), None))
-    assert slow.decisions < fast.decisions / 3 and slow.slowed == slow.decisions
+    assert slow.made < fast.made / 3 and slow.slowed == slow.made
     assert any(m == "note" and p["text"].startswith("over budget: $") for m, p in rpc.calls)
     costs.ledger.budget = costs.Budget(0.50, "stop")
     stopped = asyncio.run(loop.run(FakeRpc(snap), FactJudge(), cfg, policy.PolicyConfig(), None))
-    assert stopped.decisions == 0
+    assert stopped.made == 0
 
 
 def test_a_task_keeps_its_own_cost_log():
@@ -166,3 +166,36 @@ def test_a_task_keeps_its_own_cost_log():
 
     asyncio.run(main())
     assert [r["kind"] for r in session] == ["planner"] and [r["kind"] for r in fights] == ["fight"]
+
+
+def test_a_model_nobody_can_price_is_warned_about_not_counted_as_nothing(capsys):
+    costs._warned.clear()
+    a = costs.make_call("planner", "anthropic/claude-haiku-9", 1000, 100)
+    b = costs.make_call("planner", "anthropic/claude-haiku-9", 1000, 100)
+    assert a.cost == 0.0 and a.unpriced and a.to_log()["unpriced"] is True
+    err = capsys.readouterr().err
+    assert err.count("no price known for model 'anthropic/claude-haiku-9'") == 1  # once, not for every call
+    costs.ledger.record(a)
+    costs.ledger.record(b)
+    costs.ledger.record(costs.make_call("planner", "anthropic/claude-haiku-5.5", 1000, 100))
+    s = costs.ledger.summary()
+    assert s["unpriced_models"] == ["anthropic/claude-haiku-9"] and s["by_kind"]["planner"]["unpriced_calls"] == 2
+    assert "No price known for anthropic/claude-haiku-9" in costs.describe(s)
+    # The same from a log's records.
+    recs = [a.to_log(), costs.make_call("planner", "anthropic/claude-haiku-5.5", 1000, 100).to_log()]
+    assert costs.from_records(recs)["unpriced_models"] == ["anthropic/claude-haiku-9"]
+    # A model the provider priced is never unpriced, whatever the table knows.
+    assert not costs.make_call("fight", "some/new-model", 10, reported=0.001).unpriced
+
+
+def test_a_call_answered_by_another_model_is_warned_about(capsys):
+    costs._warned.clear()
+    assert costs.same_model("anthropic/claude-haiku-5.5", "anthropic/claude-haiku-5.5-20261001")
+    assert costs.same_model("~typesafe/jev-latest", "typesafe/jev-1.13-20260917")
+    assert costs.same_model("microsoft/microsoft-decision-1", "microsoft/microsoft-decision-1-20261009")
+    assert not costs.same_model("anthropic/claude-haiku-5.5", "anthropic/claude-haiku-4.5")
+    costs.check_served("anthropic/claude-sonnet-5.5", "anthropic/claude-sonnet-5.5")
+    assert capsys.readouterr().err == ""
+    costs.check_served("anthropic/claude-sonnet-5.5", "anthropic/claude-sonnet-4.5")
+    costs.check_served("anthropic/claude-sonnet-5.5", "anthropic/claude-sonnet-4.5")
+    assert capsys.readouterr().err.count("asked for anthropic/claude-sonnet-5.5 and anthropic/claude-sonnet-4.5 answered") == 1

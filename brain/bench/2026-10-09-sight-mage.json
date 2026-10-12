@@ -1,0 +1,1041 @@
+{
+  "started": "2026-10-09T12:26:46",
+  "rounds": 4,
+  "lane": 1,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "planner": "anthropic/claude-sonnet-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-sonnet-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "sight-wall-mage": {
+      "bead": "cuo-ehm",
+      "right": "An orc stands still behind a wall 6 tiles north of a mage, another in the open 8 tiles east: cast at the one in sight, then go round the wall to cast at the other; kill both.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Haguk (orc)",
+                "Zodagh (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 45.1,
+              "seconds": 62.1,
+              "player_died": false,
+              "engaged": [
+                "Haguk (orc)",
+                "Zodagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 53,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Golag (orc)",
+                "Otugbu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 42.2,
+              "seconds": 59.1,
+              "player_died": false,
+              "engaged": [
+                "Golag (orc)",
+                "Otugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 51,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Rodagog (orc)",
+                "Yegigoth (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 43.4,
+              "seconds": 60.4,
+              "player_died": false,
+              "engaged": [
+                "Rodagog (orc)",
+                "Yegigoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 53,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Rebub (orc)",
+                "Gujjab (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 37.7,
+              "seconds": 54.6,
+              "player_died": false,
+              "engaged": [
+                "Rebub (orc)",
+                "Gujjab (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 47,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "heuristic/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Dretkag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 92,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic_nosight-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 90.0,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Xugug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 92,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic_nosight-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 90.0,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Bagdud (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 93,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic_nosight-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 90.0,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Auhgan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 92,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-heuristic_nosight-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Mugorim (orc)",
+                "Yunkathu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 24.2,
+              "seconds": 42.2,
+              "player_died": false,
+              "engaged": [
+                "Mugorim (orc)",
+                "Yunkathu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 26,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev-01.jsonl",
+              "input_tokens": 91486,
+              "cost_usd": 0.003842,
+              "cost_by_kind": {
+                "fight": 0.003842
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 263.4
+            },
+            {
+              "success": true,
+              "kills": [
+                "Dakgu (orc)",
+                "Surgug (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 23.0,
+              "seconds": 40.6,
+              "player_died": false,
+              "engaged": [
+                "Dakgu (orc)",
+                "Surgug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 25,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev-02.jsonl",
+              "input_tokens": 87939,
+              "cost_usd": 0.003693,
+              "cost_by_kind": {
+                "fight": 0.003693
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 280.6
+            },
+            {
+              "success": true,
+              "kills": [
+                "Dergu (orc)",
+                "Agugh (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 26.7,
+              "seconds": 44.2,
+              "player_died": false,
+              "engaged": [
+                "Dergu (orc)",
+                "Agugh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 30,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev-03.jsonl",
+              "input_tokens": 108109,
+              "cost_usd": 0.004541,
+              "cost_by_kind": {
+                "fight": 0.004541
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 236.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Borug (orc)",
+                "Wapkagut (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 1.4,
+              "last_kill_s": 24.1,
+              "seconds": 41.9,
+              "player_died": false,
+              "engaged": [
+                "Borug (orc)",
+                "Wapkagut (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 26,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev-04.jsonl",
+              "input_tokens": 91946,
+              "cost_usd": 0.003862,
+              "cost_by_kind": {
+                "fight": 0.003862
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 280.1
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01594,
+          "cost_per_round_usd": 0.00398,
+          "latency_ms_avg": 265.0,
+          "errors": 0
+        },
+        "jev/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.5,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Verlgu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 74,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev_nosight-01.jsonl",
+              "input_tokens": 290377,
+              "cost_usd": 0.012196,
+              "cost_by_kind": {
+                "fight": 0.012196
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 234.5
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.5,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Quadagh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 74,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev_nosight-02.jsonl",
+              "input_tokens": 290615,
+              "cost_usd": 0.012206,
+              "cost_by_kind": {
+                "fight": 0.012206
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 239.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.5,
+              "last_kill_s": null,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Taghig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 76,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev_nosight-03.jsonl",
+              "input_tokens": 296609,
+              "cost_usd": 0.012458,
+              "cost_by_kind": {
+                "fight": 0.012458
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 224.2
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.6,
+              "last_kill_s": null,
+              "seconds": 90.5,
+              "player_died": false,
+              "engaged": [
+                "Nomgulg (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 73,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-wall-mage-jev_nosight-04.jsonl",
+              "input_tokens": 285879,
+              "cost_usd": 0.012007,
+              "cost_by_kind": {
+                "fight": 0.012007
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 255.7
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0.04887,
+          "cost_per_round_usd": 0.01222,
+          "latency_ms_avg": 238.3,
+          "errors": 0
+        }
+      }
+    },
+    "sight-hut-mage": {
+      "bead": "cuo-ehm",
+      "right": "An orc stands still in a hut 8 tiles north of a mage, its doorway on the far side: go round to where it can be seen through the doorway and kill it with spells.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Vidarok (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 16.6,
+              "seconds": 26.5,
+              "player_died": false,
+              "engaged": [
+                "Vidarok (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 23,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Rarfu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 16.7,
+              "seconds": 26.5,
+              "player_died": false,
+              "engaged": [
+                "Rarfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 23,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Gnorl (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 12.1,
+              "seconds": 24.5,
+              "player_died": false,
+              "engaged": [
+                "Gnorl (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 20,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Zumhug (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 16.8,
+              "seconds": 26.6,
+              "player_died": false,
+              "engaged": [
+                "Zumhug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 23,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "heuristic/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Onubub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic_nosight-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 89.9,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Tog (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic_nosight-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 89.9,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Yegoth (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic_nosight-03.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 20,
+              "unseen_engaged_s": 89.8,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Duiltag (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 90,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-heuristic_nosight-04.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Zugbu (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 14.3,
+              "seconds": 24.7,
+              "player_died": false,
+              "engaged": [
+                "Zugbu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 17,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev-01.jsonl",
+              "input_tokens": 55632,
+              "cost_usd": 0.002337,
+              "cost_by_kind": {
+                "fight": 0.002337
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 261.4
+            },
+            {
+              "success": true,
+              "kills": [
+                "Saghig (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 14.1,
+              "seconds": 25.0,
+              "player_died": false,
+              "engaged": [
+                "Saghig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 18,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev-02.jsonl",
+              "input_tokens": 58822,
+              "cost_usd": 0.002471,
+              "cost_by_kind": {
+                "fight": 0.002471
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 252.0
+            },
+            {
+              "success": true,
+              "kills": [
+                "Frikug (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 15.1,
+              "seconds": 25.6,
+              "player_died": false,
+              "engaged": [
+                "Frikug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 17,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev-03.jsonl",
+              "input_tokens": 55378,
+              "cost_usd": 0.002326,
+              "cost_by_kind": {
+                "fight": 0.002326
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 363.8
+            },
+            {
+              "success": true,
+              "kills": [
+                "Wudgh (orc)"
+              ],
+              "not_in_sight": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 3.1,
+              "last_kill_s": 14.4,
+              "seconds": 24.9,
+              "player_died": false,
+              "engaged": [
+                "Wudgh (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 17,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev-04.jsonl",
+              "input_tokens": 55191,
+              "cost_usd": 0.002318,
+              "cost_by_kind": {
+                "fight": 0.002318
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 301.3
+            }
+          ],
+          "n": 4,
+          "successes": 4,
+          "rate": 1.0,
+          "ci95": [
+            0.51,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00945,
+          "cost_per_round_usd": 0.00236,
+          "latency_ms_avg": 294.6,
+          "errors": 0
+        },
+        "jev/nosight": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.4,
+              "last_kill_s": null,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Bumhug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 71,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev_nosight-01.jsonl",
+              "input_tokens": 267601,
+              "cost_usd": 0.011239,
+              "cost_by_kind": {
+                "fight": 0.011239
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 274.8
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.3,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Auhgan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 74,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev_nosight-02.jsonl",
+              "input_tokens": 280696,
+              "cost_usd": 0.011789,
+              "cost_by_kind": {
+                "fight": 0.011789
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 227.0
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.5,
+              "last_kill_s": null,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Parfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 71,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev_nosight-03.jsonl",
+              "input_tokens": 269070,
+              "cost_usd": 0.011301,
+              "cost_by_kind": {
+                "fight": 0.011301
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 274.8
+            },
+            {
+              "success": false,
+              "kills": [],
+              "not_in_sight": 0,
+              "aimed_unseen": 21,
+              "unseen_engaged_s": 89.6,
+              "last_kill_s": null,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Farghed (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 100,
+              "decisions": 72,
+              "not_in_sight_msgs": 0,
+              "log": "logs/bench/20261009-122646-lane1/sight-hut-mage-jev_nosight-04.jsonl",
+              "input_tokens": 272864,
+              "cost_usd": 0.01146,
+              "cost_by_kind": {
+                "fight": 0.01146
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 252.4
+            }
+          ],
+          "n": 4,
+          "successes": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.49
+          ],
+          "deaths": 0,
+          "cost_usd": 0.04579,
+          "cost_per_round_usd": 0.01145,
+          "latency_ms_avg": 257.2,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.120045,
+    "cost_per_hour_usd": 0.1929,
+    "calls": 761,
+    "by_role": {
+      "system1": 0.120045
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 761,
+        "input_tokens": 2858214,
+        "output_tokens": 302298,
+        "cost_usd": 0.120045,
+        "latency_ms_avg": 253.9
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 761,
+        "input_tokens": 2858214,
+        "output_tokens": 302298,
+        "cost_usd": 0.120045,
+        "latency_ms_avg": 253.9
+      }
+    },
+    "cost_per_decision_usd": 0.0001577
+  },
+  "openrouter_key_spent_usd": 0.939088
+}

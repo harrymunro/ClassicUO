@@ -415,6 +415,16 @@ namespace ClassicUO
 
                         break;
 
+                    case "agent_sight_rule":
+                        CUOEnviroment.AgentSightRuleArg = value;
+
+                        break;
+
+                    case "headless":
+                        CUOEnviroment.HeadlessArg = string.IsNullOrEmpty(value) || bool.Parse(value);
+
+                        break;
+
                     case "use_verdata":
                         Settings.GlobalSettings.UseVerdata = bool.Parse(value);
 

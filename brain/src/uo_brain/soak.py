@@ -26,7 +26,8 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
     records = logs.read(log)
     decisions_log = log.with_name(log.stem + logs.DECISIONS + log.suffix)
     dlog = logs.read(decisions_log) if decisions_log.exists() else []
-    decisions = [d for d in dlog if d["type"] == "decision"]
+    made = [d for d in dlog if d["type"] == "decision"]
+    decisions = [d for d in made if not d.get("not_asked")]  # put to Jev (cuo-df8)
     if not records:
         return {"log": str(log), "error": "empty log"}
     t0, t1 = records[0]["t"], max(r.get("t", 0) for r in records)
@@ -84,20 +85,26 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
         "kills": kills,
         # A death outside a hunt ends the session: its summary says so, or a goal ends at 0 health.
         # One in a hunt is in the hunt's count already.
-        "deaths": max(sum(h.get("deaths", 0) for h in hunts), 1 if any(
+        "deaths": max(sum(h.get("deaths", 0) for h in hunts), max(
+            (r.get("deaths") or 0 for r in records if r["type"] == "session_summary"), default=0), 1 if any(
             "died" in str(r.get("finished", "")) for r in records if r["type"] == "session_summary") or any(
             str((r.get("result") or {}).get("health", "")).startswith("0/") for r in results) else 0),
+        # After a death the planner resurrects the character and goes back for its corpse (cuo-4b3).
+        "resurrections": sum(1 for e in events if e.get("event") == "resurrected"),
+        "corpses_recovered": sum(1 for e in events if e.get("event") == "corpse_recovered"),
+        "minutes_resurrecting": round(sum(e.get("seconds", 0) for e in events if e.get("event") == "resurrected") / 60, 1),
+        "minutes_recovering": round(sum(e.get("seconds", 0) for e in events if e.get("event") == "corpse_recovered") / 60, 1),
         "minutes_per_loop": round((t1 - t0) / 60 / len(hunts), 1) if hunts else None,
         "hunt_stops": [h.get("stopped_because", "") for h in hunts],
         "time_minutes": {**{k: round(v / 60, 1) for k, v in sorted(spans.items())},
                          "between goals (planner)": round(((t1 - t0) - busy) / 60, 1)},
-        "travel": {"trips": len(travels), "arrived": sum(1 for t in travels if t.get("state") == "arrived"),
-                   "stuck_spots": sum(len(t.get("stuck_at") or []) for t in travels),
-                   "minutes": round(sum(t.get("seconds", 0) for t in travels) / 60, 1)},
+        "travel": travel_counts(events),
         "bought": bought,
         "gold_banked": gold_banked,
         "gold_from_hunts": sum(h.get("gold_gained", 0) for h in hunts),
         "fight_decisions": len(decisions),
+        "fight_decisions_per_hour": round(len(decisions) / hours, 1),
+        "fight_decisions_not_asked": len(made) - len(decisions),
         "routine_questions": len(routine),
         "planner_calls": planner_calls,
         "cost_usd": {"system1": round(system1, 5), "system2": round(system2, 4),
@@ -123,6 +130,32 @@ def report(log: Path, disruptions: Path | None = None, price_per_million: float 
     return out
 
 
+def travel_counts(events: list[dict[str, Any]]) -> dict[str, Any]:
+    """How the walks went, from the session's `travel` (setting off) and `travelled` (the end of
+    a walk) events: each end state, set-offs that failed and why, stuck spots, and from logs that
+    have them, doors opened, hops of long trips and the longest planning on the game thread."""
+    travels = [e for e in events if e.get("event") == "travelled"]
+    states: dict[str, int] = {}
+    for t in travels:
+        states[t.get("state", "?")] = states.get(t.get("state", "?"), 0) + 1
+    failed: dict[str, int] = {}
+    for e in events:
+        if e.get("event") == "travel" and e.get("status") != "done":
+            key = str(e.get("detail") or e.get("status"))
+            failed[key] = failed.get(key, 0) + 1
+    out: dict[str, Any] = {
+        "trips": len(travels), "arrived": states.get("arrived", 0),
+        "stuck_spots": sum(len(t.get("stuck_at") or []) for t in travels),
+        "minutes": round(sum(t.get("seconds", 0) for t in travels) / 60, 1),
+        "states": states, "not_set_off": failed,
+    }
+    if any("doors" in t for t in travels):
+        out["doors"] = sum(t.get("doors", 0) for t in travels)
+        out["hops"] = sum(t.get("hops", 0) for t in travels)
+        out["plan_ms_max"] = max(t.get("plan_ms_max", 0) for t in travels)
+    return out
+
+
 def _jsonl(path: Path) -> list[dict[str, Any]]:
     out = []
     for line in path.read_text().splitlines():
@@ -135,17 +168,26 @@ def _jsonl(path: Path) -> list[dict[str, Any]]:
 
 def markdown(r: dict[str, Any]) -> str:
     """The report as a short Markdown summary."""
-    lines = [f"{r['minutes']} minutes, {r['hunts']} hunts, {r['kills']} kills, {r['deaths']} deaths; "
+    lines = [f"{r['minutes']} minutes, {r['hunts']} hunts, {r['kills']} kills, {r['deaths']} deaths"
+             + (f" ({r['resurrections']} resurrected, {r['corpses_recovered']} corpses taken back, "
+                f"{r['minutes_resurrecting'] + r['minutes_recovering']:.1f} min on it)" if r.get("resurrections") else "")
+             + "; "
              f"{r['gold_banked']} gold banked ({r['gold_from_hunts']} gold gained in hunts, less what was left on a corpse); bought "
              + (", ".join(f"{n} {k}" for k, n in r["bought"].items()) or "nothing") + ".",
              f"Time: " + ", ".join(f"{k} {v} min" for k, v in r["time_minutes"].items()) + ".",
              f"Travel: {r['travel']['trips']} trips, {r['travel']['arrived']} arrived, "
-             f"{r['travel']['stuck_spots']} stuck spots, {r['travel']['minutes']} min walking.",
+             f"{r['travel']['stuck_spots']} stuck spots, {r['travel']['minutes']} min walking"
+             + "".join(f"; {n} {s}" for s, n in r["travel"].get("states", {}).items() if s != "arrived")
+             + "".join(f"; {n} could not set off ({d})" for d, n in r["travel"].get("not_set_off", {}).items())
+             + (f"; {r['travel']['doors']} doors opened, {r['travel']['hops']} hops, planning at most "
+                f"{r['travel']['plan_ms_max']} ms" if "doors" in r["travel"] else "") + ".",
              f"Cost: ${r['cost_usd']['total']} (${r['cost_per_hour_usd']['total']}/h"
              + (f", ${r['cost_per_kill_usd']} a kill" if r.get("cost_per_kill_usd") else "") + "); "
              f"system two ${r['cost_usd']['system2']} ({r['planner_calls']} planner calls, "
              f"${r['cost_per_hour_usd']['system2']}/h), system one ${r['cost_usd']['system1']} "
-             f"({r['fight_decisions']} fight decisions, {r['routine_questions']} routine questions, "
+             f"({r['fight_decisions']} fight decisions"
+             + (f" and {r['fight_decisions_not_asked']} not put to Jev" if r.get("fight_decisions_not_asked") else "")
+             + f", {r['routine_questions']} routine questions, "
              f"${r['cost_per_hour_usd']['system1']}/h)"
              + ("" if r.get("costs_recorded") else ", estimated from tokens: the log has no cost records")
              + (f". OpenRouter's own count for the key: ${r['openrouter_key_spent_usd']}"

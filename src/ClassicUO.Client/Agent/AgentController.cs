@@ -59,6 +59,50 @@ namespace ClassicUO.Agent
 
         private uint _engaged;
         private const uint ENGAGE_OUT_OF_REACH_MS = 15000;
+        // A creature given up as out of reach isn't engaged again for this long unless it moves more than
+        // 2 tiles, and a path search that failed isn't repeated to the same spot for PATH_RETRY_MS (cuo-2ct:
+        // an NPC re-engaged a rat in the sewer below it for 20 minutes, its failed searches costing a core).
+        private const uint UNREACHABLE_MS = 60000;
+        private const uint PATH_RETRY_MS = 3000;
+        private readonly Dictionary<uint, (uint At, int X, int Y)> _unreachable = new Dictionary<uint, (uint, int, int)>();
+        private uint _pathFailedAt;
+        private (int X, int Y) _pathFailedTo;
+
+        // Line of sight (cuo-ehm): the server's rule over the client's map (AgentSight), and the
+        // server's own word when it disagrees ("Target can not be seen" marks the target out of sight
+        // for a few seconds). Off, the agent aims and walks as it did before sight was checked: for
+        // before-and-after benchmarks.
+        public bool SightChecks { get; set; } = true;
+
+        // Whose rule the checks follow: the local server's (ModernUO) unless agent_sight_rule, in
+        // settings.json or on the command line, or the `sight` RPC says a RunUO shard's.
+        public SightRule SightRule { get; set; } = RuleFromSettings();
+
+        private static SightRule RuleFromSettings()
+        {
+            string setting = CUOEnviroment.AgentSightRuleArg ?? Settings.GlobalSettings?.AgentSightRule;
+
+            if (!AgentSight.TryParseRule(setting, out SightRule rule))
+            {
+                Log.Warn($"[agent] agent_sight_rule '{setting}' is not modernuo, runuo or runuo22; using modernuo");
+            }
+
+            return rule;
+        }
+        // How trips go when none says (agent_travel_pace, -agent pace): at a walk, running only in danger,
+        // or at a run. A trip the brain asks for at a pace goes at it.
+        public bool TravelWalks { get; set; } = Settings.GlobalSettings?.AgentTravelPace == "walk";
+
+        private ClientSightTiles _sightTiles;
+        private readonly Dictionary<uint, uint> _sightDenied = new Dictionary<uint, uint>();
+        private readonly Dictionary<(int, int), uint> _groundDenied = new Dictionary<(int, int), uint>();
+        private const uint SIGHT_DENIED_MS = 4000;
+        private const uint SIGHT_HOLD_MS = 3000; // a spell's cursor waits this long for its target to come into sight
+        private uint _aimedAt, _aimedAtTime;      // the agent's last cursor: a creature...
+        private (int X, int Y) _aimedGround;      // ...or a ground tile
+        private bool _sightWalk;                  // walking on to see the engaged creature
+        private uint _unseenSince;                // the last engagement tick, for Stats.UnseenEngagedMs
+        private uint _retryCursorUntil;           // a spell's "try again" cursor to let go of
         private uint _engagedInReachAt; // last time the engaged creature was within reach
         private uint _nextPursuit, _lastAttackSent;
         private int _engagedLastX, _engagedLastY;
@@ -69,20 +113,7 @@ namespace ClassicUO.Agent
 
         private uint _fleeUntil, _kiteUntil;
         private bool _agentWalking;
-
-        // A long walk (travel): the planned path, how far along it the player is, and when the
-        // distance to the goal last went down. Paused while fighting, looting or fleeing.
-        private List<(int X, int Y, sbyte Z)> _travelPath;
-        private int _travelIndex, _travelGoalX, _travelGoalY, _travelDistance, _travelBest, _travelReplans;
-        private uint _travelStarted, _travelProgressAt, _nextTravelStep;
-        private readonly List<(int X, int Y)> _travelStuck = new List<(int, int)>();
-        private readonly HashSet<(int, int)> _travelBlocked = new HashSet<(int, int)>(); // impassable items seen on this trip
-        public string TravelState { get; private set; } = string.Empty;
-        public (int X, int Y) TravelGoal => (_travelGoalX, _travelGoalY);
-        public int TravelReplans => _travelReplans;
-        public IReadOnlyList<(int X, int Y)> TravelStuckAt => _travelStuck;
-        public uint TravelElapsedMs => _travelStarted == 0 ? 0 : Time.Ticks - _travelStarted;
-        public int TravelLeft => _world.Player == null ? 0 : Math.Max(Math.Abs(_world.Player.X - _travelGoalX), Math.Abs(_world.Player.Y - _travelGoalY));
+        private bool _walkRuns, _pacedWalk; // the agent's walk in progress: at a run, and a trip's or a follow's
 
         // One spell at a time: the spell the agent started and whose target cursor it
         // will answer, when its cast delay ends, and when the next spell may start.
@@ -332,6 +363,7 @@ namespace ClassicUO.Agent
             {
                 // Handing over to the player: stop walking at once (the goal is kept).
                 StopTravel("stopped: you took over");
+                StopFollow();
                 Errands.Cancel();
             }
 
@@ -390,13 +422,22 @@ namespace ClassicUO.Agent
             _agentWalking = false;
         }
 
-        // The agent always runs, as players do. The pathfinder on its own only runs walks longer
-        // than 14 tiles, so a flee of 10 tiles, a step back from melee, or a 15-tile leave on a
-        // diagonal (11 tiles each way) walked at half the speed of the monsters chasing it.
-        private bool WalkTo(int x, int y, int z, int distance)
+        // The agent runs, as players do, unless a walk is asked for: a trip or a follow at a walk
+        // (`paced`: theirs to change as danger comes and goes), or walk_to with run off. Every move
+        // of a fight runs. The pathfinder on its own only runs walks longer than 14 tiles, so a flee
+        // of 10 tiles, a step back from melee, or a 15-tile leave on a diagonal (11 tiles each way)
+        // walked at half the speed of the monsters chasing it.
+        private bool WalkTo(int x, int y, int z, int distance, bool run = true, bool paced = false, bool fromStepEnd = false)
         {
-            bool ok = _world.Player.Pathfinder.WalkTo(x, y, z, distance, run: true);
+            _sightWalk = false; // any new walk (a flee, a kite, travel) is not a walk to see the engaged creature
+            bool ok = _world.Player.Pathfinder.WalkTo(x, y, z, distance, run: run, walk: !run, fromStepEnd: fromStepEnd);
             _agentWalking |= ok;
+
+            if (ok)
+            {
+                _walkRuns = run;
+                _pacedWalk = paced;
+            }
 
             return ok;
         }
@@ -420,7 +461,11 @@ namespace ClassicUO.Agent
             d.Time = Time.Ticks;
             _decisions.Add(d);
             Spent = d.Spent ?? Spent;
-            _callCounts["fight"] = _callCounts.GetValueOrDefault("fight") + 1;
+
+            if (d.NotAsked.Length == 0)
+            {
+                _callCounts["fight"] = _callCounts.GetValueOrDefault("fight") + 1;
+            }
 
             if (_decisions.Count > 12)
             {
@@ -553,6 +598,11 @@ namespace ClassicUO.Agent
 
             if (m != AgentMessage.None)
             {
+                if (cliloc == 501943 && _aimedAtTime != 0 && Time.Ticks - _aimedAtTime < 3000)
+                {
+                    _retryCursorUntil = Time.Ticks + 2000;
+                }
+
                 Apply(m);
                 Stats.ClilocMessages++;
                 _clilocHandledAt = Time.Ticks;
@@ -615,6 +665,28 @@ namespace ClassicUO.Agent
                     _bandagingUntil = 0;
 
                     break;
+
+                // The server would not take the agent's last target: whatever its rule and ours say,
+                // that creature or tile is out of sight for a while.
+                case AgentMessage.NotInSight:
+                    Stats.NotInSight++;
+
+                    if (SightChecks && _aimedAtTime != 0 && Time.Ticks - _aimedAtTime < 3000)
+                    {
+                        if (_aimedAt != 0)
+                        {
+                            _sightDenied[_aimedAt] = Time.Ticks + SIGHT_DENIED_MS;
+                            Journal.AddAgentEvent($"0x{_aimedAt:X8} is out of sight (the server says)");
+                        }
+                        else
+                        {
+                            _groundDenied[_aimedGround] = Time.Ticks + SIGHT_DENIED_MS;
+                        }
+
+                        _aimedAtTime = 0;
+                    }
+
+                    break;
             }
         }
 
@@ -638,7 +710,12 @@ namespace ClassicUO.Agent
                 {
                     Stats.Deaths++;
                     ClearTasks();
+                    OnDied();
                     Journal.AddAgentEvent("player died");
+                }
+                else
+                {
+                    OnResurrected();
                 }
             }
 
@@ -661,6 +738,7 @@ namespace ClassicUO.Agent
             UpdateCast(now);
             UpdateSummons(now);
             UpdateRearm(now);
+            UpdateDeath(now);
 
             if (Mode == AgentMode.Off && _engaged == 0 && _lootCorpse == 0 && _takeQueue.Count == 0)
             {
@@ -680,6 +758,7 @@ namespace ClassicUO.Agent
             UpdateEngagement(now);
             UpdateLoot(now);
             UpdateTakes(now);
+            UpdateFollow(now);
             UpdateTravel(now);
             Errands.Update(now);
         }
@@ -757,6 +836,98 @@ namespace ClassicUO.Agent
         public bool IsAttackingMe(Mobile m) =>
             _attackers.TryGetValue(m.Serial, out uint at) && Time.Ticks - at < 8000
             || m.InWarMode && m.Distance <= 1 && IsMonsterTarget(m);
+
+        public ClientSightTiles SightTiles => _sightTiles ??= new ClientSightTiles(_world);
+
+        // Whether the player can see the creature, so shoot it or cast at it: the server's rule over
+        // the client's map, unless the server said otherwise in the last few seconds.
+        public bool InSight(Mobile m)
+        {
+            PlayerMobile p = _world.Player;
+
+            if (p == null || m == null)
+            {
+                return false;
+            }
+
+            if (m == p)
+            {
+                return true;
+            }
+
+            if (_sightDenied.TryGetValue(m.Serial, out uint until))
+            {
+                if (Time.Ticks < until)
+                {
+                    return false;
+                }
+
+                _sightDenied.Remove(m.Serial);
+            }
+
+            return AgentSight.MobileSeesMobile(SightTiles, p.X, p.Y, p.Z, m.X, m.Y, m.Z, SightRule);
+        }
+
+        // Whether the player can aim at the ground tile (a field, a summon).
+        public bool SeesGround(int x, int y)
+        {
+            PlayerMobile p = _world.Player;
+
+            if (p == null)
+            {
+                return false;
+            }
+
+            if (_groundDenied.TryGetValue((x, y), out uint until))
+            {
+                if (Time.Ticks < until)
+                {
+                    return false;
+                }
+
+                _groundDenied.Remove((x, y));
+            }
+
+            return AgentSight.MobileSeesGround(SightTiles, p.X, p.Y, p.Z, x, y, SightRule);
+        }
+
+        // With sight checks off (a benchmark's "before"), everything counts as in sight.
+        private bool Sees(Mobile m) => !SightChecks || InSight(m);
+
+        // The sight rule alone, without the server's corrections, whether the checks are on or off: what
+        // the counts below measure by. ModernUO says nothing when most spells miss for sight, and an
+        // archer just doesn't shoot, so the server's messages alone can't count them.
+        private bool RuleSees(Mobile m)
+        {
+            PlayerMobile p = _world.Player;
+
+            return p != null && m != null && (m == p || AgentSight.MobileSeesMobile(SightTiles, p.X, p.Y, p.Z, m.X, m.Y, m.Z, SightRule));
+        }
+
+        // What the agent's cursor just aimed at, for the server's "Target can not be seen" that may follow.
+        private void Aimed(uint serial)
+        {
+            _aimedAt = serial;
+            _aimedAtTime = serial == 0 ? 0 : Time.Ticks;
+
+            if (serial != 0 && _world.Mobiles.Get(serial) is Mobile m && !RuleSees(m))
+            {
+                Stats.AimedUnseen++;
+            }
+        }
+
+        private void AimedGround(int x, int y)
+        {
+            _aimedAt = 0;
+            _aimedGround = (x, y);
+            _aimedAtTime = Time.Ticks;
+            PlayerMobile p = _world.Player;
+
+            if (p != null && !AgentSight.MobileSeesGround(SightTiles, p.X, p.Y, p.Z, x, y, SightRule))
+            {
+                Stats.AimedUnseen++;
+            }
+        }
 
         // From the swing packet (0x2F) when the player is the defender.
         public void NoteAttacker(uint serial)
@@ -901,6 +1072,17 @@ namespace ClassicUO.Agent
 
                     return ("done", string.Empty);
 
+                case "disengage":
+                    // Let the fight go and leave the rest as it is: a leave on a trip keeps to the
+                    // road, and travel waits while the agent is engaged. Without this a warrior
+                    // leaving an ettin and a reaper on the way to Cove stood beside them, its walk
+                    // waiting, until it died.
+                    _engaged = 0;
+                    _lootCorpse = 0;
+                    _sightWalk = false;
+
+                    return ("done", string.Empty);
+
                 case "bandage_self":
                     return BandageOn(player.Serial) ? ("done", string.Empty) : ("failed", "no bandages");
 
@@ -927,7 +1109,8 @@ namespace ClassicUO.Agent
                         return ("failed", "no such item");
                     }
 
-                    if (!a.Manual && _world.Get(wanted.RootContainer) is Item root && root.IsCorpse && CorpseOfMonster(root.Serial) != true)
+                    if (!a.Manual && _world.Get(wanted.RootContainer) is Item root && root.IsCorpse && CorpseOfMonster(root.Serial) != true
+                        && !OwnCorpse(root))
                     {
                         Stats.Blocked++;
 
@@ -939,10 +1122,10 @@ namespace ClassicUO.Agent
                     return ("done", string.Empty);
 
                 case "flee":
-                    return Flee(a.Target, Math.Clamp(a.Tiles, 3, 15));
+                    return Flee(a.Target, Math.Clamp(a.Tiles, 3, 15), a.X, a.Y);
 
                 case "kite":
-                    return Kite(Math.Clamp(a.Tiles, 2, 8));
+                    return Kite(Math.Clamp(a.Tiles, 2, 8), a.X, a.Y);
 
                 case "pet":
                     return PetCommand(a.Kind, a.Target, a.Manual);
@@ -951,30 +1134,67 @@ namespace ClassicUO.Agent
                     return Recall(a.Target, a.Distance, a.Kind);
 
                 case "bank":
+                    StopFollow();
+
                     return Errands.StartBank(a.Deposit, a.Withdraw);
 
                 case "buy":
                 case "sell":
+                    StopFollow();
+
                     return Errands.StartShop(a.Verb == "buy", a.Target, a.Items);
 
                 case "travel":
                     // A new trip ends any errand still going: its walk to a vendor would otherwise
                     // take the trip over (seen in a soak run: a 240-tile trip "arrived" in 3 s).
+                    if (a.BadPace)
+                    {
+                        return ("failed", $"bad pace '{a.Pace}': walk or run");
+                    }
+
                     Errands.Cancel();
+                    StopFollow();
                     _travelManual = a.Manual;
 
-                    return StartTravel(a.X, a.Y, Math.Max(0, a.Distance));
+                    return StartTravel(a.X, a.Y, Math.Max(0, a.Distance), a.WalkPace(TravelWalks));
+
+                // Keep within a few tiles of someone as they move (AgentFollow), until a stop, a
+                // trip, a walk or an errand.
+                case "follow":
+                    if (a.BadPace)
+                    {
+                        return ("failed", $"bad pace '{a.Pace}': walk or run");
+                    }
+
+                    return StartFollow(a.Target, a.HasDistance ? a.Distance : 2, a.WalkPace(true), a.Manual);
 
                 case "walk_to":
                     _engaged = 0;
+                    StopFollow();
 
-                    return WalkTo(a.X, a.Y, player.Z, Math.Max(0, a.Distance)) ? ("done", string.Empty) : ("failed", "no path");
+                    return WalkTo(a.X, a.Y, player.Z, Math.Max(0, a.Distance), a.Run) ? ("done", string.Empty) : ("failed", "no path");
 
                 case "move":
+                    StopFollow();
+
                     return Move(a.Direction, Math.Clamp(a.Tiles, 1, 15));
 
                 case "say":
-                    GameActions.Say(a.Text);
+                    if (a.Kind == "emote")
+                    {
+                        GameActions.Say(AgentAction.EmoteText(a.Text), ProfileManager.CurrentProfile.EmoteHue, MessageType.Emote);
+                    }
+                    else
+                    {
+                        GameActions.Say(a.Text);
+                    }
+
+                    return ("done", string.Empty);
+
+                // The gestures of the client's own Bow and Salute macros.
+                case "bow":
+                case "salute":
+                    GameActions.EmoteAction(a.Verb);
 
                     return ("done", string.Empty);
 
@@ -1002,6 +1222,9 @@ namespace ClassicUO.Agent
                 case "wait":
                     return ("done", string.Empty);
 
+                case "rewear":
+                    return Rewear();
+
                 case "hint":
                     if (!string.IsNullOrEmpty(a.Text))
                     {
@@ -1013,6 +1236,24 @@ namespace ClassicUO.Agent
                 default:
                     return ("failed", $"unknown verb '{a.Verb}'");
             }
+        }
+
+        // Given up as out of reach within UNREACHABLE_MS, and still within 2 tiles of where it was.
+        public bool Unreachable(Mobile m)
+        {
+            if (!_unreachable.TryGetValue(m.Serial, out (uint At, int X, int Y) u))
+            {
+                return false;
+            }
+
+            if (Time.Ticks - u.At > UNREACHABLE_MS || Math.Max(Math.Abs(m.X - u.X), Math.Abs(m.Y - u.Y)) > 2)
+            {
+                _unreachable.Remove(m.Serial);
+
+                return false;
+            }
+
+            return true;
         }
 
         private (string, string) Attack(uint serial, bool manual, int range = 1)
@@ -1031,6 +1272,13 @@ namespace ClassicUO.Agent
                 Stats.Blocked++;
 
                 return ("blocked", "not a monster");
+            }
+
+            if (!manual && Unreachable(m))
+            {
+                Stats.Blocked++;
+
+                return ("blocked", "given up on it as out of reach a moment ago");
             }
 
             _fleeUntil = 0;
@@ -1140,6 +1388,13 @@ namespace ClassicUO.Agent
                 {
                     return ("failed", "out of spell range");
                 }
+
+                // The server refuses a target out of sight ("Target can not be seen") once the spell
+                // is cast: don't start it.
+                if (m != p && !a.Manual && !Sees(m))
+                {
+                    return ("failed", "not in sight");
+                }
             }
 
             // A field or a placed summon (Wall of Stone, Blade Spirits) aimed at a creature: its cursor
@@ -1158,6 +1413,11 @@ namespace ClassicUO.Agent
                     Stats.Blocked++;
 
                     return ("blocked", "not a monster");
+                }
+
+                if (!a.Manual && SightChecks && TileBeside(near.Serial) == null)
+                {
+                    return ("failed", "no tile beside it in sight");
                 }
             }
 
@@ -1254,6 +1514,12 @@ namespace ClassicUO.Agent
                         continue;
                     }
 
+                    // The server wants the tile in sight too.
+                    if (SightChecks && !SeesGround(x, y))
+                    {
+                        continue;
+                    }
+
                     bool taken = false;
 
                     foreach (Mobile o in _world.Mobiles.Values)
@@ -1311,6 +1577,21 @@ namespace ClassicUO.Agent
 
             _wasTargeting = tm.IsTargeting;
 
+            // "Target cannot be seen. Try again." after the agent's own aim comes with a new cursor for
+            // the same spell (ModernUO: Blade Spirits, Energy Vortex): let it go rather than leave it up.
+            if (_retryCursorUntil != 0)
+            {
+                if (tm.IsTargeting && _castSpell == 0)
+                {
+                    tm.CancelTarget();
+                    _retryCursorUntil = 0;
+                }
+                else if (now > _retryCursorUntil)
+                {
+                    _retryCursorUntil = 0;
+                }
+            }
+
             if (_castSpell == 0)
             {
                 return;
@@ -1325,18 +1606,51 @@ namespace ClassicUO.Agent
                 bool playerTookOver = !_castSurvival && touched != 0 && touched >= _castStarted;
                 Entity e = _castTarget == 0 ? null : _world.Get(_castTarget);
 
+                // A target out of sight when the cursor comes up (it walked behind something while the
+                // spell was cast) is waited for a little while the agent walks on to see it, then let go.
+                bool hold = SightChecks && now - _cursorUpSince < SIGHT_HOLD_MS;
+
                 if (playerTookOver)
                 {
                     // The player has the controls: the cursor is theirs to use or cancel.
                 }
-                else if (_castNear != 0 && tm.TargetingState == CursorTarget.Position && TileBeside(_castNear) is (int x, int y))
+                else if (_castNear != 0 && tm.TargetingState == CursorTarget.Position)
                 {
-                    tm.Target(0, (ushort) x, (ushort) y, _world.Map.GetTileZ(x, y));
+                    if (TileBeside(_castNear) is (int x, int y))
+                    {
+                        AimedGround(x, y);
+                        tm.Target(0, (ushort) x, (ushort) y, _world.Map.GetTileZ(x, y));
+                    }
+                    else if (hold && _world.Mobiles.Get(_castNear) is Mobile coming && !coming.IsDead)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        tm.CancelTarget();
+                    }
                 }
                 else if (e != null && !(e is Mobile m && m.IsDead) && (tm.TargetingState == CursorTarget.Object || tm.TargetingState == CursorTarget.Position))
                 {
-                    _agentTargeted = _castTarget;
-                    tm.Target(_castTarget);
+                    Mobile aimed = e as Mobile;
+                    bool unseen = SightChecks && aimed != null && aimed != _world.Player && !InSight(aimed);
+
+                    if (unseen && hold)
+                    {
+                        return;
+                    }
+
+                    if (unseen)
+                    {
+                        Journal.AddAgentEvent($"let the spell go: 0x{_castTarget:X8} stayed out of sight");
+                        tm.CancelTarget();
+                    }
+                    else
+                    {
+                        _agentTargeted = _castTarget;
+                        Aimed(aimed != null && aimed != _world.Player ? _castTarget : 0);
+                        tm.Target(_castTarget);
+                    }
                 }
                 else
                 {
@@ -1537,10 +1851,28 @@ namespace ClassicUO.Agent
             return ("done", string.Empty);
         }
 
-        private (string, string) Flee(uint from, int tiles)
+        // With (x, y), a spot the brain picked from the snapshot's `spots` (cuo-fhf): the run goes there,
+        // and only when there is no path to it the way away from the threat is worked out as below.
+        private (string, string) Flee(uint from, int tiles, int x = 0, int y = 0)
         {
             PlayerMobile p = _world.Player;
             Vector2 away = Vector2.Zero;
+            string fallback = string.Empty;
+
+            if (x != 0 || y != 0)
+            {
+                if (WalkToSpot(x, y, AgentSpots.RADIUS))
+                {
+                    _engaged = 0;
+                    _lootCorpse = 0;
+                    _fleeUntil = Time.Ticks + 6000;
+                    Stats.Flees++;
+
+                    return ("done", $"to the spot {AgentNav.Tiles(p.X, p.Y, x, y)} tiles {AgentSnapshot.Compass(x - p.X, y - p.Y)}");
+                }
+
+                fallback = "no path to the spot; ";
+            }
 
             if (from != 0 && _world.Mobiles.Get(from) is Mobile threat)
             {
@@ -1584,313 +1916,20 @@ namespace ClassicUO.Agent
                         _fleeUntil = Time.Ticks + 6000;
                         Stats.Flees++;
 
-                        return ("done", $"{run} tiles {AgentSnapshot.Compass(dx, dy)}");
+                        return ("done", $"{fallback}{run} tiles {AgentSnapshot.Compass(dx, dy)}");
                     }
                 }
             }
 
-            return ("failed", "no path away");
-        }
-
-        // ---------------------------------------------------------------- travel
-
-        private const int TRAVEL_LEG = 16;           // tiles per leg handed to the client's pathfinder
-        private const uint TRAVEL_STUCK_MS = 8000;   // no progress for this long: stuck
-        private const int TRAVEL_MAX_REPLANS = 5;
-
-        private (string, string) StartTravel(int x, int y, int distance)
-        {
-            _travelGoalX = x;
-            _travelGoalY = y;
-            _travelDistance = distance;
-            _travelReplans = 0;
-            _travelStuck.Clear();
-            _travelBlocked.Clear();
-            _travelStarted = Time.Ticks;
-
-            if (!PlanTravel())
-            {
-                return ("failed", "no route");
-            }
-
-            Journal.AddAgentEvent($"travelling to {x},{y}");
-
-            return ("done", $"{_travelPath.Count} tiles");
-        }
-
-        // The planning grid for a walk from the player to (gx, gy): a box around both, with the
-        // impassable items in view (barricades, blockers; doors are opened instead) and the spots
-        // already found stuck blocked. Null when the walk is too long for one plan.
-        public NavGrid TravelGrid(int gx, int gy, HashSet<(int, int)> avoid = null, int widen = 1)
-        {
-            PlayerMobile p = _world.Player;
-            int dist = Math.Max(Math.Abs(p.X - gx), Math.Abs(p.Y - gy));
-            int margin = (24 + dist / 4) * widen;
-            int x0 = Math.Min(p.X, gx) - margin, y0 = Math.Min(p.Y, gy) - margin;
-            int w = Math.Abs(p.X - gx) + 2 * margin, h = Math.Abs(p.Y - gy) + 2 * margin;
-
-            if (w > 900 || h > 900)
-            {
-                return null;
-            }
-
-            NavGrid grid = AgentNav.Load(_world.MapIndex, x0, y0, w, h);
-
-            // The client forgets items out of view, so what was seen earlier on the trip is kept.
-            foreach (Item it in _world.Items.Values)
-            {
-                if (it.OnGround && !it.IsMulti && it.ItemData.IsImpassable && !it.ItemData.IsDoor)
-                {
-                    _travelBlocked.Add((it.X, it.Y));
-                }
-            }
-
-            foreach ((int bx, int by) in _travelBlocked)
-            {
-                grid.Block(bx, by);
-            }
-
-            foreach ((int bx, int by) in _travelStuck)
-            {
-                grid.Block(bx, by);
-            }
-
-            if (avoid != null)
-            {
-                foreach ((int bx, int by) in avoid)
-                {
-                    grid.Block(bx, by);
-                }
-            }
-
-            return grid;
-        }
-
-        // Plans from where the player stands, in a box around the start and the goal; when the
-        // way round something leaves that box, in a wider one.
-        private bool PlanTravel(HashSet<(int, int)> avoid = null)
-        {
-            PlayerMobile p = _world.Player;
-            int dist = Math.Max(Math.Abs(p.X - _travelGoalX), Math.Abs(p.Y - _travelGoalY));
-            _travelPath = null;
-
-            foreach (int widen in new[] { 1, 3, 6 })
-            {
-                NavGrid grid = TravelGrid(_travelGoalX, _travelGoalY, avoid, widen);
-
-                if (grid == null)
-                {
-                    break;
-                }
-
-                _travelPath = AgentNav.Plan(grid, p.X, p.Y, p.Z, _travelGoalX, _travelGoalY, _travelDistance, 1_500_000);
-
-                if (_travelPath != null)
-                {
-                    break;
-                }
-            }
-
-            if (_travelPath == null && TravelGrid(_travelGoalX, _travelGoalY, avoid) == null)
-            {
-                TravelState = "too far";
-
-                return false;
-            }
-
-            _travelIndex = 0;
-            _travelBest = dist;
-            _travelProgressAt = Time.Ticks;
-
-            if (_travelPath == null)
-            {
-                TravelState = "no route";
-
-                return false;
-            }
-
-            TravelState = "walking";
-
-            return true;
-        }
-
-        public void StopTravel(string state)
-        {
-            if (_travelPath != null)
-            {
-                TravelState = state;
-            }
-
-            _travelPath = null;
-        }
-
-        private void UpdateTravel(uint now)
-        {
-            if (_travelPath == null || now < _nextTravelStep)
-            {
-                return;
-            }
-
-            _nextTravelStep = now + 250;
-            PlayerMobile p = _world.Player;
-
-            // Fighting, looting, fleeing or the player's hands on the controls: wait, without
-            // counting it against progress.
-            if (p.IsDead || _engaged != 0 || _lootCorpse != 0 || Fleeing || _takeQueue.Count != 0 || Paused(AgentBehavior.Move)
-                || GetAuthority(AgentBehavior.Move) != AgentAuthority.Auto && !_travelManual)
-            {
-                _travelProgressAt = now;
-
-                return;
-            }
-
-            int left = TravelLeft;
-
-            if (left <= _travelDistance)
-            {
-                TravelState = "arrived";
-                _travelPath = null;
-                Journal.AddAgentEvent($"arrived at {_travelGoalX},{_travelGoalY}");
-
-                return;
-            }
-
-            if (left < _travelBest)
-            {
-                _travelBest = left;
-                _travelProgressAt = now;
-            }
-
-            // Where along the path the player is now.
-            int nearest = _travelIndex, nearestD = int.MaxValue;
-
-            for (int i = _travelIndex; i < _travelPath.Count && i < _travelIndex + 48; i++)
-            {
-                int d = Math.Max(Math.Abs(_travelPath[i].X - p.X), Math.Abs(_travelPath[i].Y - p.Y));
-
-                if (d < nearestD)
-                {
-                    nearest = i;
-                    nearestD = d;
-                }
-            }
-
-            _travelIndex = nearest;
-
-            if (now - _travelProgressAt > TRAVEL_STUCK_MS)
-            {
-                TravelStuck(p);
-
-                return;
-            }
-
-            if (p.Pathfinder.AutoWalking)
-            {
-                return;
-            }
-
-            // The furthest point of the path the client's pathfinder can reach from here; if it
-            // finds no way there, try nearer ones.
-            int leg = AgentNav.NextLeg(_travelPath, _travelIndex, p.X, p.Y, TRAVEL_LEG);
-
-            for (int i = leg; i > _travelIndex; i -= 3)
-            {
-                (int x, int y, sbyte z) = _travelPath[i];
-
-                // The path already ends within the distance asked of the goal, so every leg,
-                // the last too, walks to its tile.
-                if (WalkTo(x, y, z, 0))
-                {
-                    return;
-                }
-            }
-
-            // No leg plans: most often a closed door on the path, which the map files don't know.
-            if (now - _doorTriedAt > 2500)
-            {
-                OpenDoorAhead(p, now);
-            }
-        }
-
-        private uint _doorTriedAt;
-
-        private void OpenDoorAhead(PlayerMobile p, uint now)
-        {
-            for (int i = _travelIndex; i < _travelPath.Count && i <= _travelIndex + 4; i++)
-            {
-                (int x, int y, sbyte z) = _travelPath[i];
-
-                foreach (Item it in _world.Items.Values)
-                {
-                    // A closed door stands in the doorway, on the path; an open one has swung aside,
-                    // and clicking it would close it.
-                    if (it.OnGround && it.ItemData.IsDoor && it.X == x && it.Y == y && Math.Abs(it.Z - z) <= 20 && it.Distance <= 2)
-                    {
-                        _doorTriedAt = now;
-                        Journal.AddAgentEvent($"opening a door at {it.X},{it.Y}");
-                        GameActions.DoubleClick(_world, it.Serial);
-
-                        return;
-                    }
-                }
-            }
-        }
-
-        // No progress: try a door first; otherwise remember where, block the next stretch of the
-        // path and plan around it.
-        private void TravelStuck(PlayerMobile p)
-        {
-            uint now = Time.Ticks;
-
-            if (now - _doorTriedAt > 6000)
-            {
-                OpenDoorAhead(p, now);
-
-                if (_doorTriedAt == now)
-                {
-                    _travelProgressAt = now;
-
-                    return;
-                }
-            }
-
-            _travelStuck.Add((p.X, p.Y));
-            Journal.AddAgentEvent($"stuck at {p.X},{p.Y} on the way to {_travelGoalX},{_travelGoalY}");
-
-            if (++_travelReplans > TRAVEL_MAX_REPLANS)
-            {
-                StopTravel("stuck");
-
-                return;
-            }
-
-            var avoid = new HashSet<(int, int)>();
-
-            for (int i = _travelIndex + 1; i < _travelPath.Count && i <= _travelIndex + 4; i++)
-            {
-                avoid.Add((_travelPath[i].X, _travelPath[i].Y));
-            }
-
-            if (!PlanTravel(avoid))
-            {
-                StopTravel("stuck");
-            }
-        }
-
-        private bool _travelManual;
-
-        // An errand walking up to a vendor: travel without needing the move authority, since the
-        // errand itself was allowed.
-        public void TravelForErrand(int x, int y)
-        {
-            _travelManual = true;
-            StartTravel(x, y, 1);
+            return ("failed", fallback + "no path away");
         }
 
         // A caster stepping back from the creatures in melee reach, between spells, keeping its
         // target: spells are interrupted by every hit. Casting roots the caster, so it only
         // goes once the current spell is off; the next queued spell waits for the step.
-        private (string, string) Kite(int tiles)
+        // With (x, y), a spot the brain picked (cuo-fhf): a step back there, if it is no further than
+        // a step back goes and there is a path.
+        private (string, string) Kite(int tiles, int x = 0, int y = 0)
         {
             PlayerMobile p = _world.Player;
 
@@ -1916,6 +1955,21 @@ namespace ClassicUO.Agent
                 return ("done", "nothing close");
             }
 
+            string fallback = string.Empty;
+
+            if (x != 0 || y != 0)
+            {
+                if (WalkToSpot(x, y, 8))
+                {
+                    _kiteUntil = Time.Ticks + 2500;
+                    Stats.Kites++;
+
+                    return ("done", $"to the spot {AgentNav.Tiles(p.X, p.Y, x, y)} tiles {AgentSnapshot.Compass(x - p.X, y - p.Y)}");
+                }
+
+                fallback = "no path to the spot; ";
+            }
+
             if (away == Vector2.Zero)
             {
                 away = new Vector2(0, -1);
@@ -1934,11 +1988,11 @@ namespace ClassicUO.Agent
                     _kiteUntil = Time.Ticks + 2500;
                     Stats.Kites++;
 
-                    return ("done", $"{tiles} tiles {AgentSnapshot.Compass(dx, dy)}");
+                    return ("done", $"{fallback}{tiles} tiles {AgentSnapshot.Compass(dx, dy)}");
                 }
             }
 
-            return ("failed", "no room to step back");
+            return ("failed", fallback + "no room to step back");
         }
 
         public bool Kiting => _kiteUntil > Time.Ticks && _agentWalking;
@@ -2003,6 +2057,11 @@ namespace ClassicUO.Agent
 
         public bool OnServerGump(uint sender, uint gumpId, string layout, string[] lines)
         {
+            if (OnResurrectGump(sender, gumpId, layout))
+            {
+                return true;
+            }
+
             // The moongate warning (cliloc 1062049, or 1062050 for Felucca): OKAY is button 1.
             if (_gateConfirmUntil > Time.Ticks && layout != null && (layout.Contains("1062049") || layout.Contains("1062050")))
             {
@@ -2094,6 +2153,7 @@ namespace ClassicUO.Agent
         private void ClearTasks()
         {
             StopTravel("stopped");
+            StopFollow();
             Errands.Cancel();
             _castSpell = 0;
             _queuedCast = null;
@@ -2367,6 +2427,19 @@ namespace ClassicUO.Agent
 
             if (_engaged == 0)
             {
+                _unseenSince = 0;
+
+                // A walk to see a creature that is gone (dead, given up) has nothing left to see.
+                if (_sightWalk)
+                {
+                    _sightWalk = false;
+
+                    if (_agentWalking && _world.Player.Pathfinder.AutoWalking)
+                    {
+                        _world.Player.Pathfinder.StopAutoWalk();
+                    }
+                }
+
                 return;
             }
 
@@ -2379,16 +2452,41 @@ namespace ClassicUO.Agent
                 return;
             }
 
+            // At range (an archer, a mage) the creature must be in sight too: the server neither shoots
+            // nor takes a spell's target through a wall. In melee, walking up to it is the way to it anyway.
+            bool sight = _engagedRange <= 1 || Sees(m);
+
+            // Time spent engaged at range with the creature out of sight, checks on or off (benchmarks).
+            if (_engagedRange > 1 && _unseenSince != 0 && !RuleSees(m))
+            {
+                Stats.UnseenEngagedMs += Math.Min(now - _unseenSince, 1000);
+            }
+
+            _unseenSince = now;
+
+            // Walking on to see it: stop as soon as it is in sight and in range, before the walk takes
+            // an archer all the way into melee.
+            if (_sightWalk && (sight && m.Distance <= _engagedRange || !_agentWalking))
+            {
+                if (_agentWalking && _world.Player.Pathfinder.AutoWalking)
+                {
+                    _world.Player.Pathfinder.StopAutoWalk();
+                }
+
+                _sightWalk = false;
+            }
+
             // A creature that stays out of reach (a bird, something behind a wall) is let go: travel
             // waits while the agent is engaged, and in a soak run a crossbill held a walk 10 tiles
             // short of the healer for 10 minutes.
-            if (m.Distance <= _engagedRange)
+            if (m.Distance <= _engagedRange && sight)
             {
                 _engagedInReachAt = now;
             }
             else if (now - _engagedInReachAt > ENGAGE_OUT_OF_REACH_MS && _engaged != _playerTarget)
             {
-                Journal.AddAgentEvent($"gave up on 0x{_engaged:X8}: out of reach");
+                Journal.AddAgentEvent($"gave up on 0x{_engaged:X8}: " + (sight ? "out of reach" : "out of sight"));
+                _unreachable[_engaged] = (now, m.X, m.Y);
                 _engaged = 0;
 
                 return;
@@ -2410,17 +2508,38 @@ namespace ClassicUO.Agent
                 GameActions.Attack(_world, _engaged);
             }
 
-            // Melee closes to adjacent; a caster only closes to spell range. Only with moving
-            // allowed: combat assist never walks the character.
-            if (m.Distance > _engagedRange && GetAuthority(AgentBehavior.Move) == AgentAuthority.Auto && !Paused(AgentBehavior.Move))
+            // Melee closes to adjacent; a caster only closes to spell range, and an archer or caster
+            // that can't see its creature walks towards it until it can. Only with moving allowed:
+            // combat assist never walks the character.
+            if ((m.Distance > _engagedRange || !sight) && GetAuthority(AgentBehavior.Move) == AgentAuthority.Auto && !Paused(AgentBehavior.Move))
             {
                 bool moved = m.X != _engagedLastX || m.Y != _engagedLastY;
 
-                if (!p.Pathfinder.AutoWalking || moved)
+                bool failedHere = now - _pathFailedAt < PATH_RETRY_MS && _pathFailedTo == (m.X, m.Y);
+
+                if ((!p.Pathfinder.AutoWalking || moved || !sight && !_sightWalk) && !failedHere)
                 {
                     _engagedLastX = m.X;
                     _engagedLastY = m.Y;
-                    WalkTo(m.X, m.Y, m.Z, _engagedRange);
+                    bool wasSightWalk = _sightWalk;
+
+                    bool walking = WalkTo(m.X, m.Y, m.Z, sight ? _engagedRange : 1);
+
+                    if (!walking)
+                    {
+                        _pathFailedAt = now;
+                        _pathFailedTo = (m.X, m.Y);
+                    }
+
+                    if (walking && !sight)
+                    {
+                        if (!wasSightWalk)
+                        {
+                            Journal.AddAgentEvent($"moving to see 0x{_engaged:X8}");
+                        }
+
+                        _sightWalk = true;
+                    }
                 }
             }
         }
@@ -2557,6 +2676,37 @@ namespace ClassicUO.Agent
         }
 
         // ---------------------------------------------------------------- helpers
+
+        // The backpack, and the bags in it, the client hasn't looked into yet: what is in them isn't in
+        // the supply counts until it has (UpdatePeek opens them, one a second). A new mage's reagents are
+        // in a bag, and the planner, told of no reagents, sent it shopping (cuo-pz9).
+        public int UnreadBags()
+        {
+            Item pack = _world.Player?.FindItemByLayer(Layer.Backpack);
+
+            if (pack == null)
+            {
+                return 0;
+            }
+
+            if (pack.Items == null && !pack.Opened)
+            {
+                return 1;
+            }
+
+            int unread = 0;
+
+            for (LinkedObject i = pack.Items; i != null; i = i.Next)
+            {
+                if (i is Item it && it.Items == null && !it.Opened && it.ItemData.IsContainer && !AgentSpells.IsBook(it)
+                    && !AgentSpells.IsRunebook(it))
+                {
+                    unread++;
+                }
+            }
+
+            return unread;
+        }
 
         public int CountByGraphic(ushort graphic)
         {
@@ -2935,7 +3085,7 @@ namespace ClassicUO.Agent
 
         // ---------------------------------------------------------------- chat command
 
-        // "-agent [off|combat|auto|switch|next|status|accept|engage <follow|defend|nearby>|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>
+        // "-agent [off|combat|auto|switch|next|status|accept|engage <follow|defend|nearby>|pace <walk|run>|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>
         //         |strategy [set <text>|add <text>|clear]|template [list|<name>|set <name>|remove <name>]]"
         public void OnCommand(string[] args)
         {
@@ -2990,6 +3140,23 @@ namespace ClassicUO.Agent
 
                     break;
 
+                case "pace" when args.Length > 2 && (args[2] == "walk" || args[2] == "run"):
+                    TravelWalks = args[2] == "walk";
+
+                    if (Settings.GlobalSettings != null)
+                    {
+                        Settings.GlobalSettings.AgentTravelPace = args[2];
+                    }
+
+                    Print(TravelWalks ? "trips walk, and run only in danger" : "trips run");
+
+                    break;
+
+                case "pace":
+                    Print($"trips {(TravelWalks ? "walk" : "run")}; -agent pace walk|run");
+
+                    break;
+
                 case "set" when args.Length > 3 && AgentModes.TryParse(args[2], out AgentBehavior b) && AgentModes.TryParse(args[3], out AgentAuthority a):
                     SetAuthority(b, a);
                     Print($"{b.Name()} = {a.Name()}");
@@ -3016,6 +3183,12 @@ namespace ClassicUO.Agent
 
                 case "goal":
                     GoalCommand(args);
+
+                    break;
+
+                case "longgoal":
+                case "longgoals":
+                    LongGoalCommand(args);
 
                     break;
 
@@ -3064,13 +3237,13 @@ namespace ClassicUO.Agent
                         sb.Append(' ').Append(beh.Name()).Append('=').Append(GetAuthority(beh).Name());
                     }
 
-                    sb.Append($" | bandage<{Reflexes.BandageBelowPercent}% potion<{Reflexes.HealPotionBelowPercent}% | brain {(AgentHost.BrainConnected ? "connected" : "not connected")}");
+                    sb.Append($" | bandage<{Reflexes.BandageBelowPercent}% potion<{Reflexes.HealPotionBelowPercent}% | trips {(TravelWalks ? "walk" : "run")} | brain {(AgentHost.BrainConnected ? "connected" : "not connected")}");
                     Print(sb.ToString());
 
                     break;
 
                 default:
-                    Print("usage: -agent off|combat|auto|switch|next|status|accept|engage <follow|defend|nearby>|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>|strategy [set|add|clear] <text>|template [list|<name>|set <name>|remove <name>]");
+                    Print("usage: -agent off|combat|auto|switch|next|status|accept|engage <follow|defend|nearby>|set <behaviour> <off|suggest|auto>|bandage <pct>|potion <pct>|strategy [set|add|clear] <text>|template [list|<name>|set <name>|remove <name>]|goal <text>|longgoal [add <text>|done <id>|drop <id>]");
 
                     break;
             }
@@ -3082,5 +3255,9 @@ namespace ClassicUO.Agent
         public int Kills, Deaths, Attacks, Bandages, HealPotions, CurePotions, Reflexes, Flees, Looted, ItemsTaken;
         public int BrainActions, Suggestions, Accepted, Blocked, Deferred, Casts, SpellHeals, Threats, Kites, PetOrders, Songs, Rearms;
         public int ClilocMessages, TextMessages; // server messages acted on, by number and by English text
+        public int NotInSight; // "Target can not be seen": a target the server would not take
+        public int AimedUnseen; // the agent's cursor answered at a creature or tile out of sight (by the sight rule)
+        public int SpotWalks, SpotFallbacks; // runs and steps back to the spot the brain picked, and those with no path there (cuo-fhf)
+        public long UnseenEngagedMs; // engaged at range with the creature out of sight (by the sight rule)
     }
 }

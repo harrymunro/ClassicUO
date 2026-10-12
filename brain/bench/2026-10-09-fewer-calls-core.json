@@ -1,0 +1,2161 @@
+{
+  "started": "2026-10-09T13:22:50",
+  "rounds": 5,
+  "lane": 7,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-haiku-5.5",
+      "guide": "anthropic/claude-haiku-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "mismatch": {
+      "bead": "cuo-46e.2",
+      "right": "An ogre lord walks up while four weak monsters fight the warrior: leave, or at least don't engage it.",
+      "judges": {
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.6,
+              "player_died": false,
+              "kills": [
+                "Vorgak (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Vorgak (orc)",
+                "Kireki (ratman)"
+              ],
+              "flees_at_hp": [
+                86,
+                87,
+                87,
+                89,
+                92,
+                94,
+                96,
+                98
+              ],
+              "min_hp": 55,
+              "decisions": 58,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev_everytick-01.jsonl",
+              "input_tokens": 108469,
+              "cost_usd": 0.004556,
+              "cost_by_kind": {
+                "fight": 0.004556
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 240.0,
+              "decisions_made": 58
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Chiackukk (ratman)"
+              ],
+              "engaged": [
+                "Chiackukk (ratman)",
+                "Brugagh (orc)"
+              ],
+              "flees_at_hp": [
+                60,
+                60,
+                94,
+                96,
+                98,
+                100,
+                100
+              ],
+              "min_hp": 59,
+              "decisions": 64,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev_everytick-02.jsonl",
+              "input_tokens": 121585,
+              "cost_usd": 0.005107,
+              "cost_by_kind": {
+                "fight": 0.005107
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 248.2,
+              "decisions_made": 64
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Pahgorim (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Pahgorim (orc)",
+                "Weckaki (ratman)"
+              ],
+              "flees_at_hp": [
+                93,
+                94,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 75,
+              "decisions": 46,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev_everytick-03.jsonl",
+              "input_tokens": 81729,
+              "cost_usd": 0.003433,
+              "cost_by_kind": {
+                "fight": 0.003433
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 279.7,
+              "decisions_made": 46
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Vagungad (orc)",
+                "a mongbat",
+                "a headless one",
+                "a headless one"
+              ],
+              "engaged": [
+                "Vagungad (orc)",
+                "a mongbat",
+                "a headless one",
+                "Chakreki (ratman)"
+              ],
+              "flees_at_hp": [
+                69,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                85
+              ],
+              "min_hp": 68,
+              "decisions": 55,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev_everytick-04.jsonl",
+              "input_tokens": 99857,
+              "cost_usd": 0.004194,
+              "cost_by_kind": {
+                "fight": 0.004194
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 263.2,
+              "decisions_made": 55
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Supaugh (orc)",
+                "a mongbat",
+                "a headless one",
+                "Recheki (ratman)"
+              ],
+              "engaged": [
+                "Supaugh (orc)",
+                "a mongbat",
+                "a headless one",
+                "Ckikicheki (ratman)"
+              ],
+              "flees_at_hp": [
+                92,
+                93,
+                95,
+                95,
+                89,
+                91,
+                92,
+                93,
+                95,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 55,
+              "decisions": 52,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev_everytick-05.jsonl",
+              "input_tokens": 97315,
+              "cost_usd": 0.004087,
+              "cost_by_kind": {
+                "fight": 0.004087
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 270.5,
+              "decisions_made": 52
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02138,
+          "cost_per_round_usd": 0.00428,
+          "latency_ms_avg": 260.3,
+          "decisions_per_round": 55.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Olaugh (orc)",
+                "a headless one",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Olaugh (orc)",
+                "a headless one",
+                "a mongbat",
+                "Fackik (ratman)"
+              ],
+              "flees_at_hp": [
+                88,
+                89,
+                91,
+                92,
+                93,
+                95,
+                97,
+                99,
+                100
+              ],
+              "min_hp": 60,
+              "decisions": 39,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev-01.jsonl",
+              "input_tokens": 74868,
+              "cost_usd": 0.003144,
+              "cost_by_kind": {
+                "fight": 0.003144
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 290.3,
+              "decisions_made": 54
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.0,
+              "player_died": false,
+              "kills": [
+                "Factik (ratman)"
+              ],
+              "engaged": [
+                "Ughat (orc)",
+                "Factik (ratman)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                66,
+                67,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 65,
+              "decisions": 43,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev-02.jsonl",
+              "input_tokens": 82675,
+              "cost_usd": 0.003472,
+              "cost_by_kind": {
+                "fight": 0.003472
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 242.5,
+              "decisions_made": 58
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Tactaki (ratman)",
+                "a mongbat",
+                "Omegugh (orc)"
+              ],
+              "engaged": [
+                "Tactaki (ratman)",
+                "a mongbat",
+                "Omegugh (orc)"
+              ],
+              "flees_at_hp": [
+                96,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 46,
+              "decisions": 43,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev-03.jsonl",
+              "input_tokens": 82138,
+              "cost_usd": 0.00345,
+              "cost_by_kind": {
+                "fight": 0.00345
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 251.4,
+              "decisions_made": 58
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.1,
+              "player_died": false,
+              "kills": [
+                "Jokgagu (orc)",
+                "a headless one",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Jokgagu (orc)",
+                "a headless one",
+                "Chatuki (ratman)"
+              ],
+              "flees_at_hp": [
+                81,
+                82,
+                83,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 66,
+              "decisions": 42,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev-04.jsonl",
+              "input_tokens": 80320,
+              "cost_usd": 0.003373,
+              "cost_by_kind": {
+                "fight": 0.003373
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 313.2,
+              "decisions_made": 57
+            },
+            {
+              "success": true,
+              "attacked_dangerous": false,
+              "dangerous_seen": true,
+              "seconds": 75.2,
+              "player_died": false,
+              "kills": [
+                "Golag (orc)",
+                "a mongbat"
+              ],
+              "engaged": [
+                "Golag (orc)",
+                "a mongbat",
+                "Titchaki (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                96,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 43,
+              "decisions": 42,
+              "log": "logs/bench/20261009-132250-lane7/mismatch-jev-05.jsonl",
+              "input_tokens": 84051,
+              "cost_usd": 0.00353,
+              "cost_by_kind": {
+                "fight": 0.00353
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 251.9,
+              "decisions_made": 53
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01697,
+          "cost_per_round_usd": 0.00339,
+          "latency_ms_avg": 269.9,
+          "decisions_per_round": 41.8,
+          "errors": 0
+        }
+      }
+    },
+    "priority": {
+      "bead": "cuo-46e.3",
+      "right": "Three zombies close by and an orcish mage casting from range: kill the mage first.",
+      "judges": {
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 80.6,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                100,
+                80,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 57,
+              "decisions": 53,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev_everytick-01.jsonl",
+              "input_tokens": 89677,
+              "cost_usd": 0.003766,
+              "cost_by_kind": {
+                "fight": 0.003766
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 258.2,
+              "decisions_made": 53
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 86.9,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                91,
+                92,
+                93,
+                96,
+                98,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 65,
+              "decisions": 57,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev_everytick-02.jsonl",
+              "input_tokens": 96380,
+              "cost_usd": 0.004048,
+              "cost_by_kind": {
+                "fight": 0.004048
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 257.2,
+              "decisions_made": 57
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 81.1,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                100,
+                59,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 59,
+              "decisions": 56,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev_everytick-03.jsonl",
+              "input_tokens": 96847,
+              "cost_usd": 0.004068,
+              "cost_by_kind": {
+                "fight": 0.004068
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 272.0,
+              "decisions_made": 56
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 68.9,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 58,
+              "decisions": 45,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev_everytick-04.jsonl",
+              "input_tokens": 86174,
+              "cost_usd": 0.003619,
+              "cost_by_kind": {
+                "fight": 0.003619
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 251.3,
+              "decisions_made": 45
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 75.7,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                63,
+                56,
+                94,
+                96,
+                98,
+                100,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 50,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev_everytick-05.jsonl",
+              "input_tokens": 86437,
+              "cost_usd": 0.00363,
+              "cost_by_kind": {
+                "fight": 0.00363
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 276.8,
+              "decisions_made": 50
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01913,
+          "cost_per_round_usd": 0.00383,
+          "latency_ms_avg": 263.1,
+          "decisions_per_round": 52.2,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 77.2,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                54,
+                64,
+                81,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 36,
+              "decisions": 39,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev-01.jsonl",
+              "input_tokens": 70677,
+              "cost_usd": 0.002968,
+              "cost_by_kind": {
+                "fight": 0.002968
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 244.5,
+              "decisions_made": 53
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 80.2,
+              "player_died": false,
+              "kills": [
+                "an orcish mage"
+              ],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                56,
+                56,
+                83,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 56,
+              "decisions": 43,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev-02.jsonl",
+              "input_tokens": 78093,
+              "cost_usd": 0.00328,
+              "cost_by_kind": {
+                "fight": 0.00328
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 256.2,
+              "decisions_made": 58
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 63.5,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 47,
+              "decisions": 38,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev-03.jsonl",
+              "input_tokens": 75069,
+              "cost_usd": 0.003153,
+              "cost_by_kind": {
+                "fight": 0.003153
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 288.6,
+              "decisions_made": 41
+            },
+            {
+              "success": false,
+              "first_kill": null,
+              "caster_killed": false,
+              "seconds": 40.9,
+              "player_died": false,
+              "kills": [],
+              "engaged": [
+                "an orcish mage"
+              ],
+              "flees_at_hp": [
+                43,
+                88,
+                91,
+                94,
+                96
+              ],
+              "min_hp": 43,
+              "decisions": 23,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev-04.jsonl",
+              "input_tokens": 44466,
+              "cost_usd": 0.001868,
+              "cost_by_kind": {
+                "fight": 0.001868
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 307.0,
+              "decisions_made": 28
+            },
+            {
+              "success": true,
+              "first_kill": "an orcish mage",
+              "caster_killed": true,
+              "seconds": 65.1,
+              "player_died": false,
+              "kills": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "engaged": [
+                "an orcish mage",
+                "a zombie",
+                "a zombie",
+                "a zombie"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 49,
+              "decisions": 36,
+              "log": "logs/bench/20261009-132250-lane7/priority-jev-05.jsonl",
+              "input_tokens": 68484,
+              "cost_usd": 0.002876,
+              "cost_by_kind": {
+                "fight": 0.002876
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 294.1,
+              "decisions_made": 42
+            }
+          ],
+          "n": 5,
+          "successes": 4,
+          "rate": 0.8,
+          "ci95": [
+            0.376,
+            0.964
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01414,
+          "cost_per_round_usd": 0.00283,
+          "latency_ms_avg": 278.1,
+          "decisions_per_round": 35.8,
+          "errors": 0
+        }
+      }
+    },
+    "loot": {
+      "bead": "cuo-46e.4",
+      "right": "A corpse holds valuables and junk while an orc walks up: take the valuables, skip the junk, stop looting when the orc arrives.",
+      "judges": {
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Zugorim (orc)",
+                "Grug (orc)"
+              ],
+              "engaged": [
+                "Grug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 76,
+              "decisions": 30,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev_everytick-01.jsonl",
+              "input_tokens": 46340,
+              "cost_usd": 0.001946,
+              "cost_by_kind": {
+                "fight": 0.001946
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 238.6,
+              "decisions_made": 30
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Haguk (orc)",
+                "Orgha (orc)"
+              ],
+              "engaged": [
+                "Orgha (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 89,
+              "decisions": 30,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev_everytick-02.jsonl",
+              "input_tokens": 46319,
+              "cost_usd": 0.001945,
+              "cost_by_kind": {
+                "fight": 0.001945
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 300.1,
+              "decisions_made": 30
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Tog (orc)",
+                "Xomath (orc)"
+              ],
+              "engaged": [
+                "Xomath (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 89,
+              "decisions": 29,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev_everytick-03.jsonl",
+              "input_tokens": 44320,
+              "cost_usd": 0.001861,
+              "cost_by_kind": {
+                "fight": 0.001861
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 239.2,
+              "decisions_made": 29
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Ougigoth (orc)"
+              ],
+              "engaged": [],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 42,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev_everytick-04.jsonl",
+              "input_tokens": 72505,
+              "cost_usd": 0.003045,
+              "cost_by_kind": {
+                "fight": 0.003045
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 233.0,
+              "decisions_made": 42
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Inkathu (orc)",
+                "Zlughig (orc)"
+              ],
+              "engaged": [
+                "Zlughig (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 82,
+              "decisions": 39,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev_everytick-05.jsonl",
+              "input_tokens": 63608,
+              "cost_usd": 0.002672,
+              "cost_by_kind": {
+                "fight": 0.002672
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 279.7,
+              "decisions_made": 39
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.01147,
+          "cost_per_round_usd": 0.00229,
+          "latency_ms_avg": 258.1,
+          "decisions_per_round": 34.0,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.2,
+              "player_died": false,
+              "kills": [
+                "Eggugat (orc)",
+                "Vuiltag (orc)"
+              ],
+              "engaged": [
+                "Vuiltag (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 100,
+              "decisions": 19,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev-01.jsonl",
+              "input_tokens": 34477,
+              "cost_usd": 0.001448,
+              "cost_by_kind": {
+                "fight": 0.001448
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 260.5,
+              "decisions_made": 28
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.3,
+              "player_died": false,
+              "kills": [
+                "Wumanok (orc)",
+                "Vargan (orc)"
+              ],
+              "engaged": [
+                "Vargan (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 84,
+              "decisions": 19,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev-02.jsonl",
+              "input_tokens": 32897,
+              "cost_usd": 0.001382,
+              "cost_by_kind": {
+                "fight": 0.001382
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 264.1,
+              "decisions_made": 28
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Sombilge (orc)",
+                "Yokgu (orc)"
+              ],
+              "engaged": [
+                "Yokgu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 93,
+              "decisions": 15,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev-03.jsonl",
+              "input_tokens": 25791,
+              "cost_usd": 0.001083,
+              "cost_by_kind": {
+                "fight": 0.001083
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 307.7,
+              "decisions_made": 23
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.1,
+              "player_died": false,
+              "kills": [
+                "Oogorim (orc)",
+                "Fandagh (orc)"
+              ],
+              "engaged": [
+                "Fandagh (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 74,
+              "decisions": 26,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev-04.jsonl",
+              "input_tokens": 46401,
+              "cost_usd": 0.001949,
+              "cost_by_kind": {
+                "fight": 0.001949
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 309.3,
+              "decisions_made": 35
+            },
+            {
+              "success": true,
+              "valuables_taken": [
+                "2 Diamond",
+                "Ring",
+                "Longsword"
+              ],
+              "junk_taken": [],
+              "seconds_looting_with_monster_adjacent": 0.0,
+              "seconds": 60.0,
+              "player_died": false,
+              "kills": [
+                "Todagog (orc)",
+                "Mabub (orc)"
+              ],
+              "engaged": [
+                "Mabub (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 94,
+              "decisions": 18,
+              "log": "logs/bench/20261009-132250-lane7/loot-jev-05.jsonl",
+              "input_tokens": 30534,
+              "cost_usd": 0.001282,
+              "cost_by_kind": {
+                "fight": 0.001282
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 265.9,
+              "decisions_made": 30
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.00714,
+          "cost_per_round_usd": 0.00143,
+          "latency_ms_avg": 281.5,
+          "decisions_per_round": 19.4,
+          "errors": 0
+        }
+      }
+    },
+    "attrition": {
+      "bead": "cuo-46e.5",
+      "right": "A long fight on six bandages and one heal potion: disengage before the supplies are gone, unless the last monster is nearly dead.",
+      "judges": {
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Xoroku (orc)",
+                "a mongbat"
+              ],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Kireki (ratman)",
+                "Xoroku (orc)",
+                "a mongbat"
+              ],
+              "flees_at_hp": [
+                100,
+                89,
+                91,
+                93,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 85,
+              "decisions": 84,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev_everytick-01.jsonl",
+              "input_tokens": 152649,
+              "cost_usd": 0.006411,
+              "cost_by_kind": {
+                "fight": 0.006411
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 259.0,
+              "decisions_made": 84
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.0,
+              "player_died": false,
+              "engaged": [
+                "Ckeki (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                71,
+                72,
+                72
+              ],
+              "min_hp": 71,
+              "decisions": 93,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev_everytick-02.jsonl",
+              "input_tokens": 174292,
+              "cost_usd": 0.00732,
+              "cost_by_kind": {
+                "fight": 0.00732
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 240.1,
+              "decisions_made": 93
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Taviectuk (ratman)"
+              ],
+              "flees_at_hp": [
+                93,
+                93,
+                94,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                95,
+                96,
+                97,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 93,
+              "decisions": 92,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev_everytick-03.jsonl",
+              "input_tokens": 172387,
+              "cost_usd": 0.00724,
+              "cost_by_kind": {
+                "fight": 0.00724
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 234.6,
+              "decisions_made": 92
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Firecheki (ratman)",
+                "Karfu (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                86,
+                87,
+                88,
+                91,
+                93,
+                95,
+                97
+              ],
+              "min_hp": 63,
+              "decisions": 85,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev_everytick-04.jsonl",
+              "input_tokens": 160990,
+              "cost_usd": 0.006762,
+              "cost_by_kind": {
+                "fight": 0.006762
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 264.7,
+              "decisions_made": 85
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "a headless one",
+                "Fozhug (orc)"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "a mongbat",
+                "Fozhug (orc)"
+              ],
+              "flees_at_hp": [
+                88,
+                88,
+                89,
+                92,
+                94,
+                96,
+                98,
+                100,
+                89,
+                91,
+                92,
+                93,
+                95,
+                97,
+                99,
+                100
+              ],
+              "min_hp": 87,
+              "decisions": 87,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev_everytick-05.jsonl",
+              "input_tokens": 152146,
+              "cost_usd": 0.00639,
+              "cost_by_kind": {
+                "fight": 0.00639
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 241.8,
+              "decisions_made": 87
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.03412,
+          "cost_per_round_usd": 0.00682,
+          "latency_ms_avg": 248.0,
+          "decisions_per_round": 88.2,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Kichak (ratman)",
+                "Derthag (orc)"
+              ],
+              "flees_at_hp": [
+                95,
+                96,
+                97,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 95,
+              "decisions": 61,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev-01.jsonl",
+              "input_tokens": 115773,
+              "cost_usd": 0.004862,
+              "cost_by_kind": {
+                "fight": 0.004862
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 267.7,
+              "decisions_made": 84
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "a mongbat",
+                "Parfu (orc)",
+                "Wecckak (ratman)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "a mongbat",
+                "a headless one",
+                "Wecckak (ratman)"
+              ],
+              "flees_at_hp": [
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100,
+                88,
+                89,
+                91,
+                92,
+                94,
+                96,
+                98,
+                100
+              ],
+              "min_hp": 88,
+              "decisions": 65,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev-02.jsonl",
+              "input_tokens": 122682,
+              "cost_usd": 0.005153,
+              "cost_by_kind": {
+                "fight": 0.005153
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 257.4,
+              "decisions_made": 83
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Tak (ratman)"
+              ],
+              "flees_at_hp": [
+                94,
+                94,
+                95,
+                96,
+                98,
+                100,
+                100,
+                100,
+                100,
+                94,
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 94,
+              "decisions": 66,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev-03.jsonl",
+              "input_tokens": 127232,
+              "cost_usd": 0.005344,
+              "cost_by_kind": {
+                "fight": 0.005344
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 245.5,
+              "decisions_made": 77
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Ritikituk (ratman)"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Ritikituk (ratman)",
+                "Xruul (orc)"
+              ],
+              "flees_at_hp": [
+                88,
+                82,
+                83,
+                84,
+                86,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 65,
+              "decisions": 82,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev-04.jsonl",
+              "input_tokens": 162050,
+              "cost_usd": 0.006806,
+              "cost_by_kind": {
+                "fight": 0.006806
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 244.4,
+              "decisions_made": 98
+            },
+            {
+              "success": true,
+              "fled": true,
+              "kills": [
+                "Fechaki (ratman)"
+              ],
+              "seconds": 120.5,
+              "player_died": false,
+              "engaged": [
+                "Fechaki (ratman)",
+                "Jogug (orc)"
+              ],
+              "flees_at_hp": [
+                93,
+                93,
+                94,
+                95,
+                97,
+                99,
+                100,
+                100,
+                100,
+                95,
+                96,
+                97,
+                99,
+                100,
+                100,
+                100
+              ],
+              "min_hp": 80,
+              "decisions": 76,
+              "log": "logs/bench/20261009-132250-lane7/attrition-jev-05.jsonl",
+              "input_tokens": 149692,
+              "cost_usd": 0.006287,
+              "cost_by_kind": {
+                "fight": 0.006287
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 278.0,
+              "decisions_made": 94
+            }
+          ],
+          "n": 5,
+          "successes": 5,
+          "rate": 1.0,
+          "ci95": [
+            0.566,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0.02845,
+          "cost_per_round_usd": 0.00569,
+          "latency_ms_avg": 258.6,
+          "decisions_per_round": 70.0,
+          "errors": 0
+        }
+      }
+    },
+    "swarm": {
+      "bead": "cuo-46e.6",
+      "right": "Six melee monsters on a mage: survive and kill at least four.",
+      "judges": {
+        "jev/everytick": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [
+                "Iki (ratman)"
+              ],
+              "seconds": 39.7,
+              "player_died": true,
+              "engaged": [
+                "Iki (ratman)",
+                "Oggugat (orc)"
+              ],
+              "flees_at_hp": [
+                100
+              ],
+              "min_hp": 0,
+              "decisions": 39,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev_everytick-01.jsonl",
+              "input_tokens": 185752,
+              "cost_usd": 0.007802,
+              "cost_by_kind": {
+                "fight": 0.007802
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 273.7,
+              "decisions_made": 39
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 22.3,
+              "player_died": true,
+              "engaged": [
+                "Tickukitaki (ratman)"
+              ],
+              "flees_at_hp": [
+                85
+              ],
+              "min_hp": 0,
+              "decisions": 22,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev_everytick-02.jsonl",
+              "input_tokens": 102905,
+              "cost_usd": 0.004322,
+              "cost_by_kind": {
+                "fight": 0.004322
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 241.9,
+              "decisions_made": 22
+            },
+            {
+              "success": true,
+              "kills": [
+                "Diwarek (ratman)",
+                "a mongbat",
+                "Hikitchaki (ratman)",
+                "Dugorim (orc)",
+                "Xugar (orc)"
+              ],
+              "seconds": 109.0,
+              "player_died": false,
+              "engaged": [
+                "Diwarek (ratman)",
+                "a mongbat",
+                "Hikitchaki (ratman)",
+                "Dugorim (orc)",
+                "Xugar (orc)"
+              ],
+              "flees_at_hp": [
+                84,
+                85,
+                86,
+                88,
+                91,
+                93,
+                95
+              ],
+              "min_hp": 55,
+              "decisions": 75,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev_everytick-03.jsonl",
+              "input_tokens": 252622,
+              "cost_usd": 0.01061,
+              "cost_by_kind": {
+                "fight": 0.01061
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 266.7,
+              "decisions_made": 75
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 46.3,
+              "player_died": true,
+              "engaged": [
+                "Tactikiv (ratman)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 0,
+              "decisions": 45,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev_everytick-04.jsonl",
+              "input_tokens": 206632,
+              "cost_usd": 0.008679,
+              "cost_by_kind": {
+                "fight": 0.008679
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 260.4,
+              "decisions_made": 45
+            },
+            {
+              "success": false,
+              "kills": [
+                "Kikiaki (ratman)",
+                "a headless one",
+                "a mongbat"
+              ],
+              "seconds": 120.1,
+              "player_died": false,
+              "engaged": [
+                "Kikiaki (ratman)",
+                "a headless one",
+                "Chaki (ratman)",
+                "Wholug (orc)",
+                "Chaki (ratman)"
+              ],
+              "flees_at_hp": [
+                64,
+                42,
+                46,
+                58,
+                58,
+                71,
+                72,
+                73,
+                75,
+                78,
+                80,
+                62,
+                51,
+                64,
+                74,
+                76,
+                78,
+                80,
+                82
+              ],
+              "min_hp": 36,
+              "decisions": 102,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev_everytick-05.jsonl",
+              "input_tokens": 333502,
+              "cost_usd": 0.014007,
+              "cost_by_kind": {
+                "fight": 0.014007
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 275.2,
+              "decisions_made": 102
+            }
+          ],
+          "n": 5,
+          "successes": 1,
+          "rate": 0.2,
+          "ci95": [
+            0.036,
+            0.624
+          ],
+          "deaths": 3,
+          "cost_usd": 0.04542,
+          "cost_per_round_usd": 0.00908,
+          "latency_ms_avg": 263.6,
+          "decisions_per_round": 56.6,
+          "errors": 0
+        },
+        "jev": {
+          "runs": [
+            {
+              "success": false,
+              "kills": [],
+              "seconds": 45.7,
+              "player_died": true,
+              "engaged": [
+                "Kukiecckak (ratman)"
+              ],
+              "flees_at_hp": [
+                51
+              ],
+              "min_hp": 0,
+              "decisions": 46,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev-01.jsonl",
+              "input_tokens": 220884,
+              "cost_usd": 0.009277,
+              "cost_by_kind": {
+                "fight": 0.009277
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 258.8,
+              "decisions_made": 46
+            },
+            {
+              "success": true,
+              "kills": [
+                "a mongbat",
+                "Marfu (orc)",
+                "Kiktaki (ratman)",
+                "Ecckkekek (ratman)"
+              ],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Marfu (orc)",
+                "Kiktaki (ratman)",
+                "Marfu (orc)",
+                "Kiktaki (ratman)",
+                "a headless one",
+                "Ecckkekek (ratman)",
+                "Zildud (orc)"
+              ],
+              "flees_at_hp": [
+                73,
+                74,
+                75,
+                79,
+                80,
+                72,
+                73,
+                74,
+                76,
+                68
+              ],
+              "min_hp": 45,
+              "decisions": 103,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev-02.jsonl",
+              "input_tokens": 370185,
+              "cost_usd": 0.015548,
+              "cost_by_kind": {
+                "fight": 0.015548
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 238.3,
+              "decisions_made": 106
+            },
+            {
+              "success": true,
+              "kills": [
+                "Ckek (ratman)",
+                "a mongbat",
+                "a headless one",
+                "Zinsbog (orc)"
+              ],
+              "seconds": 120.3,
+              "player_died": false,
+              "engaged": [
+                "Ckek (ratman)",
+                "a mongbat",
+                "Zinsbog (orc)",
+                "Wudugog (orc)"
+              ],
+              "flees_at_hp": [
+                46,
+                47
+              ],
+              "min_hp": 38,
+              "decisions": 118,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev-03.jsonl",
+              "input_tokens": 351557,
+              "cost_usd": 0.014765,
+              "cost_by_kind": {
+                "fight": 0.014765
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 239.1,
+              "decisions_made": 118
+            },
+            {
+              "success": false,
+              "kills": [
+                "a mongbat"
+              ],
+              "seconds": 120.2,
+              "player_died": false,
+              "engaged": [
+                "Xurug (orc)",
+                "Frukag (orc)",
+                "Xurug (orc)",
+                "Vectaki (ratman)",
+                "Xurug (orc)",
+                "Vectaki (ratman)"
+              ],
+              "flees_at_hp": [
+                69,
+                62,
+                74,
+                75,
+                76,
+                79,
+                81,
+                84,
+                86,
+                61,
+                55,
+                69,
+                71,
+                72,
+                74,
+                76,
+                79,
+                45
+              ],
+              "min_hp": 45,
+              "decisions": 92,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev-04.jsonl",
+              "input_tokens": 375003,
+              "cost_usd": 0.01575,
+              "cost_by_kind": {
+                "fight": 0.01575
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 255.4,
+              "decisions_made": 102
+            },
+            {
+              "success": true,
+              "kills": [
+                "Chikckak (ratman)",
+                "a mongbat",
+                "Kaki (ratman)",
+                "Gruul (orc)",
+                "Vigdug (orc)"
+              ],
+              "seconds": 101.3,
+              "player_died": false,
+              "engaged": [
+                "Chikckak (ratman)",
+                "Kaki (ratman)",
+                "Gruul (orc)",
+                "Vigdug (orc)"
+              ],
+              "flees_at_hp": [
+                72,
+                62,
+                74,
+                75,
+                78,
+                80,
+                82,
+                85
+              ],
+              "min_hp": 46,
+              "decisions": 68,
+              "log": "logs/bench/20261009-132250-lane7/swarm-jev-05.jsonl",
+              "input_tokens": 259808,
+              "cost_usd": 0.010912,
+              "cost_by_kind": {
+                "fight": 0.010912
+              },
+              "models": [
+                "typesafe/jev-1.13-20260917"
+              ],
+              "latency_ms_avg": 265.0,
+              "decisions_made": 74
+            }
+          ],
+          "n": 5,
+          "successes": 3,
+          "rate": 0.6,
+          "ci95": [
+            0.231,
+            0.882
+          ],
+          "deaths": 1,
+          "cost_usd": 0.06625,
+          "cost_per_round_usd": 0.01325,
+          "latency_ms_avg": 251.3,
+          "decisions_per_round": 85.4,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0.264484,
+    "cost_per_hour_usd": 0.2203,
+    "calls": 2692,
+    "by_role": {
+      "system1": 0.264484
+    },
+    "by_kind": {
+      "fight": {
+        "calls": 2692,
+        "input_tokens": 6297246,
+        "output_tokens": 478832,
+        "cost_usd": 0.264484,
+        "latency_ms_avg": 259.4
+      }
+    },
+    "by_model": {
+      "typesafe/jev-1.13-20260917": {
+        "calls": 2692,
+        "input_tokens": 6297246,
+        "output_tokens": 478832,
+        "cost_usd": 0.264484,
+        "latency_ms_avg": 259.4
+      }
+    },
+    "cost_per_decision_usd": 9.82e-05
+  },
+  "openrouter_key_spent_usd": 2.391671
+}

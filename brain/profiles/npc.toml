@@ -2,11 +2,16 @@
 # Which models those are comes from the model comparison (cuo-m70.3, README Results).
 
 [models]
-system1 = "jev"
+system1 = "decision1"   # with Jev for routine and strategy, as in default.toml (cuo-3ni)
+routine = "jev"
+strategy = "jev"
 system2 = "anthropic/claude-haiku-5.5"
+escalate = "anthropic/claude-haiku-5.5"   # no Sonnet for hard moments: the same model turns it off
 
 # Jev's fight decisions alone cost an active warrior about $0.08 an hour, Haiku's planning about $0.02:
-# at $0.10 a fleet's NPC spent most of its half hour resting over budget (2026-10-08).
+# at $0.10 a fleet's NPC spent most of its half hour resting over budget (2026-10-08). With memory,
+# reflections and talk the NPCs of britain-lives went over $0.15 too, so Harry raised the cap to $0.50
+# an hour (2026-10-09).
 [budget]
-per_hour = 0.15
+per_hour = 0.50
 over = "slow"

@@ -49,3 +49,22 @@ def test_announce_leaves_an_unread_strategy_alone():
                                 archetype="mage")
     asyncio.run(pilot.announce({**SNAPSHOT, "agent": {**SNAPSHOT["agent"], "strategy": "something new"}}))
     assert rpc.calls == [("brain_info", {"judge": "heuristic", "archetype": "mage", "strategy_reading": None})]
+
+
+def test_with_the_player_driving_a_death_gets_advice_not_actions(tmp_path):
+    import copy
+    from uo_brain.autopilot import death_advice
+    from uo_brain.world import World
+    w = World(tmp_path / "w.sqlite")
+    w.add_place("healer", "Britain healer", 1471, 1611, source="test")
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["mode"] = "assist"
+    snap["player"].update(x=1380, y=1520, dead=True, last_death={"x": 1380, "y": 1520, "ago_s": 5, "resurrections": 0})
+    advised = {}
+    text = death_advice(w, snap, advised)
+    assert text.startswith("dead: the nearest healer is Britain healer, 91 tiles away") and "1380,1520" in text
+    assert death_advice(w, snap, advised) == ""  # once per death
+    snap["player"].update(dead=False, last_death={"x": 1380, "y": 1520, "ago_s": 60, "resurrections": 1})
+    assert death_advice(w, snap, advised).startswith("alive again: your corpse is at 1380,1520")
+    snap["agent"]["mode"] = "auto"
+    assert death_advice(w, snap, {}) == ""  # in auto the planner does it

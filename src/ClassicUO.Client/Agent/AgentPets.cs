@@ -53,6 +53,7 @@ namespace ClassicUO.Agent
                 }
                 else if (_world.TargetManager.IsTargeting)
                 {
+                    Aimed(_petKillTarget);
                     _world.TargetManager.Target(_petKillTarget);
                     _petKillUntil = 0;
                 }

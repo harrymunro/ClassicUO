@@ -94,3 +94,10 @@ def mage_snapshot():
 @pytest.fixture
 def mage():
     return mage_snapshot()
+
+
+@pytest.fixture(autouse=True)
+def no_waiting_for_a_party(monkeypatch):
+    """A party's planner waits up to 90 s at its start for the others to join: not in tests."""
+    from uo_brain import planner
+    monkeypatch.setattr(planner.Planner, "JOIN_WAIT_S", 0.0)

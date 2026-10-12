@@ -1,0 +1,29 @@
+# The control for britain-talk.toml (cuo-x2q.3): the same two personas under other names (Kesse
+# remembers the lich, Brann wants the graveyard), so neither remembers the test's own run, and nobody
+# hears anybody. Run both at once and compare where Bran and Brann go. From brain/:
+#   uv run uo-brain fleet fleets/britain-talk-control.toml
+name = "britain-talk-control"
+talk = false
+server_port = 2593
+hours = 0.17
+
+[[agent]]
+name = "Kesse"
+account = "talk3"
+password = "talk3"
+port = 5666
+profile = "npc"
+persona = { background = "a scout who has walked every road around Britain", temperament = "cautious and talkative; she warns people about what she has seen", trade = "scouting and the odd hunt", wants = "to keep her friends alive" }
+long_goals = ["save 2000 gold"]
+memories = ["Saw a lich and two bone knights at the Britain Graveyard an hour ago; they killed a warrior there and they are still about."]
+prep = ["[AgentReset", "[AgentGo 1424 1689", "[AgentKit warrior", "[AgentSupplies bandages 60 gold 200"]
+
+[[agent]]
+name = "Brann"
+account = "talk4"
+password = "talk4"
+port = 5667
+profile = "npc"
+persona = { background = "a young fighter new to Britain", temperament = "eager and trusting; he listens to people who know the land", trade = "fighting", wants = "to test his blade on the undead at the Britain graveyard" }
+long_goals = ["reach 85 swordsmanship"]
+prep = ["[AgentReset", "[AgentGo 1423 1690", "[AgentKit warrior", "[AgentSupplies bandages 60 gold 200"]

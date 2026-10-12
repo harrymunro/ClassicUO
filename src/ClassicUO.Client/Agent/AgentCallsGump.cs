@@ -130,8 +130,8 @@ namespace ClassicUO.Agent
 
             if (d != null)
             {
-                string head = $"fight · {Ago(d.Time)} ago" + (d.LatencyMs > 0 ? $" · {Math.Round(d.LatencyMs)} ms" : "")
-                              + (d.Cost > 0 ? $" · {Dollars(d.Cost)}" : "");
+                string head = $"fight · {Ago(d.Time)} ago" + (d.NotAsked.Length != 0 ? $" · not asked: {d.NotAsked}"
+                                  : (d.LatencyMs > 0 ? $" · {Math.Round(d.LatencyMs)} ms" : "") + (d.Cost > 0 ? $" · {Dollars(d.Cost)}" : ""));
                 y = AddHeader(head, y);
 
                 foreach (AgentCallQuestion q in d.Questions)

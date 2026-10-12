@@ -58,6 +58,10 @@ namespace ClassicUO.Agent
         public float Cost = -1;
         public AgentSpent Spent;
 
+        // Why Jev wasn't asked, when it wasn't: "same state as the last call" (its answers again) or
+        // "nothing to choose". Empty for a call.
+        public string NotAsked = string.Empty;
+
         public static AgentDecision FromJson(JsonElement p)
         {
             var d = new AgentDecision();
@@ -88,6 +92,7 @@ namespace ClassicUO.Agent
                     case "gated": d.Gated = v.GetBoolean(); break;
                     case "danger": d.Danger = v.GetSingle(); break;
                     case "note": d.Note = v.GetString() ?? string.Empty; break;
+                    case "not_asked": d.NotAsked = v.GetString() ?? string.Empty; break;
 
                     case "masked":
                         foreach (JsonElement m in v.EnumerateArray())

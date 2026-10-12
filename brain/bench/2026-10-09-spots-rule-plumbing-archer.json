@@ -1,0 +1,320 @@
+{
+  "started": "2026-10-09T20:31:37",
+  "rounds": 2,
+  "lane": 1,
+  "headless": true,
+  "clients_at_start": 4,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "archer-kite": {
+      "bead": "cuo-cvl.1",
+      "right": "Four orcs come at an archer from 10 tiles: shoot them as they come, step back when two reach it, and kill all four without dying.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Igurg (orc)",
+                "Rugorim (orc)",
+                "Julakgh (orc)",
+                "Narfu (orc)"
+              ],
+              "kites": 11,
+              "seconds": 89.6,
+              "player_died": false,
+              "engaged": [
+                "Igurg (orc)",
+                "Rugorim (orc)",
+                "Julakgh (orc)",
+                "Narfu (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 45,
+              "decisions": 72,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-203137-lane1/archer-kite-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 85,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 0,
+                "steps_back": 11,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            },
+            {
+              "success": true,
+              "kills": [
+                "Jregh (orc)",
+                "Barfu (orc)",
+                "Wrukaog (orc)",
+                "Zulgha (orc)"
+              ],
+              "kites": 15,
+              "seconds": 96.0,
+              "player_died": false,
+              "engaged": [
+                "Jregh (orc)",
+                "Barfu (orc)",
+                "Wrukaog (orc)",
+                "Zulgha (orc)"
+              ],
+              "flees_at_hp": [
+                76
+              ],
+              "min_hp": 24,
+              "decisions": 88,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-203137-lane1/archer-kite-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 95,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 1,
+                "steps_back": 15,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 18.8,
+                "ran_at_s": 58.7,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 80.0,
+          "moves": {
+            "runs": 1,
+            "steps_back": 26,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 18.8,
+            "broke_contact": 1
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        },
+        "heuristic/spots": {
+          "runs": [
+            {
+              "success": true,
+              "kills": [
+                "Gnabadug (orc)",
+                "Zupgugh (orc)",
+                "Sabub (orc)",
+                "Xoruk (orc)"
+              ],
+              "kites": 10,
+              "seconds": 84.3,
+              "player_died": false,
+              "engaged": [
+                "Gnabadug (orc)",
+                "Zupgugh (orc)",
+                "Sabub (orc)",
+                "Xoruk (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 41,
+              "decisions": 72,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-203137-lane1/archer-kite-heuristic_spots-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 78,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 0,
+                "steps_back": 10,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 10
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0
+              },
+              "spot_walks": 10,
+              "spot_fallbacks": 0,
+              "stand_asked": 51,
+              "clients": 4
+            },
+            {
+              "success": true,
+              "kills": [
+                "Smogulg (orc)",
+                "Cubub (orc)",
+                "Oghuglat (orc)",
+                "Torug (orc)"
+              ],
+              "kites": 12,
+              "seconds": 99.1,
+              "player_died": false,
+              "engaged": [
+                "Smogulg (orc)",
+                "Cubub (orc)",
+                "Oghuglat (orc)",
+                "Torug (orc)"
+              ],
+              "flees_at_hp": [],
+              "min_hp": 48,
+              "decisions": 82,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-203137-lane1/archer-kite-heuristic_spots-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 90,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 0,
+                "steps_back": 12,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 12
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": null,
+                "ran_at_s": null,
+                "jev_stayed": 0
+              },
+              "spot_walks": 12,
+              "spot_fallbacks": 0,
+              "stand_asked": 63,
+              "clients": 4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 77.0,
+          "moves": {
+            "runs": 0,
+            "steps_back": 22,
+            "to_spot_jev": 0,
+            "to_spot_rule": 22,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": null,
+            "broke_contact": 0
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0,
+    "cost_per_hour_usd": 0.0,
+    "calls": 0,
+    "by_role": {},
+    "by_kind": {},
+    "by_model": {}
+  }
+}

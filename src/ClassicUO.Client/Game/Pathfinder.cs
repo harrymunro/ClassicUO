@@ -22,7 +22,8 @@ namespace ClassicUO.Game
         private readonly PathNode[] _closedList = new PathNode[PATHFINDER_MAX_NODES];
         private readonly PathNode[] _path = new PathNode[PATHFINDER_MAX_NODES];
         private int _pointIndex, _pathSize;
-        private bool _run;
+        private bool _run, _walk;
+        private sbyte _startZ;
         private static readonly int[] _offsetX =
         {
             0, 1, 1, 1, 0, -1, -1, -1, 0, 1
@@ -872,12 +873,12 @@ namespace ClassicUO.Game
             _closedList[0].Used = true;
             _closedList[0].X = _startPoint.X;
             _closedList[0].Y = _startPoint.Y;
-            _closedList[0].Z = _world.Player.Z;
+            _closedList[0].Z = _startZ;
             _closedList[0].Parent = null;
             _closedList[0].DistFromGoalCost = GetGoalDistCost(_startPoint, 0);
             _closedList[0].Cost = _closedList[0].DistFromGoalCost;
 
-            if (GetGoalDistCost(_startPoint, 0) > 14)
+            if (GetGoalDistCost(_startPoint, 0) > 14 && !_walk)
             {
                 _run = true;
             }
@@ -927,8 +928,11 @@ namespace ClassicUO.Game
             return true;
         }
 
-        // run: run the whole way. Otherwise only walks longer than 14 tiles are run.
-        public bool WalkTo(int x, int y, int z, int distance, bool run = false)
+        // run: run the whole way. walk: walk it, however long. Otherwise only walks longer than 14
+        // tiles are run. fromStepEnd: plan from where the step in progress ends, which is where the
+        // path is walked from (ProcessAutoWalk); planned from the tile the player is leaving, a walk
+        // asked for mid-step goes one step astray, and round a tree the wrong way.
+        public bool WalkTo(int x, int y, int z, int distance, bool run = false, bool walk = false, bool fromStepEnd = false)
         {
             if (_world.Player == null /*|| World.Player.Stamina == 0*/ || _world.Player.IsParalyzed)
             {
@@ -965,6 +969,13 @@ namespace ClassicUO.Game
 
             int playerX = _world.Player.X;
             int playerY = _world.Player.Y;
+            _startZ = _world.Player.Z;
+
+            if (fromStepEnd)
+            {
+                _world.Player.GetEndPosition(out playerX, out playerY, out _startZ, out _);
+            }
+
             //sbyte playerZ = 0;
             //Direction playerDir = Direction.None;
 
@@ -983,6 +994,7 @@ namespace ClassicUO.Game
             StopAutoWalk();
             AutoWalking = true;
             _run = run;
+            _walk = walk && !run;
 
             if (FindPath(PATHFINDER_MAX_NODES))
             {

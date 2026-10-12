@@ -25,6 +25,7 @@ from typing import Any
 
 from . import costs
 from . import loop, models, policy
+from .client import clients_running
 from . import machine as machines
 from .facts import FactPicker
 from .rpc import AgentRpc
@@ -39,6 +40,7 @@ class Trace:
     """What happened in one round, reduced from every snapshot the loop saw."""
 
     started: float = field(default_factory=time.monotonic)
+    wall_started: float = field(default_factory=time.time)  # the same moment by the clock the decision log uses
     start_ms: int = 0  # the client's clock when the round began; earlier deaths belong to an earlier round
     names: dict[int, str] = field(default_factory=dict)      # creature serial -> name (with kind)
     first_seen: dict[int, float] = field(default_factory=dict)
@@ -61,6 +63,20 @@ class Trace:
     _last_t: float = 0.0
     _fleeing: bool = False
     _death_serials: set[int] = field(default_factory=set)
+    # The client's line-of-sight counters (cuo-ehm), at the round's first snapshot and now: the server's
+    # "Target can not be seen" messages, the agent's aims at what is out of sight by the sight rule, and
+    # the time it was engaged at range with its creature out of sight.
+    sight_first: dict[str, int] = field(default_factory=dict)
+    sight_last: dict[str, int] = field(default_factory=dict)
+    nearest: list[tuple[float, int]] = field(default_factory=list)  # (t, tiles to the nearest live monster; 99 none)
+
+    def sight_count(self, key: str) -> int:
+        return self.sight_last.get(key, 0) - self.sight_first.get(key, 0)
+
+    @property
+    def not_in_sight(self) -> int:
+        """The server's "Target can not be seen" messages in the round."""
+        return self.sight_count("not_in_sight")
 
     def t(self) -> float:
         return time.monotonic() - self.started
@@ -106,6 +122,12 @@ class Trace:
                 self.died.append((t, d["serial"]))
 
         agent = snap["agent"]
+        stats = agent.get("stats") or {}
+        self.nearest.append((t, nearest))
+        for key in ("not_in_sight", "aimed_unseen", "unseen_engaged_ms", "spot_walks", "spot_fallbacks"):
+            if key in stats:
+                self.sight_first.setdefault(key, stats[key])
+                self.sight_last[key] = stats[key]
         engaged = agent.get("engaged", 0)
         if engaged and (not self.engaged or self.engaged[-1][1] != engaged):
             self.engaged.append((t, engaged))
@@ -142,6 +164,55 @@ class Trace:
     def actions(self, verb: str) -> list[dict[str, Any]]:
         return [a for d in self.decisions for a in d.get("actions", []) if a.get("verb") == verb]
 
+    def moves(self) -> dict[str, Any]:
+        """How the runs went (cuo-fhf.3): runs, leaves and steps back sent, how many went to a place
+        picked from the client's spots (and by whom), those with no path there or no path away at all,
+        the decisions held in the fight as cornered, a death while running or leaving, and the time
+        from the first run or leave until no monster was within 8 tiles (None if that never came)."""
+        sent = [(d, a, r) for d in self.decisions for a, r in zip(d.get("actions", []), d.get("results", []))
+                if a.get("verb") in ("flee", "kite")]
+        runs = [(d, a, r) for d, a, r in sent if a["verb"] == "flee"]
+        first = next((d["t"] - self.wall_started for d, a, _ in runs), None)
+        broke = None
+        if first is not None:
+            broke = next((round(t - first, 1) for t, n in self.nearest if t >= first and n > 8), None)
+        moving = [d["t"] - self.wall_started for d in self.decisions if d.get("intent") in ("flee", "leave")]
+        died_moving = self.player_died and self.died_at is not None and any(0 <= self.died_at - t <= 8 for t in moving)
+        cornered = sum(1 for prev, d in zip([{}] + self.decisions, self.decisions) if d.get("cornered") and not prev.get("cornered"))
+        return {
+            "runs": len(runs), "steps_back": len(sent) - len(runs),
+            "to_spot": {by: sum(1 for _, a, _ in sent if a.get("spot_by") == by) for by in ("jev", "rule", "kept")},
+            "no_path_to_spot": sum(1 for _, _, r in sent if "no path to the spot" in str(r.get("detail", ""))),
+            "failed_runs": sum(1 for _, _, r in runs if r.get("status") == "failed"),
+            "cornered": cornered, "died_moving": died_moving,
+            "break_contact_s": broke, "ran_at_s": round(first, 1) if first is not None else None,
+            "jev_stayed": sum(1 for d in self.decisions if (d.get("spot") or {}).get("jev_pick") == "stay"),
+            **self.leaves(),
+        }
+
+    def leaves(self, after_s: float = 30.0) -> dict[str, Any]:
+        """The leaves of a round (cuo-fhf.6): how many, the seconds spent leaving, and how many were caught
+        again within after_s of ending (a monster within a tile of the character, or health down 10 or more
+        from where it was when the leave ended). A leave is a run of decisions whose intent is leave; it ends
+        at the next decision that isn't one."""
+        eps, cur = [], None
+        for d in self.decisions:
+            t = d["t"] - self.wall_started
+            if d.get("intent") == "leave":
+                cur = [t, t] if cur is None else [cur[0], t]
+            elif cur is not None:
+                eps.append([cur[0], t])
+                cur = None
+        if cur is not None:
+            eps.append(cur)
+        caught = 0
+        for start, end in eps:
+            hp_end = next((h for t, h in reversed(self.hp) if t <= end), None)
+            close = any(end < t <= end + after_s and n <= 1 for t, n in self.nearest)
+            hurt = hp_end is not None and any(end < t <= end + after_s and h <= hp_end - 10 for t, h in self.hp)
+            caught += close or hurt
+        return {"leaves": len(eps), "leave_s": round(sum(e - s for s, e in eps), 1), "caught_again": caught}
+
     def summary(self) -> dict[str, Any]:
         return {
             "seconds": round(self.t(), 1),
@@ -151,6 +222,9 @@ class Trace:
             "flees_at_hp": [hp for _, hp in self.flees],
             "min_hp": min((h for _, h in self.hp), default=100),
             "decisions": len(self.decisions),
+            "not_in_sight_msgs": self.not_in_sight,
+            "aimed_unseen": self.sight_count("aimed_unseen"),
+            "unseen_engaged_s": round(self.sight_count("unseen_engaged_ms") / 1000, 1),
         }
 
 
@@ -305,6 +379,18 @@ def check_wisp_left_alone(tr: Trace) -> tuple[bool, dict[str, Any]]:
                                                                 "orcs_killed": orcs}
 
 
+def check_sight(kills_needed: int) -> Callable[[Trace], tuple[bool, dict[str, Any]]]:
+    """Line of sight (cuo-ehm): kill what stands out of sight, without dying. Reports the server's "Target
+    can not be seen" messages and when the last kill came."""
+    def check(tr: Trace) -> tuple[bool, dict[str, Any]]:
+        kills = len(tr.kills())
+        last = round(tr.died[-1][0], 1) if tr.died else None
+        return (not tr.player_died and kills >= kills_needed), \
+            {"kills": kills, "not_in_sight": tr.not_in_sight, "aimed_unseen": tr.sight_count("aimed_unseen"),
+             "unseen_engaged_s": round(tr.sight_count("unseen_engaged_ms") / 1000, 1), "last_kill_s": last}
+    return check
+
+
 # ---------------------------------------------------------------- world facts (cuo-5of.7)
 
 TEST_FIELD = "Green Acres test field"
@@ -406,6 +492,15 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "Two orcs fight a warrior; two bone knights (each stronger than it) come at it from 14 tiles: get away "
         "before they are on it, and survive.",
         "warrior", ["[AgentSpawn Orc 2 3 s", "[AgentSpawn BoneKnight 2 14 n 6"], 90, check_pack),
+    # Where to run (cuo-fhf.3): a pocket of stone walls round the warrior, open only to the south, where
+    # the pack comes from. Straight away from the pack is the back wall, a dead end; the way out is past
+    # the mouth before the knights reach it.
+    Scenario(
+        "pack-pocket", "cuo-fhf.3",
+        "A warrior in a pocket of walls open to the south, two orcs on it; two bone knights come from the south: get "
+        "out of the pocket's mouth before they reach it, not into its back wall, and survive.",
+        "warrior", ["[AgentBuild wall 4 e 11", "[AgentBuild wall 4 w 11", "[AgentBuild wall 6 n 9",
+                    "[AgentSpawn Orc 2 2 s", "[AgentSpawn BoneKnight 2 14 s 6"], 90, check_pack),
     # Archetypes (cuo-cvl): the same judgments with another way of fighting.
     Scenario(
         "archer-kite", "cuo-cvl.1",
@@ -452,6 +547,31 @@ SCENARIOS: dict[str, Scenario] = {s.name: s for s in [
         "Four orcs come at a paladin: fight them in melee with its blessings (at least one cast) and kill all four "
         "without dying.",
         "paladin", ["[AgentSpawn Orc 4 8 n"], 120, check_paladin, quiet_after=20),
+    # Line of sight (cuo-ehm): what is nearest stands where no arrow or spell reaches it from where the
+    # character is. The orcs stand still ([AgentSpawn ... still]), so only the character's moving
+    # brings them into sight; [AgentBuild lays real wall pieces, which block sight (NoShoot).
+    Scenario(
+        "sight-wall-archer", "cuo-ehm",
+        "An orc stands still behind a wall 6 tiles north of an archer, another in the open 8 tiles east: shoot the "
+        "one in sight, then go round the wall to shoot the other; kill both.",
+        "archer", ["[AgentBuild wall 3 n 9", "[AgentSpawn Orc 1 6 n still", "[AgentSpawn Orc 1 8 e still"], 90,
+        check_sight(2), quiet_after=20),
+    Scenario(
+        "sight-wall-mage", "cuo-ehm",
+        "An orc stands still behind a wall 6 tiles north of a mage, another in the open 8 tiles east: cast at the "
+        "one in sight, then go round the wall to cast at the other; kill both.",
+        "mage", ["[AgentBuild wall 3 n 9", "[AgentSpawn Orc 1 6 n still", "[AgentSpawn Orc 1 8 e still"], 90,
+        check_sight(2), quiet_after=20),
+    Scenario(
+        "sight-hut-archer", "cuo-ehm",
+        "An orc stands still in a hut 8 tiles north of an archer, its doorway on the far side: go round to where "
+        "it can be seen through the doorway and shoot it dead.",
+        "archer", ["[AgentBuild hut 8 n 5", "[AgentSpawn Orc 1 8 n still"], 90, check_sight(1), quiet_after=20),
+    Scenario(
+        "sight-hut-mage", "cuo-ehm",
+        "An orc stands still in a hut 8 tiles north of a mage, its doorway on the far side: go round to where it "
+        "can be seen through the doorway and kill it with spells.",
+        "mage", ["[AgentBuild hut 8 n 5", "[AgentSpawn Orc 1 8 n still"], 90, check_sight(1), quiet_after=20),
     # Strategy adherence (cuo-46e.7): a template should change behaviour as written.
     Scenario(
         "relentless-never-flees", "cuo-46e.7", "With the relentless template, never flee, even running out of supplies.",
@@ -487,6 +607,10 @@ KIT_ARCHETYPES = {"warriormage": "warrior-mage", "magetamer": "mage-tamer", "nec
 ARCHETYPES = ["archer-kite", "tamer-orcs", "tamer-ogre-lord", "bard-provoke", "warrior-mage-opener", "mage-tamer-orcs",
               "necro-orcs", "paladin-orcs"]
 PACKS = ["pack-gargoyles", "pack-bone-knights"]
+SIGHT = ["sight-wall-archer", "sight-wall-mage", "sight-hut-archer", "sight-hut-mage"]
+# Where to run (cuo-fhf.3): the packs, the swarm, the archer that steps back, a caster that must keep sight of
+# its target, and the pocket whose straight-away is a dead end.
+SPOTS = ["pack-gargoyles", "pack-bone-knights", "pack-pocket", "swarm", "archer-kite", "sight-wall-mage"]
 WORLD = [n for n, s in SCENARIOS.items() if s.seed]  # world-fact scenarios
 FACT_MODES = ["none", "all", "jev"]
 
@@ -521,9 +645,11 @@ def load_bestiary(shard: str = "local") -> None:
 
 @dataclass
 class JudgeSpec:
-    """"heuristic", "jev", or "jev+<template>" (Jev with that strategy template), each with an
+    """"heuristic", "jev" (Jev in every system-one call), "profile" (the active profile's model for each
+    kind), a model alias, or "jev+<template>" (Jev with that strategy template), each with an
     optional "/nokite" (no stepping back from melee), to measure what kiting is worth, "/nopack"
-    (code doesn't leave from a pack; Jev's own leave still counts), "#<machine>" (follow that
+    (code doesn't leave from a pack; Jev's own leave still counts), "/everytick" (Jev asked at every
+    tick of the loop, as before cuo-df8), "#<machine>" (follow that
     plan, a state machine from brain/machines), and for
     world-fact scenarios "@none", "@all" or "@jev" after it: which world facts reach Jev."""
 
@@ -554,6 +680,34 @@ class JudgeSpec:
     @property
     def pack(self) -> bool:
         return "/nopack" not in self.base
+
+    @property
+    def every_tick(self) -> bool:
+        return "/everytick" in self.base
+
+    @property
+    def sight(self) -> bool:
+        """"jev/nosight": the client's sight checks off, so it aims and walks as it did before them, and
+        the snapshot carries no in_sight (cuo-ehm): the "before" of a line-of-sight comparison."""
+        return "/nosight" not in self.base
+
+    @property
+    def spots(self) -> str:
+        """"jev/spots": runs, leaves and steps back go to the place Jev picks from the client's places to
+        stand ("jev/spotsrev": the same, listed the other way round, to check the picks don't follow the
+        order); "jev/codespots": to code's pick of them (policy.rule_spot); else "off", the client's way away
+        from the creatures (cuo-fhf.3)."""
+        parts = self.base.split("/")[1:]
+        return "jev" if "spots" in parts or "spotsrev" in parts else "rule" if "codespots" in parts else "off"
+
+    @property
+    def leave_stop(self) -> str:
+        """"jev/jevstop": Jev says when a leave may stop (cuo-fhf.6); else code's 40 s rule."""
+        return "jev" if "jevstop" in self.base.split("/")[1:] else "rule"
+
+    @property
+    def spot_order(self) -> str:
+        return "reversed" if "spotsrev" in self.base.split("/")[1:] else "bearing"
 
     @property
     def ward(self) -> bool:
@@ -606,6 +760,7 @@ async def prepare(rpc: AgentRpc, sc: Scenario, template: str | None, lane: int) 
 async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, log_path: Path,
                      min_confidence: float, world: World | None = None) -> dict[str, Any]:
     template = sc.template or spec.template
+    await rpc.call("sight", checks=spec.sight)
     await prepare(rpc, sc, template, lane)
     tr = Trace()
     stop = asyncio.Event()
@@ -628,12 +783,16 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
     tr.start_ms = (await rpc.call("snapshot", since=0))["time_ms"]
     for cmd in sc.setup:
         await say(rpc, cmd)
-    tr.started = time.monotonic()
+    tr.started, tr.wall_started = time.monotonic(), time.time()
 
-    judge = models.make_judge(spec.kind)
+    # "jev" is Jev in every system-one call whatever the profile says, as in every result before the
+    # default profile split system one (cuo-3ni); "profile" plays the active profile's own models.
+    judge = models.make_judge("jev" if spec.kind == "profile" else spec.kind, pin=spec.kind != "profile")
     lcfg = loop.LoopConfig(duration_s=sc.seconds)
+    lcfg.ask_every_tick = lcfg.ask_every_tick or spec.every_tick
     pcfg = policy.PolicyConfig(min_intent_confidence=min_confidence, kite=spec.kite, leave_packs=spec.pack,
-                               ward=spec.ward)
+                               ward=spec.ward, spots=spec.spots, spot_order=spec.spot_order,
+                               leave_stop=spec.leave_stop)
     facts = FactPicker(world, judge, mode=spec.facts) if world is not None and spec.facts != "none" else None
     try:
         runner = machines.Runner(machines.load(spec.machine)) if spec.machine else None
@@ -655,7 +814,14 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
            "input_tokens": summary["input_tokens"], "cost_usd": summary["cost_usd"],
            "cost_by_kind": {k: v["cost_usd"] for k, v in summary["costs"]["by_kind"].items()},
            "models": sorted(summary["costs"]["by_model"]), "latency_ms_avg": summary["latency_ms_avg"],
-           "decisions": summary["decisions"]}
+           "decisions": summary["decisions"], "decisions_made": len(tr.decisions),
+           "input_tokens_per_call": round(summary["input_tokens"] / summary["decisions"]) if summary["decisions"] else None,
+           "cost_per_call_usd": round(summary["cost_usd"] / summary["decisions"], 7) if summary["decisions"] else None,
+           "moves": tr.moves(), "spot_walks": tr.sight_count("spot_walks"),
+           "spot_fallbacks": tr.sight_count("spot_fallbacks")}
+    asked = [d for d in tr.decisions if "stand" in (d.get("questions") or {})]
+    if asked:
+        out["stand_asked"] = len(asked)
     if runner is not None:
         out["plan"] = runner.summary()
     if world is not None:
@@ -669,16 +835,20 @@ async def play_round(rpc: AgentRpc, sc: Scenario, spec: JudgeSpec, lane: int, lo
 async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: int, lane: int,
               out: Path, log_dir: Path,
               min_confidence: float = policy.PolicyConfig.min_intent_confidence,
-              progress: Callable[[str], None] = print, fact_modes: list[str] | None = None) -> dict[str, Any]:
+              progress: Callable[[str], None] = print, fact_modes: list[str] | None = None,
+              meta: dict[str, Any] | None = None) -> dict[str, Any]:
     """Plays every scenario for every judge, rounds times, interleaving the judges so a slow
     drift in the server or the client hits them alike. Writes the JSON after every round.
     A world-fact scenario plays each model judge once per fact mode (default none, all, jev),
-    against its own store under log_dir/worlds/<scenario>/."""
+    against its own store under log_dir/worlds/<scenario>/. meta goes into the results as it is
+    (whether the client was headless, how many clients ran); each round also records how many
+    clients ran on the machine when it began, since results move with the load."""
     load_bestiary()
     result: dict[str, Any] = {"started": time.strftime("%Y-%m-%dT%H:%M:%S"), "rounds": rounds, "lane": lane,
+                              **(meta or {}),
                               "bestiary": bool(BESTIARY.get("local")), "profile": models.active.to_log(),
                               "aliases": {k: models.active.resolve(k) for k in (JudgeSpec(x).kind for x in judge_labels)
-                                          if k not in ("jev", "heuristic")},
+                                          if k not in ("jev", "heuristic", "profile")},
                               "scenarios": {}}
     mark = costs.ledger.mark()
     # OpenRouter's own count for the key, before and after, to check the recorded costs against
@@ -703,10 +873,12 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
                 spec = JudgeSpec(label)
                 log_path = log_dir / f"{name}-{label.replace('+', '_').replace('/', '_').replace('@', '_')}-{n:02d}.jsonl"
                 log_path.unlink(missing_ok=True)
+                running = clients_running()
                 try:
                     r = await play_round(rpc, sc, spec, lane, log_path, min_confidence, world)
                 except Exception as e:  # a round that could not be played is not a failure of the judge
                     r = {"error": f"{type(e).__name__}: {e}"[:300]}
+                r["clients"] = running
                 j = entry["judges"].setdefault(label, {"runs": []})
                 j["runs"].append(r)
                 tally(j)
@@ -718,6 +890,7 @@ async def run(rpc: AgentRpc, names: list[str], judge_labels: list[str], rounds: 
         if world is not None:
             world.close()
     await say(rpc, "[AgentReset")
+    await rpc.call("sight", checks=True)
     result["costs"] = costs.ledger.summary(mark)
     if key_before is not None and (key_after := costs.openrouter_usage()) is not None:
         result["openrouter_key_spent_usd"] = round(key_after - key_before, 6)
@@ -738,6 +911,31 @@ def tally(j: dict[str, Any]) -> None:
     j["cost_per_round_usd"] = round(j["cost_usd"] / j["n"], 5) if j["n"] else None
     lat = [r["latency_ms_avg"] for r in played if r.get("latency_ms_avg")]
     j["latency_ms_avg"] = round(sum(lat) / len(lat), 1) if lat else None
+    # Fight decisions put to Jev a round (cuo-df8: not when nothing has changed).
+    asked = [r["decisions"] for r in played if "decisions" in r]
+    j["decisions_per_round"] = round(sum(asked) / len(asked), 1) if asked else None
+    # Where the runs went (cuo-fhf.3).
+    moves = [r["moves"] for r in played if "moves" in r]
+    if moves:
+        broke = sorted(m["break_contact_s"] for m in moves if m.get("break_contact_s") is not None)
+        j["moves"] = {"runs": sum(m["runs"] for m in moves), "steps_back": sum(m["steps_back"] for m in moves),
+                      "to_spot_jev": sum(m["to_spot"]["jev"] for m in moves),
+                      "to_spot_rule": sum(m["to_spot"]["rule"] for m in moves),
+                      "to_spot_kept": sum(m["to_spot"].get("kept", 0) for m in moves),
+                      "no_path_to_spot": sum(m["no_path_to_spot"] for m in moves),
+                      "failed_runs": sum(m["failed_runs"] for m in moves),
+                      "cornered": sum(m["cornered"] for m in moves),
+                      "died_moving": sum(bool(m["died_moving"]) for m in moves),
+                      "jev_stayed": sum(m.get("jev_stayed", 0) for m in moves),
+                      "break_contact_s_median": broke[len(broke) // 2] if broke else None,
+                      "broke_contact": len(broke),
+                      "leaves": sum(m.get("leaves", 0) for m in moves),
+                      "leave_s": round(sum(m.get("leave_s", 0) for m in moves), 1),
+                      "caught_again": sum(m.get("caught_again", 0) for m in moves)}
+    tokens = [r["input_tokens_per_call"] for r in played if r.get("input_tokens_per_call")]
+    j["input_tokens_per_call"] = round(sum(tokens) / len(tokens)) if tokens else None
+    per_call = [r["cost_per_call_usd"] for r in played if r.get("cost_per_call_usd")]
+    j["cost_per_call_usd"] = round(sum(per_call) / len(per_call), 7) if per_call else None
     j["errors"] = len(j["runs"]) - len(played)
 
 

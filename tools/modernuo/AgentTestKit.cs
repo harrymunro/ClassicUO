@@ -43,6 +43,11 @@ public static class AgentTestKit
     // Invisible walls laid with [AgentWall, removed by [AgentWall clear.
     private static readonly List<Item> _walls = [];
 
+    // Walls you can see, and that block sight, laid with [AgentBuild; removed by [AgentBuild clear and
+    // [AgentReset. Named so the reset finds pieces left from before a restart too.
+    private static readonly Dictionary<Mobile, List<Item>> _builds = new();
+    private const string BuildName = "agent test wall";
+
     // Every creature in _arenaSpawns, so the orphan sweep can tell live arenas from leftovers of a
     // previous boot (the tracking itself is not persisted).
     private static readonly HashSet<BaseCreature> _tracked = new();
@@ -77,6 +82,8 @@ public static class AgentTestKit
         CommandSystem.Register("AgentRestock", _accessLevel, AgentRestock_OnCommand);
         CommandSystem.Register("AgentRunes", _accessLevel, AgentRunes_OnCommand);
         CommandSystem.Register("AgentDisrupt", _accessLevel, AgentDisrupt_OnCommand);
+        CommandSystem.Register("AgentSight", _accessLevel, AgentSight_OnCommand);
+        CommandSystem.Register("AgentBuild", _accessLevel, AgentBuild_OnCommand);
     }
 
     // Runs before AccountPrompt.Initialize (default priority 50) so a headless first boot finds an
@@ -324,6 +331,7 @@ public static class AgentTestKit
 
         RestoreVitals(from);
         var removed = ClearArena(from);
+        ClearBuilds(from);
 
         from.SendMessage($"Reset: {(wasDead ? "resurrected, " : "")}vitals restored, removed {removed} arena monsters.");
         logger.Information(
@@ -383,14 +391,22 @@ public static class AgentTestKit
         return TestLocation;
     }
 
-    [Usage("AgentSpawn <kind> [count] [distance] [direction] [delay seconds]")]
+    [Usage("AgentSpawn <kind> [count] [distance] [direction] [delay seconds] [still]")]
     [Description(
-        "Spawns count (default 1) creatures of a kind (orc, ratman, a ModernUO type such as Dragon, Lich, OrcishMage) distance tiles (default 8) from you in a compass direction (n, ne, e, se, s, sw, w, nw; default n), after an optional delay. They belong to your arena, so [AgentReset removes them."
+        "Spawns count (default 1) creatures of a kind (orc, ratman, a ModernUO type such as Dragon, Lich, OrcishMage) distance tiles (default 8) from you in a compass direction (n, ne, e, se, s, sw, w, nw; default n), after an optional delay. 'still' anywhere in the line makes them stay where they are (they never walk, but fight what comes to them). They belong to your arena, so [AgentReset removes them."
     )]
     public static void AgentSpawn_OnCommand(CommandEventArgs e)
     {
         var from = e.Mobile;
         var map = from.Map;
+        var still = Array.Exists(e.Arguments, a => a.InsensitiveEquals("still"));
+
+        if (still)
+        {
+            e = new CommandEventArgs(
+                e.Mobile, e.Command, e.ArgString, Array.FindAll(e.Arguments, a => !a.InsensitiveEquals("still"))
+            );
+        }
 
         if (map == null || map == Map.Internal || e.Length < 1)
         {
@@ -432,13 +448,13 @@ public static class AgentTestKit
                 // Spread a group sideways around the bearing so they do not stack on one tile.
                 var a = angle + (i - (count - 1) / 2.0) * (Math.PI / 16);
 
-                if (TrySpot(map, center, a, distance, out var spot) && SpawnInArena(from, kind, spot, map, center, distance + 4))
+                if (TrySpot(map, center, a, distance, out var spot) && SpawnInArena(from, kind, spot, map, center, distance + 4, still))
                 {
                     spawned++;
                 }
             }
 
-            from.SendMessage($"Spawn: {spawned}/{count} {kind.Name} at {distance} tiles.");
+            from.SendMessage($"Spawn: {spawned}/{count} {kind.Name} at {distance} tiles{(still ? ", standing still" : "")}.");
         }
 
         if (delay <= 0)
@@ -615,6 +631,250 @@ public static class AgentTestKit
         }
 
         from.SendMessage($"Wall: {steps + 1} tiles from ({x1}, {y1}) to ({x2}, {y2}).");
+    }
+
+    [Usage("AgentSight <x1> <y1> <z1> <x2> <y2> <z2> | sample [count] [radius] [seed]")]
+    [Description(
+        "The server's line of sight (Map.LineOfSight), to check a client's against. With two points: whether the first sees the second, the points as given (a mobile's eye is its z + 14). sample: count tiles (default 100, at most 400) within radius (default 15) of you, picked at random (the same seed picks the same ones), each tested twice from your eye (your z + 14): a mobile standing there (at a floor or the ground where one fits, its z + 14) and the ground there as a field or summon is aimed (one above the highest corner of the land). The answers go to your journal in lines of up to 40: 'AgentSight <ox> <oy> <oz>: x,y,zm,m,zg,g;...', zm and zg the target points' heights, m and g 1 when in sight, 0 when not."
+    )]
+    public static void AgentSight_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var map = from.Map;
+
+        if (map == null || map == Map.Internal)
+        {
+            return;
+        }
+
+        if (e.Length == 6)
+        {
+            var a = new Point3D(e.GetInt32(0), e.GetInt32(1), e.GetInt32(2));
+            var b = new Point3D(e.GetInt32(3), e.GetInt32(4), e.GetInt32(5));
+            from.SendMessage($"AgentSight {a} to {b}: {(map.LineOfSight(a, b) ? "in sight" : "out of sight")}.");
+            return;
+        }
+
+        if (e.Length < 1 || !e.GetString(0).InsensitiveEquals("sample"))
+        {
+            from.SendMessage("Usage: [AgentSight <x1> <y1> <z1> <x2> <y2> <z2> | sample [count] [radius] [seed]");
+            return;
+        }
+
+        var count = e.Length > 1 ? Math.Clamp(e.GetInt32(1), 1, 400) : 100;
+        var radius = e.Length > 2 ? Math.Clamp(e.GetInt32(2), 1, 24) : 15;
+        var rnd = e.Length > 3 ? new System.Random(e.GetInt32(3)) : new System.Random();
+        var eye = from.Location;
+        eye.Z += 14;
+        var line = new System.Text.StringBuilder();
+        var n = 0;
+        int mobiles = 0, grounds = 0;
+
+        for (var i = 0; i < count; i++)
+        {
+            int x = from.X + rnd.Next(-radius, radius + 1), y = from.Y + rnd.Next(-radius, radius + 1);
+            var zm = StandingZ(map, x, y, rnd) + 14;
+            map.GetAverageZ(x, y, out _, out _, out var top);
+            var zg = top + 1;
+            var m = map.LineOfSight(eye, new Point3D(x, y, zm));
+            var g = map.LineOfSight(eye, new Point3D(x, y, zg));
+            mobiles += m ? 1 : 0;
+            grounds += g ? 1 : 0;
+            line.Append($"{x},{y},{zm},{(m ? 1 : 0)},{zg},{(g ? 1 : 0)};");
+
+            if (++n == 40 || i == count - 1)
+            {
+                from.SendMessage($"AgentSight {from.X} {from.Y} {from.Z}: {line}");
+                line.Clear();
+                n = 0;
+            }
+        }
+
+        from.SendMessage($"AgentSight done: {count} tiles, {mobiles} with a mobile in sight, {grounds} with the ground in sight.");
+    }
+
+    // Where a mobile could stand at a tile: the ground or a floor with room above it, one at random
+    // when there are several (a house's floor and the street under it); the land's height if none.
+    private static int StandingZ(Map map, int x, int y, System.Random rnd)
+    {
+        var landZ = map.GetAverageZ(x, y);
+        var options = new List<int>();
+
+        if (map.CanFit(x, y, landZ, 16, false, false))
+        {
+            options.Add(landZ);
+        }
+
+        foreach (var t in map.Tiles.GetStaticAndMultiTiles(x, y))
+        {
+            var data = TileData.ItemTable[t.ID & TileData.MaxItemValue];
+            var top = t.Z + data.CalcHeight;
+
+            if (data.Surface && !data.Impassable && !options.Contains(top) && map.CanFit(x, y, top, 16, false, false))
+            {
+                options.Add(top);
+            }
+        }
+
+        return options.Count > 0 ? options[rnd.Next(options.Count)] : landZ;
+    }
+
+    [Usage("AgentBuild wall <distance> <direction> [length] [stone|window|fence|los] | hut <distance> <direction> [size] | clear")]
+    [Description(
+        "Lays real wall pieces (visible, impassable) around you, for line-of-sight tests. wall: a straight wall length tiles long (default 7) across the way, distance tiles from you in a compass direction; stone (default) and window block sight (NoShoot, Window), a wooden fence (6 high) does not, los is ModernUO's invisible LOSBlocker. hut: a square room of stone walls size tiles across (default 5, odd) centred distance tiles away, with a doorway in the middle of its far side. clear removes what you built; [AgentReset does too."
+    )]
+    public static void AgentBuild_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+        var map = from.Map;
+
+        if (map == null || map == Map.Internal || e.Length < 1)
+        {
+            from.SendMessage("Usage: [AgentBuild wall <distance> <direction> [length] [stone|window|fence|los] | hut <distance> <direction> [size] | clear");
+            return;
+        }
+
+        var what = e.GetString(0).ToLowerInvariant();
+
+        if (what == "clear")
+        {
+            from.SendMessage($"Build: removed {ClearBuilds(from)} pieces.");
+            return;
+        }
+
+        if (what is not ("wall" or "hut") || e.Length < 3)
+        {
+            from.SendMessage("Usage: [AgentBuild wall <distance> <direction> [length] [stone|window|fence|los] | hut <distance> <direction> [size] | clear");
+            return;
+        }
+
+        var distance = Math.Clamp(e.GetInt32(1), 1, 20);
+        var angle = CompassAngle(e.GetString(2));
+
+        if (double.IsNaN(angle))
+        {
+            from.SendMessage($"Unknown direction '{e.GetString(2)}': use n, ne, e, se, s, sw, w or nw.");
+            return;
+        }
+
+        // The way from you, and across it, as whole steps (a diagonal is one step each way).
+        int fx = Math.Sign((int)Math.Round(Math.Cos(angle) * 2)), fy = Math.Sign((int)Math.Round(Math.Sin(angle) * 2));
+        int ax = -fy, ay = fx;
+        int cx = from.X + fx * distance, cy = from.Y + fy * distance;
+        var laid = 0;
+
+        if (what == "wall")
+        {
+            var length = e.Length > 3 ? Math.Clamp(e.GetInt32(3), 1, 31) : 7;
+            var kind = e.Length > 4 ? e.GetString(4).ToLowerInvariant() : "stone";
+
+            for (var i = -(length / 2); i < length - length / 2; i++)
+            {
+                laid += Lay(from, map, cx + ax * i, cy + ay * i, kind) ? 1 : 0;
+            }
+
+            from.SendMessage($"Build: a {kind} wall of {laid} pieces, {distance} tiles {e.GetString(2)}.");
+            return;
+        }
+
+        var size = e.Length > 3 ? Math.Clamp(e.GetInt32(3), 3, 15) | 1 : 5;
+        var half = size / 2;
+
+        for (var i = -half; i <= half; i++)
+        {
+            for (var j = -half; j <= half; j++)
+            {
+                // The ring of walls, less the doorway: the middle of the side facing away from you.
+                if (Math.Abs(i) != half && Math.Abs(j) != half || i == half && j == 0)
+                {
+                    continue;
+                }
+
+                // i runs along the way from you, j across it.
+                laid += Lay(from, map, cx + fx * i + ax * j, cy + fy * i + ay * j, "stone") ? 1 : 0;
+            }
+        }
+
+        from.SendMessage($"Build: a hut {size} across of {laid} pieces, {distance} tiles {e.GetString(2)}, its door on the far side.");
+    }
+
+    private static bool Lay(Mobile from, Map map, int x, int y, string kind)
+    {
+        Item piece = kind switch
+        {
+            "window" => new Static(0x005D),
+            "fence"  => new Static(0x085D),
+            "los"    => new LOSBlocker(),
+            _        => new Static(0x001C)
+        };
+
+        piece.Name = BuildName;
+        piece.MoveToWorld(new Point3D(x, y, map.GetAverageZ(x, y)), map);
+
+        if (!_builds.TryGetValue(from, out var list))
+        {
+            list = [];
+            _builds[from] = list;
+        }
+
+        list.Add(piece);
+        return true;
+    }
+
+    // What the mobile built, and any test wall left near it from before a restart.
+    private static int ClearBuilds(Mobile from)
+    {
+        var removed = 0;
+
+        if (_builds.Remove(from, out var list))
+        {
+            foreach (var piece in list)
+            {
+                if (!piece.Deleted)
+                {
+                    piece.Delete();
+                    removed++;
+                }
+            }
+        }
+
+        var map = from.Map;
+
+        if (map == null || map == Map.Internal)
+        {
+            return removed;
+        }
+
+        using var left = PooledRefQueue<Item>.Create();
+
+        foreach (var item in map.GetItemsInRange(from.Location, OrphanSweepRange))
+        {
+            if (item.Name == BuildName && !IsBuiltByOther(item, from))
+            {
+                left.Enqueue(item);
+            }
+        }
+
+        while (left.Count > 0)
+        {
+            left.Dequeue().Delete();
+            removed++;
+        }
+
+        return removed;
+    }
+
+    private static bool IsBuiltByOther(Item item, Mobile from)
+    {
+        foreach (var (owner, pieces) in _builds)
+        {
+            if (owner != from && pieces.Contains(item))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     [Usage("AgentRunes")]
@@ -950,13 +1210,15 @@ public static class AgentTestKit
         }
     }
 
-    private static bool SpawnInArena(Mobile from, Type type, Point3D spot, Map map, Point3D home, int homeRange)
+    private static bool SpawnInArena(Mobile from, Type type, Point3D spot, Map map, Point3D home, int homeRange, bool still = false)
     {
         var creature = type.CreateInstance<BaseCreature>();
         if (creature == null)
         {
             return false;
         }
+
+        creature.CantWalk = still;
 
         creature.Home = home;
         creature.RangeHome = homeRange;

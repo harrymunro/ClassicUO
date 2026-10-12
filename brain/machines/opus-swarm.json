@@ -1,0 +1,142 @@
+{
+  "name": "mage vs mixed mob",
+  "why": "Thin out a group of five or six melee monsters by walling and blasting them while they bunch up, picking off the weak ones from range, and pulling back to recover mana or health before it gets dangerous.",
+  "start": "open",
+  "states": {
+    "open": {
+      "says": "Attack from range while the group is still coming. Kill fast, weak ones like mongbats with quick single-target spells, and step back from melee.",
+      "allow": [
+        "fight",
+        "seek",
+        "rest",
+        "loot"
+      ],
+      "target": "weakest_first",
+      "loot": "valuables",
+      "kite": true,
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more creatures are bunched up close together near the mage.",
+          "requires": [
+            "area spell ready"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "recover",
+          "when": "Health is below half and creatures are still hitting the mage, or mana is nearly gone while several are still coming.",
+          "requires": [
+            "health below 50"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "recover",
+          "when": "Mana is nearly gone and two or more creatures are still coming.",
+          "requires": [
+            "mana below 20",
+            "2+ coming"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "blast": {
+      "says": "Stand and cast area spells at the bunch so every creature in it takes damage from each cast.",
+      "allow": [
+        "fight",
+        "rest"
+      ],
+      "kite": false,
+      "spell": "Chain Lightning",
+      "transitions": [
+        {
+          "to": "finish",
+          "when": "Only one or two creatures are left close, or most of the bunch is badly hurt.",
+          "unless": "Three or more fairly healthy creatures are still bunched together.",
+          "at": 0.6
+        },
+        {
+          "to": "recover",
+          "when": "Health is falling fast with several creatures on the mage, or it is already below half.",
+          "requires": [
+            "health below 55"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "recover",
+          "when": "Mana is nearly gone and several creatures are still fighting.",
+          "requires": [
+            "mana below 20"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "finish": {
+      "says": "Finish the creature with the least health left using quick single-target spells, stepping back from melee, then loot when it's clear.",
+      "allow": [
+        "fight",
+        "seek",
+        "rest",
+        "loot"
+      ],
+      "target": "weakest_first",
+      "loot": "valuables",
+      "kite": true,
+      "transitions": [
+        {
+          "to": "blast",
+          "when": "Three or more creatures are bunched up close together again.",
+          "requires": [
+            "area spell ready"
+          ],
+          "at": 0.5
+        },
+        {
+          "to": "recover",
+          "when": "Health is below half or mana is nearly gone while creatures are still fighting.",
+          "requires": [
+            "2+ coming"
+          ],
+          "at": 0.6
+        }
+      ]
+    },
+    "recover": {
+      "says": "Get away from the group, drink a heal potion if health is low, and meditate back mana at a distance. Fight only if cornered.",
+      "allow": [
+        "flee",
+        "leave",
+        "rest"
+      ],
+      "loot": "nothing",
+      "max_s": 40.0,
+      "then": "open",
+      "transitions": [
+        {
+          "to": "open",
+          "when": "Health is above three quarters and mana is back above half, with nothing close.",
+          "requires": [
+            "none close",
+            "health above 70",
+            "mana above 50"
+          ],
+          "at": 0.6
+        },
+        {
+          "to": "blast",
+          "when": "Three or more creatures have caught up, they are bunched up, and there is still mana for area spells.",
+          "requires": [
+            "area spell ready",
+            "mana above 30",
+            "health above 50"
+          ],
+          "at": 0.7
+        }
+      ]
+    }
+  }
+}

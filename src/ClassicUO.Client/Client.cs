@@ -212,7 +212,16 @@ namespace ClassicUO
 
             Log.Trace("Running game...");
 
-            using (Game = new GameController(pluginHost))
+            bool headless = CUOEnviroment.HeadlessArg ?? Settings.GlobalSettings.Headless;
+
+            if (headless)
+            {
+                // macOS: run as a background (accessory) app, so a headless client puts no icon
+                // in the Dock and doesn't take the focus when it starts. Must be set before SDL starts.
+                SDL.SDL_SetHint(SDL.SDL_HINT_MAC_BACKGROUND_APP, "1");
+            }
+
+            using (Game = new GameController(pluginHost, headless))
             {
                 // https://github.com/FNA-XNA/FNA/wiki/7:-FNA-Environment-Variables#fna_graphics_enable_highdpi
                 CUOEnviroment.IsHighDPI = Environment.GetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI") == "1";

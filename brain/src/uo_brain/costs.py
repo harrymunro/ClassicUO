@@ -23,6 +23,7 @@ One brain process plays one character, so the process's ledger is that character
 import contextvars
 import json
 import os
+import sys
 import time
 import urllib.request
 from collections import deque
@@ -32,8 +33,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-SYSTEM_ONE = ("fight", "routine", "facts", "rerank", "strategy", "recorder", "replay")
-SYSTEM_TWO = ("planner", "review", "guide", "design")
+SYSTEM_ONE = ("fight", "routine", "facts", "rerank", "strategy", "recorder", "replay", "memory", "chat")
+SYSTEM_TWO = ("planner", "review", "guide", "design", "escalate", "compact", "heartbeat", "daily", "talk", "table",
+              "huddle")
 
 # Dollars per million tokens: (input, output, cached input). Used only when the provider
 # doesn't report a call's cost (TypeSafe direct, or a model OpenRouter didn't price). The
@@ -41,6 +43,7 @@ SYSTEM_TWO = ("planner", "review", "guide", "design")
 PRICES: dict[str, tuple[float, float, float]] = {
     "typesafe/jev": (0.042, 0.0, 0.042),
     "jev": (0.042, 0.0, 0.042),
+    "microsoft/microsoft-decision-1": (0.042, 0.0, 0.042),
     "anthropic/claude-sonnet-5.5": (2.0, 10.0, 0.2),
     "anthropic/claude-haiku-5.5": (0.10, 0.50, 0.01),
     "anthropic/claude-opus-5.5": (4.0, 20.0, 0.4),
@@ -95,6 +98,30 @@ def price_of(model: str) -> tuple[float, float, float] | None:
     return None
 
 
+_warned: set[str] = set()
+
+
+def warn_once(key: str, text: str) -> None:
+    """One line on stderr the first time something about a model's cost needs a person's eye."""
+    if key not in _warned:
+        _warned.add(key)
+        print(f"costs: {text}", file=sys.stderr)
+
+
+def same_model(asked: str, answered: str) -> bool:
+    """Whether the model that answered is the one asked for. A dated name answers for its plain id
+    ("anthropic/claude-haiku-5.5-20261001"), and a "-latest" id is answered by whatever is latest."""
+    a, b = asked.removeprefix("~").lower(), answered.removeprefix("~").lower()
+    return not a or not b or a.endswith("-latest") or a == "jev" or b.startswith(a) or a.startswith(b)
+
+
+def check_served(asked: str, answered: str) -> None:
+    """Warn when a call was answered by another model than the one asked for (cuo-znw): an id that
+    the provider redirects, or one typed wrong and routed elsewhere."""
+    if not same_model(asked, answered):
+        warn_once(f"served:{asked}:{answered}", f"asked for {asked} and {answered} answered")
+
+
 def estimate(model: str, input_tokens: int, output_tokens: int = 0, cached_tokens: int = 0) -> float | None:
     p = price_of(model)
     if p is None:
@@ -117,6 +144,7 @@ class Call:
     estimated: bool = False
     t: float = field(default_factory=time.time)
     character: str = ""
+    unpriced: bool = False  # neither the provider nor the price table knew what it cost: counted as $0
 
     @property
     def role(self) -> str:
@@ -127,17 +155,23 @@ class Call:
                 "input_tokens": self.input_tokens, "output_tokens": self.output_tokens,
                 "cached_tokens": self.cached_tokens, "latency_ms": round(self.latency_ms, 1),
                 "cost": round(self.cost, 7), **({"estimated": True} if self.estimated else {}),
+                **({"unpriced": True} if self.unpriced else {}),
                 **({"character": self.character} if self.character else {})}
 
 
 def make_call(k: str, model: str, input_tokens: int, output_tokens: int = 0, cached_tokens: int = 0,
               latency_ms: float = 0.0, reported: float | None = None) -> Call:
-    """A call's record, with the provider's cost if it reported one, else the table's estimate
-    (0 for a model the table doesn't know, still marked estimated)."""
+    """A call's record, with the provider's cost if it reported one, else the table's estimate. A
+    model the table doesn't know either is counted as $0, marked unpriced and warned about once
+    (cuo-znw): a model id typed wrong or out of date must show in the costs, not vanish from them."""
     if reported is not None:
         return Call(k, model, input_tokens, output_tokens, cached_tokens, latency_ms, float(reported))
     est = estimate(model, input_tokens, output_tokens, cached_tokens)
-    return Call(k, model, input_tokens, output_tokens, cached_tokens, latency_ms, est or 0.0, True)
+    if est is None:
+        warn_once(f"unpriced:{model}", f"no price known for model {model!r}: its calls are counted as $0 "
+                                       "(an id typed wrong or out of date? `uo-brain costs --prices` updates the table)")
+    return Call(k, model, input_tokens, output_tokens, cached_tokens, latency_ms, est or 0.0, True,
+                unpriced=est is None)
 
 
 @dataclass
@@ -148,6 +182,7 @@ class Total:
     cost: float = 0.0
     latency_ms: float = 0.0
     estimated: int = 0  # calls whose cost was estimated
+    unpriced: int = 0   # calls counted as $0 because nothing knew their price
 
     def add(self, c: Call) -> None:
         self.calls += 1
@@ -156,14 +191,23 @@ class Total:
         self.cost += c.cost
         self.latency_ms += c.latency_ms
         self.estimated += c.estimated
+        self.unpriced += c.unpriced
+
+    def plus(self, other: "Total") -> "Total":
+        return Total(self.calls + other.calls, self.input_tokens + other.input_tokens,
+                     self.output_tokens + other.output_tokens, self.cost + other.cost,
+                     self.latency_ms + other.latency_ms, self.estimated + other.estimated,
+                     self.unpriced + other.unpriced)
 
     def minus(self, other: "Total") -> "Total":
         return Total(self.calls - other.calls, self.input_tokens - other.input_tokens,
                      self.output_tokens - other.output_tokens, self.cost - other.cost,
-                     self.latency_ms - other.latency_ms, self.estimated - other.estimated)
+                     self.latency_ms - other.latency_ms, self.estimated - other.estimated,
+                     self.unpriced - other.unpriced)
 
     def copy(self) -> "Total":
-        return Total(self.calls, self.input_tokens, self.output_tokens, self.cost, self.latency_ms, self.estimated)
+        return Total(self.calls, self.input_tokens, self.output_tokens, self.cost, self.latency_ms, self.estimated,
+                     self.unpriced)
 
     def to_log(self) -> dict[str, Any]:
         out = {"calls": self.calls, "input_tokens": self.input_tokens, "output_tokens": self.output_tokens,
@@ -171,6 +215,8 @@ class Total:
                "latency_ms_avg": round(self.latency_ms / self.calls, 1) if self.calls else None}
         if self.estimated:
             out["estimated_calls"] = self.estimated
+        if self.unpriced:
+            out["unpriced_calls"] = self.unpriced
         return out
 
 
@@ -247,8 +293,7 @@ class Ledger:
     def total(self) -> Total:
         out = Total()
         for t in self.by_kind.values():
-            out = Total(out.calls + t.calls, out.input_tokens + t.input_tokens, out.output_tokens + t.output_tokens,
-                        out.cost + t.cost, out.latency_ms + t.latency_ms, out.estimated + t.estimated)
+            out = out.plus(t)
         return out
 
     @property
@@ -328,6 +373,8 @@ def summarise(by_kind: dict[str, Total], by_model: dict[str, Total], hours: floa
         out["cost_per_kill_usd"] = round(total / kills, 5)
     if (est := sum(t.estimated for t in by_kind.values())):
         out["estimated_calls"] = est
+    if (unpriced := sorted(m for m, t in by_model.items() if t.unpriced)):
+        out["unpriced_models"] = unpriced  # counted as $0: the total is too low by what these cost
     return out
 
 
@@ -344,7 +391,7 @@ def from_records(records: list[dict[str, Any]], hours: float | None = None, kill
     for r in recs:
         c = Call(r.get("kind", "?"), r.get("model", "?"), r.get("input_tokens", 0), r.get("output_tokens", 0),
                  r.get("cached_tokens", 0), r.get("latency_ms", 0.0), r.get("cost", 0.0), bool(r.get("estimated")),
-                 r.get("t", 0.0), r.get("character", ""))
+                 r.get("t", 0.0), r.get("character", ""), bool(r.get("unpriced")))
         by_kind.setdefault(c.kind, Total()).add(c)
         by_model.setdefault(c.model, Total()).add(c)
         by_character.setdefault(c.character or "?", Total()).add(c)
@@ -367,8 +414,10 @@ def describe(s: dict[str, Any] | None) -> str:
         extra.append(f"${s['cost_per_decision_usd']:.6f} a decision")
     if s.get("cost_per_kill_usd"):
         extra.append(f"${s['cost_per_kill_usd']:.4f} a kill")
+    unpriced = (f"\nNo price known for {', '.join(s['unpriced_models'])}: counted as $0, so the total is too low"
+                if s.get("unpriced_models") else "")
     return (f"${s['cost_usd']:.4f} in {s['calls']} calls, ${s['cost_per_hour_usd']:.4f}/h"
-            + (f", {', '.join(extra)}" if extra else "") + f"; {kinds}")
+            + (f", {', '.join(extra)}" if extra else "") + f"; {kinds}" + unpriced)
 
 
 # ------------------------------------------------------------ OpenRouter's own figures

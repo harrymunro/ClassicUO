@@ -1,0 +1,9 @@
+# Jev in every system-one call, the rest as profiles/default.toml: the default until 2026-10-12, when
+# system one went to Decision 1 with Jev for routine and strategy (cuo-3ni). For comparing, or going back.
+#   uo-brain session "..." --profile jev
+
+[models]
+system1 = "jev"
+system2 = "anthropic/claude-haiku-5.5"
+review = "anthropic/claude-sonnet-5.5"
+guide = "anthropic/claude-sonnet-5.5"

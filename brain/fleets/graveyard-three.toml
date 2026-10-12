@@ -1,5 +1,5 @@
 # Three warriors on the local test server (cuo-m70.4): the player's character on the default
-# profile (Jev and Sonnet) and two smart NPCs on the npc profile (Jev and Haiku, capped at $0.15/h).
+# profile (Jev and Haiku; Sonnet in the 2026-10-08 runs) and two smart NPCs on the npc profile (Jev and Haiku, capped at $0.50/h).
 # Run from brain/ with the server up: uv run uo-brain fleet fleets/graveyard-three.toml
 name = "graveyard-three"
 server_port = 2593

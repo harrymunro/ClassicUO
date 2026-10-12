@@ -1,4 +1,5 @@
 import copy
+import json
 
 import pytest
 
@@ -55,6 +56,15 @@ def test_a_machine_is_checked_and_described():
         machine.parse(bad)
     assert "unknown intents ['dance']" in str(e.value) and "unknown state 'nowhere'" in str(e.value)
     assert "unknown condition 'when the moon is full'" in str(e.value)
+
+
+def test_states_sent_as_a_json_string_are_read():
+    # Haiku 5.5 sent the states as a string, once with the outer object's closing brace inside it (cuo-twd).
+    states = json.dumps(PULL["states"])
+    for text in (states, states + "}"):
+        assert list(machine.parse({**PULL, "states": text}).states) == ["pull", "regroup", "out"]
+    with pytest.raises(machine.MachineError, match="came as a string"):
+        machine.parse({**PULL, "states": states + ', "x": 1}'})
 
 
 def test_only_the_current_states_transitions_are_asked_and_only_when_code_allows():

@@ -27,7 +27,7 @@ namespace ClassicUO.Agent
         private static readonly List<Mobile> _mobiles = new List<Mobile>();
         private static readonly List<Item> _corpses = new List<Item>();
 
-        public static void Write(Utf8JsonWriter w, World world, long journalSince, int radius, bool pack = false)
+        public static void Write(Utf8JsonWriter w, World world, long journalSince, int radius, bool pack = false, bool spots = false)
         {
             AgentController agent = world.Agent;
             w.WriteStartObject();
@@ -61,6 +61,11 @@ namespace ClassicUO.Agent
                 WritePack(w, world, p);
             }
 
+            if (spots)
+            {
+                WriteSpots(w, world, p, agent, radius);
+            }
+
             WriteAgent(w, world, agent);
             w.WriteEndObject();
         }
@@ -92,6 +97,17 @@ namespace ClassicUO.Agent
             w.WriteBoolean("poisoned", p.IsPoisoned);
             w.WriteBoolean("paralyzed", p.IsParalyzed);
             w.WriteBoolean("dead", p.IsDead);
+
+            // The last death this session (cuo-4b3): where, how long ago, and resurrections since.
+            if (agent.LastDeath.At != 0)
+            {
+                w.WriteStartObject("last_death");
+                w.WriteNumber("x", agent.LastDeath.X);
+                w.WriteNumber("y", agent.LastDeath.Y);
+                w.WriteNumber("ago_s", (Time.Ticks - agent.LastDeath.At) / 1000);
+                w.WriteNumber("resurrections", agent.Resurrections);
+                w.WriteEndObject();
+            }
             w.WriteBoolean("hidden", p.IsHidden);
             w.WriteBoolean("war_mode", p.InWarMode);
             w.WriteBoolean("walking", p.Pathfinder.AutoWalking);
@@ -116,6 +132,7 @@ namespace ClassicUO.Agent
             w.WriteNumber("arrows", agent.CountByGraphic(AgentWeapons.ARROW_GRAPHIC));
             w.WriteNumber("bolts", agent.CountByGraphic(AgentWeapons.BOLT_GRAPHIC));
             w.WriteBoolean("instrument", agent.FindInstrument() != null);
+            w.WriteNumber("unread_bags", agent.UnreadBags());
             w.WriteStartObject("reagents");
 
             foreach ((_, string name, ushort graphic) in AgentSpells.ReagentGraphics)
@@ -220,14 +237,92 @@ namespace ClassicUO.Agent
                 w.WriteNumber("dx", m.X - p.X);
                 w.WriteNumber("dy", m.Y - p.Y);
                 w.WriteString("dir", Compass(m.X - p.X, m.Y - p.Y));
+                w.WriteString("facing", Facing(m.Direction));
                 w.WriteBoolean("my_target", m.Serial == world.TargetManager.LastAttack);
                 w.WriteBoolean("player_target", m.Serial == world.Agent.PlayerTarget);
                 w.WriteBoolean("attacking_me", world.Agent.IsAttackingMe(m));
+
+                if (world.Agent.Unreachable(m))
+                {
+                    w.WriteBoolean("unreachable", true); // given up as out of reach a moment ago (cuo-2ct)
+                }
+
+                // Whether the player can see it, so shoot it or cast at it (cuo-ehm); left out with the
+                // agent's sight checks off.
+                if (world.Agent.SightChecks)
+                {
+                    w.WriteBoolean("in_sight", world.Agent.InSight(m));
+                }
 
                 if (AgentController.ThreatKind(m, world) is string threat)
                 {
                     w.WriteString("threat", threat);
                 }
+                w.WriteEndObject();
+            }
+
+            w.WriteEndArray();
+        }
+
+        // Places the player could walk to, for the brain's "where to stand" question (cuo-fhf): only
+        // with a monster in view; none otherwise. Facts only, worded by the brain.
+        private static void WriteSpots(Utf8JsonWriter w, World world, PlayerMobile p, AgentController agent, int radius)
+        {
+            IReadOnlyList<Spot> spots = agent.Spots(radius);
+            w.WriteNumber("spots_ms", Math.Round(agent.SpotsMs, 2));
+            w.WriteStartArray("spots");
+
+            foreach (Spot s in spots)
+            {
+                w.WriteStartObject();
+                w.WriteString("kind", s.Kind);
+
+                if (s.Name.Length != 0)
+                {
+                    w.WriteString("name", s.Name);
+                }
+
+                w.WriteNumber("x", s.X);
+                w.WriteNumber("y", s.Y);
+                w.WriteNumber("dx", s.X - p.X);
+                w.WriteNumber("dy", s.Y - p.Y);
+
+                if (s.Kind == "ring")
+                {
+                    w.WriteNumber("ring", s.Ring);
+                    w.WriteNumber("bearing", s.Bearing);
+                }
+
+                w.WriteNumber("steps", s.Steps);
+                w.WriteString("dir", AgentSpots.Compass16(s.X - p.X, s.Y - p.Y));
+                w.WriteNumber("room", s.Room);
+                w.WriteStartArray("near");
+
+                foreach ((uint serial, int distance) in s.Near)
+                {
+                    w.WriteStartArray();
+                    w.WriteNumberValue(serial);
+                    w.WriteNumberValue(distance);
+                    w.WriteEndArray();
+                }
+
+                w.WriteEndArray();
+                w.WriteStartArray("seen_by");
+
+                foreach (uint serial in s.SeenBy)
+                {
+                    w.WriteNumberValue(serial);
+                }
+
+                w.WriteEndArray();
+                w.WriteStartArray("passes");
+
+                foreach (uint serial in s.PassesBy)
+                {
+                    w.WriteNumberValue(serial);
+                }
+
+                w.WriteEndArray();
                 w.WriteEndObject();
             }
 
@@ -291,6 +386,11 @@ namespace ClassicUO.Agent
                 w.WriteNumber("distance", c.Distance);
                 w.WriteString("dir", Compass(c.X - world.Player.X, c.Y - world.Player.Y));
                 w.WriteBoolean("opened", c.Opened || c.Items != null);
+
+                if (world.Agent.OwnCorpse(c))
+                {
+                    w.WriteBoolean("own", true);
+                }
 
                 bool? monster = world.Agent.CorpseOfMonster(c.Serial);
 
@@ -584,6 +684,7 @@ namespace ClassicUO.Agent
             w.WriteStartObject("agent");
             w.WriteString("mode", agent.Mode.Name());
             w.WriteString("engage", agent.Engage.Name());
+            w.WriteString("travel_pace", agent.TravelWalks ? "walk" : "run");
             w.WriteNumber("player_target", agent.PlayerTarget);
             w.WriteString("strategy", agent.Strategy);
             w.WriteNumber("strategy_rev", agent.StrategyRevision);
@@ -637,15 +738,56 @@ namespace ClassicUO.Agent
                 w.WriteEndObject();
             }
 
-            if (agent.TravelState.Length != 0)
+            // A follow has no trip of the brain's: the one it makes for a way round stays its own.
+            if (agent.Following)
+            {
+                (int seenX, int seenY) = agent.FollowSeenAt;
+                w.WriteStartObject("follow");
+                w.WriteNumber("target", agent.FollowTarget);
+                w.WriteString("name", agent.FollowName);
+                w.WriteString("state", agent.FollowState);
+                w.WriteNumber("distance", agent.FollowTiles);
+                w.WriteBoolean("running", agent.FollowRunning);
+                w.WriteString("pace", agent.FollowPace);
+                w.WriteNumber("within", agent.FollowWithin);
+                w.WriteNumber("x", seenX);
+                w.WriteNumber("y", seenY);
+
+                if (agent.FollowWhy.Length != 0)
+                {
+                    w.WriteString("why", agent.FollowWhy);
+                }
+
+                w.WriteEndObject();
+            }
+            else if (agent.TravelState.Length != 0)
             {
                 w.WriteStartObject("travel");
                 w.WriteString("state", agent.TravelState);
+                w.WriteString("pace", agent.TravelPace);
+                w.WriteBoolean("running", agent.TravelRunning);
                 w.WriteNumber("x", agent.TravelGoal.X);
                 w.WriteNumber("y", agent.TravelGoal.Y);
                 w.WriteNumber("left", agent.TravelLeft);
                 w.WriteNumber("replans", agent.TravelReplans);
                 w.WriteNumber("elapsed_ms", agent.TravelElapsedMs);
+                w.WriteBoolean("hop", agent.TravelHop);
+                w.WriteNumber("hops", agent.TravelHops);
+                w.WriteNumber("doors", agent.TravelDoors);
+                w.WriteNumber("plans", agent.TravelPlans);
+                w.WriteNumber("plan_ms", Math.Round(agent.TravelPlanMs, 1));
+                w.WriteNumber("plan_ms_max", Math.Round(agent.TravelPlanMsMax, 1));
+
+                if (agent.TravelWhy.Length != 0)
+                {
+                    w.WriteString("why", agent.TravelWhy);
+                }
+
+                w.WriteStartObject("known");
+                w.WriteNumber("doors", agent.TravelMemory.Doors);
+                w.WriteNumber("locked_doors", agent.TravelMemory.LockedDoors);
+                w.WriteNumber("houses", agent.TravelMemory.Houses);
+                w.WriteEndObject();
                 w.WriteStartArray("stuck_at");
 
                 foreach ((int x, int y) in agent.TravelStuckAt)
@@ -654,6 +796,16 @@ namespace ClassicUO.Agent
                     w.WriteNumberValue(x);
                     w.WriteNumberValue(y);
                     w.WriteEndArray();
+                }
+
+                w.WriteEndArray();
+
+                // Beside each stuck tile, the next tile of the path and who stood on or beside it.
+                w.WriteStartArray("stuck_why");
+
+                foreach (string why in agent.TravelStuckWhy)
+                {
+                    w.WriteStringValue(why);
                 }
 
                 w.WriteEndArray();
@@ -692,7 +844,15 @@ namespace ClassicUO.Agent
             w.WriteNumber("rearms", s.Rearms);
             w.WriteNumber("cliloc_messages", s.ClilocMessages);
             w.WriteNumber("text_messages", s.TextMessages);
+            w.WriteNumber("not_in_sight", s.NotInSight);
+            w.WriteNumber("aimed_unseen", s.AimedUnseen);
+            w.WriteNumber("unseen_engaged_ms", s.UnseenEngagedMs);
+            w.WriteNumber("spot_walks", s.SpotWalks);
+            w.WriteNumber("spot_fallbacks", s.SpotFallbacks);
+            w.WriteNumber("spots_computed", agent.SpotsComputed);
             w.WriteEndObject();
+            w.WriteBoolean("sight_checks", agent.SightChecks);
+            w.WriteString("sight_rule", agent.SightRule.Name());
             w.WriteEndObject();
         }
 
@@ -722,6 +882,14 @@ namespace ClassicUO.Agent
             int idx = (int) Math.Round(((angle + 360) % 360) / 45) % 8;
 
             return names[idx];
+        }
+
+        // The way a character faces, in the same words.
+        public static string Facing(Direction d)
+        {
+            (int dx, int dy) = AgentPace.Step(d);
+
+            return Compass(dx, dy);
         }
     }
 }

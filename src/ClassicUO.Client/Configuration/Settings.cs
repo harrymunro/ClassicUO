@@ -100,6 +100,18 @@ namespace ClassicUO.Configuration
         [JsonPropertyName("agent_start_brain")] public bool AgentStartBrain { get; set; } = true;
         [JsonPropertyName("agent_brain_dir")] public string AgentBrainDir { get; set; }
 
+        // Whose line of sight the agent's sight checks follow (Agent/AgentSight.cs): "modernuo" (the
+        // local test server), "runuo" for a RunUO shard (2.3 and later), "runuo22" for RunUO 2.0 to 2.2.
+        [JsonPropertyName("agent_sight_rule")] public string AgentSightRule { get; set; } = "modernuo";
+
+        // The pace of the agent's trips when none is asked for (Agent/AgentTravel.cs): "run", or "walk"
+        // for realistic travel, a run only in danger. In game: -agent pace walk|run.
+        [JsonPropertyName("agent_travel_pace")] public string AgentTravelPace { get; set; } = "run";
+
+        // Start with the window hidden and draw nothing (GameController.Headless): for NPCs and
+        // benchmark lanes. The -headless command-line option overrides it for one launch.
+        [JsonPropertyName("headless")] public bool Headless { get; set; }
+
         public static string GetSettingsFilepath()
         {
             if (CustomSettingsFilepath != null)

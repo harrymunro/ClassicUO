@@ -11,7 +11,8 @@ namespace ClassicUO.Agent
         BandageEnded,
         CastFailed,       // the spell never started, or was interrupted before its cursor
         CastNotRecovered, // too soon after the last spell
-        InstrumentPrompt  // a bard's song asks which instrument to play
+        InstrumentPrompt, // a bard's song asks which instrument to play
+        NotInSight        // the server would not take the target: out of sight (or hidden)
     }
 
     // The server messages the agent acts on. Servers send most of them as cliloc numbers,
@@ -49,6 +50,10 @@ namespace ClassicUO.Agent
 
                 case 500617: // What instrument shall you play?
                     return AgentMessage.InstrumentPrompt;
+
+                case 500237: // Target can not be seen.
+                case 501943: // Target cannot be seen. Try again. (ModernUO: Blade Spirits, Energy Vortex)
+                    return AgentMessage.NotInSight;
 
                 case 502642: // You are already casting a spell.
                 case 502625: // Insufficient mana (for this spell).
@@ -96,6 +101,13 @@ namespace ClassicUO.Agent
             if (text.Contains("What instrument shall you play", StringComparison.OrdinalIgnoreCase))
             {
                 return AgentMessage.InstrumentPrompt;
+            }
+
+            if (text.Contains("Target can not be seen", StringComparison.OrdinalIgnoreCase)
+                || text.Contains("Target cannot be seen", StringComparison.OrdinalIgnoreCase)
+                || text.Contains("not in line of sight", StringComparison.OrdinalIgnoreCase))
+            {
+                return AgentMessage.NotInSight;
             }
 
             foreach (string s in CastFail)

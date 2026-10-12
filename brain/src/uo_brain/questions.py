@@ -214,7 +214,15 @@ TARGET_GUIDANCE = (
     "creatures that are fighting over ones that are not. Otherwise prefer the creature already being fought unless "
     "another is much more dangerous or much closer, and close, weakened creatures over distant ones."
 )
+# Only with something out of sight (cuo-ehm). Worded first as "can't be shot ... so prefer one in sight",
+# Jev took it as "attack none of these" with a lone orc behind a wall (none 0.94-0.98).
+SIGHT_GUIDANCE = (" A creature out of sight can still be fought: the character walks round until it can see it, "
+                  "which takes a few seconds, so when there is a choice a creature in sight comes first.")
 TAMER_TARGETS = "For a tamer this is the creature to set its pet on; anything attacking the tamer itself comes first. "
+# Only with a creature on a companion (cuo-4ti): who takes it off them.
+PARTY_TARGETS = ("In a party: a creature attacking a companion who is weak in melee (a mage, an archer, a bard, a "
+                 "tamer) or badly hurt is worth taking off them, even past a closer one. A warrior or paladin, who can "
+                 "take the hits, goes for it first unless it is itself badly hurt; the others help kill it. ")
 SWARMED_CASTER = ("With three or more creatures on a spellcaster, finish the one with least health left first: every "
                   "kill is one fewer hitting it and breaking its spells. ")
 
@@ -310,9 +318,46 @@ def ward_options(sit: Situation) -> list[Any]:
     return [c for c in sit.spells if c.info.get("aim") in ("ground", "summon") and c.info.get("chance", 1.0) >= 0.5]
 
 
-def build(sit: Situation, ward: bool = False) -> dict[str, dict[str, Any]]:
+# Where to stand (cuo-fhf.2): what a good place is, per way of fighting. The probe (2026-10-09) had
+# Jev pick the safest of 48 spots in 3 of 3 orders with the facts worded and no guidance at all.
+STAND_GUIDANCE = (
+    "A good place to run to has no creature within 3 tiles once there, lies away from all of them and not just "
+    "the nearest, is out of sight of spellcasters, and has open ground beyond so the run can go on. Avoid dead "
+    "ends and closed-in places, where the only way out is back past the creatures, and ways that pass next to a "
+    "creature. Fewer steps get there sooner; a few steps are enough to get out of melee reach."
+)
+STAND_ROLE = {
+    "mage": "A spellcaster also wants its target within 10 tiles and in sight, so it can cast from there.",
+    "archer": "An archer also wants its target within shooting range and in sight, so it can shoot from there.",
+    "tamer": "A tamer stays near its pet, with the pet between it and the creatures, so the pet stays in sight "
+             "and can follow or fight.",
+    "bard": "A bard also wants the creatures within 8 tiles or so, to keep playing at them.",
+}
+
+
+def stand_question(sit: Situation) -> dict[str, Any]:
+    """Where the character goes if it moves (cuo-fhf.2): one option per place in `sit.spots`, in
+    their fixed order (by bearing, "stay" last), each worded from the client's facts."""
+    who = character(sit)
+    kind = "tamer" if sit.is_tamer else "mage" if sit.is_mage else "archer" if sit.is_archer else "bard" if sit.is_bard \
+        else ""
+    return {
+        "type": "choice",
+        "instructions": instructions(
+            sit, f"If the {who} moves now, to run away, to leave, or to step back from creatures in melee reach, "
+                 f"where should it go? Each option is a place the {who} can walk to: the steps and the way there, how "
+                 "far the hostile creatures are from it, which spellcasters could see it there, whether the way "
+                 "passes next to a creature, and whether there is open ground beyond it or it is a dead end.",
+            guidance=STAND_GUIDANCE + (" " + STAND_ROLE[kind] if kind else "")),
+        "criteria": {c.id: c.info["words"] for c in sit.spots},
+    }
+
+
+def build(sit: Situation, ward: bool = False, stand: bool = False, stop: str = "") -> dict[str, dict[str, Any]]:
     """Every question of a fight decision. With `ward`, a mage with a crowd coming is also asked
-    whether to wall it off or summon something first (cuo-ev9)."""
+    whether to wall it off or summon something first (cuo-ev9). With `stand` and places to stand in
+    the situation, where it should go if it runs, leaves or steps back (cuo-fhf.2). With `stop` (the
+    reason, while a leave goes on), whether it is safe to stop running (cuo-fhf.6)."""
     who = character(sit)
     qs: dict[str, dict[str, Any]] = {
         "intent": {
@@ -360,6 +405,21 @@ def build(sit: Situation, ward: bool = False) -> dict[str, dict[str, Any]]:
             },
         }
 
+    # While leaving: whether it is safe to stop running. Code keeps the direction (the line away from
+    # them all); this is a yes/no about the situation, the kind of call Jev makes well (cuo-fhf.6).
+    if stop:
+        qs["stop_running"] = {
+            "type": "noul",
+            "instructions": instructions(sit, f"The {who} is running away from this fight. Is it safe to stop "
+                                              "running now?", reason=stop),
+            "criteria": {
+                "true": f"Nothing is coming after the {who} any more: each creature still in sight is falling behind "
+                        f"(see `moving`) or isn't fighting, no spellcaster can still reach it, and its health holds.",
+                "false": f"Something is closing in or keeping pace (following), a spellcaster can still reach the "
+                         f"{who}, or it is badly hurt and would be caught if it stopped now.",
+            },
+        }
+
     # A tamer's pet is lost for good if it dies, so whether to call it back is asked on its own.
     if sit.is_tamer and (reason := pull_back_reason(sit)):
         qs["pull_back"] = {
@@ -384,7 +444,8 @@ def build(sit: Situation, ward: bool = False) -> dict[str, dict[str, Any]]:
                 sit,
                 f"If the {who} fights, which hostile creature in `hostile_creatures` should they attack?",
                 guidance=(TAMER_TARGETS if sit.is_tamer else "") + (SWARMED_CASTER if swarmed else "")
-                + TARGET_GUIDANCE,
+                + (PARTY_TARGETS if any(h.info.get("attacking_your_companion") for h in sit.targets) else "")
+                + TARGET_GUIDANCE + (SIGHT_GUIDANCE if any(not h.in_sight for h in sit.targets) else ""),
             ),
             "criteria": criteria,
         }
@@ -464,6 +525,9 @@ def build(sit: Situation, ward: bool = False) -> dict[str, dict[str, Any]]:
                          "while it lasts. Tithing points and mana are limited, so bless the fights that need it."),
             "criteria": options,
         }
+
+    if stand and sit.spots:
+        qs["stand"] = stand_question(sit)
 
     # Looting questions only matter with no hostile close (policy masks loot otherwise),
     # so they are not asked mid-fight: unused answers would be re-asked every second.
@@ -554,8 +618,12 @@ def describe_hostile(info: dict[str, Any], who: str = "warrior") -> str:
         parts.append("within spell range" if info["in_spell_range"] else "out of spell range")
     if "in_shooting_range" in info:
         parts.append("within shooting range" if info["in_shooting_range"] else "out of shooting range")
+    if info.get("out_of_sight"):
+        parts.append("out of sight behind something")
     if info.get("your_pet_is_fighting_it"):
         parts.append("the pet is fighting it")
+    if info.get("attacking_your_companion"):
+        parts.append(f"attacking your companion {info['attacking_your_companion']}")
     if info.get("your_current_target"):
         parts.append(f"the {who} is already fighting it")
     if info.get("the_players_target"):

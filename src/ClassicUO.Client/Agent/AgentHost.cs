@@ -2,6 +2,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using ClassicUO.Configuration;
@@ -166,7 +167,8 @@ namespace ClassicUO.Agent
                     long since = Get(p, "since", out JsonElement s) ? s.GetInt64() : 0;
                     int radius = Get(p, "radius", out JsonElement r) ? Math.Clamp(r.GetInt32(), 1, 24) : 18;
                     bool pack = Get(p, "pack", out JsonElement pk) && pk.GetBoolean();
-                    Reply(conn, id, w => AgentSnapshot.Write(w, world, since, radius, pack));
+                    bool spots = Get(p, "spots", out JsonElement sp) && sp.GetBoolean(); // places to stand (cuo-fhf)
+                    Reply(conn, id, w => AgentSnapshot.Write(w, world, since, radius, pack, spots));
 
                     break;
 
@@ -309,6 +311,55 @@ namespace ClassicUO.Agent
 
                     break;
 
+                // {goals: [{id, text, progress}], ack: seq}: the character's long goals for the panel, from the
+                // brain, which keeps them. Replies with what the player asked in the panel since (add, done,
+                // drop); the brain sends ack with the last seq it applied.
+                case "long_goals":
+                    RequireInGame(world);
+
+                    if (Get(p, "goals", out JsonElement lgs) && lgs.ValueKind == JsonValueKind.Array)
+                    {
+                        var goals = new List<AgentController.LongGoal>();
+
+                        foreach (JsonElement g in lgs.EnumerateArray())
+                        {
+                            goals.Add(new AgentController.LongGoal
+                            {
+                                Id = g.TryGetProperty("id", out JsonElement gi) && gi.ValueKind == JsonValueKind.Number ? gi.GetInt32() : 0,
+                                Text = g.TryGetProperty("text", out JsonElement gt2) ? gt2.GetString() ?? string.Empty : string.Empty,
+                                Progress = g.TryGetProperty("progress", out JsonElement gpr) ? gpr.GetString() ?? string.Empty : string.Empty
+                            });
+                        }
+
+                        world.Agent.SetLongGoals(goals);
+                    }
+
+                    if (Get(p, "ack", out JsonElement lack) && lack.ValueKind == JsonValueKind.Number)
+                    {
+                        world.Agent.AckLongGoalRequests(lack.GetInt32());
+                    }
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteStartArray("requests");
+
+                        foreach (AgentController.LongGoalRequest r in world.Agent.LongGoalRequests)
+                        {
+                            w.WriteStartObject();
+                            w.WriteNumber("seq", r.Seq);
+                            w.WriteString("action", r.Action);
+                            w.WriteNumber("id", r.Id);
+                            w.WriteString("text", r.Text);
+                            w.WriteEndObject();
+                        }
+
+                        w.WriteEndArray();
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
                 // {step, why}: what the planner is doing about the goal, for the panel.
                 case "goal_status":
                     RequireInGame(world);
@@ -399,16 +450,20 @@ namespace ClassicUO.Agent
                     break;
 
                 // The travel planner's view around the player, for debugging routes: '.' somewhere to
-                // stand, '#' nowhere, 'x' an impassable item, '@' the player. With goal_x/goal_y it
-                // plans the walk exactly as travel would and draws the path ('o').
+                // stand, '#' nowhere, 'x' an impassable item, 'd' a door ('D' one blocked), 'h' a house's blocked tile (all of
+                // a house, or its walls when the player or the goal is in it), '@' the player. With goal_x/goal_y it
+                // plans the walk exactly as travel would (the first hop of a long one) and draws
+                // the path ('o'). With reach, ',' is what the planner can walk to from the player;
+                // with check, '-' marks tiles only the planner reaches and '+' tiles only the
+                // client's own pathfinder does.
                 case "nav":
                     RequireInGame(world);
-                    int rad = Get(p, "radius", out JsonElement nr) ? Math.Clamp(nr.GetInt32(), 4, 60) : 20;
+                    int rad = Get(p, "radius", out JsonElement nr) ? Math.Clamp(nr.GetInt32(), 4, 200) : 20;
                     int px = world.Player.X, py = world.Player.Y;
                     int goalX = Get(p, "goal_x", out JsonElement gx) ? gx.GetInt32() : px;
                     int goalY = Get(p, "goal_y", out JsonElement gy) ? gy.GetInt32() : py;
-                    NavGrid grid = world.Agent.TravelGrid(goalX, goalY) ?? throw new AgentRpcException(-32602, "too far for one plan");
-                    var route = goalX == px && goalY == py ? null : AgentNav.Plan(grid, px, py, world.Player.Z, goalX, goalY, 0);
+                    (NavGrid grid, TripPlan trip) = world.Agent.TravelView(goalX, goalY, rad);
+                    var route = trip?.Path;
                     var onPath = new System.Collections.Generic.HashSet<(int, int)>();
 
                     foreach ((int rx, int ry, sbyte _) in route ?? new System.Collections.Generic.List<(int, int, sbyte)>())
@@ -416,9 +471,11 @@ namespace ClassicUO.Agent
                         onPath.Add((rx, ry));
                     }
 
-                    var reach = Get(p, "reach", out JsonElement rf) && rf.GetBoolean()
+                    bool check = Get(p, "check", out JsonElement cf) && cf.GetBoolean();
+                    var reach = check || Get(p, "reach", out JsonElement rf) && rf.GetBoolean()
                         ? AgentNav.Reachable(grid, px, py, world.Player.Z)
                         : new System.Collections.Generic.HashSet<(int, int)>();
+                    var clientReach = check ? world.Agent.ClientReachable(rad) : null;
                     var items = new System.Collections.Generic.HashSet<(int, int)>();
 
                     foreach (Game.GameObjects.Item it in world.Items.Values)
@@ -429,12 +486,29 @@ namespace ClassicUO.Agent
                         }
                     }
 
+                    int navMap = world.MapIndex;
+
                     Reply(conn, id, w =>
                     {
                         w.WriteStartObject();
                         w.WriteNumber("x0", px - rad);
                         w.WriteNumber("y0", py - rad);
                         w.WriteNumber("path", route?.Count ?? -1);
+
+                        if (trip != null)
+                        {
+                            w.WriteBoolean("hop", trip.Hop);
+                            w.WriteNumber("plan_ms", Math.Round(trip.TotalMs, 1));
+                            w.WriteNumber("load_ms", Math.Round(trip.LoadMs, 1));
+                            w.WriteNumber("nodes", trip.Stats.Expanded);
+                            w.WriteNumber("grids", trip.Grids);
+
+                            if (trip.Why != null)
+                            {
+                                w.WriteString("why", trip.Why);
+                            }
+                        }
+
                         w.WriteStartArray("rows");
 
                         for (int y = py - rad; y <= py + rad; y++)
@@ -444,7 +518,10 @@ namespace ClassicUO.Agent
                             for (int x = px - rad; x <= px + rad; x++)
                             {
                                 row[x - px + rad] = x == px && y == py ? '@' : onPath.Contains((x, y)) ? 'o'
-                                    : items.Contains((x, y)) ? 'x' : reach.Contains((x, y)) ? ',' : grid.Count(x, y) > 0 ? '.' : '#';
+                                    : items.Contains((x, y)) ? 'x' : grid.IsDoor(x, y) ? grid.Count(x, y) > 0 ? 'd' : 'D'
+                                    : grid.Count(x, y) == 0 && world.Agent.TravelMemory.InHouse(navMap, x, y) ? 'h'
+                                    : clientReach != null && reach.Contains((x, y)) != clientReach.Contains((x, y)) ? reach.Contains((x, y)) ? '-' : '+'
+                                    : reach.Contains((x, y)) ? ',' : grid.Count(x, y) > 0 ? '.' : '#';
                             }
 
                             w.WriteStringValue(new string(row));
@@ -487,7 +564,140 @@ namespace ClassicUO.Agent
                             w.WriteEndObject();
                         }
 
+                        // With parts: the pieces of the houses in range too (part_of the house).
+                        if (Get(p, "parts", out JsonElement ip) && ip.GetBoolean())
+                        {
+                            foreach (Game.GameObjects.House house in world.HouseManager.Houses)
+                            {
+                                foreach (Game.GameObjects.Multi m in house.Components)
+                                {
+                                    if (m.IsDestroyed || Math.Max(Math.Abs(m.X - world.Player.X), Math.Abs(m.Y - world.Player.Y)) > ir)
+                                    {
+                                        continue;
+                                    }
+
+                                    w.WriteStartObject();
+                                    w.WriteNumber("part_of", house.Serial);
+                                    w.WriteNumber("graphic", m.Graphic);
+                                    w.WriteString("name", m.Name ?? string.Empty);
+                                    w.WriteNumber("x", m.X);
+                                    w.WriteNumber("y", m.Y);
+                                    w.WriteNumber("z", m.Z);
+                                    w.WriteNumber("height", m.ItemData.Height);
+                                    w.WriteBoolean("impassable", m.ItemData.IsImpassable);
+                                    w.WriteBoolean("surface", m.ItemData.IsSurface);
+                                    w.WriteBoolean("door", m.ItemData.IsDoor);
+                                    w.WriteEndObject();
+                                }
+                            }
+                        }
+
                         w.WriteEndArray();
+                    });
+
+                    break;
+
+                // Line of sight (cuo-ehm). {checks: bool} turns the agent's sight checks on or off (for
+                // before-and-after benchmarks). {rule: "modernuo" | "runuo" | "runuo22"} sets whose rule
+                // they follow (cuo-2ad) for as long as the client runs; the setting is agent_sight_rule.
+                // {pairs: [[x1, y1, z1, x2, y2, z2], ...]} answers the sight rule for raw points, no eye
+                // height added, to compare with the server's [AgentSight. {serial: n}: whether the player
+                // sees that mobile. {view: radius}: which ground tiles around the player it can aim at
+                // ('.' yes, '#' no, '@' the player).
+                case "sight":
+                    RequireInGame(world);
+
+                    if (Get(p, "checks", out JsonElement checksOn))
+                    {
+                        world.Agent.SightChecks = checksOn.GetBoolean();
+                    }
+
+                    if (Get(p, "rule", out JsonElement ruleName))
+                    {
+                        string asked = ruleName.ValueKind == JsonValueKind.String ? ruleName.GetString() : null;
+
+                        if (string.IsNullOrWhiteSpace(asked) || !AgentSight.TryParseRule(asked, out SightRule asRule))
+                        {
+                            throw new AgentRpcException(-32602, "rule is modernuo, runuo or runuo22");
+                        }
+
+                        world.Agent.SightRule = asRule;
+                    }
+
+                    var answers = new System.Collections.Generic.List<bool>();
+
+                    if (Get(p, "pairs", out JsonElement pairs) && pairs.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (JsonElement pair in pairs.EnumerateArray())
+                        {
+                            if (pair.ValueKind != JsonValueKind.Array || pair.GetArrayLength() != 6)
+                            {
+                                throw new AgentRpcException(-32602, "each pair is [x1, y1, z1, x2, y2, z2]");
+                            }
+
+                            answers.Add(AgentSight.InSight(world.Agent.SightTiles, pair[0].GetInt32(), pair[1].GetInt32(), pair[2].GetInt32(),
+                                                           pair[3].GetInt32(), pair[4].GetInt32(), pair[5].GetInt32(), world.Agent.SightRule));
+                        }
+                    }
+
+                    bool? seen = null;
+
+                    if (Get(p, "serial", out JsonElement ss))
+                    {
+                        seen = world.Mobiles.TryGetValue(ss.GetUInt32(), out Game.GameObjects.Mobile sm) && world.Agent.InSight(sm);
+                    }
+
+                    var view = new System.Collections.Generic.List<string>();
+
+                    if (Get(p, "view", out JsonElement vr))
+                    {
+                        int vrad = Math.Clamp(vr.GetInt32(), 2, 24), vx = world.Player.X, vy = world.Player.Y;
+
+                        for (int y = vy - vrad; y <= vy + vrad; y++)
+                        {
+                            var row = new char[2 * vrad + 1];
+
+                            for (int x = vx - vrad; x <= vx + vrad; x++)
+                            {
+                                row[x - vx + vrad] = x == vx && y == vy ? '@' : world.Agent.SeesGround(x, y) ? '.' : '#';
+                            }
+
+                            view.Add(new string(row));
+                        }
+                    }
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteBoolean("checks", world.Agent.SightChecks);
+                        w.WriteString("rule", world.Agent.SightRule.Name());
+                        w.WriteStartArray("in_sight");
+
+                        foreach (bool a in answers)
+                        {
+                            w.WriteBooleanValue(a);
+                        }
+
+                        w.WriteEndArray();
+
+                        if (seen.HasValue)
+                        {
+                            w.WriteBoolean("mobile", seen.Value);
+                        }
+
+                        if (view.Count != 0)
+                        {
+                            w.WriteStartArray("view");
+
+                            foreach (string row in view)
+                            {
+                                w.WriteStringValue(row);
+                            }
+
+                            w.WriteEndArray();
+                        }
+
+                        w.WriteEndObject();
                     });
 
                     break;
@@ -499,10 +709,32 @@ namespace ClassicUO.Agent
 
                     break;
 
+                // {visible: true} shows the window and draws again, {visible: false} hides it and
+                // stops drawing (headless); without params, only reports. For watching an NPC.
+                case "window":
+                    if (Get(p, "visible", out JsonElement vis))
+                    {
+                        game.SetHeadless(!vis.GetBoolean());
+                    }
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        WriteWindow(w, game);
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
                 case "capture":
                     if (!Get(p, "path", out JsonElement path) || string.IsNullOrEmpty(path.GetString()))
                     {
                         throw new AgentRpcException(-32602, "path is required");
+                    }
+
+                    if (game.Headless)
+                    {
+                        throw new AgentRpcException(-32003, "nothing is drawn while the window is hidden; show it first (window visible=true)");
                     }
 
                     // Answered from OnDraw once this frame has been drawn.
@@ -523,6 +755,7 @@ namespace ClassicUO.Agent
             LoginScene login = game.GetScene<LoginScene>();
             w.WriteString("scene", login != null ? "login" : game.GetScene<GameScene>() != null ? "game" : "other");
             w.WriteBoolean("in_game", world.InGame && world.Player != null);
+            WriteWindow(w, game);
 
             if (login != null)
             {
@@ -557,6 +790,16 @@ namespace ClassicUO.Agent
             }
 
             w.WriteEndObject();
+        }
+
+        // Whether the window is shown, and the loop's rates over the last second: updates, frames
+        // the frame cap let through, and frames drawn (0 headless).
+        private static void WriteWindow(Utf8JsonWriter w, GameController game)
+        {
+            w.WriteBoolean("headless", game.Headless);
+            w.WriteNumber("updates_per_s", game.UpdatesPerSecond);
+            w.WriteNumber("frames_per_s", game.FramesPerSecond);
+            w.WriteNumber("draws_per_s", game.DrawsPerSecond);
         }
 
         private static void RequireInGame(World world)

@@ -34,8 +34,14 @@ namespace ClassicUO.Agent
             public readonly Dictionary<string, int> Skills = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         }
 
+        // Whether this run's login was the brain's (the login RPC): a fleet's client, which the brain
+        // logs in again after a lost connection, so the client goes back to the login screen rather
+        // than waiting on a message box nobody clicks (cuo-m12).
+        public static bool UsedThisRun { get; private set; }
+
         public static AgentLogin Start(GameController game, JsonElement p)
         {
+            UsedThisRun = true;
             var login = new AgentLogin
             {
                 _character = Str(p, "character"),

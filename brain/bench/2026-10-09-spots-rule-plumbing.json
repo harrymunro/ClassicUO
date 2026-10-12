@@ -1,0 +1,676 @@
+{
+  "started": "2026-10-09T19:54:03",
+  "rounds": 2,
+  "lane": 1,
+  "headless": true,
+  "clients_at_start": 4,
+  "bestiary": true,
+  "profile": {
+    "profile": "default",
+    "models": {
+      "fight": "jev",
+      "routine": "jev",
+      "facts": "jev",
+      "rerank": "jev",
+      "strategy": "jev",
+      "recorder": "jev",
+      "replay": "jev",
+      "memory": "jev",
+      "chat": "jev",
+      "planner": "anthropic/claude-haiku-5.5",
+      "review": "anthropic/claude-sonnet-5.5",
+      "guide": "anthropic/claude-sonnet-5.5",
+      "design": "anthropic/claude-haiku-5.5",
+      "escalate": "anthropic/claude-sonnet-5.5",
+      "compact": "anthropic/claude-haiku-5.5",
+      "heartbeat": "anthropic/claude-haiku-5.5",
+      "daily": "anthropic/claude-haiku-5.5",
+      "talk": "anthropic/claude-haiku-5.5"
+    }
+  },
+  "aliases": {},
+  "scenarios": {
+    "pack-pocket": {
+      "bead": "cuo-fhf.3",
+      "right": "A warrior in a pocket of walls open to the south, two orcs on it; two bone knights come from the south: get out of the pocket's mouth before they reach it, not into its back wall, and survive.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (94%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Xurek (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 72,
+              "seconds": 90.3,
+              "player_died": false,
+              "engaged": [
+                "Xurek (orc)",
+                "Wogharod (orc)"
+              ],
+              "flees_at_hp": [
+                94,
+                95,
+                98,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 43,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-pocket-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 66,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 12,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 3.5,
+                "ran_at_s": 15.8,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (73%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Wapkagut (orc)",
+                "Zurpigig (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 21,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Wapkagut (orc)",
+                "Zurpigig (orc)",
+                "a bone knight (skeleton)"
+              ],
+              "flees_at_hp": [
+                73,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 55,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-pocket-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 80,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 3.8,
+                "ran_at_s": 16.0,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 49.0,
+          "moves": {
+            "runs": 19,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 3.8,
+            "broke_contact": 2
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        },
+        "heuristic/spots": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (79%)",
+              "why": "3 coming at once: 2 orcs (weak each) and a skeleton (stronger than you); together far stronger than you: too many to fig",
+              "kills": [
+                "Pargu (orc)"
+              ],
+              "engaged_pack": true,
+              "min_hp": 39,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Sarhbub (orc)",
+                "Pargu (orc)",
+                "a bone knight (skeleton)"
+              ],
+              "flees_at_hp": [
+                79,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 65,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-pocket-heuristic_spots-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 78,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 9,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 9
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 5.6,
+                "ran_at_s": 15.9,
+                "jev_stayed": 0
+              },
+              "spot_walks": 9,
+              "spot_fallbacks": 0,
+              "stand_asked": 54,
+              "clients": 4
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (83%)",
+              "why": "3 coming at once: an orc (weak) and 2 skeletons (stronger than you each); together far stronger than you: too many to fi",
+              "kills": [
+                "Sildud (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 49,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Sildud (orc)",
+                "Yokgagu (orc)"
+              ],
+              "flees_at_hp": [
+                83,
+                52,
+                91,
+                93,
+                96,
+                97,
+                98,
+                99,
+                100,
+                100,
+                100
+              ],
+              "decisions": 52,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-pocket-heuristic_spots-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 64,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 11,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 11
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 3.9,
+                "ran_at_s": 16.2,
+                "jev_stayed": 0
+              },
+              "spot_walks": 11,
+              "spot_fallbacks": 0,
+              "stand_asked": 50,
+              "clients": 4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 58.5,
+          "moves": {
+            "runs": 20,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 20,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 5.6,
+            "broke_contact": 2
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        }
+      }
+    },
+    "pack-gargoyles": {
+      "bead": "cuo-d28.9",
+      "right": "Two orcs fight a warrior; three gargoyles (a fair fight each, and spellcasters) come at it from 14 tiles: get away before they are on it, and survive.",
+      "judges": {
+        "heuristic": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "lightly wounded (91%)",
+              "why": "4 coming at once: an orc (weak) and 3 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Tozhug (orc)",
+                "Yerghug (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 49,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Tozhug (orc)",
+                "Yerghug (orc)"
+              ],
+              "flees_at_hp": [
+                91,
+                86,
+                87,
+                89,
+                92,
+                94,
+                96
+              ],
+              "decisions": 43,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-gargoyles-heuristic-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 64,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 7,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 3.8,
+                "ran_at_s": 16.8,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "wounded (68%)",
+              "why": "4 coming at once: 2 orcs (weak each) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than y",
+              "kills": [],
+              "engaged_pack": false,
+              "min_hp": 47,
+              "seconds": 90.1,
+              "player_died": false,
+              "engaged": [
+                "Yulakgh (orc)",
+                "Sogugbu (orc)"
+              ],
+              "flees_at_hp": [
+                68,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                89,
+                64,
+                100
+              ],
+              "decisions": 41,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-gargoyles-heuristic-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 65,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 16,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 0
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 4.3,
+                "ran_at_s": 16.0,
+                "jev_stayed": 0
+              },
+              "spot_walks": 0,
+              "spot_fallbacks": 0,
+              "clients": 4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 42.0,
+          "moves": {
+            "runs": 23,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 0,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 4.3,
+            "broke_contact": 2
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        },
+        "heuristic/spots": {
+          "runs": [
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Inkathu (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 72,
+              "seconds": 90.0,
+              "player_died": false,
+              "engaged": [
+                "Inkathu (orc)",
+                "Wapkagut (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                91,
+                92,
+                94
+              ],
+              "decisions": 62,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-gargoyles-heuristic_spots-01.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 73,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 13,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 13
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 1.5,
+                "ran_at_s": 15.9,
+                "jev_stayed": 0
+              },
+              "spot_walks": 13,
+              "spot_fallbacks": 0,
+              "stand_asked": 49,
+              "clients": 4
+            },
+            {
+              "success": true,
+              "left": true,
+              "left_at_hp": "unhurt (100%)",
+              "why": "3 coming at once: an orc (weak) and 2 gargoyles (a fair fight and a spellcaster each); together far stronger than you: t",
+              "kills": [
+                "Surpigig (orc)"
+              ],
+              "engaged_pack": false,
+              "min_hp": 69,
+              "seconds": 90.2,
+              "player_died": false,
+              "engaged": [
+                "Surpigig (orc)",
+                "Futgarek (orc)"
+              ],
+              "flees_at_hp": [
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100,
+                100
+              ],
+              "decisions": 63,
+              "not_in_sight_msgs": 0,
+              "aimed_unseen": 0,
+              "unseen_engaged_s": 0.0,
+              "log": "logs/bench/20261009-195403-lane1/pack-gargoyles-heuristic_spots-02.jsonl",
+              "input_tokens": 0,
+              "cost_usd": 0,
+              "cost_by_kind": {},
+              "models": [],
+              "latency_ms_avg": 0.0,
+              "decisions_made": 74,
+              "input_tokens_per_call": 0,
+              "cost_per_call_usd": 0.0,
+              "moves": {
+                "runs": 13,
+                "steps_back": 0,
+                "to_spot": {
+                  "jev": 0,
+                  "rule": 13
+                },
+                "no_path_to_spot": 0,
+                "failed_runs": 0,
+                "cornered": 0,
+                "died_moving": false,
+                "break_contact_s": 3.4,
+                "ran_at_s": 15.7,
+                "jev_stayed": 0
+              },
+              "spot_walks": 13,
+              "spot_fallbacks": 0,
+              "stand_asked": 51,
+              "clients": 4
+            }
+          ],
+          "n": 2,
+          "successes": 2,
+          "rate": 1.0,
+          "ci95": [
+            0.342,
+            1.0
+          ],
+          "deaths": 0,
+          "cost_usd": 0,
+          "cost_per_round_usd": 0.0,
+          "latency_ms_avg": null,
+          "decisions_per_round": 62.5,
+          "moves": {
+            "runs": 26,
+            "steps_back": 0,
+            "to_spot_jev": 0,
+            "to_spot_rule": 26,
+            "no_path_to_spot": 0,
+            "failed_runs": 0,
+            "cornered": 0,
+            "died_moving": 0,
+            "jev_stayed": 0,
+            "break_contact_s_median": 3.4,
+            "broke_contact": 2
+          },
+          "input_tokens_per_call": null,
+          "cost_per_call_usd": null,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "costs": {
+    "cost_usd": 0,
+    "cost_per_hour_usd": 0.0,
+    "calls": 0,
+    "by_role": {},
+    "by_kind": {},
+    "by_model": {}
+  }
+}

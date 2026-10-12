@@ -19,6 +19,13 @@ namespace ClassicUO
         public static uint CurrentRefreshRate;
         public static bool SkipLoginScreen;
         public static bool NoServerPing;
+        // -headless [true|false] on the command line; null when not given (settings.json's "headless" decides).
+        // Kept out of Settings so that one headless launch doesn't make the next one headless too.
+        public static bool? HeadlessArg;
+        // -agent_sight_rule on the command line; null when not given (settings.json's "agent_sight_rule"
+        // decides). Kept out of Settings for the same reason: a launch against a RunUO shard from a folder
+        // shared with the local server's clients must not leave them on its rule.
+        public static string AgentSightRuleArg;
 
         public static readonly bool IsWindows = Environment.OSVersion.Platform == PlatformID.Win32NT || Environment.OSVersion.Platform == PlatformID.Win32Windows || Environment.OSVersion.Platform == PlatformID.Win32S || Environment.OSVersion.Platform == PlatformID.WinCE;
         public static readonly bool IsUnix = !IsWindows;

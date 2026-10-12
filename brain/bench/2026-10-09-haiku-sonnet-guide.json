@@ -1,0 +1,2277 @@
+{
+ "what": "Guide import by Claude Haiku 5.5 and Claude Sonnet 5.5 (cuo-twd, 2026-10-09). 'before' is the guide prompt as it was; 'after' has the stronger facet rule now in guides.py. Trammel-system notes: notes about Despise's Trammel-only wisp-orb system (matched by its words); saying_trammel: those whose text says Trammel.",
+ "commands": [
+  "uv run uo-brain world --root <scratch> --shard twd-<model> import-guide https://www.uoguide.com/<Page> --area <Page> --planner-model anthropic/claude-<haiku|sonnet>-5.5 --cost-log logs/twd/guide-<model>.jsonl",
+  "'after' runs: the same call through guides.summarise with the new prompt (scratchpad script), nothing stored"
+ ],
+ "runs": [
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "before",
+   "notes_count": 20,
+   "cost": 0.001236,
+   "prompt_tokens": 4434,
+   "completion_tokens": 1540,
+   "latency_s": 5.6,
+   "trammel_system_notes": 11,
+   "trammel_system_notes_saying_trammel": 0,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an Anti-Virtue dungeon original to Ultima Online, located at sextant coordinates 47N, 1W on Felucca and Trammel.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three levels below the entrance area; the stairs going up from the entrance are Level 1.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Level 1 is full of Lizardmen and has ankhs that act as two-way switches teleporting between the two ankhs on that level; you cannot resurrect at either ankh.",
+     "tags": [
+      "danger",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Level 2 consists entirely of Ettins and Earth Elementals; a popular lockpicking spot lies just inside Level 2 to the north.",
+     "tags": [
+      "creature",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Level 3 has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "On Felucca, Despise Level 3 hosts the Vermin Horde Champion Spawn with Barracoon the Piper as champion.",
+     "tags": [
+      "danger",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Wisp Orbs are obtained by double-clicking an ankh inside the dungeon; positive karma uses the Good side ankh and negative karma uses the Evil side ankh.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A Despise Wisp Orb lets you control any creature regardless of side by double-clicking the orb and targeting the creature.",
+     "tags": [
+      "rule",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Controlled Despise creatures can be set to Defensive or Aggressive aggression, and leash length can be set to Short or Long via the orb.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Evil-side Despise creatures include Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Good-side Despise creatures include Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A controlled Despise creature gains power levels by killing creatures; it advances when the cumulative power level of its kills equals or exceeds its current power level. Max power level is 10, raised to 15 if its karma changes sign by killing same-alignment creatures.",
+     "tags": [
+      "rule",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Each kill in Despise yields Putrid Hearts by victim power level: 1, 2, 4, 8, 12, 18, 24, 32, 40, 50 for levels 1 through 10.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Putrid Hearts are spent with the Mysterious Wisp at the Despise entrance for Dungeon Crystal Points of Despise, which buy random Ephemeral magic items.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To fight in the final battle, a trained creature must be Conscripted via the Wisp Orb menu; the highest Army Power alignment is teleported to the final level within 60 seconds.",
+     "tags": [
+      "rule",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Army Power is the sum of squares of the power levels of conscripted creatures on an alignment.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "In the Despise final battle, Adrian the Glorious Lord (Good) or Andros the Dread Lord (Evil) sit on an island inside the lake and are immune to player attacks; only your controlled creature can damage them.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "If a player dies on the Despise final level, the ghost and corpse are teleported back to the side of their alignment.",
+     "tags": [
+      "danger",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A Despise Artifact has a chance to drop into your backpack when Adrian or Andros is killed.",
+     "tags": [
+      "loot"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "before",
+   "notes_count": 23,
+   "cost": 0.001158,
+   "prompt_tokens": 4434,
+   "completion_tokens": 1590,
+   "latency_s": 5.8,
+   "trammel_system_notes": 12,
+   "trammel_system_notes_saying_trammel": 0,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an Anti-Virtue dungeon original to Ultima Online, located at sextant coordinates 47\u00ba N, 1\u00ba W on Felucca and Trammel.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three levels below the entrance area.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise on Trammel was revamped with Publish 78.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Wisp Orbs are obtained by double-clicking the ankhs inside Despise; a character with positive karma uses the Good side ankh, and one with negative karma uses the Evil side ankh.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A Wisp Orb lets you control any creature, regardless of side, by double-clicking the orb and targeting the creature.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A controlled creature's aggression can be set to Defensive (only defends) or Aggressive (attacks other creatures) through the Wisp Orb.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Evil-side trainable creatures include Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Good-side trainable creatures include Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A controlled creature levels up by killing creatures; cumulative power level of kills must equal or exceed its current power level to advance.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Killing creatures with a Wisp Orb-controlled creature yields Putrid Hearts based on the victim's power level (1 to 50 for power levels 1 to 10).",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Putrid Hearts can be spent with the Mysterious Wisp at the dungeon entrance for Dungeon Crystal Points of Despise, which buy random Ephemeral magic items.",
+     "tags": [
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Maximum power level for a controlled creature is 10, raised to 15 if its karma changes sign while killing same-alignment creatures.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Army Power is the sum of squares of the power levels of conscripted creatures on your alignment; the strongest army is teleported to the final level within 60 seconds of the Call to Arms.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "The final battle is against Adrian the Glorious Lord (Good) or Andros the Dread Lord (Evil) and their Wisps, on an island inside the lake.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "The twin brothers on the final island are shielded from player attacks; only your controlled creature can damage them.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "If you die on the final level of Despise, your ghost and corpse are teleported back to your alignment's side.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A chance for a Despise Artifact to drop into your backpack when Adrian or Andros is killed.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Level 1 (stairs up from entrance) is full of Lizardmen and has an escort quest.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "On Despise Level 1, ankhs have switches that teleport you to the other ankh on Level 1; the switch works both ways. You cannot resurrect at either ankh.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Level 2 consists entirely of Ettins and Earth Elementals; a popular lockpicking spot lies just inside Level 2 to the north.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Level 3 has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "On Felucca, Despise Level 3 hosts the Vermin Horde Champion Spawn, with Barracoon the Piper as champion.",
+     "tags": [
+      "spawn"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Covetous",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "before",
+   "notes_count": 25,
+   "cost": 0.001381,
+   "prompt_tokens": 4033,
+   "completion_tokens": 1912,
+   "latency_s": 7.4,
+   "notes": [
+    {
+     "area": "Covetous",
+     "text": "Covetous is one of the seven Anti-Virtue Dungeons, opposite the Sacrifice virtue. It has five levels and lies in the Mountains of Avarice.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous is on Felucca and Trammel at about 62N 83E (page gives 62\u00ba 13' N, 82\u00ba 41' E), northeast of Cove, south of Minoc, west of Vesper, southwest of the Minoc Moongate.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Two outside passages connect Covetous levels: one between levels 1 and 2, another between levels 2 and 3. You can Mark and Recall between levels for quicker access.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "A Sacrificial Brazier sits near the exit of level 2 in the outside passage. Sacrificing a Treasure Map or World Map there yields a new map marking Corgul the Soulbinder's Island.",
+     "tags": [
+      "location",
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Skeletons spawn in the passage outside Covetous between levels 2 and 3.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Ghost of Frederic Smithson, a quest NPC, stands at the first outside passage near the exit of level 1.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 1 is a cave ecosystem. Area 1 has Dazzled Harpies and Vampire Mongbats, Area 2 has Headless Miners, and Area 3 has Strange Gazers.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "On Covetous level 1, all creatures except the Strange Gazers are non-hostile to players.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Headless Miners on Covetous level 1 often mine gem pieces that can be picked up from the cavern floor.",
+     "tags": [
+      "creature",
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Dazzled Harpies on Covetous level 1 are drawn to nearby gems and become briefly hypnotized. Vampire Mongbats hunt them, leeching hit points or hiding.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 1 has several switches whose purpose is unknown.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 2 has no regular spawn. Instead, players defend the Void Pool from endless, increasingly tough and fast waves of Cora's minions.",
+     "tags": [
+      "danger",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Cora's Void Pool waves come from these groups in order: Abyss, Repond, Undead, Reptile, Elemental.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Cora's minions drop no loot. Players earn Void Pool points for kills or assists, viewable via The Void Pool entry in the character context menu.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Cove",
+     "text": "Void Pool reward points are redeemed by visiting Vela the Sorceress in Cove.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 is reached by following the passage east to a carved stone entrance. Its Great Hall has three groups of Cora's minions and monsters inside side rooms and behind locked doors to the north.",
+     "tags": [
+      "location",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Storage Room has one group of Cora's minions.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Dining Hall has two candles that respawn after each maintenance in both facets. The hallway has two to three groups of Cora's minions.",
+     "tags": [
+      "location",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "The staircase on the west side of the Covetous level 3 Dining Hall leads down to level 4.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Throne Room has one group of Cora's minions. Its staircase in the northeast corner leads to level 5.",
+     "tags": [
+      "spawn",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 4 is an old prison with cells on both sides of a short corridor leading to a torture chamber. A single group of Cora's minions spawns there.",
+     "tags": [
+      "location",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous monsters become stronger the deeper players go into levels 3 and 4, and as more Void Pool waves are defeated.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 5 lies beside a subterranean lake where Cora the Sorceress leads minions out to the rest of the dungeon.",
+     "tags": [
+      "creature",
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Fire traps are scattered across the floors of Covetous and should be avoided.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Travel spells cannot be used near the Void Pool in Covetous because of a twist in space.",
+     "tags": [
+      "rule",
+      "travel"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-sonnet-5.5",
+   "prompt": "before",
+   "notes_count": 23,
+   "cost": 0.02878,
+   "prompt_tokens": 4308,
+   "completion_tokens": 1972,
+   "latency_s": 11.2,
+   "trammel_system_notes": 13,
+   "trammel_system_notes_saying_trammel": 13,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an original Ultima Online dungeon, an Anti-Virtue dungeon, at sextant coordinates 47\u00ba N, 1\u00ba W. It exists on both Felucca and Trammel.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three levels not counting the entrance area.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Level 1 of Despise (the stairs up from the entrance area) is full of Lizardmen. It has an escort quest.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Level 1 of Despise has two ankhs, each with a switch that teleports you to the other ankh (works both ways). You cannot resurrect at either ankh.",
+     "tags": [
+      "rule",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Level 2 of Despise (Felucca) consists entirely of Ettins and Earth Elementals.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Just inside Level 2 of Despise, to the north, is a popular lockpicking spot.",
+     "tags": [
+      "location",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Level 3 of Despise (Felucca) has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature",
+      "danger",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Level 3 of Despise on Felucca hosts the Vermin Horde Champion Spawn, with Barracoon the Piper as its champion.",
+     "tags": [
+      "danger",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise was revamped in Publish 78 with a creature-training army system. You train one creature on the Evil or Good side and have it slay one of the twin brothers in the final level.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: double-click an ankh inside the dungeon to get a Wisp Orb. Characters with positive karma must use the Good side's ankh, and negative karma characters must use the Evil side's ankh.",
+     "tags": [
+      "location",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: double-click the Wisp Orb and target a creature to control it, whichever side it is on. The same menu sets its aggression to Defensive or Aggressive, and the Leash length to Short or Long.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Evil-side creatures in Trammel Despise: Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian, Dendrite.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Good-side creatures in Trammel Despise: Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion, Naba.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: a controlled creature's power level rises as it kills. To advance, the cumulative power level of its kills must equal or exceed its current power level. A level 7 creature needs seven level-1 kills or one level-7 kill. You can heal it with spells.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: each kill by your controlled creature gives Putrid Hearts by victim power level 1\u201310: 1, 2, 4, 8, 12, 18, 24, 32, 40, 50.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: Putrid Hearts are exchanged for Dungeon Crystal Points of Despise. Spend them with the Mysterious Wisp at the dungeon entrance on random Ephemeral magic items.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: the maximum creature power level is 10. It rises to 15 if the creature's karma changes sign while it kills creatures of its own alignment.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: use the Wisp Orb's context menu to Conscript a trained creature into your alignment's army. Army Power is the sum of the squares of the conscripted creatures' power levels.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise: the army with the highest power is teleported to the final level, about 60 seconds after the Call to Arms. This does not happen if you release your conscripted creature or it dies.",
+     "tags": [
+      "rule",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise final level: the Good army fights Adrian the Glorious Lord and his Ensorcled Wisp. The Evil army fights Andros the Dread Lord and his Corrupted Wisp.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise final level: the brothers are on an island in the lake and are shielded from players. Only your controlled creature can damage them.",
+     "tags": [
+      "creature",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise final level: if you die there, your ghost and corpse are teleported back to your alignment's side. Killing Adrian or Andros can drop a Despise Artifact into your backpack.",
+     "tags": [
+      "danger",
+      "loot",
+      "rule"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-sonnet-5.5",
+   "prompt": "before",
+   "notes_count": 24,
+   "cost": 0.026879,
+   "prompt_tokens": 4308,
+   "completion_tokens": 1995,
+   "latency_s": 12.0,
+   "trammel_system_notes": 13,
+   "trammel_system_notes_saying_trammel": 5,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an original Ultima Online dungeon, an Anti-Virtue dungeon, at sextant coordinates 47\u00ba N, 1\u00ba W. It exists on both Felucca and Trammel.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three dungeon levels, not counting the entrance area.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca Level 1 (the stairs going up from the entrance area) is full of Lizardmen. It also has an escort quest.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "On Level 1 there are two ankhs, each with a switch. Double-clicking a switch transports you to the other ankh, and it works both ways.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "You cannot resurrect at either of the Level 1 ankhs in Despise.",
+     "tags": [
+      "danger",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca Level 2 of Despise consists entirely of Ettins and Earth Elementals.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "There is a popular lockpicking spot just inside Level 2 of Despise, to the north.",
+     "tags": [
+      "location",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca Level 3 of Despise has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "On Felucca, Level 3 of Despise hosts the Vermin Horde Champion Spawn, whose champion is Barracoon the Piper.",
+     "tags": [
+      "danger",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel Despise was revamped in Publish 78 with a creature-training and army system. You train one creature on the Evil or Good side and have it fight the twin brothers on the final level.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To start the Trammel Despise system, double-click an ankh inside the dungeon to get a Wisp Orb. Positive karma characters must use the Good side's ankh, and negative karma characters must use the Evil side's ankh.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "With a Wisp Orb, double-click the orb and target any creature to control it, whichever side it is on. The same menu sets its aggression to Defensive or Aggressive.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Evil-side creatures in Trammel Despise: Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian, Dendrite.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Good-side creatures in Trammel Despise: Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion, Naba.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A controlled creature's power level rises as it kills. To advance, the cumulative power level of its kills must equal or exceed its current level, so a level 7 creature needs seven level-1 kills or one level-7 kill. You can heal it with spells.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Each kill by your controlled creature gives Putrid Hearts by victim power level 1\u201310: 1, 2, 4, 8, 12, 18, 24, 32, 40, 50. Trade them for Dungeon Crystal Points with the Mysterious Wisp at the dungeon entrance, then spend the points on random Ephemeral magic items.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "The maximum creature power level is 10. It rises to 15 if the creature's karma changes sign while it trains by killing creatures of its own alignment.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Power level titles in Trammel Despise: 1\u20133 Normal, 4\u20136 Improved, 7\u20138 Heightened, 9\u201310 Magnified, 11\u201312 Amplified, 13\u201314 Inspired, 15 Galvanized.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Use the Wisp Orb's context menu to Conscript a trained creature into your alignment's army. Army Power is the sum of the squares of the power levels of the conscripted creatures. The army with the highest power is teleported to the final level.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "In the final battle, the Good army fights Adrian the Glorious Lord and his Ensorcled Wisp. The Evil army fights Andros the Dread Lord and his Corrupted Wisp.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "The brothers are on the island in the lake on the final level. They are shielded from players, and only your controlled creature can damage them.",
+     "tags": [
+      "danger",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "If you die on the final level of Despise, your ghost and corpse are teleported back to your alignment's side. Killing Adrian or Andros can drop a Despise Artifact into your backpack.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "After the Call to Arms you are teleported to the final level within 60 seconds. This does not happen if you release your conscripted creature or it dies.",
+     "tags": [
+      "rule"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Covetous",
+   "model": "anthropic/claude-sonnet-5.5",
+   "prompt": "before",
+   "notes_count": 24,
+   "cost": 0.026408,
+   "prompt_tokens": 3907,
+   "completion_tokens": 1815,
+   "latency_s": 10.5,
+   "notes": [
+    {
+     "area": "Covetous",
+     "text": "Covetous is a five-level dungeon on both Felucca and Trammel, carved into the Mountains of Avarice. It is one of the seven Anti-Virtue dungeons.",
+     "tags": [
+      "dungeon",
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "The Covetous entrance is at 62\u00ba N, 83\u00ba E, northeast of Cove, south of Minoc, west of Vesper and just southwest of the Minoc moongate.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous monsters get stronger the deeper you go into Levels 3 and 4, and the more Void Pool waves you defeat.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Outside Covetous there are two passages: one between Levels 1 and 2, and one between Levels 2 and 3. You can Mark and Recall between levels for quicker access.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "A Sacrificial Brazier stands in the passage just outside the exit of Level 2. Sacrificing a Treasure Map or World Map there gives a new map marking the Island of the Soulbinder (Corgul the Soulbinder).",
+     "tags": [
+      "location",
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Skeletons spawn in the outdoor passage between Levels 2 and 3 of Covetous.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "The Ghost of Frederic Smithson, a quest NPC, is in the first outdoor passage near the exit of Level 1.",
+     "tags": [
+      "location",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Covetous Level 1",
+     "text": "Level 1 has three spawn areas. Area 1 has Dazzled Harpies and Vampire Mongbats, Area 2 has Headless Miners, and Area 3 has Strange Gazers.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous Level 1",
+     "text": "Level 1 creatures are not hostile to players, except the Strange Gazers.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous Level 1",
+     "text": "Headless Miners on Level 1 often mine regular gem pieces, which you can pick up from the cavern floor.",
+     "tags": [
+      "creature",
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Fire traps litter the floor in Covetous and should be avoided.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous Level 2",
+     "text": "Level 2 has no regular spawn. It holds the Void Pool, which players defend against endless waves of Cora's minions.",
+     "tags": [
+      "location",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous Level 2",
+     "text": "Each Void Pool wave is tougher and faster than the last. Minion groups come in this order: Abyss, Repond, Undead, Reptile, Elemental.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous Level 2",
+     "text": "Cora's minions at the Void Pool drop no loot. Players score points for kills and assists, shown through the Void Pool option in the character context menu.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Void Pool reward points are redeemed with Vela the Sorceress in Cove.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Covetous Level 2",
+     "text": "Travel spells such as Recall and Gate do not work near the Void Pool.",
+     "tags": [
+      "rule",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous Level 3",
+     "text": "Level 3 is reached by following the passage east to a carved stone entrance. It is an abandoned royal abode with a Great Hall, Storage Room, Dining Hall, Chapel and Throne Room.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous Level 3",
+     "text": "The Great Hall on Level 3 has three groups of Cora's minions, in the center and in the side rooms. A door on the north side leads to a corridor with three large areas behind locked doors.",
+     "tags": [
+      "location",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous Level 3",
+     "text": "The Storage Room and the Throne Room on Level 3 each spawn a single group of Cora's minions.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous Level 3",
+     "text": "The Dining Hall hallway on Level 3 has two to three groups of Cora's minions. Two candles spawn in the dining hall after each maintenance.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous Level 3",
+     "text": "The staircase on the west side of the Level 3 dining hall leads down to Level 4.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous Level 3",
+     "text": "The staircase at the northeast corner of the Level 3 Throne Room leads to Level 5.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous Level 4",
+     "text": "Level 4 is an old prison with cells along a corridor ending at a torture room. A single group of Cora's minions spawns here.",
+     "tags": [
+      "location",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous Level 5",
+     "text": "Level 5 is by a subterranean lake and is where Cora the Sorceress stands. She sends her minions to the rest of the dungeon.",
+     "tags": [
+      "creature",
+      "danger",
+      "location"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "after",
+   "notes_count": 23,
+   "cost": 0.001359,
+   "prompt_tokens": 4485,
+   "completion_tokens": 1774,
+   "latency_s": 6.7,
+   "trammel_system_notes": 13,
+   "trammel_system_notes_saying_trammel": 0,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an Anti-Virtue Dungeon original to Ultima Online, first seen September 1997. It has three levels not counting the entrance area.",
+     "tags": [
+      "location",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise is at sextant coordinates 47\u00ba N, 1\u00ba W on the Felucca and Trammel facets.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To walk to Despise, head north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Wisp Orbs are obtained by double-clicking an ankh inside the dungeon. Characters with positive karma use the Good side ankh; characters with negative karma use the Evil side ankh.",
+     "tags": [
+      "skill",
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A Despise Wisp Orb can control any creature regardless of its side, by double-clicking the orb and targeting the creature.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise Wisp Orb aggression settings are Defensive (fights back only) or Aggressive (attacks other creatures). The orb can also set the controlled creature's leash to Short or Long and show its alignment, army power and status.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Evil-side Despise creatures that can be trained are Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Good-side Despise creatures that can be trained are Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "A trained Despise creature gains power levels by killing creatures; to advance, the total power level of its kills must equal or exceed its current power level.",
+     "tags": [
+      "skill",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise creatures gain Putrid Hearts for each kill based on power level: 1, 2, 4, 8, 12, 18, 24, 32, 40, 50 for power levels 1 through 10.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Putrid Hearts can be spent on Dungeon Crystal Points of Despise with the Mysterious Wisp at the dungeon entrance, for random Ephemeral magic items.",
+     "tags": [
+      "vendor",
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise creature power level caps at 10, or 15 if a controlled creature changes karma sign by killing creatures of its own alignment.",
+     "tags": [
+      "skill",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To conscript a trained Despise creature into your alignment's army, use the Wisp Orb context menu. Army Power is the sum of squares of conscripted creatures' power levels.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "The army with the highest Army Power is teleported to the final level within 60 seconds after the Call to Arms, unless the conscripted creature is released or dies.",
+     "tags": [
+      "rule",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "The final battle on Despise is against Adrian the Glorious Lord with his Ensorcled Wisp (Good) or Andros the Dread Lord with his Corrupted Wisp (Evil). The brothers are on the island inside the lake.",
+     "tags": [
+      "danger",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "On the Despise final level the brothers are shielded from player attacks; only the player's controlled creature can damage them.",
+     "tags": [
+      "danger",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "If you die on the Despise final level, your ghost and corpse are teleported back to the side of your alignment.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Killing Adrian or Andros gives a chance for a Despise Artifact to drop into your backpack.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Despise Level 1 (stairs up from entrance) is full of Lizardmen and has an escort quest.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: On Despise Level 1, switch-equipped ankhs teleport you to the other ankh on Level 1 and work both ways. You cannot resurrect at either ankh.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Despise Level 2 consists entirely of Ettins and Earth Elementals. A popular lockpicking spot lies just inside Level 2 to the north.",
+     "tags": [
+      "creature",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Despise Level 3 has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Despise Level 3 hosts the Vermin Horde Champion Spawn, with Barracoon the Piper as champion.",
+     "tags": [
+      "spawn",
+      "creature",
+      "danger"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "after",
+   "notes_count": 23,
+   "cost": 0.001402,
+   "prompt_tokens": 4485,
+   "completion_tokens": 1861,
+   "latency_s": 6.7,
+   "trammel_system_notes": 14,
+   "trammel_system_notes_saying_trammel": 14,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an Anti-Virtue Dungeon original to Ultima Online, located at sextant coordinates 47\u00ba N, 1\u00ba W.",
+     "tags": [
+      "location",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three levels not counting the entrance area.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Despise was revamped with Publish 78; the Wisp Orb creature-training system is found at ankhs inside the dungeon.",
+     "tags": [
+      "skill",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: To get a Wisp Orb, double-click an ankh inside Despise. Positive karma characters must use the Good side ankh; negative karma characters must use the Evil side ankh.",
+     "tags": [
+      "skill",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A Wisp Orb can control any creature, regardless of side, by double-clicking the orb and targeting the creature.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Wisp Orb aggression settings are Defensive (fights back only), Aggressive (attacks other creatures), or following you; the orb also shows alignment, army power, controlled creature, anchor, leash and aggression.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Leash length of a controlled creature can be set to Short or Long via the Wisp Orb.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Evil side trainable creatures include Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Good side trainable creatures include Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A controlled creature gains power levels by killing creatures; to advance, the cumulative power level of its kills must be at least its current power level.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Killing creatures with a controlled creature yields Putrid Hearts; power level 1 gives 1 heart, level 5 gives 12, level 10 gives 50.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Putrid Hearts can be spent for Dungeon Crystal Points of Despise, which are spent with the Mysterious Wisp at the dungeon entrance on random Ephemeral magic items.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A controlled creature's maximum power level is 10, rising to 15 if its karma changes sign while killing same-alignment creatures during training.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Army Power is the sum of squares of the power levels of conscripted creatures on your alignment; the strongest army is teleported to the final level within 60 seconds of a Call to Arms.",
+     "tags": [
+      "skill",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: The final battle is against Adrian the Glorious Lord (Good) or Andros the Dread Lord (Evil) on an island inside the lake; they cannot be damaged by players, only by your controlled creature.",
+     "tags": [
+      "danger",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: If you die on the final level, your ghost and corpse are teleported back to your alignment's side.",
+     "tags": [
+      "danger",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A chance for a Despise Artifact to drop on killing Adrian or Andros.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 1 (stairs up from the entrance) is full of Lizardmen and has an escort quest.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: On Level 1, two ankhs each have a switch that teleports you to the other ankh; the switch works both ways. You cannot resurrect at either ankh.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 2 consists entirely of Ettins and Earth Elementals; a popular lockpicking spot lies just inside Level 2 to the north.",
+     "tags": [
+      "creature",
+      "danger",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 3 has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 3 hosts the Vermin Horde Champion Spawn with Barracoon the Piper as champion.",
+     "tags": [
+      "spawn",
+      "danger"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "after",
+   "notes_count": 23,
+   "cost": 0.001194,
+   "prompt_tokens": 4485,
+   "completion_tokens": 1661,
+   "latency_s": 6.3,
+   "trammel_system_notes": 13,
+   "trammel_system_notes_saying_trammel": 13,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an Anti-Virtue Dungeon original to Ultima Online, located at sextant coordinates 47\u00baN, 1\u00baW.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three levels below the entrance area.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Despise was revamped with Publish 78; the Wisp Orb creature-training system is on this facet.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Wisp Orbs are obtained by double-clicking an ankh inside the dungeon. Good karma uses the Good-side ankh; negative karma uses the Evil-side ankh.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A Wisp Orb can control any creature regardless of side, by double-clicking the orb and targeting the creature.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Wisp Orb aggression can be Defensive (defends only), Aggressive (attacks other creatures), or set to follow you.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Evil-side trainable creatures include Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Good-side trainable creatures include Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A trained creature's power level rises as it kills creatures; it advances when the cumulative power level of its kills is at least its current power level.",
+     "tags": [
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Killing with a controlled creature yields Putrid Hearts based on victim power level (level 1 gives 1, level 5 gives 12, level 10 gives 50).",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Putrid Hearts are spent with the Mysterious Wisp at the dungeon entrance for Dungeon Crystal Points of Despise, used on random Ephemeral magic items.",
+     "tags": [
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Normal power level cap is 10; if a creature's karma changes sign by killing same-alignment creatures, the cap rises to 15.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Army Power is the sum of squares of power levels of conscripted creatures on your alignment; the strongest army is teleported to the final level within 60 seconds of the Call to Arms.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: In the final battle, the army fights Adrian the Glorious Lord (Good) or Andros the Dread Lord (Evil) and their Wisp on an island inside the lake.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: The twin brothers on the final island cannot be damaged by players; only your controlled creature can damage them.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: If you die on the final level, your ghost and corpse are teleported back to your alignment's side.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: There is a chance for a Despise Artifact to drop when killing Adrian or Andros.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 1 (stairs up from the entrance) is full of Lizardmen and has an escort quest.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: On Level 1, ankhs have switches that teleport you to the other ankh on Level 1, working both ways; you cannot resurrect at either ankh.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 2 consists entirely of Ettins and Earth Elementals, with a popular lockpicking spot just inside and north.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 3 has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 3 hosts the Vermin Horde Champion Spawn, with Barracoon the Piper as champion.",
+     "tags": [
+      "spawn"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Covetous",
+   "model": "anthropic/claude-haiku-5.5",
+   "prompt": "after",
+   "notes_count": 25,
+   "cost": 0.001337,
+   "prompt_tokens": 4084,
+   "completion_tokens": 1810,
+   "latency_s": 6.4,
+   "notes": [
+    {
+     "area": "Covetous",
+     "text": "Covetous is one of the seven Anti-Virtue Dungeons, with values opposite the Sacrifice virtue. It is carved into the Mountains of Avarice and has five levels.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous entrance is at about 62\u00ba N, 83\u00ba E, northeast of Cove, south of Minoc, west of Vesper, and just southwest of the Minoc Moongate.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous is on Felucca and Trammel.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 1 is a cave ecosystem with three spawn areas: Area 1 has Dazzled Harpies and Vampire Mongbats, Area 2 has Headless Miners, Area 3 has Strange Gazers.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "On Covetous level 1, all creatures except the Strange Gazers are not hostile to players.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 1 Headless Miners often mine gem pieces that can be picked up from the cavern floor.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 1 Dazzled Harpies are drawn to nearby gems and become hypnotized briefly; Vampire Mongbats prey on them.",
+     "tags": [
+      "creature"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 2 has no regular spawn. Players must defend the Void Pool from Cora's waves of monsters, each wave tougher and faster than the last.",
+     "tags": [
+      "spawn",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Void Pool waves come from groups in this order: Abyss, Repond, Undead, Reptile, Elemental.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Cora's Void Pool minions drop no loot; players earn points for kills or assists, viewable via the Void Pool entry in the character context menu.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Void Pool reward points are redeemed by visiting Vela the Sorceress in Cove.",
+     "tags": [
+      "vendor"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous outside passages: one lies between levels 1 and 2 with the Ghost of Frederic Smithson, a quest NPC, near the level 1 exit.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous passage between levels 2 and 3 has a Sacrificial Brazier near the level 2 exit; sacrificing a Treasure or World Map gives a map marking Corgul the Soulbinder's island.",
+     "tags": [
+      "loot"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Skeletons spawn in the passage between Covetous levels 2 and 3.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "You can Mark and Recall between each Covetous level for quicker access.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 is reached by following the eastern passage to a carved stone entrance.",
+     "tags": [
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Great Hall has three groups of Cora's minions at the center and in rooms on both sides; a north door leads to three large areas behind locked doors.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Storage Room has one group of Cora's minions.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Dining Hall: two candles spawn after each maintenance on both facets, two to three minion groups spawn in the hallway, and the west staircase leads to level 4.",
+     "tags": [
+      "spawn",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 3 Throne Room has one group of minions; its northeast corner staircase leads to level 5.",
+     "tags": [
+      "spawn",
+      "travel"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 4 is an old prison with cells and a torture chamber at the end of a long corridor, with one group of minions.",
+     "tags": [
+      "spawn"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous level 5 is near a subterranean lake where Cora the Sorceress leads her minions to other parts of the dungeon.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous monsters become stronger the deeper players go into levels 3 and 4, and as more Void Pool waves are defeated.",
+     "tags": [
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous levels 1 and 2 have fire traps on the floor that should be avoided.",
+     "tags": [
+      "danger"
+     ]
+    },
+    {
+     "area": "Covetous",
+     "text": "Covetous: travel spells cannot be used near the Void Pool because of a twist in space, so Cora must gate her minions in from a distance.",
+     "tags": [
+      "rule"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-sonnet-5.5",
+   "prompt": "after",
+   "notes_count": 22,
+   "cost": 0.028127,
+   "prompt_tokens": 4359,
+   "completion_tokens": 1894,
+   "latency_s": 12.1,
+   "trammel_system_notes": 13,
+   "trammel_system_notes_saying_trammel": 13,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an original Ultima Online dungeon at sextant coordinates 47\u00ba N, 1\u00ba W, on both Felucca and Trammel. It has three levels not counting the entrance area.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 1 of Despise is the stairs going up from the entrance area, and it is full of Lizardmen.",
+     "tags": [
+      "spawn",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Level 1 has an escort quest. Two ankhs on Level 1 each have a switch that, when double-clicked, transports you to the other ankh in both directions.",
+     "tags": [
+      "travel",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "You cannot resurrect at either of the Level 1 ankhs in Despise.",
+     "tags": [
+      "rule",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 2 of Despise consists entirely of Ettins and Earth Elementals.",
+     "tags": [
+      "spawn",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "There is a popular lockpicking spot just inside Level 2 of Despise, to the north.",
+     "tags": [
+      "skill",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 3 of Despise has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "spawn",
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 3 of Despise hosts a Vermin Horde Champion Spawn, with Barracoon the Piper as its champion.",
+     "tags": [
+      "spawn",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: since Publish 78 Despise has a creature-training system. You train one creature on the Evil or Good side and have it slay one of the twin brothers and his Wisp on the final level.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: you get a Wisp Orb by double-clicking an ankh inside Despise. Positive karma characters must use the Good side ankh, and negative karma characters must use the Evil side ankh.",
+     "tags": [
+      "rule",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: double-click the Wisp Orb and target a creature to control it, whichever side it is on. The orb also sets the creature's aggression (Defensive or Aggressive) and its Short or Long leash.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Evil-side creatures in Despise are Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Good-side creatures in Despise are Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: a controlled creature gains power by killing creatures whose cumulative power level is at least its own. A level 7 creature needs seven level-1 kills or one level-7 kill. You can heal it with spells.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: each kill by your controlled creature gives Putrid Hearts by victim power level. Levels 1 to 10 give 1, 2, 4, 8, 12, 18, 24, 32, 40 and 50.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Putrid Hearts convert to Dungeon Crystal Points of Despise. You spend them with the Mysterious Wisp at the dungeon entrance on random Ephemeral magic items.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: the maximum creature power level is 10. It rises to 15 if the creature's karma changes sign while it trains by killing creatures of its own alignment.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: use the Wisp Orb's context menu to Conscript a well-trained creature into your alignment's army. Army Power is the sum of the squares of the conscripted creatures' power levels.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: the army with the highest power is teleported to the final level of Despise, with about 60 seconds' warning. You are not teleported if you release your conscripted creature or it dies.",
+     "tags": [
+      "travel",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: the final level has Adrian the Glorious Lord with his Ensorcled Wisp (Good) or Andros the Dread Lord with his Corrupted Wisp (Evil). They stand on an island in the lake and only your controlled creature can damage them.",
+     "tags": [
+      "creature",
+      "danger",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: if you die on the final level of Despise, your ghost and corpse are teleported back to your alignment's side. Killing Adrian or Andros can drop a Despise Artifact into your backpack.",
+     "tags": [
+      "loot",
+      "danger"
+     ]
+    }
+   ]
+  },
+  {
+   "page": "https://www.uoguide.com/Despise",
+   "model": "anthropic/claude-sonnet-5.5",
+   "prompt": "after",
+   "notes_count": 22,
+   "cost": 0.028147,
+   "prompt_tokens": 4359,
+   "completion_tokens": 1896,
+   "latency_s": 11.6,
+   "trammel_system_notes": 13,
+   "trammel_system_notes_saying_trammel": 13,
+   "notes": [
+    {
+     "area": "Despise",
+     "text": "Despise is an original Anti-Virtue dungeon at sextant coordinates 47\u00ba N, 1\u00ba W, available on both Felucca and Trammel.",
+     "tags": [
+      "location",
+      "travel"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "To reach Despise on foot, walk north from the Britain Cemetery and go left through the mountains.",
+     "tags": [
+      "travel",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Despise has three levels, not counting the entrance area.",
+     "tags": [
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only (Publish 78 revamp): Despise has a Wisp Orb training system where you train one creature on the Evil or Good side and have it kill one of the twin brothers in the final level.",
+     "tags": [
+      "rule",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Get a Wisp Orb by double-clicking an ankh inside the dungeon. Positive karma characters must use the Good side ankh, and negative karma characters must use the Evil side ankh.",
+     "tags": [
+      "rule",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Double-click the Wisp Orb and target a creature to control it, whichever side it is on. The orb also sets its aggression to Defensive or Aggressive and its leash to Short or Long.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Evil-side creatures in Despise are Ursadane, Fairy, Sagittarri, Forest Nymph, Silenii, Unicorn, Divine Guardian and Dendrite.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Good-side creatures in Despise are Prometheoid, Birling Blades, Skeletrex, Phantom, Echidnite, Darkmane, Hellion and Naba.",
+     "tags": [
+      "creature",
+      "spawn"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: A controlled creature gains power level by killing creatures. Its next level needs the cumulative power of its kills to equal or exceed its current level, and you can heal it with spells.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Each creature your controlled creature kills gives Putrid Hearts by power level. Levels 1 to 10 give 1, 2, 4, 8, 12, 18, 24, 32, 40 and 50 hearts.",
+     "tags": [
+      "loot",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: Putrid Hearts are traded for Dungeon Crystal Points of Despise. You spend these with the Mysterious Wisp at the dungeon entrance on random Ephemeral magic items.",
+     "tags": [
+      "loot",
+      "vendor"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: The maximum creature power level is 10. It rises to 15 if the creature's karma changes sign while it kills creatures of its own alignment.",
+     "tags": [
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: You can Conscript a trained creature into your alignment's army from the Wisp Orb context menu. Army Power is the sum of the squares of the conscripted creatures' power levels.",
+     "tags": [
+      "rule",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: The army with the highest power is teleported to the final level of Despise, with a warning of up to 60 seconds. Releasing the conscripted creature or having it die cancels the teleport.",
+     "tags": [
+      "travel",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: In the final level the Good army fights Adrian the Glorious Lord and his Ensorcled Wisp, and the Evil army fights Andros the Dread Lord and his Corrupted Wisp. The brothers are on the island in the lake and only your controlled creature can damage them.",
+     "tags": [
+      "creature",
+      "danger",
+      "tactic"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Trammel only: If you die on the final level, your ghost and corpse are teleported back to your alignment's side. Killing Adrian or Andros can drop a Despise Artifact into your backpack.",
+     "tags": [
+      "loot",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 1 of Despise is the stairs going up from the entrance area. It is full of Lizardmen and has an escort quest.",
+     "tags": [
+      "spawn",
+      "creature",
+      "location"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 1 of Despise has two ankhs, each with a switch. Double-clicking one transports you to the other ankh, in both directions, and you cannot resurrect at either ankh.",
+     "tags": [
+      "travel",
+      "rule"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 2 of Despise is made up entirely of Ettins and Earth Elementals.",
+     "tags": [
+      "spawn",
+      "creature"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Just inside Level 2 of Despise, to the north, is a popular lockpicking spot.",
+     "tags": [
+      "location",
+      "skill"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca: Level 3 of Despise has Trolls, Ogres, Ogre Lords, Ettins, Titans, Cyclopean Warriors and an Acid Elemental.",
+     "tags": [
+      "spawn",
+      "creature",
+      "danger"
+     ]
+    },
+    {
+     "area": "Despise",
+     "text": "Felucca only: Level 3 of Despise hosts the Vermin Horde Champion Spawn, whose champion is Barracoon the Piper.",
+     "tags": [
+      "spawn",
+      "danger"
+     ]
+    }
+   ]
+  }
+ ]
+}

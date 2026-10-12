@@ -1,0 +1,37 @@
+# NPCs with lives of their own (cuo-x2q.1): no session goal, each a persona and its own long goals,
+# on the npc profile (Jev and Haiku, capped at $0.50/h). They choose their own days on the local
+# server. Run from brain/ with the server up: uv run uo-brain fleet fleets/britain-lives.toml
+name = "britain-lives"
+server_port = 2593
+rules = "realistic"   # people with lives of their own walk, talk at a human pace and gesture (cuo-iqb)
+hours = 0.33
+
+[[agent]]
+name = "Garrick"
+account = "life1"
+password = "life1"
+port = 5661
+profile = "npc"
+persona = { background = "a journeyman smith from Britain who fights to pay his way", temperament = "steady and careful; never takes a fight he might lose", trade = "smithing, though he earns his gold with a sword for now", wants = "a forge of his own" }
+long_goals = ["save 5000 gold for a forge of my own"]
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 40 gold 300"]
+
+[[agent]]
+name = "Ilsa"
+account = "life2"
+password = "life2"
+port = 5662
+profile = "npc"
+persona = { background = "a healer's apprentice who left the Britain healers to see the world", temperament = "curious and cautious; she would rather look than fight", trade = "healing", wants = "to know the dangerous places near Britain before she goes into them" }
+long_goals = ["learn the dungeons near Britain"]
+prep = ["[AgentReset", "[AgentGo 1471 1609", "[AgentKit warrior", "[AgentSupplies bandages 60 gold 300"]
+
+[[agent]]
+name = "Torv"
+account = "life3"
+password = "life3"
+port = 5663
+profile = "npc"
+persona = { background = "a sell-sword from Minoc newly arrived in Britain", temperament = "bold, impatient, proud of his blade", trade = "fighting for pay", wants = "to be the best swordsman in Britain" }
+long_goals = ["reach 85 swordsmanship"]
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 40 gold 200"]

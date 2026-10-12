@@ -1,0 +1,57 @@
+# britain-five with the four NPCs headless (cuo-1k7): their clients hide their windows and draw
+# nothing; the player's character keeps its window. Its own accounts (headless3..7) and agent
+# ports (5612-5616), so it can run beside britain-five. Needs the server's
+# accountHandler.maxAccountsPerIP above the accounts already made (tools/modernuo/README.md).
+# Run from brain/: uv run uo-brain fleet fleets/britain-five-headless.toml
+name = "britain-five-headless"
+server_port = 2593
+hours = 0.33
+headless = true
+
+[[agent]]
+name = "Bram"
+account = "headless3"
+password = "headless3"
+port = 5612
+profile = "default"
+headless = false
+goal = "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied with bandages. Bank your gold and loot when the bag gets heavy."
+# The first agent also restocks the Britain healer and shops, so no run starts against an earlier one's purchases.
+prep = ["[AgentReset", "[AgentGo 1471 1609", "[AgentRestock 60", "[AgentGo 1425 1690", "[AgentKit warrior",
+        "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Holt"
+account = "headless4"
+password = "headless4"
+port = 5613
+profile = "npc"
+goal = "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Wynn"
+account = "headless5"
+password = "headless5"
+port = 5614
+profile = "npc"
+goal = "Hunt the undead at the Britain graveyard, starting from the West Britain bank. Keep yourself supplied with bandages. Bank your gold and loot when the bag gets heavy."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Mora"
+account = "headless6"
+password = "headless6"
+port = 5615
+profile = "npc"
+goal = "Hunt the creatures in the open country north of Britain for gold, staying clear of anything too strong. Keep yourself supplied and bank the gold."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
+
+[[agent]]
+name = "Tess"
+account = "headless7"
+password = "headless7"
+port = 5616
+profile = "npc"
+goal = "Earn gold hunting near Britain. Choose hunting spots that suit the character, and move on if one is empty or too dangerous. Keep yourself supplied and bank the gold."
+prep = ["[AgentReset", "[AgentGo 1425 1690", "[AgentKit warrior", "[AgentSupplies bandages 30 gold 400"]
