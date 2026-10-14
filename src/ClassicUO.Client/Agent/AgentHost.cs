@@ -25,6 +25,9 @@ namespace ClassicUO.Agent
         private static AgentConnection _captureConn;
         private static string _captureId, _capturePath;
 
+        // The eight steps in the order of the game's directions (0 is north, clockwise), for the nav view.
+        private static readonly string[] Compass8 = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
+
         public static bool BrainConnected => _server?.HasClient == true;
 
         public static void Update(GameController game)
@@ -488,12 +491,125 @@ namespace ClassicUO.Agent
 
                     int navMap = world.MapIndex;
 
+                    // With steps: each step from the player's tile as the client's own walker judges it
+                    // (the tile and height it would land on, or not `ok`), the land under the player and
+                    // round it, and how many steps the server has refused since login. A walk the map
+                    // allows and the game doesn't shows here (cuo-4v1).
+                    var steps = new System.Collections.Generic.List<(string Dir, bool Ok, int X, int Y, int Z)>();
+                    var lands = new System.Collections.Generic.List<(int X, int Y, int Z, int Min, int Avg, bool Stretched, int Graphic)>();
+                    var things = new System.Collections.Generic.List<(int X, int Y, int Z, int Height, int Graphic, bool Impassable, bool Surface, bool Bridge)>();
+
+                    if (Get(p, "steps", out JsonElement sf) && sf.GetBoolean())
+                    {
+                        for (int d = 0; d < 8; d++)
+                        {
+                            var dir = (Game.Data.Direction) d;
+                            int nx = px, ny = py;
+                            sbyte nz = world.Player.Z;
+                            bool ok = world.Player.Pathfinder.CanWalk(ref dir, ref nx, ref ny, ref nz) && (int) dir == d;
+                            steps.Add((Compass8[d], ok, nx, ny, nz));
+                        }
+
+                        for (int ly = py - 1; ly <= py + 1; ly++)
+                        {
+                            for (int lx = px - 1; lx <= px + 1; lx++)
+                            {
+                                Game.GameObjects.GameObject o = world.Map.GetTile(lx, ly, false);
+
+                                while (o?.TPrevious != null)
+                                {
+                                    o = o.TPrevious;
+                                }
+
+                                for (; o != null; o = o.TNext)
+                                {
+                                    if (o is Game.GameObjects.Land land)
+                                    {
+                                        lands.Add((lx, ly, land.Z, land.MinZ, land.AverageZ, land.IsStretched, land.Graphic));
+                                    }
+                                    else if (o is Game.GameObjects.Static || o is Game.GameObjects.Multi || o is Game.GameObjects.Item)
+                                    {
+                                        // As the walker reads it: a static by what the map says it is, whatever the season draws.
+                                        ushort own = o is Game.GameObjects.Static st ? st.OriginalGraphic : o.Graphic;
+                                        ref Assets.StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[own];
+
+                                        if (data.IsImpassable || data.IsSurface || data.IsBridge)
+                                        {
+                                            things.Add((lx, ly, o.Z, data.Height, own, data.IsImpassable, data.IsSurface, data.IsBridge));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    int denied = world.Player.Walker.Denied;
+                    int playerZ = world.Player.Z;
+
                     Reply(conn, id, w =>
                     {
                         w.WriteStartObject();
                         w.WriteNumber("x0", px - rad);
                         w.WriteNumber("y0", py - rad);
                         w.WriteNumber("path", route?.Count ?? -1);
+
+                        if (steps.Count != 0)
+                        {
+                            w.WriteNumber("z", playerZ);
+                            w.WriteNumber("denied", denied);
+                            w.WriteStartArray("steps");
+
+                            foreach ((string dir, bool ok, int sx, int sy, int sz) in steps)
+                            {
+                                w.WriteStartObject();
+                                w.WriteString("dir", dir);
+                                w.WriteBoolean("ok", ok);
+
+                                if (ok)
+                                {
+                                    w.WriteNumber("x", sx);
+                                    w.WriteNumber("y", sy);
+                                    w.WriteNumber("z", sz);
+                                }
+
+                                w.WriteEndObject();
+                            }
+
+                            w.WriteEndArray();
+                            w.WriteStartArray("land");
+
+                            foreach ((int lx, int ly, int lz, int min, int avg, bool stretched, int graphic) in lands)
+                            {
+                                w.WriteStartObject();
+                                w.WriteNumber("x", lx);
+                                w.WriteNumber("y", ly);
+                                w.WriteNumber("z", lz);
+                                w.WriteNumber("min", min);
+                                w.WriteNumber("avg", avg);
+                                w.WriteBoolean("stretched", stretched);
+                                w.WriteNumber("graphic", graphic);
+                                w.WriteEndObject();
+                            }
+
+                            w.WriteEndArray();
+                            w.WriteStartArray("things");
+
+                            foreach ((int tx, int ty, int tz, int height, int graphic, bool impassable, bool surface, bool bridge) in things)
+                            {
+                                w.WriteStartObject();
+                                w.WriteNumber("x", tx);
+                                w.WriteNumber("y", ty);
+                                w.WriteNumber("z", tz);
+                                w.WriteNumber("height", height);
+                                w.WriteNumber("graphic", graphic);
+                                w.WriteBoolean("impassable", impassable);
+                                w.WriteBoolean("surface", surface);
+                                w.WriteBoolean("bridge", bridge);
+                                w.WriteEndObject();
+                            }
+
+                            w.WriteEndArray();
+                        }
 
                         if (trip != null)
                         {

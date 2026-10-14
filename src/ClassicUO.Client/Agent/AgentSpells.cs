@@ -110,7 +110,7 @@ namespace ClassicUO.Agent
 
         public static readonly AgentSchool[] Schools = { AgentSchool.Magery, AgentSchool.Necromancy, AgentSchool.Chivalry };
 
-        public const int HEAL = 4, CURE = 11, GREATER_HEAL = 29, RECALL = 32, GATE_TRAVEL = 52;
+        public const int HEAL = 4, CURE = 11, GREATER_HEAL = 29, RECALL = 32, GATE_TRAVEL = 52, RESURRECTION = 59;
         public const ushort RUNEBOOK_GRAPHIC = 0x22C5;
 
         // Before AOS a runebook has the spellbook's graphic, told apart by its hue.

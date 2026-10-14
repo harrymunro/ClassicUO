@@ -216,3 +216,26 @@ def test_defending_only_a_far_creature_out_of_war_mode_or_a_corpse_is_no_change(
     assert state.build(cat, set(), [], set()).signature(defend_only=True) != calm.signature(defend_only=True)
     cat["mobiles"][-1].update(distance=11, dy=11, war_mode=True)  # far, but in war mode
     assert state.build(cat, set(), [], set()).signature(defend_only=True) != calm.signature(defend_only=True)
+
+
+def test_a_setting_changed_while_the_loop_runs_is_decided_on_at_once():
+    """A companion told to loot in the quiet after a fight (standing.py, cuo-cym.18): what its leader's word has
+    changed is laid over the loop's settings, and it isn't left standing until the stretched clock runs out."""
+    from dataclasses import replace
+
+    def quiet(t):
+        snap = far()
+        snap["mobiles"], snap["corpses"] = [], copy.deepcopy(SNAPSHOT["corpses"])
+        return snap
+
+    began = time.monotonic()
+
+    def told_to_loot(cfg):
+        return replace(cfg, looting="valuables", take_item=0.6) if time.monotonic() - began >= 0.4 else cfg
+
+    cfg = loop.LoopConfig(poll_s=0.01, combat_interval_s=0.02, idle_interval_s=0.02, duration_s=1.0, quiet_max_s=0.6)
+    rpc = Rpc(quiet)
+    asyncio.run(loop.run(rpc, Judge("loot"), cfg, policy.PolicyConfig(escort="Roland", looting="nothing", live=told_to_loot), None))
+    looted = [t for t, m, p in rpc.calls if m == "act" and p.get("verb") == "loot"]
+    # Decisions at about 0, 0.02, 0.06, 0.15 and 0.31 s, the next due at 0.63 s; told to loot in between.
+    assert looted and 0.4 <= looted[0] < 0.55

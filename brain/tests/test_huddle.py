@@ -273,3 +273,148 @@ def test_a_goal_cut_short_by_a_new_plan_doesnt_cut_the_next_one(tmp_path, monkey
     asyncio.run(plan.step())
     assert rested == [False]
     w.close()
+
+
+# ---------------------------------------------------------------- who goes (cuo-cym.14)
+
+def going_chat(going, target="Hunt the undead at the Britain Graveyard, the lich first, all three, now", seen=None):
+    async def chat(messages, tools=None, **_):
+        if seen is not None:
+            seen.append(tools)
+        return reply(call("blackboard", {"target": target, "roles": "Roland takes the lich", "rally": "Two down: back to the "
+                                         "Britain healer", "going": going}))
+    return chat
+
+
+def test_the_plan_names_who_goes(tmp_path, monkeypatch):
+    """The blackboard's fourth entry: who goes into the hunt, for the rally that waits for them at its edge."""
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    tools = []
+    roland, rp, rs = member(w, "Roland", going_chat(["Wystan", "Roland", "Gandalf"], seen=tools), mem=False)
+    isolde, _, _ = member(w, "Isolde", mem=False)
+    assert roland.going() is None  # no plan yet
+    out = asyncio.run(roland.call("no plan yet"))
+    # The model chooses among the party's own names, and a name it made up is nobody's.
+    names = tools[0][0]["function"]["parameters"]["properties"]["going"]
+    assert names["items"]["enum"] == NAMES[:3] and "going" in tools[0][0]["function"]["parameters"]["required"]
+    assert out["going"] == ["Roland", "Wystan"] and isolde.board()["going"] == ["Roland", "Wystan"]
+    # Every member reads it, for the hunt the plan names and no other.
+    assert isolde.going() == ["Roland", "Wystan"] and isolde.going("Britain Graveyard") == ["Roland", "Wystan"]
+    assert isolde.going("britain graveyards") == ["Roland", "Wystan"] and isolde.going("Covetous") is None
+    assert "- Going in, together: Roland, Wystan\n" in isolde.section()
+    # The next plan is shown who went under the last one.
+    seen = []
+    again = huddle.Huddle(rp, rs, GOAL, chat_fn=board_chat(seen))
+    asyncio.run(again.call("Wystan died since the plan was made"))
+    assert "rally: Two down: back to the Britain healer; going: Roland, Wystan" in seen[0][1]["content"]
+    # A plan that names nobody (not to fight now, or a model that left it out) says nothing of who goes.
+    assert again.board()["rev"] == 2 and again.board()["going"] == [] and again.going("Britain Graveyard") is None
+    assert "Going in" not in again.section()
+    w.close()
+
+
+def test_who_goes_is_read_as_loosely_as_it_comes():
+    assert huddle.named(["Roland", "isolde"], NAMES) == ["Roland", "Isolde"]
+    assert huddle.named('["Thea", "Corwin"]', NAMES) == ["Thea", "Corwin"]      # a list sent as one string
+    assert huddle.named("Roland, Isolde and Wystan", NAMES) == ["Roland", "Isolde", "Wystan"]
+    assert huddle.named("all five", NAMES) == [] and huddle.named(None, NAMES) == []
+    assert huddle.named("Rolando and Theatre", NAMES) == []  # a name inside another word isn't it
+
+
+def test_a_store_from_before_the_plan_named_who_goes(tmp_path):
+    w = World.open("local", root=tmp_path)
+    w.db.execute("CREATE TABLE party_board (id INTEGER PRIMARY KEY, party TEXT NOT NULL, rev INTEGER NOT NULL, target TEXT "
+                 "NOT NULL, roles TEXT, rally TEXT, reason TEXT, by TEXT NOT NULL, t REAL NOT NULL)")
+    w.db.execute("INSERT INTO party_board (party, rev, target, roles, rally, reason, by, t) VALUES ('p1', 1, 'Hunt the "
+                 "undead at the Britain Graveyard', '', '', 'no plan yet', 'Roland', ?)", (time.time(),))
+    w.db.commit()
+    h, _, _ = member(w, "Isolde", mem=False)
+    assert h.board()["going"] == [] and h.going("Britain Graveyard") is None
+    huddle.ensure(w)  # a second brain starting: nothing to add
+    asyncio.run(member(w, "Roland", going_chat(NAMES), mem=False)[0].call("no plan yet"))
+    assert h.going("Britain Graveyard") == NAMES[:3]
+    w.close()
+
+
+def test_a_member_on_an_errand_of_its_own_says_so(tmp_path, monkeypatch):
+    """A huddle's rally doesn't wait for one who is at the shop or going back for its corpse: its planner says
+    so while such a goal is going on (the report's `busy`), as a follower does of its own business."""
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    h, p, s = member(w, "Isolde", mem=False)
+    report(p, plays="mage")
+    asyncio.run(h.maybe(asyncio.run(s.snap()), {}))
+    during = []
+
+    async def restock():
+        during.append(plan.on_errand)
+        return Result(True, "restocked")
+
+    async def rest(seconds=30):
+        during.append(plan.on_errand)
+        return Result(True, "rested")
+
+    s.restock, s.rest = restock, rest
+    plan = planner.Planner(s, GOAL, chat_fn=scripted(reply(call("restock", {"why": "no reagents"})),
+                                                     reply(call("rest", {"seconds": 30, "why": "wait"}))),
+                           escalate=False, memory=False, party=p, huddle=h)
+    plan.party_waited = plan.pack_checked = True
+    asyncio.run(plan.step())
+    assert during == [True] and not plan.on_errand
+    asyncio.run(plan.step())
+    assert during == [True, False]
+    w.close()
+
+
+def test_a_members_own_trip_into_the_plans_hunt_is_one_to_the_rally_point(tmp_path, monkeypatch):
+    """With a planner each and the party forming up, a trip of a member's own into the hunt the plan sends it
+    to ends at the party's rally point (Session.to_the_rally); any other trip is made as before."""
+    from uo_brain.session import Session
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    w.insert("spawns", {"area": "Britain Graveyard", "map": "Felucca", "x": 1369, "y": 1475, "walk_range": 30,
+                        "creature": "Skeleton", "max_count": 3, "spawner": "a", "source": "modernuo:Graveyards.json",
+                        "last_seen": "2026-10-14T00:00:00+00:00"})
+    w.add_place("graveyard", "Britain Graveyard", 1384, 1492, source="test")  # 17 tiles from its spawn's centre
+    w.add_place("healer", "Britain healer", 1472, 1610, source="test")
+
+    class Trip(Sess):
+        hunt_spot, resolve = Session.hunt_spot, Session.resolve
+
+        def __init__(self, world):
+            super().__init__(world)
+            self.rally = object()  # the party forms up
+            self.to_rally = []
+
+        async def to_the_rally(self, name, cx, cy, radius):
+            self.to_rally.append((name, cx, cy, radius))
+            return Result(True, f"at the party's rally point at the edge of {name}")
+
+    roland, _, _ = member(w, "Roland", going_chat(NAMES[:3]), mem=False)
+    asyncio.run(roland.call("the party has come together and has no plan yet"))
+    h, p, _ = member(w, "Isolde", mem=False)
+    report(p, plays="mage")
+    assert h.hunt_area() == "Britain Graveyard"  # the longest of the store's areas named in the target
+
+    def goes(place, who=h, party_=p, rally_=True):
+        s = Trip(w)
+        s.rally = object() if rally_ else None
+        plan = planner.Planner(s, GOAL, chat_fn=scripted(reply(call("travel_to", {"place": place, "why": "with them"}))),
+                               escalate=False, memory=False, party=party_, huddle=who)
+        plan.party_waited = plan.pack_checked = True
+        asyncio.run(plan.step())
+        return s.to_rally, [g for g in s.goals if g[0] == "travel_to"]
+
+    # To the graveyard by its name, or to a tile within its edge: as far as the rally point.
+    assert goes("Britain Graveyard") == ([("Britain Graveyard", 1369, 1475, 15)], [])
+    assert goes("1380,1495") == ([("Britain Graveyard", 1369, 1475, 15)], [])
+    # Elsewhere, or with the party not forming up: the trip as it was.
+    assert goes("Britain healer") == ([], [("travel_to", "Britain healer")])
+    assert goes("Britain Graveyard", rally_=False) == ([], [("travel_to", "Britain Graveyard")])
+    # One the plan doesn't send there: the trip as it was.
+    others = huddle.Huddle(party.Party(w, "p1", "Isolde", "Roland", NAMES[:3]), Sess(w), GOAL, chat_fn=going_chat(["Roland"]))
+    asyncio.run(others.call("Isolde is out of reagents"))
+    assert others.going("Britain Graveyard") == ["Roland"]
+    assert goes("Britain Graveyard", who=others) == ([], [("travel_to", "Britain Graveyard")])
+    w.close()

@@ -1,0 +1,1183 @@
+{
+ "bead": "cuo-k0d",
+ "date": "2026-10-13",
+ "server": "ModernUO, the soak copy (Distribution-dev2, port 2595), UOContent as built 2026-10-13 01:53",
+ "character": "Brutus (account warrior), agent port 5580; scripts/buy_check.py",
+ "words": {
+  "first run": [
+   {
+    "case": "plain_guild_nearer",
+    "said": "vendor buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": false
+   },
+   {
+    "case": "named_guild_nearer",
+    "said": "Minerva buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": true
+   },
+   {
+    "case": "plain_healer_nearer",
+    "said": "vendor buy",
+    "healer_hears": 121,
+    "guild_hears": 242,
+    "list_shown": true
+   },
+   {
+    "case": "plain_guild_nearer",
+    "said": "vendor buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": false
+   },
+   {
+    "case": "named_guild_nearer",
+    "said": "Minerva buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": true
+   },
+   {
+    "case": "plain_healer_nearer",
+    "said": "vendor buy",
+    "healer_hears": 121,
+    "guild_hears": 242,
+    "list_shown": true
+   },
+   {
+    "case": "plain_guild_nearer",
+    "said": "vendor buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": false
+   },
+   {
+    "case": "named_guild_nearer",
+    "said": "Minerva buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": true
+   },
+   {
+    "case": "plain_healer_nearer",
+    "said": "vendor buy",
+    "healer_hears": 121,
+    "guild_hears": 242,
+    "list_shown": true
+   }
+  ],
+  "second run": [
+   {
+    "case": "plain_guild_nearer",
+    "said": "vendor buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": false
+   },
+   {
+    "case": "named_guild_nearer",
+    "said": "Minerva buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": true
+   },
+   {
+    "case": "plain_healer_nearer",
+    "said": "vendor buy",
+    "healer_hears": 121,
+    "guild_hears": 242,
+    "list_shown": true
+   },
+   {
+    "case": "plain_guild_nearer",
+    "said": "vendor buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": false
+   },
+   {
+    "case": "named_guild_nearer",
+    "said": "Minerva buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": true
+   },
+   {
+    "case": "plain_healer_nearer",
+    "said": "vendor buy",
+    "healer_hears": 121,
+    "guild_hears": 242,
+    "list_shown": true
+   },
+   {
+    "case": "plain_guild_nearer",
+    "said": "vendor buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": false
+   },
+   {
+    "case": "named_guild_nearer",
+    "said": "Minerva buy",
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "list_shown": true
+   },
+   {
+    "case": "plain_healer_nearer",
+    "said": "vendor buy",
+    "healer_hears": 121,
+    "guild_hears": 242,
+    "list_shown": true
+   }
+  ]
+ },
+ "staged_errand": {
+  "before (a copy of bin/osx-arm64-next)": [
+   {
+    "at": [
+     1470,
+     1610
+    ],
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "state": "done",
+    "detail": "bought 5 Clean Bandage, gold -25",
+    "asks": 2,
+    "said": null,
+    "nearer": null,
+    "seconds": 8.3
+   },
+   {
+    "at": [
+     1472,
+     1610
+    ],
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "state": "failed",
+    "detail": "the vendor did not show its goods",
+    "asks": 2,
+    "said": null,
+    "nearer": null,
+    "seconds": 12.6
+   },
+   {
+    "at": [
+     1470,
+     1611
+    ],
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "state": "done",
+    "detail": "bought 5 Clean Bandage, gold -25",
+    "asks": 2,
+    "said": null,
+    "nearer": null,
+    "seconds": 11.4
+   },
+   {
+    "at": [
+     1473,
+     1612
+    ],
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "state": "failed",
+    "detail": "the vendor did not show its goods",
+    "asks": 2,
+    "said": null,
+    "nearer": null,
+    "seconds": 12.4
+   },
+   {
+    "at": [
+     1473,
+     1611
+    ],
+    "healer_hears": 242,
+    "guild_hears": 121,
+    "state": "failed",
+    "detail": "the vendor did not show its goods",
+    "asks": 2,
+    "said": null,
+    "nearer": null,
+    "seconds": 12.4
+   }
+  ],
+  "after, four builds": {
+   "22:16": [
+    {
+     "at": [
+      1470,
+      1611
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1470,
+      1611
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1471,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1471,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1470,
+      1613
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    }
+   ],
+   "23:00": [
+    {
+     "at": [
+      1474,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1474,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1474,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1474,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1474,
+      1610
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    }
+   ],
+   "23:11": [
+    {
+     "at": [
+      1471,
+      1610
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1471,
+      1611
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1471,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1472,
+      1610
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": null,
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1471,
+      1609
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    }
+   ],
+   "23:24, as left": [
+    {
+     "at": [
+      1471,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1470,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1472,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1472,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    },
+    {
+     "at": [
+      1472,
+      1612
+     ],
+     "healer_hears": 242,
+     "guild_hears": 121,
+     "state": "done",
+     "detail": "bought 5 Clean Bandage, gold -25",
+     "asks": 1,
+     "said": "Minerva buy",
+     "nearer": "Devaki The Healer Guildmistress",
+     "seconds": 1.8
+    }
+   ]
+  }
+ },
+ "soak_prep_then_buy": {
+  "before": {
+   "runs": 10,
+   "bought": 8,
+   "seconds_median": 33.5,
+   "seconds_min": 30.8,
+   "seconds_max": 81.0,
+   "asks_per_run": {
+    "2": 2,
+    "1": 8
+   },
+   "nearer_at_the_ask": 0,
+   "approach_stuck_runs": 1
+  },
+  "after": {
+   "first build of the fix (22:16)": {
+    "runs": 15,
+    "bought": 15,
+    "seconds_median": 31.8,
+    "seconds_min": 30.7,
+    "seconds_max": 33.7,
+    "asks_per_run": {
+     "1": 15
+    },
+    "nearer_at_the_ask": 2,
+    "approach_stuck_runs": 0
+   },
+   "a later build (23:11)": {
+    "runs": 10,
+    "bought": 10,
+    "seconds_median": 31.7,
+    "seconds_min": 31.2,
+    "seconds_max": 32.7,
+    "asks_per_run": {
+     "1": 10
+    },
+    "nearer_at_the_ask": 1,
+    "approach_stuck_runs": 0
+   },
+   "the client as left (23:24)": {
+    "runs": 5,
+    "bought": 5,
+    "seconds_median": 32.2,
+    "seconds_min": 31.7,
+    "seconds_max": 32.7,
+    "asks_per_run": {
+     "1": 5
+    },
+    "nearer_at_the_ask": 1,
+    "approach_stuck_runs": 0
+   }
+  },
+  "after_all": {
+   "runs": 30,
+   "bought": 30,
+   "seconds_median": 31.8,
+   "seconds_min": 30.7,
+   "seconds_max": 33.7,
+   "asks_per_run": {
+    "1": 30
+   },
+   "nearer_at_the_ask": 4,
+   "approach_stuck_runs": 0
+  },
+  "before_runs": [
+   {
+    "ok": false,
+    "seconds": 42.3,
+    "asks_said": [
+     "vendor buy",
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 0 of 30 bandage for 0 gold (the vendor did not show its goods; the world store knows no other healer selling bandage nearby)"
+   },
+   {
+    "ok": true,
+    "seconds": 33.6,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": true,
+    "seconds": 33.7,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": false,
+    "seconds": 81.0,
+    "asks_said": [
+     "vendor buy",
+     "vendor buy"
+    ],
+    "approach_stuck": 4,
+    "result": "Britain healer: bought 0 of 30 bandage for 0 gold (the vendor did not show its goods; the world store knows no other healer selling bandage nearby)"
+   },
+   {
+    "ok": true,
+    "seconds": 30.8,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": true,
+    "seconds": 32.2,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": true,
+    "seconds": 33.7,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": true,
+    "seconds": 33.3,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": true,
+    "seconds": 32.2,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   },
+   {
+    "ok": true,
+    "seconds": 32.2,
+    "asks_said": [
+     "vendor buy"
+    ],
+    "approach_stuck": null,
+    "result": "Britain healer: bought 30 of 30 bandage for 150 gold"
+   }
+  ],
+  "after_runs": {
+   "first build of the fix (22:16)": [
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 7,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 33.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 8,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 8,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 8,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 7,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy",
+       "nearer": "Devaki The Healer Guildmistress"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 4,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy",
+       "nearer": "Devaki The Healer Guildmistress"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 4,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 4,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 30.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 5,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 5,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.8,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.3,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.3,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.3,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    }
+   ],
+   "a later build (23:11)": [
+    {
+     "ok": true,
+     "seconds": 32.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 4,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.8,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 5,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 6,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 5,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 5,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 5,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy",
+       "nearer": "Devaki The Healer Guildmistress"
+      }
+     ]
+    }
+   ],
+   "the client as left (23:24)": [
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 3,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 3,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.2,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 4,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy",
+       "nearer": "Devaki The Healer Guildmistress"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 31.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 3,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    },
+    {
+     "ok": true,
+     "seconds": 32.7,
+     "asks_said": [
+      "Minerva buy"
+     ],
+     "vendors": [
+      {
+       "serial": 917,
+       "name": "Minerva The Healer",
+       "tiles": 4,
+       "state": "done",
+       "asks": 1,
+       "said": "Minerva buy"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

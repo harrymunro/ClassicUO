@@ -69,6 +69,31 @@ def test_a_guildmaster_in_the_shop_is_not_asked_for_its_goods(tmp_path):
     w.close()
 
 
+def test_the_buy_record_says_which_vendor_was_asked_and_how(tmp_path):
+    """cuo-k0d: a soak's first three buys failed with "the vendor did not show its goods" and the log
+    couldn't say who had been asked. "vendor buy" had gone to the healer guildmistress, the nearer of
+    the two."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("healer", "the Britain healer", 1006, 1000, sells=["bandages"])
+    snap = healer_in_shop(copy.deepcopy(SNAPSHOT))
+    snap["agent"]["errand"] = {"state": "failed", "detail": "the vendor did not show its goods", "gold_change": 0,
+                               "vendor": 0x500, "vendor_name": "Lucy the healer", "asks": 3, "said": "vendor buy",
+                               "nearer": "Devaki The Healer Guildmistress"}
+    logged = []
+    res = asyncio.run(Session(FakeRpc(snap), w, None, log=logged.append).buy("bandage", 25))
+    assert not res.ok
+    buy = next(r for r in logged if r["event"] == "buy")
+    assert buy["vendors"] == [{"serial": 0x500, "name": "Lucy the healer", "tiles": 3, "state": "failed", "asks": 3,
+                               "said": "vendor buy", "nearer": "Devaki The Healer Guildmistress"}]
+    # A client from before the change says nothing of the asking: who was chosen is still there.
+    snap["agent"]["errand"] = {"state": "done", "detail": "bought 25 Clean Bandage", "gold_change": -125}
+    logged.clear()
+    asyncio.run(Session(FakeRpc(snap), w, None, log=logged.append).buy("bandage", 25))
+    assert next(r for r in logged if r["event"] == "buy")["vendors"][0] == {
+        "serial": 0x500, "name": "Lucy the healer", "tiles": 3, "state": "done"}
+    w.close()
+
+
 def test_a_buy_doesnt_set_off_for_a_far_shop_either(tmp_path):
     w = World.open("test", root=tmp_path)
     w.add_place("healer", "the Cove healer", 1770, 1000, sells=["bandages"])

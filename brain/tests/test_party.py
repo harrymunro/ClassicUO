@@ -532,3 +532,29 @@ def test_the_leader_hears_what_the_party_killed(tmp_path):
     said = chat.seen[0]["messages"][1]["content"]
     assert '"the_hunt_here": "won: you and your party killed a bone knight here 0 min ago' in said
     w.close()
+
+
+def test_a_member_that_joins_late_carries_out_the_goal_already_posted(tmp_path):
+    """Its watcher sees the leader's goal while its first step is still looking, and sets the interrupt for
+    it: left set, the goal was cut short at once and the member only kept up with the party until the next."""
+    w = World.open("local", root=tmp_path)
+    party.Party(w, "p1", "Roland", "Roland", NAMES).post("travel_to", {"place": "Britain"})
+
+    class Late(Following):
+        """The watcher's interrupt lands while the step is looking at the client, after its own clearing."""
+
+        seen_set = []
+
+        async def snap(self, **kw):
+            self.interrupt.set()
+            return await super().snap(**kw)
+
+        async def travel_to(self, place=None, x=None, y=None, distance=2, refuse=True, pace=None):
+            self.seen_set.append(self.interrupt.is_set())  # what the goal would find when it starts
+            return await super().travel_to(place, x, y, distance, refuse, pace)
+
+    s = Late(w)
+    f = party.Follower(s, party.Party(w, "p1", "Thea", "Roland", NAMES))
+    asyncio.run(f.step())
+    assert s.goals == [("travel_to", "Britain", 3)] and f.rev == 1 and s.seen_set == [False]
+    w.close()

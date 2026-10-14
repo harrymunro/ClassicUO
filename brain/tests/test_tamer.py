@@ -187,3 +187,28 @@ def test_a_tamer_caught_while_leaving_lets_the_pet_hold_off_the_chaser(tamer):
     dec = policy.decide(sit, answers(), mem, CFG, now=50.0)
     assert [a["verb"] for a in dec.actions] == ["pet", "flee"]
     assert dec.actions[0]["kind"] == "kill" and dec.actions[0]["target"] == 0x101
+
+
+def test_in_a_party_a_tamers_runs_go_to_the_rally_point(tamer):
+    """Live: a tamer in a party that had formed up ran its short way from a bone knight three times, each time
+    away from the party as well, and died out of everyone's reach while the others looted."""
+    # Calling a hurt pet back.
+    fighting(tamer, 45)
+    sit = sit_of(tamer)
+    sit.rally = (1000, 1010)
+    dec = policy.decide(sit, answers(pull_back=0.8), policy.Memory(), CFG, now=10.0)
+    run = next(a for a in dec.actions if a["verb"] == "flee")
+    assert (run["x"], run["y"], run["spot"]) == (1000, 1010, "rally") and "to the rally point" in dec.note
+    # Running from what is beside her.
+    tamer["agent"].update({"pet_order": "follow", "pet_target": 0})
+    tamer["mobiles"][0].update({"distance": 1, "dx": 1})
+    sit = sit_of(tamer)
+    sit.rally = (1000, 1010)
+    dec = policy.decide(sit, answers("flee", in_danger=0.95), policy.Memory(), CFG, now=10.0)
+    run = next(a for a in dec.actions if a["verb"] == "flee")
+    assert dec.intent == "flee" and (run["x"], run["y"], run["spot"]) == (1000, 1010, "rally")
+    assert [a["kind"] for a in dec.actions if a["verb"] == "pet"] == ["follow"]
+    # With no party formed up, the short way from the creature, as before.
+    dec = policy.decide(sit_of(tamer), answers("flee", in_danger=0.95), policy.Memory(), CFG, now=10.0)
+    run = next(a for a in dec.actions if a["verb"] == "flee")
+    assert "x" not in run and run["tiles"] == 6

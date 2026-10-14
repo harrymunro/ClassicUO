@@ -198,6 +198,10 @@ def main() -> None:
     flr = sub.add_parser("fleet-report", help="what each character of a fleet run did and cost, and the load")
     flr.add_argument("dir", type=Path)
     flr.add_argument("--json", action="store_true")
+    pr = sub.add_parser("party-report", help="what a party did in a run as a party: each fight (who joined when, "
+                                             "who fell, fall backs, who healed whom, callouts), deaths, forming up, cost")
+    pr.add_argument("dirs", type=Path, nargs="+", metavar="DIR", help="a fleet run's folder, e.g. logs/fleet/RUN")
+    pr.add_argument("--json", action="store_true", help="one JSON object a run, a line each")
 
     add_world_args(sub)
     add_memory_args(sub)
@@ -219,9 +223,11 @@ def main() -> None:
     ss.add_argument("--party", metavar="ID", help="play as one of a party (cuo-4ar): the run's party id, shared by its members")
     ss.add_argument("--party-members", metavar="NAMES", default="", help="the party's characters, comma-separated")
     ss.add_argument("--leader", metavar="NAME", help="the party's leader: it plans, the others follow its goals")
-    ss.add_argument("--party-plan", choices=["leader", "huddle"], default="leader",
+    ss.add_argument("--party-plan", choices=["leader", "huddle", "player"], default="leader",
                     help="how a party gets one plan: the leader's planner sets every goal and the others follow "
-                         "(default), or every member plans for itself with a plan they agree in a huddle (cuo-bih)")
+                         "(default); every member plans for itself with a plan they agree in a huddle (cuo-bih); or "
+                         "the leader is a character a person plays, and this one its companion: it follows and "
+                         "fights beside it with no planner (cuo-cym.6)")
     ss.add_argument("--no-callouts", action="store_true",
                     help="a party member that doesn't call out in fights (hurt, what it is on, out of supplies; cuo-cod.2)")
     ss.add_argument("--no-party-help", action="store_true",
@@ -230,9 +236,31 @@ def main() -> None:
                     help="with --hear: talk only when there is something to say, no chit chat (cuo-cod.6)")
     ss.add_argument("--no-pace", action="store_true",
                     help="with --hear: say each line the moment it is written, as before cuo-cod.9")
+    ss.add_argument("--pace-factor", type=float, default=1.0,
+                    help="with --hear: the share of a person's time to read and type that a reply waits (1: all of "
+                         "it; 0.7: seven tenths). A person who leads is answered in four fifths of that (cuo-cym.22)")
+    ss.add_argument("--no-persuade", action="store_true",
+                    help="with --party-plan player: a companion sent somewhere without the leader goes when told. "
+                         "Without this, going is its own to agree to: a yes/no on the moment (cuo-cym.19)")
     ss.add_argument("--roleplay", action="store_true",
                     help="a party member that emotes and gestures in character: at the inn's table, on setting out, "
                          "resting, after a kill, over a fallen companion (cuo-cod.8)")
+    ss.add_argument("--game-party", action="store_true",
+                    help="make the party in the game too: the leader invites the others, each accepts its own "
+                         "leader's invitation and no other, so all may loot the party's kills (cuo-cym.3)")
+    ss.add_argument("--callouts-to", choices=["say", "party", "both"], default="say",
+                    help="where a party's callouts are said: aloud (default), in the game's party chat (needs "
+                         "--game-party), or both")
+    ss.add_argument("--party-raise", action="store_true",
+                    help="a party that raises its fallen where they fell: a ghost waits by its corpse for a companion "
+                         "with the bandages and skill, or the Resurrection spell, before walking to a healer (cuo-cym.4)")
+    ss.add_argument("--party-form-up", action="store_true",
+                    help="a party that forms up at the edge of a hunt and goes in as one: the leader waits there for "
+                         "the others, and a member that leaves falls back to that place (cuo-cym.1)")
+    ss.add_argument("--party-rally-map", action="store_true",
+                    help="with --party-form-up: the place the party falls back to is chosen from the client's map, a "
+                         "few tiles back the way it came with a way out behind it, and a second point further back "
+                         "for one badly hurt at the first (cuo-cym.13)")
     ss.add_argument("--party-walk", action="store_true",
                     help="a party that walks its trips together, the others beside the leader, and runs only in "
                          "danger or to catch up (cuo-cod.7)")
@@ -300,6 +328,12 @@ def main() -> None:
         return
     if args.cmd == "replay":
         asyncio.run(replay(args))
+        return
+    if args.cmd == "party-report":
+        from . import partyreport
+        for d in args.dirs:
+            r = partyreport.report(d)
+            print(json.dumps(r) if args.json else partyreport.render(r))
         return
     if args.cmd in ("fleet", "fleet-report"):
         from . import fleet
@@ -1003,13 +1037,28 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
                      floor=Floor(world, me, set(party.members)))
         # companions: the same dict, filled as they report.
         session.pcfg = replace(session.pcfg, companions=party.companions, link=link,
-                               help_mates=not args.no_party_help)
+                               help_mates=not args.no_party_help,
+                               raise_fallen=args.party_raise and not args.no_party_help)
+        session.raise_fallen = args.party_raise and not args.no_party_help  # nobody raises with helping off
         party.on_death = link.died
         if args.party_walk:
             # The party walks its trips together (cuo-cod.7): the leader waits for the others, who walk beside it.
             session.pace = "walk"
             session.leads = party.leading and args.party_plan == "leader"
             session.beside = None if party.leading or args.party_plan == "huddle" else party.leader
+        if args.game_party:
+            # The party in the game too (gameparty.py, cuo-cym.3); its callouts where the fleet says.
+            from .gameparty import GameParty
+            link.game = GameParty(rpc, party, log=write)
+            link.to = args.callouts_to
+        if args.party_form_up and args.party_plan != "player":
+            # The party forms up at the edge of a hunt and goes in as one (rally.py, cuo-cym.1): on its leader,
+            # or with a planner each on whoever gets there first (cuo-cym.5).
+            from .rally import Rally
+            session.rally = link.rally = Rally(session, party, log=write, plan=args.party_plan,
+                                               by_map=args.party_rally_map)
+            session.rally.shout = link.shout
+            session.leads_party = party.leading and args.party_plan == "leader"
         rp = None
         if args.roleplay:
             from .roleplay import Roleplay
@@ -1017,32 +1066,49 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
             session.roleplay = link.roleplay = rp
         write({"type": "party", "t": time.time(), "party": args.party, "me": me, "leader": party.leader,
                "members": party.members, "callouts": not args.no_callouts, "help": not args.no_party_help,
+               "form_up": session.rally is not None, "game_party": link.game is not None, "raise": args.party_raise,
+               **({"callouts_to": link.to} if link.to != "say" else {}),
                "voice": "plain" if spoken is None or spoken.plain else "its own"})
     huddling = party is not None and args.party_plan == "huddle"
     table = None
     if party is not None and args.hear and not huddling:
-        # A party that talks has a table at the inn (table.py): the leader's planner gets the inn goal.
+        # A party that talks has a table at the inn (table.py): the leader's planner gets the inn goal. A
+        # party for the player holds it at the leader's word (companion.py).
         from .table import Table
         table = Table(party, rpc, persona, link.voice, None, link.story, log=write, floor=link.floor,
                       pace=not args.no_pace, emotes=args.roleplay)
-        party.inn = party.leading
+        party.inn = party.leading and args.party_plan != "player"
+        table.guest = party.leader if args.party_plan == "player" else None
     huddle = None
     if huddling:
         # Every member plans for itself, with the plan they agree in front of it (huddle.py, cuo-bih).
         from .huddle import Huddle
         huddle = Huddle(party, session, args.goal, log=write)
+        if session.rally is not None:
+            session.rally.sends = huddle.going  # the rally waits for whom the plan sends (cuo-cym.14)
+    escorting = party is not None and args.party_plan == "player"
     plan = Planner(session, args.goal, model=args.planner_model, log=write, on_goal=show,
                    machines_allowed=not args.no_machines, escalate=not args.no_escalate,
                    memory=False if args.no_memory else None,
                    persona=persona, resume=not args.fresh,
-                   party=party, table=table, huddle=huddle) if party is None or party.leading or huddling else None
+                   party=party, table=table, huddle=huddle) \
+        if (party is None or party.leading or huddling) and not escorting else None
     own_memory = plan.memory if plan else None
     if huddle is not None:
         if own_memory is not None and not own_memory.character:
             own_memory.character = me or None
         huddle.memory, huddle.picker = own_memory, plan.picker  # what it brings is from its own memory
+    companion = None
+    if escorting:
+        # A companion of a character a person plays: no planner and no leader's goals (companion.py, cuo-cym.6).
+        from .companion import Companion
+        # Its word on taking an order is its own when it has a voice of its own, and on the floor either way, so
+        # the others hear it without answering it.
+        companion = Companion(session, party, log=write, game=link.game, table=table, floor=link.floor,
+                              voice=link.voice if not link.voice.plain else None, link=link,
+                              persuade=not args.no_persuade)
     if party is not None and not party.leading and not huddling:
-        follower = Follower(session, party, log=write, table=table)
+        follower = Follower(session, party, log=write, table=table) if not escorting else None
         if not args.no_memory:
             # A follower has no planner, and still a memory of its own (cuo-cod.1): what it hears and says is
             # kept as every character's is, private to it.
@@ -1055,13 +1121,18 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         table.memory = own_memory
         link.tactics = tactics(own_memory)  # its own lines on how to fight, from earlier tables (cuo-cod.5)
     stop = asyncio.Event()
-    asyncio.get_running_loop().add_signal_handler(signal.SIGINT, stop.set)
+    # A closed terminal (SIGHUP) or a `kill` (SIGTERM) ends the run as Ctrl-C does, with its summary: a
+    # playtest's three brains went with their terminal and left none (cuo-cym.23).
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        asyncio.get_running_loop().add_signal_handler(sig, stop.set)
     await rpc.call("mode", mode="auto")
     mark = costs.ledger.mark()
     key_check(write)
-    listening = reporting = watching = ears = None
+    listening = reporting = watching = ears = partying = None
 
     def doing() -> str:
+        if companion is not None:
+            return companion.doing
         if follower is not None:
             return follower.doing
         return plan.history[-1].line()[:200] if plan.history else ""
@@ -1070,7 +1141,12 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         from .talk import Ears
         ears = Ears(rpc, me, {n.strip() for n in args.hear.split(",")}, judge=judge,
                     persona=persona, memory=own_memory, log=write, doing=doing, world=world,
-                    pace=not args.no_pace, small_talk=not args.no_small_talk, banter=party is not None)
+                    pace=not args.no_pace, small_talk=not args.no_small_talk, banter=party is not None,
+                    person=party.leader if escorting else None, pace_factor=args.pace_factor)
+        if companion is not None:
+            # What it says of a line of the leader's goes by how its companion half read the line, and how much
+            # it talks is a setting the leader can change.
+            companion.hears(ears)
         if plan:
             plan.ears = ears
         if table is not None:
@@ -1082,13 +1158,19 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
             if ears:
                 listening = asyncio.create_task(ears.run(stop))
             if party is not None:
-                reporting = asyncio.create_task(party.keep_reporting(session.snap, state.archetype_of, doing, stop,
-                                                                     left=session.last_leave))
+                reporting = asyncio.create_task(party.keep_reporting(
+                    session.snap, state.archetype_of, doing, stop, left=session.last_leave,
+                    busy=lambda: bool(follower is not None and follower.own or companion is not None and companion.own
+                                      or huddling and plan is not None and plan.on_errand),
+                    hunting=lambda: session.hunting_area))
+            if link is not None and link.game is not None:
+                partying = asyncio.create_task(link.game.keep(session.snap, stop))
             if huddling:
                 watching = asyncio.create_task(plan.huddle.watch(stop))
-            summary = await (follower.run(stop, args.hours) if follower else plan.run(hours=args.hours, stop=stop))
+            summary = await (companion.run(stop, args.hours) if companion else follower.run(stop, args.hours)
+                             if follower else plan.run(hours=args.hours, stop=stop))
     finally:
-        for task in (listening, reporting, watching):
+        for task in (listening, reporting, watching, partying):
             if task:
                 task.cancel()
         await judge.close()
@@ -1096,6 +1178,10 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     summary |= session.routine_summary()
     if link is not None:
         summary |= link.to_log()
+    if session.rally is not None:
+        summary |= session.rally.to_log()
+    if link is not None and link.game is not None:
+        summary |= link.game.to_log()
     if ears is not None and plan is None:
         summary |= ears.to_log()  # a follower's talk; a planner's summary has its own
     if table is not None:

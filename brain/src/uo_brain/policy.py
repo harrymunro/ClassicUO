@@ -9,7 +9,8 @@ from .judge import Answers, ChoiceResult
 from .spells import (BLESSING_SPELLS, GREATER_HEAL, MEDITATION, PROTECTION, RECAST_AFTER, RECAST_AFTER_WITH_ICON,
                      is_damage)
 from .questions import leave_reason, pull_back_reason
-from .state import PACK_FAR, SPELL_RANGE, SPOT_DEAD_END, SPOT_OPEN, Candidate, Situation, around_target
+from .state import (PACK_FAR, PARTY_TILES, SPELL_RANGE, SPOT_DEAD_END, SPOT_OPEN, Candidate, Mate, Situation,
+                    around_target)
 
 
 @dataclass
@@ -61,6 +62,23 @@ class PolicyConfig:
     # one that can take the hits, go for what is on a companion who can't.
     help_mates: bool = True
     help_below: int = 60
+    raise_fallen: bool = False  # ...and raise one who fell, where it fell, once the fight is over (cuo-cym.4)
+    # A companion of a character a person plays (companion.py, cuo-cym.6): that character's name. It fights
+    # what attacks it, and what is in war mode close to itself or to that character, and goes after nothing else.
+    escort: str = ""
+    # ...how far from that character, and from itself, what stands in war mode is the party's to fight. The
+    # leader's word changes both ("only what comes at us", "clear the place": standing.py, cuo-cym.18).
+    escort_tiles: int = 4
+    escort_own: int = 6
+    # Settings that change while a fight loop runs (a companion's, at its leader's word): laid over this
+    # configuration at every decision (loop.run). None: nothing does.
+    live: Any = None
+    # The leader's word for the fight going on (companion.py, cuo-cym.24), laid over by `live`: the creature to go
+    # for before anything else (its serial); to fall back to the leader, fighting only beside it; and one heal on
+    # someone whatever their health ((name, the order's number), done once: Memory.heals_done).
+    focus: int = 0
+    fall_back: bool = False
+    heal_now: tuple[str, int] = ("", 0)
     # Set from the player's strategy (strategy.py).
     allow_flee: bool = True
     target_priority: str = "current_first"
@@ -113,8 +131,24 @@ class Memory:
     # minutes, every walk "no path" (cuo-20l). The client's own give-up (cuo-2ct) covers attacks only.
     leave_started: float = 0.0  # when the leave going on began (Jev's "safe to stop running?", cuo-fhf.6)
     party_held_at: float = -1.0  # when a leave was last held back with the party beside it (cuo-e1p)
+    # A leave that is a fall back to the party's rally point (cuo-cym.1), and why it left: it ends at the rally
+    # with the party there, and only a leave from the rally itself ends the hunt.
+    regrouping: bool = False
+    leave_why: str = ""
+    fall_back_ended: str = ""  # why a fall back became a leave for good, until the decision that says so
+    # Back in from a fall back, or standing at the rally point: no leaving again before this, unless hurt.
+    # Without it a leave decided at good health (a pack coming) was undone and decided again at every
+    # decision, and a member back at the rally point left it for good a second later.
+    no_leave_until: float = 0.0
+    # Its last run was for the second point behind the rally point (cuo-cym.13): until this, the next runs are too.
+    back_until: float = 0.0
+    # When a leg of a walk to a creature last found no path (seek_leg): the next few walks go the whole way,
+    # as before, or one blocked tile (a tombstone) would leave the walker standing there asking for it again.
+    leg_failed_at: float = -1e9
     last_mate_help: float = -1e9  # the last bandage or heal on a companion or its pet (cuo-4ti)
+    last_raise: float = -1e9      # the last try at raising a fallen companion (cuo-cym.4)
     helped: tuple[str, str] | None = None  # (who, how) helped by the decision just made, for the callout
+    heals_done: set[int] = field(default_factory=set)  # the leader's orders to heal someone, carried out (cuo-cym.24)
     # Each monster's distance over the last seconds (creature -> [(when, tiles)]): whether it is following,
     # for Jev's "safe to stop running?" (movement). Asked with "far away" and war mode alone, Jev
     # answered 0.3-0.5 nearly every time.
@@ -213,6 +247,7 @@ class Decision:
     spot_confidence: float | None = None  # Jev's probability for it, renormalised over the places allowed
     spot_why: str = ""  # "jev" or "rule"
     cornered: bool = False  # code holds it in the fight: its runs found no path (Memory.cornered_until)
+    regroup: bool = False   # a leave that falls back to the party's rally point: the hunt goes on (cuo-cym.1)
 
     @property
     def next_move(self) -> dict[str, Any] | None:
@@ -260,7 +295,7 @@ def masked_intent(sit: Situation, answer: ChoiceResult, cfg: PolicyConfig) -> tu
         "leave": bool(sit.hostiles) and cfg.allow_flee and move,
         "rest": True,
     }
-    if cfg.defend_only:
+    if cfg.defend_only or cfg.fall_back:
         valid["seek"] = valid["loot"] = False
     if cfg.allowed_intents is not None:
         # A plan's state limits the choice; something on the character is still fought back
@@ -292,6 +327,29 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
         # had a soak run's warrior chase a crossbill while its walk waited.
         for h in sit.hostiles:
             h.allowed = h.allowed and (bool(h.info.get("aggressive")) and h.distance <= 6 or attacking_me(sit, h))
+    if cfg.escort:
+        # Beside a character a person plays: a client isn't told whom another character attacks, so what the
+        # leader is fighting is taken to be what stands in war mode within cfg.escort_tiles of it.
+        lead = next((m for m in sit.raw.get("mobiles", []) if m.get("name") == cfg.escort and not m.get("monster")), None)
+
+        def from_leader(h: Candidate) -> int:
+            raw = mobile(sit, h.serial) or {}
+            return 99 if lead is None else max(abs(raw.get("dx", 99) - lead.get("dx", 0)), abs(raw.get("dy", 99) - lead.get("dy", 0)))
+
+        for h in sit.hostiles:
+            h.allowed = h.allowed and (attacking_me(sit, h) or bool(h.info.get("aggressive"))
+                                       and (h.distance <= cfg.escort_own or from_leader(h) <= cfg.escort_tiles))
+        if cfg.fall_back:
+            # Told to fall back (companion.py, cuo-cym.24): it goes after nothing, and only once beside the leader
+            # fights what is on it or right on the leader. The client's follow takes it there (decide, below).
+            beside = lead is not None and lead.get("distance", 99) <= BESIDE_LEADER
+            for h in sit.hostiles:
+                h.allowed = h.allowed and beside and (attacking_me(sit, h) or bool(h.info.get("aggressive"))
+                                                      and (h.distance <= 1 or from_leader(h) <= 1))
+        if cfg.focus and (named := sit.hostile_by_serial(cfg.focus)) is not None:
+            named.allowed = True  # the leader named it: whether or not it stands in war mode by either of them
+    sit.past_rally = now < mem.back_until
+    end_fall_back(sit, mem, now)
     if now < mem.no_seek_until:
         # After leaving, only what is close or attacking is fought: going after one further off took a
         # warrior in a pack round back to the gargoyles it had left, as seeking would have. What comes
@@ -302,6 +360,14 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
             h.allowed = h.allowed and (h.distance <= cfg.close_tiles or attacking_me(sit, h)
                                        or h.distance <= reach and bool(h.info.get("aggressive")))
     dec = decide_intent(sit, ans, mem, cfg, now)
+    if cfg.escort and cfg.fall_back and dec.intent not in ("flee", "leave"):
+        back_to_the_leader(sit, dec, mem, cfg, now)
+    if goes_on(sit):
+        # A run for the second point behind the rally point: the runs of the next seconds are for it too (it
+        # doesn't turn round half way), and the note says which of the two points it is.
+        if any(a.get("spot") == "back" for a in dec.actions):
+            mem.back_until = now + BACK_RUN_S
+        dec.note = dec.note.replace("the rally point", "the second point behind the rally point")
     if mem.party_held_at == now:
         dec.note = (dec.note + "; " if dec.note else "") + f"held with the party: {sit.party_near} companions beside it"
     if cfg.defend_only and sit.traveling and dec.intent == "rest" and sit.agent.get("engaged"):
@@ -471,6 +537,132 @@ def place_moves(sit: Situation, ans: Answers, dec: Decision, cfg: PolicyConfig, 
         mem.spot_goal = None  # fighting or resting again: the next run picks afresh
 
 
+HOLDING = "holding the line with the party"
+RALLY_FAR = 40   # a rally point further off than this isn't run to
+RALLY_LEG = 12   # a run toward it goes this far at a time: about what the client's walk to a place finds a path for
+RALLY_AT = 3     # this close to it is at it
+RALLY_STAND_S = 20.0  # after a stand at the rally, what isn't coming at the party is left alone this long
+REJOIN_HP = 60   # a member that fell back goes in again at this health (%), with companions still in the fight
+FALL_BACK_MIN_S = 5.0  # ...and not before it has fallen back this long
+STAND_S = 15.0   # back in, or standing at the rally point, it doesn't leave again for this long unless it is hurt
+BACK_RUN_S = 10.0  # a run for the second point behind the rally point is kept to this long after its last action
+
+
+def at_rally(sit: Situation) -> bool:
+    p = sit.player
+    return sit.rally is not None and max(abs(sit.rally[0] - p["x"]), abs(sit.rally[1] - p["y"])) <= RALLY_AT
+
+
+def goes_on(sit: Situation) -> bool:
+    """Whether a member's run is for the second point, behind its party's rally point (cuo-cym.13). Formed up, a
+    party fights at its rally point: live, the warrior stood 1 to 8 tiles from it, so a fall back was a few
+    steps to the place the wave arrives at, and he died there twice, from over half his health in about a
+    second. With a second point further back the way the party came, one that is at the rally point badly
+    hurt while companions fight on, or with something on it there, runs on to it. One whose last run was
+    for the second point (Situation.past_rally, from Memory.back_until) doesn't turn round for the first
+    half way, and one that is at the second point is where it was going.
+
+    Nobody else's run is for it. A first version took anyone nearer the second point than the rally point
+    is to be on its way there, which by the game's square distances was anyone a tile behind the rally
+    point and up to eleven to its side: a member at nine tenths of its health, four tiles behind the rally
+    point, ran eight tiles further from its party instead of four to it."""
+    if sit.rally is None or sit.rally_back is None:
+        return False
+    if not at_rally(sit):
+        p = sit.player
+        return sit.past_rally or max(abs(sit.rally_back[0] - p["x"]), abs(sit.rally_back[1] - p["y"])) <= RALLY_AT
+    return sit.hp_pct < PARTY_HOLD_HP and sit.party_fighting > 0 \
+        or any(h.distance <= 2 and attacking_me(sit, h) for h in sit.hostiles)
+
+
+def stands_at_rally(sit: Situation) -> bool:
+    """At the party's rally point with nothing on it: where a fall back was going, so it runs no further. A
+    member that fell back badly hurt may leave again at once (the stand doesn't hold under 40%), and from the
+    rally point itself there is no way "to the rally": live, an archer at 37% fell back to it, ran 15 tiles
+    on away from everything in sight at the next decision, and turned round at the one after. With a second
+    point behind the rally point, one whose run goes on to it (goes_on) stands there instead."""
+    if any(h.distance <= 2 and attacking_me(sit, h) for h in sit.hostiles):
+        return False
+    if goes_on(sit):
+        p = sit.player
+        return max(abs(sit.rally_back[0] - p["x"]), abs(sit.rally_back[1] - p["y"])) <= RALLY_AT
+    return at_rally(sit)
+
+
+def rally_run(sit: Situation) -> tuple[int, int] | None:
+    """Where a party member's run goes (cuo-cym.1): toward the place its party formed up at, a leg at a
+    time. In the party runs the ones that left ran each along its own line away from whatever it saw, out
+    of the 10 tiles that make a party, and didn't find each other again. None (the line away, as alone):
+    no rally point, at it already, or too far from it.
+
+    Creatures on the way don't change it. A first version kept the line away whenever one stood between
+    the member and the rally point, which in a fight at the line is always: live, a tamer, a warrior and
+    an archer each fell back "away from all 6 in sight", north, west and north-east through the graveyard,
+    and somebody stood apart from the others for 70 of the fight's 86 seconds. The client walks round
+    what is in the way, and takes its own line away when there is no way round.
+
+    With a second point behind the rally point it goes there instead, for those `goes_on` says."""
+    if sit.rally is None:
+        return None
+    p = sit.player
+    rx, ry = sit.rally_back if goes_on(sit) else sit.rally
+    gx, gy = rx - p["x"], ry - p["y"]
+    d = max(abs(gx), abs(gy))
+    if d <= RALLY_AT or d > RALLY_FAR:
+        return None
+    if d <= RALLY_LEG:
+        return rx, ry
+    return p["x"] + round(gx * RALLY_LEG / d), p["y"] + round(gy * RALLY_LEG / d)
+
+
+def end_fall_back(sit: Situation, mem: Memory, now: float) -> None:
+    """Falling back (cuo-cym.1) is a party member's leave while companions fight on, and it ends three ways,
+    looked at before anything else in a decision (what it may fight depends on it)."""
+    if mem.leaving_until <= now or not mem.regrouping:
+        return
+    on_me = any(h.distance <= 2 and attacking_me(sit, h) for h in sit.hostiles)
+    # Badly hurt, with companions still fighting and a second point behind the rally point: its run isn't over
+    # at the first.
+    onward = sit.hp_pct < PARTY_HOLD_HP and sit.party_fighting and goes_on(sit)
+    if at_rally(sit) and sit.party_near >= PARTY_HOLD and not onward:
+        # At the rally point with the party there: it stands with them, and the run is over.
+        mem.regrouping, mem.leaving_until, mem.no_seek_until = False, now, now + RALLY_STAND_S
+        mem.no_leave_until = now + STAND_S
+    elif sit.hp_pct >= REJOIN_HP and not on_me and sit.party_fighting and now - mem.leave_started >= FALL_BACK_MIN_S \
+            and (sit.party_near >= 1 or rally_run(sit) is None):
+        # Healed, beside a companion (or with no way to the rally point), and the others are still at it:
+        # back in. A warrior that left a lich at 34% was at 92% seven seconds later and stood by for the
+        # rest of the fight, its hunt over, while four fought on. Not in the first seconds: a leave decided
+        # at good health (a pack coming) would be undone by the very next decision.
+        mem.regrouping, mem.leaving_until, mem.no_seek_until = False, now, now
+        mem.no_leave_until = now + STAND_S
+    elif goes_on(sit) and not at_rally(sit) and not on_me and not sit.party_fighting and not sit.party_running:
+        # At the second point, or on the way to it, with the fight behind it over and nothing on it: its run is
+        # over where it is, and its hunt goes on. The party is out of its ten tiles there, so the rule below took
+        # it for one with nobody to go back to: the others had only to win before it was back at 60% for its
+        # hunt to end "left the area", with a recall away and the place refused for half an hour.
+        mem.regrouping, mem.leaving_until, mem.no_seek_until = False, now, now + RALLY_STAND_S
+    elif not sit.party_fighting and not sit.party_running and (at_rally(sit) or rally_run(sit) is None):
+        # Nobody left in the fight to go back to, nobody else falling back who is still on the way, and nobody
+        # at the rally point to stand with (or no way there): a leave like any other from here on, and its hunt
+        # ends. The first of several falling back together reaches the rally point alone, seconds ahead of the rest.
+        mem.regrouping = False
+        mem.no_seek_until = mem.leaving_until + 120
+        mem.fall_back_ended = mem.leave_why or "fell back, and nobody of the party is left in the fight"
+    if not mem.regrouping:
+        mem.back_until, sit.past_rally = 0.0, False  # back in or done: its next run begins from the rally point's rules
+
+
+def to_rally(sit: Situation, action: dict[str, Any]) -> bool:
+    """Aim a run at the party's rally point, or at the second point behind it (spot "back") for one whose run
+    goes on there; False when it keeps the line away."""
+    to = rally_run(sit)
+    if to is None:
+        return False
+    action.update(x=to[0], y=to[1], spot="back" if goes_on(sit) else "rally", spot_by="party")
+    return True
+
+
 def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: float) -> Decision:
     intent, conf, masked = masked_intent(sit, ans.choices["intent"], cfg)
     danger = ans.nouls.get("in_danger", 0.0)
@@ -511,6 +703,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # four failures in a row count as cornered all the same.
     if mem.flee_failed >= 2 and (any(h.distance <= cfg.close_tiles for h in sit.hostiles) or mem.flee_failed >= 4):
         mem.flee_failed, mem.leaving_until, mem.cornered_until = 0, 0.0, now + 15
+    # A fall back that became a leave for good: said once, so its hunt ends (Decision.leave_why).
+    ended, mem.fall_back_ended = mem.fall_back_ended, ""
     if mem.leaving_until > now and sit.authority("move") == "auto":
         near = [h for h in sit.hostiles if h.distance <= 14]
         call = [{"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "leave"}] \
@@ -531,7 +725,15 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                 mem.leaving_until = min(mem.leave_started + MAX_LEAVE_S, mem.leaving_until + 10)
                 mem.no_seek_until = mem.leaving_until + 120
         if not near:
-            return Decision("leave", 1.0, call, "left: nothing in sight", masked)
+            if mem.regrouping and (to := rally_run(sit)) is not None and not sit.agent.get("fleeing"):
+                # Nothing after it any more: the rest of the way back to the party's rally point.
+                return Decision("leave", 1.0, call + [{"verb": "flee", "target": 0, "tiles": 15, "confidence": 1.0,
+                                                       "reason": "leave", "x": to[0], "y": to[1],
+                                                       "spot": "back" if goes_on(sit) else "rally", "spot_by": "party"}],
+                                "falling back to the rally point", masked, regroup=True)
+            return Decision("leave", 1.0, call, "fallen back: nothing after it, getting its health back"
+                            if mem.regrouping else "left: nothing in sight", masked, regroup=mem.regrouping,
+                            leave_why=ended)
         # Something stronger has caught up with a tamer: the pet covers the escape (it may not
         # come back; most monsters run as fast as a character, and the tamer can't take the hits).
         chaser = next((h for h in near if h.distance <= 3 and h.allowed
@@ -543,20 +745,28 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                                             "reason": "leave"}],
                             f"leaving: the pet holds off {chaser.name}", masked, target=chaser)
         if sit.agent.get("fleeing"):
-            return Decision("leave", 1.0, call, "leaving", masked)
+            return Decision("leave", 1.0, call, "leaving", masked, regroup=mem.regrouping, leave_why=ended)
         if sit.is_tamer and sit.pet and sit.pet["distance"] > 6 and not any(h.distance <= 4 for h in near):
-            return Decision("leave", 1.0, call, "leaving, waiting for the pet", masked)
+            return Decision("leave", 1.0, call, "leaving, waiting for the pet", masked, regroup=mem.regrouping,
+                            leave_why=ended)
         nearest = min(near, key=lambda h: h.distance)
         if keep_travelling(sit):
             return Decision("leave", 1.0, call + let_go(sit), "leaving by the road: the trip goes on", masked,
-                            target=nearest)
+                            target=nearest, leave_why=ended)
+        if mem.regrouping and stands_at_rally(sit):
+            return Decision("leave", 1.0, call, "fallen back: standing at the rally point", masked, target=nearest,
+                            regroup=True, leave_why=ended)
         tiles = 8 if sit.is_tamer else 15
         # From them all, weighed by the client, when there are two or more; after runs that found no
         # path, from the nearest alone, which points another way.
         away = nearest.serial if mem.flee_failed >= 2 else flee_from(sit, nearest)
-        return Decision("leave", 1.0, call + [{"verb": "flee", "target": away, "tiles": tiles, "confidence": 1.0,
-                                               "reason": "leave"}],
-                        f"leaving, away from {away_words(sit, nearest)}", masked, target=nearest)
+        run = {"verb": "flee", "target": away, "tiles": tiles, "confidence": 1.0, "reason": "leave"}
+        # A fall back keeps to the party's rally point while the way there is clear, else the line away.
+        back = mem.regrouping and mem.flee_failed < 2 and to_rally(sit, run)
+        return Decision("leave", 1.0, call + [run],
+                        "falling back to the rally point" if back else
+                        f"{'falling back' if mem.regrouping else 'leaving'}, away from {away_words(sit, nearest)}",
+                        masked, target=nearest, regroup=mem.regrouping, leave_why=ended)
 
     # A cautious strategy gets out early: badly hurt with several creatures on the character.
     outmatched = any(str(h.info.get("strength", "")).startswith("far stronger") for h in sit.hostiles)
@@ -617,7 +827,20 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
     # With the party fighting beside it, a member doesn't leave on its own: in a party run the ones that
     # left ran off each its own way, lost the companions that made the odds good, and three of five died
     # (cuo-e1p). Code's pack rule, weighed against the party already, and a badly hurt member still leave.
-    if intent == "leave" and sit.party_near >= PARTY_HOLD and not pack and sit.hp_pct >= PARTY_HOLD_HP \
+    hurt = sit.hp_pct < PARTY_HOLD_HP or sit.hp_drop >= FAST_FALL
+    # ...and so does one with nothing to fight with that has something on it. Held, all it can do is stand:
+    # live, a tamer whose pet was gone stood at the rally point "held with the party: 4 companions beside
+    # it" for eight seconds with a bone knight beside her, from 100% of her health to 22%, and died.
+    helpless = cannot_fight and any(h.distance <= 2 and (h.info.get("aggressive") or attacking_me(sit, h))
+                                    for h in sit.hostiles)
+    if intent == "leave" and sit.rally is not None and not hurt and not helpless \
+            and (now < mem.no_leave_until or at_rally(sit) and sit.party_fighting):
+        # Just back in from a fall back, or at the rally point while companions are still in the fight: it
+        # stays (cuo-cym.1). Live, a tamer fell back to the rally point for a pack, was back at 100% health
+        # two seconds later, left "away from all 5" from the rally itself, and her hunt was over.
+        intent = "fight" if sit.targets and "fight" not in masked else "rest"
+        mem.party_held_at = now
+    if intent == "leave" and held_by_the_party(sit, close) and not pack and not helpless \
             and not why_leave.startswith("badly hurt"):
         intent = "fight" if sit.targets and "fight" not in masked else "rest"  # the party is fighting: so does it
         mem.party_held_at = now
@@ -643,20 +866,46 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             mem.pulling_until = now + 10
             foe = next((h for h in sit.hostiles if h.serial == sit.agent["pet_target"]), None)
             actions = [{"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "pull back"}]
+            back = False
             if foe:
-                actions.append({"verb": "flee", "target": foe.serial, "tiles": 8, "confidence": 1.0, "reason": "pull back"})
-            return Decision("flee", 1.0, hints + actions, f"call the pet back ({why})", masked, target=foe)
+                run = {"verb": "flee", "target": foe.serial, "tiles": 8, "confidence": 1.0, "reason": "pull back"}
+                actions.append(run)
+                back = to_rally(sit, run)  # in a party, to where it formed up, as any other run (below)
+            return Decision("flee", 1.0, hints + actions,
+                            f"call the pet back{', to the rally point' if back else ''} ({why})", masked, target=foe)
 
-    note_rest = ""
+    note_rest = note_point = ""
     if intent == "seek" and now < mem.no_seek_until:
         intent, conf = "rest", 1.0
         note_rest = "not going back after leaving"
+    # In a party that formed up a fight isn't over while something is on a companion (cuo-cym.10): one with
+    # nothing of its own to fight doesn't loot or rest, it goes there.
+    aid: Candidate | None = None
+    named = sit.hostile_by_serial(cfg.focus) if cfg.focus else None
+    if named is not None and intent in ("fight", "seek", "loot", "rest") and "fight" not in masked and not sit.assisting:
+        # The creature the leader named for this fight (companion.py, cuo-cym.24), whatever else is about and
+        # whatever Jev would pick. Running and leaving are decided above, and still come first.
+        within = named.distance <= fighting_reach(sit, cfg) and (named.in_sight or not aims_at_range(sit))
+        aid, intent, conf, note_point = named, "fight" if within else "seek", 1.0, f"at {cfg.escort or 'the leader'}'s word: "
+    elif intent in ("loot", "rest") and not close and free_to_go(sit, mem, cfg, now):
+        if (theirs := on_a_companion(sit)) is not None:
+            aid, whom = theirs
+            within = aid.distance <= fighting_reach(sit, cfg) and (aid.in_sight or not aims_at_range(sit))
+            intent, conf, note_point = "fight" if within else "seek", 1.0, f"to {whom.name}: "
+        elif sit.mate_far is not None and not any(h.info.get("aggressive") for h in sit.hostiles) \
+                and (walk := to_far_companion(sit)) is not None:
+            # ...and one out of view by its own word, when nothing in view here is in war mode.
+            return Decision("seek", 1.0, hints + [walk], f"to {sit.mate_far[0]}: set upon out of view", masked)
     # Seek only what Jev would attack: with its target answer "none of these", seeking the nearest
     # anyway walked a warrior to the wraith it had said to leave (cuo-8ga).
-    seek_target, seek_conf = pick_target(sit, ans, cfg) if intent == "seek" else (None, None)
+    seek_target, seek_conf = (aid, 1.0) if aid is not None and intent == "seek" else \
+        pick_target(sit, ans, cfg) if intent == "seek" else (None, None)
+    if intent == "seek" and seek_target is None and (seek_target := with_the_point(sit)) is not None:
+        note_point = f"with {sit.point_name}: "
     if intent == "seek" and seek_target is None:
         intent = "rest"
-        note_rest = f"not seeking: Jev would attack none of these ({seek_conf or 0:.2f})"
+        note_rest = HOLDING if on_the_line(sit, cfg) is not None else \
+            f"not seeking: Jev would attack none of these ({seek_conf or 0:.2f})"
     # Seeking one within reach but out of sight is fighting it: engaged at range, the client walks round
     # until it sees it, and stops there (a walk to it would stop a few tiles short, still behind the wall).
     if intent == "seek" and seek_target is not None and not seek_target.in_sight \
@@ -686,22 +935,50 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         actions.extend(take_items(sit, ans, mem, cfg, {"confidence": round(conf, 3), "reason": "take"}))
 
     if intent == "fight":
-        dec.target, dec.target_confidence = pick_target(sit, ans, cfg)
+        dec.target, dec.target_confidence = (aid, 1.0) if aid is not None else pick_target(sit, ans, cfg)
+        if dec.target is None and (theirs := with_the_point(sit)) is not None:
+            dec.target, note_point = theirs, f"with {sit.point_name}: "
         target = dec.target
         if target is None:
             dec.note = "no target"
+            if on_the_line(sit, cfg) is not None:
+                dec.note = HOLDING
+                actions += back_to_the_line(sit) or stop_walking(sit)
             return dec
         pet_note = ""
+        # From how far it can fight from where it stands. An archer by its bow's own range: it shoots from
+        # bow_range by choice, and from behind the point from as far as the bow carries (below). Live, 17 of
+        # the archer's 20 "out of reach" decisions had the creature in shooting range.
+        reach = max(fighting_reach(sit, cfg), sit.ranged.get("range", 0)) if sit.is_archer else fighting_reach(sit, cfg)
+
+        def waits_behind(t: Candidate) -> bool:
+            """Out of reach from anywhere behind the point: it waits for the creature to come, or the point to go."""
+            g = behind_the_point(sit, t)
+            if g is None or g <= reach or t.distance <= reach:
+                return False
+            dec.note = f"keeping behind {sit.point_name}: {t.name} is out of reach"
+            actions.extend(stop_walking(sit))
+            return True
+
         if sit.is_tamer:
             # The pet fights; the tamer stays back. Not while the pet is being called back.
             if now < mem.pulling_until:
                 dec.note = f"pet called back, not sending it at {target.name}"
                 return dec
-            target, pet_note = set_pet_on(sit, dec, target, meta)
+            # Nor is the pet sent ahead of the point: it is the tamer's weapon, and alone out there it brings
+            # the wave back to the tamer. What is on the tamer itself comes first, wherever the point stands.
+            if not any(h.distance <= 1 or attacking_me(sit, h) for h in sit.targets) and waits_behind(target):
+                return dec
+            target, pet_note = set_pet_on(sit, dec, target, meta, named=named is not None and target is named)
+        gap = behind_the_point(sit, target)
+        if waits_behind(target):
+            return dec
         if sit.is_mage:
-            # Engage at range so the client follows the creature without closing to melee.
-            if target.serial != engaged or sit.agent.get("engaged_range", 1) != cfg.spell_range:
-                actions.append({"verb": "attack", "target": target.serial, "range": cfg.spell_range, **meta})
+            # Engage at range so the client follows the creature without closing to melee: and, in a party,
+            # without closing nearer than its point stands.
+            rng = cfg.spell_range if gap is None else max(cfg.spell_range, min(gap, SPELL_RANGE))
+            if target.serial != engaged or sit.agent.get("engaged_range", 1) != rng:
+                actions.append({"verb": "attack", "target": target.serial, "range": rng, **meta})
             # Two or more creatures in melee reach: step back between spells (kiting), since
             # every hit interrupts a spell. Not while a spell is being cast: casting roots the mage.
             # One step back per spell: kiting again before a spell has gone off only stops the
@@ -760,6 +1037,8 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         elif sit.is_archer:
             # Engage at range, as a mage does, so the client shoots without closing to melee.
             rng = shooting_range(sit, cfg)
+            if gap is not None:
+                rng = max(rng, min(gap, sit.ranged.get("range", rng)))  # ...nor nearer than the point stands
             if target.serial != engaged or sit.agent.get("engaged_range", 1) != rng:
                 actions.append({"verb": "attack", "target": target.serial, "range": rng, **meta})
             # Two or more in melee reach: step back, once per shot fired (arrows used) since the
@@ -806,6 +1085,7 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         if sit.is_tamer and sit.pet:
             mem.last_pet_call = now
             actions.append({"verb": "pet", "kind": "follow", **meta})
+        mem.leave_why, mem.regrouping = dec.leave_why, False
         if keep_travelling(sit):
             actions += let_go(sit, meta)
             dec.note = f"leave by the road: the trip goes on ({conf:.2f})"
@@ -813,9 +1093,25 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             # Away from all of them (the client weighs every creature in view), whichever rule chose
             # to leave: Jev's leave_now with an orc adjacent ran from the orc alone, 15 tiles north
             # into three gargoyles, and the warrior died there (cuo-d28.11).
-            actions.append({"verb": "flee", "target": flee_from(sit, threat), "tiles": 8 if sit.is_tamer else 15,
-                            **meta})
-            dec.note = f"leave, away from {away_words(sit, threat)} ({conf:.2f})"
+            run = {"verb": "flee", "target": flee_from(sit, threat), "tiles": 8 if sit.is_tamer else 15, **meta}
+            actions.append(run)
+            # A party member with companions still in the fight falls back, to where the party formed up when
+            # the way there is clear: it comes back in once it has its health back, and its hunt goes on
+            # (cuo-cym.1). With nobody left fighting and no rally point to go to, it is a leave.
+            back = to_rally(sit, run)
+            if sit.party_fighting and stands_at_rally(sit):
+                # At the rally point already: it stands there, and runs only once something is on it.
+                actions.remove(run)
+                mem.regrouping = dec.regroup = True
+                mem.no_seek_until = mem.leaving_until
+                dec.note = f"fall back: standing at the rally point: {dec.leave_why} ({conf:.2f})"
+            elif back or sit.party_fighting:
+                mem.regrouping = dec.regroup = True
+                mem.no_seek_until = mem.leaving_until  # no staying clear after it: it goes back in
+                dec.note = (f"fall back{' to the rally point' if back else ', away from ' + away_words(sit, threat)}: "
+                            f"{dec.leave_why} ({conf:.2f})")
+            else:
+                dec.note = f"leave, away from {away_words(sit, threat)} ({conf:.2f})"
 
     elif intent == "flee":
         # From what is after the character: a timber wolf a few steps off that wasn't once took the
@@ -825,8 +1121,13 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
         if sit.is_tamer and sit.pet:
             actions.append({"verb": "pet", "kind": "follow", **meta})
         # A tamer runs a short way only, so its pet stays in sight and can follow.
-        actions.append({"verb": "flee", "target": threat.serial, "tiles": 6 if sit.is_tamer else 10, **meta})
-        dec.note = f"flee from {threat.name} (danger {danger:.2f})"
+        run = {"verb": "flee", "target": threat.serial, "tiles": 6 if sit.is_tamer else 10, **meta}
+        actions.append(run)
+        # In a party, toward where it formed up, which is where the others fall back to as well (cuo-cym.1).
+        # A tamer too, its pet following: live, one ran its short way from a bone knight three times, each
+        # time away from the party as well, and died out of everyone's reach while the others looted.
+        back = to_rally(sit, run)
+        dec.note = f"flee from {threat.name}{', to the rally point' if back else ''} (danger {danger:.2f})"
 
     elif intent == "loot":
         corpse = pick_corpse(sit, ans)
@@ -847,16 +1148,38 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
                 actions.append(cast_action(sit, mem, dec.spell, target, now, **meta, opener=True))
                 dec.note = f"open on {target.name} with {dec.spell.name} ({conf:.2f})"
                 return dec
+        # To a companion with something on it the walk goes the whole way: the legs keep the point from
+        # walking into a wave alone, and where it is going now a companion stands.
+        leg = None if aid is not None else seek_leg(sit, target)
+        if leg is not False and leg is not None and now - mem.leg_failed_at < LEG_RETRY_S:
+            leg = None
+        if leg is False:
+            actions += stop_walking(sit)
+            dec.note = f"{note_point}seek {target.name}: waiting for the party to close up ({conf:.2f})"
+            return dec
         raw = next(m for m in sit.raw["mobiles"] if m["serial"] == target.serial)
         p = sit.player
         stop = cfg.spell_range - 1 if sit.is_mage else shooting_range(sit, cfg) - 1 if sit.is_archer \
             else 5 if sit.is_tamer else 8 if sit.is_bard else 1
-        actions.append({"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": stop,
-                        "target": target.serial, **meta})  # the client walks to x, y; the loop counts no-path walks by target
-        dec.note = f"seek {target.name} ({conf:.2f})"
+        gap = behind_the_point(sit, target)
+        if gap is not None and gap > stop:
+            stop = gap
+            if target.distance <= stop:
+                actions += stop_walking(sit)
+                dec.note = f"{note_point}seek {target.name}: keeping behind {sit.point_name} ({conf:.2f})"
+                return dec
+        if leg is not None:
+            # A leg isn't a walk to the creature: no "target", so a tile in the way isn't counted against it.
+            actions.append({"verb": "walk_to", "x": leg[0], "y": leg[1], "distance": 1, "leg": True, **meta})
+        else:
+            actions.append({"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": stop,
+                            "target": target.serial, **meta})  # the client walks to x, y; the loop counts no-path walks by target
+        dec.note = f"{note_point}seek {target.name} ({conf:.2f})"
 
     else:
         dec.note = note_rest or f"rest ({conf:.2f})"
+        if note_rest == HOLDING:
+            actions += back_to_the_line(sit) or stop_walking(sit)
         # A mage regains mana faster in a trance; the skill has a 10 s delay of its own.
         if sit.is_mage and sit.mana_pct < cfg.meditate_below and not close \
                 and "ActiveMeditation" not in sit.player.get("buffs", []) and now - mem.last_meditate > 10:
@@ -864,7 +1187,213 @@ def decide_intent(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, 
             actions.append({"verb": "skill", "name": MEDITATION, **meta})
             dec.note = f"meditate ({conf:.2f})"
 
+    if note_point and dec.intent == "fight" and dec.note:
+        dec.note = note_point + dec.note
     return dec
+
+
+MATE_NEAR = 2    # a creature in war mode this close to a companion is on it, whatever the companion's row says
+MATE_FAR = 40    # a companion out of view further off than this isn't gone to
+AID_HP = 50      # one under this health itself doesn't go (as with helping, help_mates)
+AID_MANA = 30    # ...nor a mage under this mana: its rest is how it gets back what it fights and heals with
+
+
+def free_to_go(sit: Situation, mem: Memory, cfg: PolicyConfig, now: float) -> bool:
+    """Whether a member of a party that formed up may go to a companion that is set upon (cuo-cym.10): it can
+    walk and fight, isn't hurt itself, isn't falling back or standing at the rally after one, and no plan or
+    strategy has it defend only.
+
+    Nor one whose rest is how it gets back what it fights with. A mage short of mana: live, the first run
+    with this rule, the mage at 2% to 10% of her mana had her rest (a trance, to have mana again) turned into
+    a fight at every decision for 40 seconds: eleven Magic Arrows and seven decisions that cast nothing, and
+    no mana for a heal in all that time. A tamer whose pet is called back or badly hurt: live, one bandaging
+    a pet at 2% was walked to within a few steps of a lich, with nothing to send at it."""
+    can_fight = not (sit.is_archer and sit.ammo <= 0) and not (sit.is_tamer and not sit.pet) \
+        and not (sit.is_bard and not sit.player.get("supplies", {}).get("instrument")) \
+        and not (sit.is_mage and sit.mana_pct < AID_MANA) \
+        and not (sit.is_tamer and (now < mem.pulling_until or sit.pet_pct < AID_HP))
+    return (sit.rally is not None and not sit.assisting and not sit.traveling and not cfg.defend_only
+            and cfg.allowed_intents is None and sit.authority("move") == "auto" and can_fight
+            and sit.hp_pct >= AID_HP and mem.leaving_until <= now and now >= mem.no_seek_until)
+
+
+def on_a_companion(sit: Situation) -> tuple[Candidate, Mate] | None:
+    """A creature in view that is on a living companion in view, and that companion; the worst hurt one's
+    first, then the nearest creature. On it by the companion's own fight row, or in war mode within
+    MATE_NEAR tiles of it: the row alone misses a chaser, which is "attacking" only at the moment it hits.
+
+    Live, 2026-10-13 (cuo-cym.10): a tamer ran from a bone knight three times in nine seconds, 15 tiles from
+    the others and in view of all four, who had killed their own bone knight and looted. One of their
+    thirty decisions in those seconds said the bone knight was on her. She died."""
+    at = {m["serial"]: (m.get("dx", 0), m.get("dy", 0)) for m in sit.raw.get("mobiles", [])}
+    found: list[tuple[int, int, Candidate, Mate]] = []
+    for mate in sit.mates:
+        if mate.dead or mate.serial not in at:
+            continue
+        mx, my = at[mate.serial]
+        for h in sit.targets:
+            hx, hy = at.get(h.serial, (99, 99))
+            beside = h.info.get("aggressive") and max(abs(hx - mx), abs(hy - my)) <= MATE_NEAR
+            if h.serial in mate.attackers or beside:
+                found.append((100 if mate.hits_pct is None else mate.hits_pct, h.distance, h, mate))
+    if not found:
+        return None
+    _, _, h, mate = min(found, key=lambda f: f[:2])
+    return h, mate
+
+
+def to_far_companion(sit: Situation) -> dict[str, Any] | None:
+    """The walk toward a companion out of view that is set upon or running (sit.mate_far), a leg at a time as a
+    run to the rally point is; None when it is too far off, or near enough that it should be in view."""
+    _, x, y = sit.mate_far
+    p = sit.player
+    gx, gy = x - p["x"], y - p["y"]
+    d = max(abs(gx), abs(gy))
+    if d > MATE_FAR or d <= PARTY_TILES:
+        return None
+    if d > RALLY_LEG:
+        x, y = p["x"] + round(gx * RALLY_LEG / d), p["y"] + round(gy * RALLY_LEG / d)
+    return {"verb": "walk_to", "x": x, "y": y, "distance": 3, "confidence": 1.0, "reason": "aid"}
+
+
+LEASH_TILES = 4  # a party's hand-to-hand fighter goes for what is this close to a companion, or on itself
+LINE_TILES = 5   # ...and walks back to its companions when further than this from all of them, with nothing on it
+SEEK_AHEAD = 6   # ...and doesn't walk to a creature to a place further than this from the nearest of them
+SEEK_LEG = 3     # ...and walks to one a leg of this many tiles at a time, looking again after each
+LEG_RETRY_S = 5.0  # after a leg that found no path, walks go the whole way for this long
+
+
+def on_the_line(sit: Situation, cfg: PolicyConfig | None = None) -> list[Candidate] | None:
+    """For one who fights hand to hand in a party that formed up (cuo-cym.1): the creatures it may go for
+    without leaving the others, which are those on it, and those within LEASH_TILES of a companion. None
+    when there is no such limit: not in such a party, no companion in view, or nothing but spellcasters
+    left to hold a line against.
+
+    Live, 2026-10-12: the party went in as one, the warrior went on to the lich at the back of the wave
+    while the others stopped at their own reach 6 to 8 tiles short, and he stood among a lich, a bone
+    knight and four skeletons: 100% to 14% in eight seconds, every way out blocked, dead in thirteen.
+    The four behind him then won the fight without losing anyone. What comes at the party reaches the
+    line by itself, and the spellcaster that stands off is the mage's and the archer's to kill."""
+    if sit.rally is None or sit.assisting or aims_at_range(sit):
+        return None
+    mates = [m for m in sit.mates if not m.dead]
+    if not mates:
+        return None
+    if not any(h.info.get("aggressive") and not h.info.get("casts_spells") and h.distance <= 12 for h in sit.hostiles):
+        return None
+    at = {m["serial"]: (m.get("dx", 0), m.get("dy", 0)) for m in sit.raw.get("mobiles", [])}
+    beside = [at[m.serial] for m in mates if m.serial in at]
+    out = []
+    for h in sit.targets:
+        hx, hy = at.get(h.serial, (99, 99))
+        if h.distance <= 2 or attacking_me(sit, h) \
+                or any(max(abs(hx - mx), abs(hy - my)) <= LEASH_TILES for mx, my in beside):
+            out.append(h)
+    return out
+
+
+def seek_leg(sit: Situation, target: Candidate) -> tuple[int, int, int] | None | bool:
+    """For a party's hand-to-hand fighter (cuo-cym.1): where this decision's walk toward a creature ends,
+    as (x, y, how near to stop). A leg of SEEK_LEG tiles at most, and never to a place more than SEEK_AHEAD
+    tiles from the nearest companion it can see unless that brings it nearer to them: it waits for them to
+    come up, its aim still said, so that they do (with_the_point). False: wait. None: no such limit (not
+    in a party that formed up, or no companion in view), the whole walk as before.
+
+    A walk asked for once goes all the way: live, the warrior's decisions said "waiting for the party to
+    close up" while the walk begun a second earlier carried him 13 tiles to a wraith, and he met the lich
+    at 38% health with the mage 12 tiles back and the tamer 17."""
+    if sit.rally is None or sit.assisting or aims_at_range(sit):
+        return None
+    mates = [raw for m in sit.mates if not m.dead and (raw := mobile(sit, m.serial)) is not None]
+    mine = mobile(sit, target.serial)
+    if not mates or mine is None:
+        return None
+    tx, ty = mine.get("dx", 0), mine.get("dy", 0)
+    d = max(abs(tx), abs(ty))
+    whole = d <= SEEK_LEG + 1
+    ex, ey = (tx, ty) if whole else (round(tx * SEEK_LEG / d), round(ty * SEEK_LEG / d))
+
+    def from_nearest(x: int, y: int) -> int:
+        return min(max(abs(x - m.get("dx", 0)), abs(y - m.get("dy", 0))) for m in mates)
+
+    if from_nearest(ex, ey) > SEEK_AHEAD and from_nearest(ex, ey) >= from_nearest(0, 0):
+        return False
+    if whole:
+        return None  # the last few tiles: the usual walk to the creature itself
+    p = sit.player
+    return p["x"] + ex, p["y"] + ey, 0
+
+
+def behind_the_point(sit: Situation, target: Candidate) -> int | None:
+    """How near to a creature one who fights from where it stands may come, in a party whose point takes
+    the blows (cuo-cym.1): a tile further from it than the point is. None: no such limit (no such point in
+    view, or this is it).
+
+    Live, with the warrior holding the line at the rally point, the tamer, the mage and the archer each
+    walked forward to their own reach of the lich, 5 to 8 tiles from it, and were the party's front: the
+    tamer was at 45% in eight seconds with the lich and a skeleton on her, and the fall backs began."""
+    if sit.rally is None or not sit.point_serial or not aims_at_range(sit) or sit.assisting:
+        return None
+    theirs, its = mobile(sit, sit.point_serial), mobile(sit, target.serial)
+    if theirs is None or its is None:
+        return None
+    return 1 + max(abs(theirs.get("dx", 0) - its.get("dx", 0)), abs(theirs.get("dy", 0) - its.get("dy", 0)))
+
+
+def pet_ahead_of_the_point(sit: Situation, dec: Decision, pet: dict[str, Any]) -> bool:
+    """Whether walking back to its pet would take a tamer nearer its creature than the party's point stands
+    (behind_the_point). Live: "keeping behind Roland: a bone knight is out of reach; back to the pet", and
+    the walk to the pet was a walk to the bone knight."""
+    if dec.target is None or (gap := behind_the_point(sit, dec.target)) is None:
+        return False
+    its = mobile(sit, dec.target.serial)
+    if its is None:
+        return False
+    beside_pet = max(abs(pet.get("dx", 0) - its.get("dx", 0)), abs(pet.get("dy", 0) - its.get("dy", 0))) + 2
+    return beside_pet < gap
+
+
+def stop_walking(sit: Situation) -> list[dict[str, Any]]:
+    """The act that stops a walk under way, for one who is holding or waiting: a walk asked for goes on
+    until it arrives, whatever the decisions after it say."""
+    if not sit.player.get("walking") or sit.authority("move") != "auto":
+        return []
+    return [{"verb": "halt", "confidence": 1.0, "reason": "line"}]
+
+
+def back_to_the_line(sit: Situation) -> list[dict[str, Any]]:
+    """The walk back to the nearest companion for one who is holding the line from too far ahead of it."""
+    mates = [m for m in sit.mates if not m.dead]
+    if not mates or sit.authority("move") != "auto" or any(h.distance <= 1 for h in sit.hostiles):
+        return []
+    nearest = min(mates, key=lambda m: m.distance)
+    raw = mobile(sit, nearest.serial)
+    if nearest.distance <= LINE_TILES or raw is None:
+        return []
+    p = sit.player
+    return [{"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": 2, "confidence": 1.0,
+             "reason": "line"}]
+
+
+def with_the_point(sit: Situation) -> Candidate | None:
+    """In a party that formed up, what its point is going for, when this member's own pick is nobody
+    (cuo-cym.1). "Seek only what Jev would attack" keeps a lone character off an idle creature it was
+    told to leave; in a party the one who goes in first has made that choice for all. Live, the word to
+    go was given and the warrior went in while the other four rested ("would attack none of these",
+    0.9) until the creatures turned on him four seconds later."""
+    if not sit.point_aim:
+        return None
+    line = on_the_line(sit)  # one who fights hand to hand keeps to the line, whatever the point goes for
+    return next((h for h in (sit.targets if line is None else line) if h.serial == sit.point_aim), None)
+
+
+def held_by_the_party(sit: Situation, close: list[Candidate]) -> bool:
+    """Whether a member's leave is held back with the party beside it (cuo-e1p). Not once it can fall back
+    instead (a rally point, cuo-cym.1) and its health is falling fast with three or more on it: held at 69%,
+    66% and 49%, a warrior was at 14% a second later with no way out."""
+    if sit.party_near < PARTY_HOLD or sit.hp_pct < PARTY_HOLD_HP:
+        return False
+    return not (sit.rally is not None and sit.hp_drop >= FAST_FALL and len(close) >= 3)
 
 
 def flee_from(sit: Situation, one: Candidate) -> int:
@@ -1029,7 +1558,7 @@ def tend_pet(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, now:
     moving = any(a["verb"] in ("walk_to", "flee", "kite") for a in dec.actions)
     # Stay together: a pet far off can't be bandaged and is lost once out of sight.
     if pet["distance"] > 7 and not moving and sit.authority("move") == "auto" \
-            and not any(h.distance <= 1 for h in sit.hostiles):
+            and not any(h.distance <= 1 for h in sit.hostiles) and not pet_ahead_of_the_point(sit, dec, pet):
         p = sit.player
         dec.actions.append({"verb": "walk_to", "x": p["x"] + pet["dx"], "y": p["y"] + pet["dy"], "distance": 2,
                             "confidence": 1.0, "reason": "pet"})
@@ -1060,6 +1589,25 @@ def tend_pet(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, now:
         dec.note += f"; go to the hurt pet ({sit.pet_pct}%)"
 
 
+BESIDE_LEADER = 3   # a companion told to fall back is beside its leader this close, and fights only from there
+
+
+def back_to_the_leader(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, now: float) -> None:
+    """A companion its leader told to fall back (companion.py, cuo-cym.24): the creature it is on, which it may no
+    longer fight, is let go, so that the client's follow (which waits while it is engaged) takes it to the leader,
+    at a run while there is danger; a tamer calls its pet back with it. Running from what is after it is decided
+    as always, before this."""
+    engaged = sit.agent.get("engaged", 0)
+    held = sit.hostile_by_serial(engaged)
+    if engaged and (held is None or not held.allowed):
+        dec.actions += let_go(sit, {"confidence": 1.0, "reason": "fall back"})
+    pet_on = sit.hostile_by_serial(sit.agent.get("pet_target", 0)) if sit.is_tamer and sit.pet else None
+    if pet_on is not None and not pet_on.allowed and now - mem.last_pet_call > 3:
+        mem.last_pet_call = now
+        dec.actions.append({"verb": "pet", "kind": "follow", "confidence": 1.0, "reason": "fall back"})
+    dec.note = f"falling back to {cfg.escort}" + (f": {dec.note}" if dec.note else "")
+
+
 HELP_SELF_MIN = 50   # a member under this health % looks after itself first
 HELP_EVERY_S = 4.0   # between two helps: a bandage on another takes about that long, a heal spell a cast and its recovery
 BANDAGE_REACH = 2    # tiles: ModernUO's bandage range (AOS)
@@ -1083,18 +1631,32 @@ def help_mates(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, no
         return
     if any(a.get("reason") == "pet" and a["verb"] in ("bandage", "cast") for a in dec.actions):
         return  # its own pet comes first, and one bandage goes on at a time
+    # The one its leader said to heal now (companion.py, cuo-cym.24) comes first, whatever its health, once.
+    whom, order = cfg.heal_now
+    ordered = whom if order and order not in mem.heals_done else ""
     # One being healed by another already is left to them, unless it is near death.
-    hurt = sorted((m for m in sit.mates if not m.dead and m.hits_pct is not None and m.hits_pct < cfg.help_below
-                   and (not m.being_helped or m.hits_pct < 30)), key=lambda m: (m.hits_pct, m.distance))
+    hurt = sorted((m for m in sit.mates if not m.dead and (m.name == ordered or m.hits_pct is not None
+                   and m.hits_pct < cfg.help_below and (not m.being_helped or m.hits_pct < 30))),
+                  key=lambda m: (100 if m.hits_pct is None else m.hits_pct, m.distance))
+    if any(m.name == ordered for m in hurt):
+        hurt = [m for m in hurt if m.name == ordered]
     skills = sit.player.get("skills") or {}
     bandages = sit.player.get("supplies", {}).get("bandages", 0)
     moving = any(a["verb"] in ("walk_to", "flee", "kite") for a in dec.actions)
     free = sit.authority("move") == "auto" and not moving and not sit.agent.get("engaged") \
-        and not any(h.distance <= HELP_CLEAR for h in sit.hostiles)
+        and not any(h.distance <= HELP_CLEAR for h in coming(sit))
+    # ...and for it, a walk over in the fight too, unless something is on this one itself.
+    sent = bool(ordered) and sit.authority("move") == "auto" and not any(attacking_me(sit, h) for h in sit.hostiles)
 
     def done(who: str, how: str, note: str) -> None:
         mem.last_mate_help, mem.helped = now, (who, how)
+        if who == ordered:
+            mem.heals_done.add(order)
         dec.note += ("; " if dec.note else "") + note
+
+    def health(m: Mate) -> str:
+        return (f"{m.hits_pct}%" if m.hits_pct is not None else "health unknown") \
+            + (f", at {cfg.escort or 'the leader'}'s word" if m.name == ordered else "")
 
     if sit.archetype in HEALERS and sit.can_cast(GREATER_HEAL):
         # Queued after any attack spell of this decision, so it goes first (as a mage-tamer's heal on its pet).
@@ -1102,19 +1664,19 @@ def help_mates(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, no
         if near is not None:
             dec.actions.append({"verb": "cast", "spell": GREATER_HEAL, "target": near.serial, "queue": True,
                                 "confidence": 1.0, "reason": "companion"})
-            return done(near.name, "heal", f"heal {near.name} ({near.hits_pct}%)")
+            return done(near.name, "heal", f"heal {near.name} ({health(near)})")
     can_bandage = bandages > 0 and not sit.agent.get("bandaging")
     if can_bandage and skills.get("Healing", 0) >= 30 and hurt:
         near = next((m for m in hurt if m.distance <= BANDAGE_REACH), None)
         if near is not None:
             dec.actions.append({"verb": "bandage", "target": near.serial, "confidence": 1.0, "reason": "companion"})
-            return done(near.name, "bandage", f"bandage {near.name} ({near.hits_pct}%)")
-        walk = next((m for m in hurt if m.distance <= HELP_WALK and not m.attackers), None)
-        if walk is not None and free and (raw := mobile(sit, walk.serial)):
+            return done(near.name, "bandage", f"bandage {near.name} ({health(near)})")
+        walk = next((m for m in hurt if m.distance <= HELP_WALK and (not m.attackers or m.name == ordered)), None)
+        if walk is not None and (free or sent and walk.name == ordered) and (raw := mobile(sit, walk.serial)):
             p = sit.player
             dec.actions.append({"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": 1,
                                 "confidence": 1.0, "reason": "companion"})
-            dec.note += ("; " if dec.note else "") + f"go to {walk.name}, who is hurt ({walk.hits_pct}%)"
+            dec.note += ("; " if dec.note else "") + f"go to {walk.name}, who is hurt ({health(walk)})"
             return
     if can_bandage and skills.get("Veterinary", 0) >= 30:
         pets = sorted(((m, pet) for m in sit.mates for pet in m.pets
@@ -1123,7 +1685,67 @@ def help_mates(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, no
         if pets:
             owner, pet = pets[0]
             dec.actions.append({"verb": "bandage", "target": pet["serial"], "confidence": 1.0, "reason": "companion pet"})
-            done(owner.name, "vet", f"bandage {owner.name}'s {pet.get('name') or 'pet'} ({pet['hits_pct']}%)")
+            return done(owner.name, "vet", f"bandage {owner.name}'s {pet.get('name') or 'pet'} ({pet['hits_pct']}%)")
+    if cfg.raise_fallen:
+        raise_fallen(sit, dec, mem, now, free)
+
+
+RAISE_SKILL = 80.0    # ModernUO: a bandage raises the dead only with Healing and Anatomy both at this
+RAISE_CLEAR = 10      # nothing hostile within this many tiles: the fight is over where the fallen lies
+RAISE_EVERY_S = 7.0   # a bandage on the dead takes about 6.5 s, the spell its cast and recovery
+RAISE_WALK = 20       # a fallen companion this close is walked to
+RESURRECTION = "Resurrection"
+
+
+def raise_fallen(sit: Situation, dec: Decision, mem: Memory, now: float, free: bool) -> None:
+    """Raise a companion who fell, where it fell (cuo-cym.4): once nothing hostile is within RAISE_CLEAR
+    tiles, one with Healing and Anatomy at RAISE_SKILL bandages its ghost from within reach, a mage casts
+    Resurrection from beside it, and either walks over first. The ghost waits there in war mode, which is
+    when the living can see it (Session.wait_to_be_raised). At the kit's skill a try works about one time in
+    four, so it is tried again every RAISE_EVERY_S until the ghost stands up or walks off to a healer, and
+    by everyone who can: a bandage and a spell on the same ghost don't get in each other's way."""
+    if sit.agent.get("engaged") or any(h.distance <= RAISE_CLEAR for h in coming(sit)):
+        return
+    lying = [m for m in sit.mates if m.dead and m.in_sight and mobile(sit, m.serial)]
+    if now - mem.last_raise < RAISE_EVERY_S:
+        # Its bandage is on someone (or its spell on the way): it stays beside them. A walk to a corpse to loot,
+        # or after the next creature, would take it out of the two tiles the bandage needs.
+        if lying:
+            dec.actions[:] = [a for a in dec.actions if a["verb"] not in ("loot", "take", "walk_to")]
+        return
+    fallen = sorted(lying, key=lambda m: m.distance)
+    if not fallen:
+        return
+    skills = sit.player.get("skills") or {}
+    with_bandages = skills.get("Healing", 0) >= RAISE_SKILL and skills.get("Anatomy", 0) >= RAISE_SKILL \
+        and sit.player.get("supplies", {}).get("bandages", 0) > 0 and not sit.agent.get("bandaging")
+    with_spell = not with_bandages and sit.can_cast(RESURRECTION)
+    if not (with_bandages or with_spell):
+        return
+    m = fallen[0]
+    if m.distance <= (BANDAGE_REACH if with_bandages else 1):
+        dec.actions[:] = [a for a in dec.actions if a["verb"] not in ("loot", "take", "walk_to")]  # the fallen first
+        dec.actions.append({"verb": "bandage", "target": m.serial, "confidence": 1.0, "reason": "raise"} if with_bandages
+                           else {"verb": "cast", "spell": RESURRECTION, "target": m.serial, "queue": True,
+                                 "confidence": 1.0, "reason": "raise"})
+        mem.last_raise, mem.helped = now, (m.name, "raise")
+        dec.note += ("; " if dec.note else "") + f"raise {m.name}"
+    elif m.distance <= RAISE_WALK and (free or sit.authority("move") == "auto" and not sit.agent.get("engaged")) \
+            and (raw := mobile(sit, m.serial)):
+        # Before the corpses and the next creature: a ghost doesn't wait for ever.
+        dec.actions[:] = [a for a in dec.actions if a["verb"] not in ("loot", "take", "walk_to")]
+        p = sit.player
+        dec.actions.append({"verb": "walk_to", "x": p["x"] + raw["dx"], "y": p["y"] + raw["dy"], "distance": 1,
+                            "confidence": 1.0, "reason": "companion"})
+        dec.note += ("; " if dec.note else "") + f"go to {m.name}, who has fallen"
+
+
+def coming(sit: Situation) -> list[Candidate]:
+    """What could interrupt a walk to a companion or a bandage on the dead: creatures that fight (not the birds
+    and deer, Situation.threats) and are in war mode or on this character. Every creature in view counted
+    once, and a deer ten tiles off, or a zombie that hadn't noticed anyone, kept a raiser from ever trying
+    while its report still said it could, so the ghost waited its minute for nothing."""
+    return [h for h in sit.threats if h.info.get("aggressive") or attacking_me(sit, h)]
 
 
 def mobile(sit: Situation, serial: int) -> dict[str, Any] | None:
@@ -1148,12 +1770,14 @@ def rescue_target(sit: Situation, targets: list[Candidate], cfg: PolicyConfig) -
     return best[1] if best else None
 
 
-def set_pet_on(sit: Situation, dec: Decision, target: Candidate, meta: dict[str, Any]) -> tuple[Candidate, str]:
+def set_pet_on(sit: Situation, dec: Decision, target: Candidate, meta: dict[str, Any],
+               named: bool = False) -> tuple[Candidate, str]:
     """Send the pet at the target, or at whatever is on the tamer itself, which comes first: the
-    tamer can't take many hits, and stepping back would only take it away from its pet."""
+    tamer can't take many hits, and stepping back would only take it away from its pet. Not before the
+    one its leader named (named: "Thea, send the bear at the lich"), which the pet goes for at once."""
     on_me = [h for h in sit.targets if h.distance <= 1 or attacking_me(sit, h)]
     pet_on = next((h for h in sit.hostiles if h.serial == sit.agent.get("pet_target", 0)), None)
-    if on_me and (pet_on is None or pet_on not in on_me) and target not in on_me:
+    if on_me and not named and (pet_on is None or pet_on not in on_me) and target not in on_me:
         target = dec.target = min(on_me, key=lambda h: h.distance)
     if sit.agent.get("pet_target", 0) != target.serial:
         dec.actions.append({"verb": "pet", "kind": "kill", "target": target.serial, **meta})
@@ -1180,6 +1804,9 @@ def pick_target(sit: Situation, ans: Answers, cfg: PolicyConfig) -> tuple[Candid
     """Jev's pick when it is confident, otherwise the strategy's priority."""
     choice = ans.choices.get("target")
     targets = sit.targets
+    # In a party that formed up, one who fights hand to hand keeps to the line (on_the_line).
+    if (line := on_the_line(sit, cfg)) is not None:
+        targets = line
     # What fights from where it stands (spells, arrows, songs, a pet sent with a target cursor) can't
     # reach what it can't see: while anything is in sight, what is out of sight waits (cuo-ehm).
     if aims_at_range(sit) and any(h.in_sight for h in targets):

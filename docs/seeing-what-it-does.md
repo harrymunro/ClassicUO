@@ -87,7 +87,7 @@ Each kind of call can have its own model, named in one place: a profile in `brai
 
 ```toml
 [models]
-system1 = "decision1"                      # fight, routine, facts, rerank, strategy, recorder, memory, chat
+system1 = "decision1"                      # fight, routine, facts, rerank, strategy, recorder, memory, chat, order
 routine = "jev"                            # one kind's own line beats its system's
 system2 = "anthropic/claude-sonnet-5.5"    # planner, review, guide, design, compact, heartbeat, daily
 escalate = "anthropic/claude-sonnet-5.5"   # the planner's hard moments (Sonnet unless named,

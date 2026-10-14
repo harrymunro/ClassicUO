@@ -156,6 +156,8 @@ class Story:
         self.called: dict[str, int] = {}      # its callouts, by kind
         self.healed: dict[str, int] = {}      # companions it healed or bandaged -> times
         self.healed_by: dict[str, int] = {}   # ...and who healed it
+        self.raised: dict[str, int] = {}      # companions it tried to bring back from the dead -> tries
+        self.raised_by = ""                   # ...and who brought it back
         self.fell: list[str] = []             # companions who died
         self.ran = 0
         self.out_of: list[str] = []
@@ -192,6 +194,10 @@ class Story:
         if self.healed:
             out.append("They healed or bandaged " + ", ".join(f"{n} ({c} time{'s' if c != 1 else ''})"
                                                                for n, c in self.healed.items()) + ".")
+        if self.raised:
+            out.append("They worked to bring " + ", ".join(self.raised) + " back from the dead where they fell.")
+        if self.raised_by:
+            out.append(f"{self.raised_by} brought them back from the dead where they fell.")
         if self.healed_by:
             out.append("Healed or bandaged by " + ", ".join(f"{n} ({c} time{'s' if c != 1 else ''})"
                                                              for n, c in self.healed_by.items()) + ".")
@@ -238,6 +244,9 @@ class Table:
         self.ears: Any = None         # talk.Ears: it listens at the table, and the table's turns do the talking
         self.emoted: list[str] = []   # the small things done at this table, so none is done twice
         self.last_emoted = False
+        # A party for the player (companion.py): the character a person plays sits with them. Its lines are on
+        # the table as anyone's, and it is never named for a turn.
+        self.guest: str | None = None
 
     async def arrive(self) -> None:
         """Sitting down: a small thing done, in the character's own way (from its voice pack)."""
@@ -324,7 +333,7 @@ class Table:
                 continue
             asked = self.add(tid, "next", phase=phase, who=who)
             deadline, spoke = time.time() + TURN_S, False
-            while time.time() < deadline and not spoke:
+            while time.time() < deadline and not spoke and not (stop is not None and stop.is_set()):
                 spoke = any(r["kind"] == "line" and r["who"] == who for r in self.rows(tid, asked))
                 if not spoke:
                     await asyncio.sleep(0.4)
@@ -390,6 +399,8 @@ class Table:
                 + f"\n\n{self.me}'s own part of the hunt: {self.story.words()}\n\n"
                 + "What they remember:\n" + ("\n".join(f"- {m}" for m in remembered) or "(nothing much)")
                 + f"\n\nAt the table: {', '.join(present)}."
+                + (f" {self.guest}, who leads the party, sits with them and speaks when they like: what {self.guest} "
+                   f"says is answered like anyone's." if self.guest else "")
                 + (f"\n\nThe small things {self.me} has done tonight already: {'; '.join(self.emoted)}." if self.emoted else "")
                 + "\n\nSaid at the table so far:\n" + (lines or "(nothing yet: they have just sat down)")
                 + f"\n\nNow: {ASK.get(phase, ASK['banter'])} Call table_say.")

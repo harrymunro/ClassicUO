@@ -10,18 +10,49 @@ and goal, and the test-server commands that prepare it:
 cd brain
 uv run uo-brain fleet fleets/graveyard-three.toml [--hours 0.5]   # the player's warrior and two NPCs
 uv run uo-brain fleet-report logs/fleet/<time>-graveyard-three
+uv run uo-brain party-report logs/fleet/<time>-party-lich        # a party's run, as a party
 ```
 
 - **What it does:** starts a client for each agent that hasn't one running (from
   `bin/osx-arm64`), logs it in (creating a warrior if the character doesn't exist), runs its prep
   commands, then runs `uo-brain session` for it as its own process, so each brain has its own
   ledger. While they play it samples the CPU and memory of every client, brain and the server.
+- **Stopping it:** Ctrl-C, a closed terminal or a `kill` ends the run in order: the fleet asks its brains
+  to stop, each writes its summary (a companion's and a follower's say `finished: "stopped"`, or `"time
+  up"` when the hours ran out), and then it closes the clients it started. A brain that hasn't gone after
+  15 s is ended. The fleet's log gets a `stopped` record.
 - **The report:** per character, its profile, minutes, kills, deaths, gold banked, cost an hour
   and the models it used; together, the cost, the cost an hour and a kill, judge errors (where
   rate limits show) and the load per process.
+- **A party's report** (`party-report DIR…`, `--json`; `partyreport.py`, cuo-cym.7): what the party did as a
+  party, for any party run.
+  - **The run:** its settings, who never logged in (such a run is void for a measurement), and the leader's
+    goals in order with how each ended.
+  - **Each fight,** found from the decisions themselves (a stretch in which some member acted against a
+    creature or had one on it, with no more than 20 s of quiet inside it): what was fought and what lay dead
+    after it, who joined and how many seconds after the first of them, who fell and how low the others got,
+    the leaves, flees and fall backs begun, the leaves held back with the party beside it, who healed
+    whom and who received it, and what was called out.
+  - **How together it was,** when the members' positions were sampled through the run
+    (`scripts/party_walk.py sample --ports … --out RUN/where.jsonl`): how far those who fought stood from the
+    leader as the fight began, and for how many of its seconds one of them stood more than 10 tiles from
+    every other.
+  - **Deaths** (who, in which fight, how long until each was on its feet again, and whether at a healer or
+    raised where it fell), **forming up** (how often, how long the leader waited, whom it went in without),
+    each **talk round the table** (who spoke how often, how long it took, the memories kept of it), and
+    what the run **cost** by member and by kind of call.
+  - `scripts/party_scene.py` stays for the lich scene's own measures, which the results cite.
 - **An agent's environment:** an `env` table in its entry goes into its brain's environment, so
   `env = { UO_BRAIN_ASK_EVERY_TICK = "1" }` puts one agent on the fight loop as it was before
   cuo-df8, beside others on the new one (`fleets/fewer-calls-ab.toml`).
+- **The strategy a character starts with:** a character keeps its strategy between runs (it is the
+  player's own words, saved with its client's profile). A fleet file's `strategy = "…"` at the top sets
+  every character's at login, `strategy = ""` clears it, an agent's own `strategy` wins, and a file that
+  names none leaves each as its client has it. A fleet that measures something should say: the lich
+  scene's five had carried a video shoot's "never flee: the party stands together" into every party run
+  of 2026-10-10 and 11, some with old planner lines after it ("flee if health drops below 50%"), so who
+  could leave a fight depended on which client folder a run used. `party-lich` and `party-lich-solo`
+  say `strategy = ""` since 2026-10-12.
 - **Shared knowledge:** the agents share the shard's world store; it runs in SQLite's WAL mode so
   one brain's writes don't hold up the others' reads.
 - **NPCs with lives of their own:** an agent can have a `persona` (background, temperament, trade,
@@ -65,6 +96,12 @@ uv run uo-brain fleet-report logs/fleet/<time>-graveyard-three
   - **Not leaving alone:** with two or more companions within 10 tiles and health at 40% or more, a member's leave is held and it fights on with them ("held with the party: 3 companions beside it"); code's pack rule, weighed against the party, and a cautious strategy's badly hurt rule still leave (cuo-e1p). It fired 6 times in two runs and made no measurable difference: the party's deaths came in fights they were all in.
   - **Companions, not strangers:** in the fights each member's companions are named with what they play as (`your_party` in the state) and count in the odds ([leaving](playing.md#leaving-and-packs)); the planner no longer hears of them as "a unknown player 2 tiles away".
   - **The lich scene:** `fleets/party-lich.toml` (the party) and `fleets/party-lich-solo.toml` (a planner each), five classes staged south of the Britain graveyard with a lich, two bone knights and four skeletons waiting; `scripts/party_scene.py logs/fleet/RUN` says who reached the fight, who died, and how long the lich took to kill ([results](results.md#a-party-on-one-plan)).
+  - **A second scene, casters and archers from two sides:** `fleets/party-casters.toml`, the same five against three skeletal mages and two skeletons where the lich's wave stands, and two ratman archers and a bone magus 18 tiles east of them (cuo-cym.11); measure a run with `scripts/party_scene.py --wave "skeletal mage,bone magi,ratman archer,skeleton" --boss "" logs/fleet/RUN` ([results](results.md#a-party-that-goes-in-together): formed up, nobody died in six runs).
+  - **A clean scene after a restart:** the wave a run spawns is removed by the next run's `[AgentDisrupt
+    restore`, from a list the server keeps in memory. A wave left standing when the server stopped was
+    in the save and stayed: on 2026-10-12 the first run after a restart met two liches and five bone
+    knights for a scene of one and two, and all five died within a minute. `restore` now also removes
+    what `strong` spawned before a restart.
   - **One party a run:** a party's goals, states and callouts are kept under the run's own id (the fleet's name and the run's folder; a second run into the same `--out` folder gets a new one, recorded as `party_id` in `fleet.jsonl`), so a run never follows an earlier one's goals.
   - **Starting together:** a fleet starts each of a party's brains as soon as its character is logged in and prepared, so it fights back from then on, and the leader's planner waits for every member to be heard from (up to 90 s) before its first goal. Started together after the last login, a leader stood with its agent off for half a minute while a stray bone knight killed it and the archer beside it.
   - **More than one plan:** what a party does in a fight, on the road and at the inn is [below](#a-party-in-a-fight-on-the-road-and-at-the-inn).
@@ -122,10 +159,17 @@ KEY=VALUE` overrides one for a run (repeatable), which is how the comparisons in
 | `callouts` | true | call out in fights |
 | `talk` | true | hear each other and talk (a party hears itself, persona or not) |
 | `small_talk` | true | chat when there is time, not only when there is something to say |
-| `pace` | true | answer at a human pace, one speaker at a time |
+| `pace` | true | answer at a human pace, one speaker at a time; a number is the share of that wait (`pace = 0.7`: seven tenths; false or 0: each line as soon as it is written). A person who leads is answered in four fifths of it ([below](#a-party-for-the-player)) |
+| `persuade` | true | with `plan = "player"`: a companion sent somewhere without the leader goes if it is willing, and may say no; false: it goes when told |
 | `roleplay` | false | gestures and emotes on events |
 | `walk` | false | walk trips together, run only in danger or to catch up |
-| `plan` | "leader" | one plan: the leader's, or agreed in a huddle with a planner each ("huddle") |
+| `plan` | "leader" | one plan: the leader's, agreed in a huddle with a planner each ("huddle"), or a person's, whose character leads and isn't one of the agents ("player": [below](#a-party-for-the-player)) |
+| `form_up` | false | form up at the edge of a hunt, go in as one, keep to the line and fall back to the rally point |
+| `rally_map` | false | with `form_up`: the rally point is chosen from the client's map, a few tiles back the way the party came with a way out behind it, and a second point further back for one badly hurt at the first |
+| `game_party` | false | make the party in the game too: invitations, the right to loot the party's kills, party chat |
+| `callouts_to` | "say" | where callouts are said: aloud (`say`), in the game's party chat (`party`, with `game_party`), or `both` |
+| `raise` | false | raise a fallen companion where it fell, with bandages or Resurrection, before the walk to a healer |
+| `strategy` | unset | every character's standing strategy for the run, `""` for none ([above](#several-agents-on-one-server)); unset, each keeps what its client has |
 | `memory` | true | false: every brain without its character's memory, so repeat runs are independent |
 | `use` | none | a model for one kind of call in every brain of the run, over its profile: `--set 'use="table=anthropic/claude-sonnet-5.5"'` (a list for several) |
 | `travel` | unset | `walk` or `run`: the pace of every trip of every brain, its own errands too (an agent's own `travel` wins); unset, each client's `agent_travel_pace` ([rules of play](#rules-of-play)) |
@@ -136,6 +180,165 @@ wave (a lich and four skeletons, without the two bone knights), so that the hunt
 what follows it can be seen; `fleets/party-lich.toml` stays the baseline, with the full wave, no
 personas and no talk.
 
+- **Going in together** (`rally.py`, `form_up = true`, cuo-cym.1). A party forms up before a hunt, goes in
+  as one, and falls back to the place it formed up at.
+  - **Why:** the logs of 2026-10-11 showed where the lich scene's deaths came from. The leader's hunt
+    walked to the centre of the spawn, through the wave, each follower two seconds behind it on a path of
+    its own, and the warrior met the lich and the bone knights with the others 8 tiles and more behind
+    (100% to 42% in half a second in one run). The ones who then left (a mage at 89%, an archer at 94%)
+    ran each along its own line away, out of the 10 tiles that make a party in the odds, and their hunts
+    ended "left the area", which refuses them that place for half an hour.
+  - **Forming up:** the leader's hunt walks to the edge of the hunting area (8 tiles outside the spawn's
+    own spread), or stops sooner when something hostile comes within 13 tiles of it there (within 30
+    tiles of the edge: a creature by the road on the way is the walk's own fight loop's). The others
+    close up on it (the client's follow) instead of each walking to the centre. It waits there until
+    everyone alive, heard from, within 60 tiles and not on business of its own (a resurrection, a
+    corpse, a restock) is within 4 tiles of it, for 25 s at most; a fight that starts ends the wait.
+    One who doesn't come is gone in without, and when it does come goes first to where the party went
+    in from. A leader already inside the area (the second hunt of a place) gathers the others where it
+    stands and keeps the rally point the party went in from.
+  - **The word:** the leader calls it in its own voice ("Hold here. Form up on me.", then "In we go.
+    Together."), and the word itself is a row in the party store (`party_rally`) that every brain reads.
+    Everyone sets off at once. The party's point, its first warrior or paladin (the leader when it has
+    neither), waits 1.2 s first: the others hear the word up to half a second late and each fight loop
+    takes a moment to start, which at a run was eight tiles of lead.
+  - **Where the hunt starts:** with creatures in view from where the party formed up, the hunt starts
+    there. Nobody walks on to the centre of the spawn through them.
+  - **With the point:** a member whose own pick of a target is nobody goes for what the point is going
+    for (each member's fight row says its aim). "Seek only what Jev would attack" keeps a lone character
+    off an idle creature it was told to leave; live, it had four of five rest for four seconds after the
+    word, until the creatures turned on the warrior.
+  - **Keeping to the line:** one who fights hand to hand goes only for what is on it or within 4 tiles of
+    a companion, for as long as anything but spellcasters stands in war mode within 12 tiles. With nothing
+    on the line it holds it ("holding the line with the party") and walks back to the nearest companion
+    when it is more than 5 tiles from all of them. Live, the warrior had gone on to the lich at the back
+    of the wave while the others stopped at their own reach, stood among six creatures, and was dead in
+    thirteen seconds; the four behind him then won without losing anyone. A spellcaster that stands off
+    is the mage's and the archer's to kill, and once only spellcasters are left there is no line to hold.
+  - **Not ahead of the others:** it walks to a creature a leg of 3 tiles at a time, looking again after
+    each, and never to a place more than 6 tiles from the nearest companion unless that brings it nearer
+    to them: it waits for them to come up, its aim still said, so that they do. A walk under way is
+    stopped when it holds or waits (the client's `halt`): a walk asked for once goes all the way, and
+    in one run the warrior's decisions said "waiting for the party to close up" while the walk begun a
+    second earlier carried him 13 tiles to the creature.
+  - **Behind the point:** one who fights from where it stands (a mage, an archer, a tamer, a bard) comes
+    no nearer to a creature than a tile further from it than the party's point stands, when the point is
+    one who takes the blows. A creature out of its reach from there is waited for ("keeping behind
+    Roland"), and it engages at the range that keeps it there, not its usual one. Live, with the warrior
+    holding the line at the rally point, the tamer, the mage and the archer each walked forward to their
+    own reach of the lich, 5 to 8 tiles from it, and were the party's front: the tamer was at 45% in
+    eight seconds, and the fall backs began. An archer's reach from there is its bow's own range (10),
+    not the 8 it shoots from by choice. A tamer's pet is not sent ahead of the point either, and the
+    tamer doesn't walk "back to the pet" when that is a walk past the point; what is on the tamer itself
+    comes first, wherever the point stands.
+  - **Falling back:** a member's leave is a fall back while companions are still in the fight, or while
+    the rally point is within 40 tiles. It runs to the rally point, a leg of 12 tiles at a time, whatever
+    stands on the way (the client walks round it), and its hunt goes on. A first version kept the line
+    away from the creatures whenever one stood between the member and the rally point, which in a fight
+    at the line is always: three members fell back north, west and north-east through the graveyard,
+    and somebody stood apart from the others for 70 of that fight's 86 seconds. The shorter runs go
+    there too: a flee from what is on a member, and a tamer's run when it calls a hurt pet back (its pet
+    following). A tamer's didn't until the fourth version's run, in which one ran from a bone knight
+    three times in nine seconds, each time further from the party, and died where nobody could reach her.
+  - **Coming back in:** at 60% health with nothing on it, once it has been back 5 s and is beside a
+    companion (or has no way to the rally point); or at the rally point with two or more companions
+    within 10 tiles, where it stands with them. Live, a warrior that left the lich at 38% was at 86%
+    five seconds later and fighting beside the others again. After either it doesn't leave again for
+    15 s unless it is under 40% or its health is falling fast, and at the rally point it stays while
+    any companion still fights: the reason it left for (a pack coming) is often still there, and
+    without this a leave decided at good health was undone and decided again at every decision.
+    One that is badly hurt and at the rally point stands there too, and runs on only once something
+    is on it: from the rally point there is no way "to the rally", and an archer at 37% ran 15 tiles
+    on away from everything in sight, then turned round.
+  - **When it is a leave after all:** with nobody left in the fight, nobody else still falling back,
+    and nobody at the rally point to stand with or no way there. Who is still in the fight is each
+    member's own fight row, in which one that is running says so; the first of several falling back
+    together waits at the rally point for the rest. "Not leaving alone" no longer holds a member whose health is falling fast
+    (30 points in 6 s) with three or more on it: held at 69%, 66% and 49%, a warrior was at 14% a
+    second later with no way out. Nor one with nothing to fight with (a tamer whose pet is gone, an
+    archer out of arrows) that has something beside it: held, all it can do is stand, and a tamer
+    stood at the rally point for eight seconds beside a bone knight, from all of her health to 22%.
+  - **To a companion that is set upon** (cuo-cym.10): a fight isn't over while something is on one of
+    the party. A member with nothing close to it, who would loot or rest, goes instead for a creature
+    that is on a companion in view: one the companion's own fight row names, or one in war mode within
+    2 tiles of it (the row alone misses a chaser, which is "attacking" only as it hits). In reach it
+    is fought from where the member stands; out of reach it is walked to, the warrior the whole way
+    and not a leg at a time, the others behind him. A companion out of view whose row says something
+    is on it is walked toward, 12 tiles at a time, by where its last report put it (within 40 tiles),
+    when nothing in war mode is in view where the member stands. Not by one under half its own
+    health, one whose rest is how it gets back what it fights with (a mage under 30% of her mana, a
+    tamer whose pet is called back or under half its health), or one that fell back and stands at
+    the rally point. Live, before this: a tamer ran from a bone knight 15 tiles from
+    the others and in view of all four, who had killed their own and looted; one of their thirty
+    decisions in those nine seconds said the bone knight was on her. With the rule, a bard who was
+    looting walked to an archer out of his view with a bone knight on him and played Discordance on
+    it; and in a staged run the warrior, the mage and the bard, all three looting, walked to an
+    archer put 24 tiles off with a bone knight on him, and it was dead 18 s after it reached him
+    ([results](results.md#a-party-that-goes-in-together)). The limits came from its first runs, in which a mage at 5% mana was kept from her trance
+    for 40 seconds, the mage and the bard walked after a tamer who was merely running, away from the
+    bone knight the archer beside them was shooting, and a tamer bandaging a pet at 2% was walked
+    up to a lich.
+  - **The hunt goes on:** a hunt's stop (Jev's "not worth staying here", supplies, a full bag) waits up
+    to 90 s while a companion is still fighting. The leader's hunt is the party's: live, its "not worth
+    staying" at a kill, with four creatures about, had its planner choose the next goal and cut the
+    other four off in the middle of a fight they were winning. A death doesn't wait.
+  - **A rally point that is chosen** (`rally_map = true`, cuo-cym.13; three live runs on the lich
+    scene, [results](results.md#a-party-that-goes-in-together): no deaths, as without it). Without it the rally point is where the leader stood when it reached the
+    edge or first saw something hostile, and formed up the party fights there: in the five runs looked
+    at the warrior stood 1 to 8 tiles from it, so a fall back was a few steps to the place the wave
+    arrives at, and he died there twice, from over half his health in about a second. With it the
+    party still forms up where the leader stopped, and the leader then picks where it falls back to:
+    - **The rally point** is 5 tiles back the way the leader came, by its own steps on the way in
+      (kept as it walks; not across a recall). With no steps to go by, or none that lead to ground
+      that will do, it is 5 tiles straight away from the hunt's centre, then an eighth of a circle to
+      either side of that. Five is just behind those gathered within 4 tiles of the leader, and near
+      enough to be one place with them.
+    - **The ground** is the client's own map of what its travel planner can walk to (the `nav` RPC,
+      32 tiles round the leader). The point may be put up to 3 tiles from the place aimed at. It has
+      to be further from the hunt than where the party formed up, a short walk from there that never
+      comes nearer the hunt, and to have a way out: a walk of at most 16 steps that gets 8 tiles
+      further from the hunt without coming nearer to it on the way, and a walk that leads on from
+      there to the edge of the map the client gave, again without coming nearer the hunt. A walled
+      yard whose gate is shut has none (a door is not ground to fall back through), nor has a shore,
+      nor a yard whose only opening is toward the hunt, however deep. Of the tiles that will
+      do, one clear of the other spawns the world store knows comes first (outside how far a
+      spawner's creatures walk, and 13 tiles more), then one with room to stand (five of the nine
+      tiles round it), then the nearest to the place aimed at.
+    - **The second point** is 12 tiles further back the same way (one leg of a run), found the same
+      way: reached from the first by a walk that never comes nearer the hunt, at least 6 tiles
+      further from the hunt than the first, and with a way out of its own. A rally point with no
+      second point behind it is still used.
+    - **With no map** (an older client, the call failing or taking more than 3 s), or no ground
+      behind with a way out, the rally point is where the leader stopped, as before, and the `rally`
+      record says why (`unchosen`). Chosen, the record has the rally point (`at`), where the party
+      formed up (`formed_at`), the second point (`back`) and how long the map and the choice took
+      (`map_ms`). A later hunt begun inside the area keeps
+      both points, as it kept the one.
+    - **In the fight:** every member's run is for the rally point, as before, wherever it stands:
+      ahead of it, beside it or behind it. Only one that is at the rally point under 40% of its
+      health while companions still fight, or with something on it there, runs on to the second
+      point. Its runs of the next 10 s are for the second point too, so that it doesn't turn round
+      half way. At the second point it stands, and comes back in at 60% as from the first. When the
+      fight behind it is over and nothing is on it, its run is over where it is and its hunt goes
+      on: the party is out of its ten tiles there, and the rule for one with nobody left to go back
+      to would have ended its hunt as a leave whenever the others won before it had healed. Back at
+      the rally point with two companions beside it and something after it, a member that is not
+      badly hurt still stands with them and fights it there. The run's action says which point it
+      is for (`spot`: `rally` or `back`), and its note names the second point.
+    - **What it doesn't choose:** cover. Nothing in the choice asks what blocks sight (the client
+      could say which ground the leader sees from where it stands, the `sight` RPC's `view`); a point
+      out of sight of the line is out of its healers' sight too, and no run has shown which matters
+      more. Nor does it use the world store's routes: the leader's own steps are the better record
+      of the road, and the routes stored for a hunting place are mostly hops inside it. The store's
+      sightings of creatures are left out on purpose: the wave a party fought last time is among
+      them, where it was met and not where it lives.
+  - **With a planner each:** a party that plans by huddle forms up too (the huddle, below).
+  - **Measured** ([results](results.md#a-party-that-goes-in-together)): on the lich scene a party on the
+    defaults had somebody standing apart from all the others for 17 to 50 of the first 60 seconds in
+    each of six runs, and lost four members. Formed up, nobody stood apart in twelve of fifteen runs,
+    the warrior was the first one hurt in all ten runs of the third and fifth versions, and three
+    members died (none in the first seven runs). The code changed between those runs, so they are a sign and
+    not a sample. Walking together (below) keeps a party together too.
 - **Helping each other** (`policy.help_mates`, cuo-4ti). Whatever else a member is doing, unless it
   is running or under half its own health:
   - **A mage** casts Greater Heal on the worst hurt companion under 60% within 10 tiles and in sight.
@@ -151,6 +354,50 @@ personas and no talk.
     ("attacking your companion Isolde (mage, badly wounded)"), the target question says a creature
     on a companion who is weak in melee or badly hurt is worth taking off them, and when Jev's own
     pick isn't sure a warrior or paladin goes for it before the creature it was fighting.
+- **Raising the fallen** (`raise = true`, cuo-cym.4). A member that dies was out of the fight for the walk
+  to a healer in town and back for its corpse, alone, and a dead leader took the party's plan with it.
+  - **The ghost** stays where it fell while a companion who could raise it is alive and within 20
+    tiles (as far as a raiser walks), in war mode, which on ModernUO is when the living can see a
+    ghost. Nobody raises anyone in a fight, so its wait is counted from when the party's fight is over:
+    60 s of quiet, not counted while a raiser stands within 3 tiles of it, 4 minutes in all, and no
+    more than 6 s once nobody who could is near. A mage short of mana for the moment still counts. It accepts the offer as it accepts a healer's
+    and takes its things back from the corpse it is standing on. Then, or with nobody to do it, the
+    walk to a healer as before.
+  - **The raiser:** once nothing in war mode or on it is within 10 tiles and it isn't fighting, one with Healing and
+    Anatomy at 80 and a bandage bandages the ghost from within two tiles, and a mage with Resurrection in
+    its book, 50 mana and the reagents casts it from the next tile; either walks over first (up to 20
+    tiles). The fallen come before the corpses: it doesn't walk off to loot, or round the spawn, while a
+    companion lies there or its bandage is on. Each member's report says whether it could raise
+    (`raises`), which is what the ghost waits on. With helping off (`help = false`) nobody raises.
+  - **Again, and by everyone who can:** at the test kit's skills a try works about one time in four
+    (ModernUO: (Healing − 68) / 50 for a bandage, which takes about 6.5 s on the dead; Resurrection at
+    Magery 90 the same), so it is tried again every 7 s (a cast about every 10), and by every companion who
+    can: a bandage and a spell on the same ghost don't get in each other's way. A raiser says so once
+    ("Hold on, Wystan. I'll bring you back."), not at every try, and the one raised names whoever said so.
+    In the first live run only one raiser at a time was allowed: the mage's fifth cast brought the archer
+    back 63 s after his death, with the warrior and his bandages standing by.
+  - **Measured** ([results](results.md#a-party-that-goes-in-together)): raised, the archer had his things
+    back 77 s and 104 s after a staged death; the four members who walked to the Britain healer in the
+    same night's runs, 40 tiles away, took 193 s to 237 s.
+- **The game's own party** (`gameparty.py`, `game_party = true`, cuo-cym.3). A fleet's party was a party
+  only in the brain's store, and to the game its five were strangers.
+  - **Why it matters:** on ModernUO a monster's corpse is a crime to open for anyone without a right to
+    it, unless they are in the party of someone who has one. In the party runs of 2026-10-10 and 11
+    the five were told "Looting this monster corpse will be a criminal act!" 788 times between them,
+    at each other's kills. The party also shares fame and karma, is told of a member's death by the
+    server, and has its own chat; and the client keeps a member of its party out of the "red or criminal
+    player" threats it leaves from.
+  - **The leader invites** each companion it can see within 8 tiles (the server's reach for the
+    invitation's target) who isn't in the game's party yet: one at a time, never with something on it
+    (the invitation is a target cursor), and again after 35 s if nothing came of it.
+  - **A member accepts its own leader's invitation and no other.** The leader is known by the serial
+    its own brain reports to the party store, not by its name: names aren't unique on a shard. Anyone
+    else's invitation is declined, and a member found in somebody else's party leaves it.
+  - **Callouts in party chat** (`callouts_to = "party"`, or `"both"`): on a real shard a party's shouts
+    are for the party, not for everyone on the screen. Until the member is in the game's party they
+    are said aloud as before; `"say"`, aloud, stays the default, because that is what shows in footage.
+    Party chat is never answered as talk, and like guild and alliance chat the client never takes it
+    for the server's own word.
 - **Callouts** (`mates.py`, `voice.py`, cuo-cod.2). In a fight talk stops (a yes/no and a line take
   about 2 s, and the moment has passed), so code calls out from what the fight loop already knows,
   with no model call:
@@ -224,6 +471,10 @@ personas and no talk.
   one trip and had 179 tiles unfinished after 9 minutes). `fleets/party-walk.toml` is a trip of
   about 260 tiles through Britain for measuring it; `scripts/party_walk.py` samples where everyone
   is and reports how far apart they got.
+  Into a fight it is the difference between a party and five characters
+  ([results](results.md#a-party-that-goes-in-together), six runs each on the lich scene): walking
+  together the furthest member was 3 or 4 tiles from the leader as the fight began, against 9 to 11,
+  and the party called 3 leaves in six runs against 28 and lost one member against four.
 - **Roleplay** (`roleplay.py`, cuo-cod.8): with `roleplay = true`, a bow as the party comes
   together (the others salute their leader), and small things done in character, shown as emotes:
   on setting out, while resting, after a fight, and kneeling by a fallen companion once the fight is
@@ -271,7 +522,9 @@ personas and no talk.
   - **The blackboard:** three lines (target, roles, rally point) in the party store, written by one
     call of the cheap planner model, which is shown why the party stopped, every member's state,
     and what each brings from its own memory (the two memories Jev picks as bearing on it most, in
-    its own words). Memories stay private and there is no shared party note.
+    its own words). Memories stay private and there is no shared party note. With the three lines
+    the plan names who goes into the hunt (`going`, chosen from the party's own names; nobody when
+    the plan is not to fight now), and each planner sees that list with the rest.
   - **When:** on events, never on a timer, and never with a hostile within 12 tiles or a fight on:
     the party has no plan yet; a member's goal for the plan failed or it had to leave the place;
     someone came near death or died since the plan was made; someone ran out of what it needs;
@@ -280,6 +533,341 @@ personas and no talk.
   - **What each member does with it:** its planner reads the blackboard before choosing a goal, a
     goal under way is cut short when the plan changes (not in a fight), and it keeps its own memory
     of what was agreed.
+  - **Setting out together** (`form_up = true`, cuo-cym.5): a plan in words doesn't start five planners
+    at the same moment, and in the runs of 2026-10-11 the mage and the bard were in the fight half a
+    minute before the warrior. With form-up on, the first member to reach the edge of the hunt the plan
+    names holds the rally there, the others close up on it, and it waits (25 s at most) for those whose
+    own reports say they are on their way to the same hunt and for those the plan sends there (below);
+    anyone else isn't waited for. A member says it has set out the moment its hunt begins, not at its next report (they are
+    5 s apart), and with nobody on the way yet the first there gives the others 4 s to say so: in the
+    first live run the warrior reached the edge before any report said so and went in at once. One whose
+    next hunt of the place begins while others are still on theirs joins the rally they went in from:
+    each planner chooses the same hunt again every minute or so, and in the first runs each time one of
+    them held a new rally where it stood, three tiles from the spawn's centre. One who arrives while the others are fighting from it joins them, and a rally that went
+    more than 20 s ago with no fight on is held anew by the next to arrive. The warrior goes first
+    whoever held the rally, and the rest is as for a leader's party: with the point, keeping to the
+    line, falling back.
+  - **Whom the first there waits for** (cuo-cym.14; built and unit-tested, not yet played in a live
+    run): those who have said they are on the hunt, and those the plan sends there (the
+    blackboard's `going`, when its target names the place), whatever each has said yet. Of them,
+    as for a leader's party: alive, heard from in the last 30 s, within 60 tiles and not on business
+    of its own. A member's planner says so while it is banking, buying, selling, restocking, being
+    resurrected or going back for its corpse. Live, the bard was first at the edge with the warrior
+    a second behind on a walk to the graveyard, which his own report didn't call a hunt, and the
+    bard was made the point; the warrior died. The wait is 25 s at most, as it was. With nobody
+    beside the rally who can take the blows (a warrior, a paladin or a warrior-mage) and one of
+    those waited for who can still coming, it goes on to 45 s: under the 60 s the others wait for
+    the word.
+  - **A trip of its own into the hunt stops at the rally point** (cuo-cym.14, after the first live
+    runs; unit-tested, not yet played live). Live (2026-10-14) the mage's planner chose to walk to
+    the graveyard rather than hunt it: she walked through the rally point toward the spawn's
+    centre, the warrior holding the rally took her for one who had walked on and went in after
+    her alone, two died and the lich lived. Now a member's own trip (its planner's `travel_to`, by
+    a place's name or a tile) that would end within the edge of the hunt its plan sends it to
+    (the area the plan's target names, by the world store's spawners: the longest name in it, the
+    Britain Graveyard and not Britain) goes no further than the party's rally point. It closes up
+    on whoever holds the rally, or holds it there itself when it is the first, and is one of those
+    gathered until the word to go in; its report says the hunt meanwhile. Then the trip ends ("the
+    word to go in has been given: hunt it now"), and its planner chooses its next goal, the hunt
+    as a rule. The edge counts, not the spawn's spread: the place a planner names for an area can
+    be further from the spawn's centre than that (the Britain Graveyard's by 17 tiles, the spread
+    15). A trip to a place it left creatures at lately is refused, as any trip there is.
+  - **One who walks on past the rally anyway** (a walk the code didn't stop: more than 4 tiles
+    nearer the hunt's centre than the rally point, not than the one holding it, who may have run
+    from something meanwhile; and its report names no hunt) ends the wait only when the party has
+    one beside the rally who can take the blows, or no fighter is coming: then the word is given
+    and the party goes in after it. With a fighter on his way, the one holding the rally waits for
+    him, within the 25 and 45 s, and he goes in first. One whose report does say the hunt is still
+    waited for when it passes: it walks to its own stop at the edge and then closes up on whoever
+    holds the rally. The point is a fighter beside the rally first, then one
+    still coming. The `rally` record of whoever held it says whom the plan sent (`plan_sends`), the
+    fighter the wait went on for (`waited_for_fighter`) and who had walked on (`gone_ahead`). There is no "ready" word from each planner before the hunt: what it would give
+    (the first there not going in before the others have chosen) the plan's list and the wait at
+    the edge give without another round of calls before every hunt, and it would not make a
+    planner that chose the shop choose the hunt.
+  - **Measured** ([results](results.md#a-party-that-goes-in-together)): with memory off, when every
+    planner chooses the hunt, all five were in the fight within 7.0, 5.2 and 3.6 s of each other in
+    three runs. With memory on, in three more, those who came were in within 6.4, 4.5 and 15.4 s of
+    each other, but one or two members never came in every run, and once the bard, first at the edge with nobody on the way yet, went
+    in as the point with the mage and the archer 9 and 15 s behind him. The gathering brings together
+    those who have set out; it doesn't make five planners set out. The leader's plan, formed up, had
+    all five in within 3.4 to 3.6 s in each of its three runs. All of these runs are from before the
+    first there waited for whom the plan sends.
+
+## A party for the player
+
+A party's leader can be a character a person plays (`plan = "player"`, `companion.py`, cuo-cym.6). The
+leader is not one of the fleet's agents and has no brain: you log it in and play it, and the fleet's
+agents are its companions.
+
+```bash
+cd brain
+# log your own character in (here Roland) and stand south of the Britain graveyard, then:
+uv run uo-brain fleet fleets/party-player.toml --windowed
+# or companions with personas, who talk with you and each other and sit down for a drink when told:
+uv run uo-brain fleet fleets/party-player-talk.toml --windowed
+# without a person: a script plays the leader's part with walks, attacks and three lines of speech
+uv run python scripts/party_player.py
+# the same with its orders said as a person might ("Hold up a moment, I'll scout ahead.")
+uv run python scripts/party_player.py --own-words
+# the same with companions who talk, and the table at the end
+uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --table
+# and with another character inviting two companions first, which they should decline
+uv run python scripts/party_player.py --stranger talk2:5665:Corwin
+# what a person tried in the first five minutes: loot and stop, off to the inn, a question to all of them
+uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --playtest --own-words
+```
+
+- **What a companion goes by:** a character someone plays posts no goals and reports nothing, so each
+  companion reads the leader from what its own client sees of it.
+- **Keeping beside it:** the client's follow, two tiles off, at the leader's own pace (a walk while it
+  walks, a run to catch up). With the leader out of view the companion goes to where it last saw it and
+  waits there.
+- **Fighting beside it:** the fight loop runs the whole time. A companion takes on what attacks it, and
+  anything in war mode within 6 tiles of itself or 4 tiles of the leader: a client isn't told whom
+  another character attacks, so what stands in war mode beside the leader is taken to be what it is
+  fighting, or what is on it. It walks to those and goes after nothing else, and it loots nothing until
+  you say it may: the kills are the player's.
+- **Helping it:** the leader is a companion like any other to [the helping](#a-party-in-a-fight-on-the-road-and-at-the-inn):
+  a mage heals it under 60%, one with bandages bandages it, by what its health bar shows. Callouts work
+  as in any party.
+- **What you say to them,** in your own speech and nobody else's, and in your own words (cuo-cym.15,
+  cuo-cym.18 to .21). Each companion puts every line you say to system one (calls of kind `order`,
+  Decision 1 unless the [profile](seeing-what-it-does.md#which-model-answers) says otherwise), for
+  itself, with the party's names and the talk just before the line in front of it. It asks: is this
+  an order to me, does it change how I play (the settings, below), with creatures about is it an order
+  for the fight itself (below), and, in a party that talks, is it asking me for something and who is it
+  for (further down).
+- **Orders.** There are four: come along ("follow me", "right, on we go", "keep up, you lot"), wait
+  where you are ("stay here", "hold up a moment, I'll scout ahead"), go somewhere without you ("off to
+  the inn with you, see you there": the next point) and, in a party that talks, sit down for a drink
+  (below).
+  - **An order is taken when the model gives it 0.6 or more.** Most of what a person says is none of
+    them: "you should have stayed back, Isolde" and "I could follow that road for days" are talk, and
+    so is a plan put as a question ("who wants to go off to the inn?").
+  - **Sure it is an order to move, unsure whether you are coming too,** it is taken as being sent
+    when that has 0.3 or more ("Right - off to the inn for you all - see you there" had being sent at
+    0.50 to 0.65 and coming along at 0.35 to 0.50 for three companions in one live run, so one went
+    and two stood still; in a later one two had coming along at 0.64 and 0.67). Sent to a place you
+    walk to as well, a companion gets there first and you find it there; left to follow a leader who
+    stays, nobody moves. With no place in the line it is an order to come along.
+  - **Who an order is for** is the model's reading too: at "Wystan stay, the rest of you with me"
+    Wystan waits and the others come, and at "everyone but Thea, come on" Thea waits.
+  - **Each says a word when it takes one,** so a line misread shows at once, and the next order puts
+    it right: "Staying here.", or with a persona a line of its own, written once with its
+    [callouts](#a-party-in-a-fight-on-the-road-and-at-the-inn). The others hear it and don't answer it.
+  - **An order it is already carrying out gets a word too** ("Still with you.", "Still here.", "On my
+    way."), from each at most every 15 s. Without it a line misread as the order in force showed
+    nothing: "off you go then" was read as "come along" by companions who were following, and the
+    leader couldn't tell it had been read as an order at all.
+  - **Every reading is logged** and shown in the calls window. `order_read`: the line, the order or
+    none, the probability of each, the settings it speaks to (`settings`), who it is for (`for`),
+    whether it asks for something (`asked`, and `left`: "asked" or "unsure" when that is answered) and,
+    with creatures in view, the order for the fight it holds (`fight`: the order or none, the
+    probability of each, the creature picked and how sure, whom to heal); `order` when one is taken,
+    with the word said, and for a trip its `place`, `arrived`, `refused` or `gave_up`, and `already`
+    for an order in force; `setting_read` and `setting` for a line that speaks to a setting and each
+    change it made; `place_read` for where a companion was sent and how willing it was; `fight_order`
+    for an order for the fight taken (the creature, whom to heal, the word said), one it couldn't carry
+    out (`none`, `cannot`), and each one's end (`ended` and `why`); `whom_read` for whom a heal is for.
+  - **Without a model** (the rule judge), or for a minute after two questions in a row got no answer,
+    a short list of phrases reads the orders as before: "stay here", "wait here", "hold here"; "follow
+    me", "come on", "let's go", "stay close"; "sit down", "drinks", "take a seat"; and "off you go",
+    "go on ahead", "see you at", "wait for me at" with the place's word in the line ("the inn", "the
+    bank"). Settings and who a line is for aren't read without a model.
+  - **How well it reads** ([measured](results.md#a-party-that-goes-in-together), each line for three
+    companions): on 34 lines it hadn't been tried on, written to test being sent somewhere, Decision 1
+    read 92 of 102 as written, Jev 90, the phrases 47; on the 53 unseen lines of the first three orders,
+    148 of 159 (149 before the fourth order was added). A reading takes about 0.3 s and costs $0.00006
+    with the question about settings in it, and $0.00002 more for the one about requests.
+  - The leader is known by its name and then by the serial first seen under that name, so another
+    character of the same name changes nothing; this is for the local server.
+- **Going somewhere without you** (cuo-cym.19): "off to the inn for you all, see you there", "go on
+  ahead to the bank, I'll catch you up", "Wystan, wait for me at the stables".
+  - **Where:** the nearest of its kind that the world store knows, no further than 400 tiles: the inn,
+    the tavern, the bank, the healer's, the stables, the smithy, a shop by its trade, town, the
+    graveyard, the docks, the moongate, a dungeon's entrance, a shrine. System one picks the kind by
+    what you said, or by the talk just before when the line names none ("off you go then"). With no
+    place it can tell, or one in another town ("the inn in Skara Brae"), the companion asks where and
+    stays.
+  - **Whether:** going is the companion's to agree to (`persuade`, on unless the fleet file says
+    otherwise). A yes/no for system one on the moment: its own health and yours, whether it is in a
+    fight, hostile creatures close, whether it has said no already. On a no it stays with you and
+    says why in its own way; ask again, or give a reason, and it goes. `persuade = false` has every
+    companion go when told.
+  - **The trip:** it runs there by itself with the fight loop beside it as always, says a word on
+    setting off ("Off to the inn, then.") and one on arriving, and waits there. A walk that gets stuck
+    four times is given up: it comes back to you and says so.
+  - **Yours again** when you come within 8 tiles of where it waits, or when you call it back ("come
+    back", "back to me"; in party chat when it is out of earshot). Called back with you out of view,
+    it goes to where it last saw you.
+  - **How well it reads where** ([measured](results.md#a-party-that-goes-in-together), one companion):
+    the kind of place meant on 17 of 20 lines, and on 9 of 10 written afterwards; whether to go on 12
+    moments of 12 (Jev 7). A line that names two places sent it to the first of them ("I'm going to the
+    bank, you go to the healer").
+- **Orders for the fight itself** (cuo-cym.24): "kill the mage first", "get the one on me", "fall back!",
+  "heal me". With creatures in view (one at least that could start a fight: a deer alone isn't one), a
+  companion also asks of every line you say, in a request of its own beside the order's: is this an order
+  for the fight, to carry out now? One choice: go for one creature, fall back, heal someone, or none; in
+  the same request, which creature, with the six nearest as the options, each with how far it is from the
+  companion and from you, whether it is in war mode and whom it is on. "That one" with nothing more is
+  the one on you, or the one nearest you. An order is taken at 0.6 or more, the creature at 0.5 or more.
+  Each is said back at once, as an order is ("On the evil mage.", "Falling back.", "Healing you.", or with
+  a persona a line of its own from its callouts for going for a creature, coming along and healing
+  someone), and the next line puts a misreading right. An order for the fight is each companion's unless
+  the line is plainly for others ("Wystan, shoot the lich"): one with nobody named split the question of
+  whom it was for live, and nobody took it. Live, "Get the one on me!" was taken by all three and "Fall
+  back!" brought all three away with you ([results](results.md#a-party-that-goes-in-together)).
+  - **Go for one:** the fight loop goes for that creature before anything else,
+    whatever Jev would pick and whether or not it is in war mode beside either of you (so you can name the
+    one to pull), until it dies, leaves view or 30 seconds pass. A tamer sends its pet at it before what
+    is on the tamer itself. Running and leaving still come first: nearly dead with something after it, a
+    companion runs as it always does.
+  - **Fall back:** it lets go of what it is fighting and comes to you (the client's
+    follow, which runs while there is danger); a trip you sent it on ends, and one told to wait comes
+    too. On the way it fights nothing; within 3 tiles of you it fights only what is on it or right on you,
+    and goes after nothing. It holds for the fight: until nothing has been in war mode within 12 tiles of
+    it for 5 seconds, or a minute, or until you name a creature to go for. A tamer calls its pet back.
+  - **Heal someone now:** one heal or bandage on you, or on the companion named
+    ("Isolde, heal Thea"), whatever their health (the helping's 60% doesn't apply to it), walking over in
+    the fight if nothing is on the healer itself. Whom is a question of its own, asked once a heal is read;
+    when it can't tell and the line names nobody of the party ("heal pls"), it is you. One who can't heal
+    (no Greater Heal with the mana and reagents for it, no bandages and Healing) says so when the line is
+    for it alone (as a party that talks reads who a line is for), and otherwise leaves it to a healer.
+    Good for 15 seconds.
+  - **What it can't tell, it asks:** "Which one?" when no creature in view fits ("kill the dragon"),
+    "Heal whom?". In a fight, or without talk, in those plain words.
+  - **What stays what it was:** a line that sends it away or sits it down is that order, whatever the
+    fight question made of it ("off to the inn with you, I'll deal with these" is a trip it may refuse);
+    a request for no one creature ("cover me", "hold them off", "kill them all") is answered as a request,
+    and talk, a command to your own pets ("all kill") and words shouted at a creature are none of these.
+  - **Without a model** nothing reads these: the phrases know only the four orders. Each line read with
+    creatures about costs one request more, about $0.00005 on Decision 1, and 0.3 s, beside the order's.
+  - **How well it reads** ([measured](results.md#a-party-that-goes-in-together), each line for three
+    companions): on 42 lines held back until the wording was settled, Decision 1 read 112 of 126 as
+    written and Jev 117; each took talk, or an order for another companion, for an order in 3 readings,
+    and Decision 1 never sent a companion at the wrong creature (Jev once: "Wystan, pull the near one"
+    went for the deer nearer Wystan, not the orc nearer you). What Decision 1 missed it missed safely:
+    "help Thea with that ghoul" (0.12 to 0.32) and "leave it, leave it!" were no order, and the companion
+    fought on.
+- **Settings, by your word** (cuo-cym.18; `standing.py`). Everything about how a companion plays that
+  the fleet file or a strategy sets, you can change by saying so, and it holds until you say otherwise:
+
+  | setting | what you might say | values |
+  |---|---|---|
+  | looting | "feel free to loot", "take everything", "leave the rest" | nothing (as they start), what is worth having, everything |
+  | fleeing | "nobody runs", "run if it goes bad" | may run, never runs |
+  | aggression | "play it safe", "go all out" | cautious, balanced, relentless |
+  | target | "weakest first", "biggest threat first" | the one it is on, the weakest, the closest, the strongest first |
+  | opening spell, main spell (a caster) | "Isolde, open with Explosion", "stick to Lightning" | an attack spell, or its own choice |
+  | helping | "heal each other", "no healing, save your mana" | on, off |
+  | raising | "if someone drops, get them back up" | on, off |
+  | callouts | "stop shouting in fights" | on, off |
+  | talk | "quiet, all of you", "less chatter", "you can talk again" | silent, answers when spoken to, talks freely |
+  | distance | "stay tight on me", "give me some room" | at your side, two tiles, five tiles back |
+  | reach | "only what attacks us", "kill everything you see" | only what is on it or on you, what is close to either, anything hostile in sight |
+
+  - **Two steps.** Beside the order question, on every line: which of my settings does this speak to,
+    if any? One choice with the settings as its options. For each it gives a quarter or more (a line
+    can speak to two: "loot what you like, and no running"), that setting's own question: what does
+    the line make of it, or does it leave it as it is? A value is taken at 0.6 or more.
+  - **Each reads it for itself,** so "Wystan, you loot; the rest of you keep off" sets Wystan's
+    looting one way and the others' the other.
+  - **Each says what it has changed,** in a line of its own that has to say what it will now do
+    ("Fine. I'll take what's worth carrying."), without the wait of an answer and whatever the yes/no
+    on answering would say; in a fight, or without talk, in plain words ("I'll loot what's worth
+    taking."). Told what it already does, it says so. A misreading shows, and the next line puts it
+    right.
+  - **A change is acted on at once:** told to loot in the quiet after a fight, a companion goes to the
+    corpses then, not when the fight loop next looks.
+  - **How close to keep isn't read from a line that is itself an order:** "stay close" is an order.
+  - **How well it reads** ([measured](results.md#a-party-that-goes-in-together), each line for three
+    companions): all 171 readings on the lines the questions were written with, and 134 of 156 on 52
+    lines written afterwards (Jev 154 and 132). Most of what went wrong there was a remark or a request
+    for one thing now taken as a rule: "I always go for the biggest one", "run for it!", "heal pls".
+    None of it is taken silently: each change is said.
+- **Talking with them** (`talk = true`, a persona each; cuo-cym.16, cuo-cym.20 to .22): what you say is
+  heard as a companion's is, in the two steps of [all talk here](#several-agents-on-one-server). System
+  one answers a yes/no on your line (kind `chat`): should this companion say something now? On a yes
+  the cheap planner model (kind `talk`, Haiku) writes one line in the companion's persona, with what it
+  is doing and what it remembers. What is different for you from how they talk among themselves:
+  - **Who a line is for is read, not matched.** One question for system one with the party as its
+    options: one companion, all of them, all but one, or none of them, from the line, what each plays
+    as ("our archer") and the talk before it. "And your reagents?" straight after Isolde's answer is
+    hers; "what about the rest of you?" is the other two's; "Wystan shot it first" is said to
+    everyone. Those it isn't for leave it without asking anything.
+  - **Each it is for answers,** in turn: the first as soon as its line is written, the next once it
+    has heard that answer, about 2.5 s after it. "How are you all today?" gets an answer from each of
+    them. (Among themselves a line for nobody in particular still gets one answer, from whoever claims
+    it first.)
+  - **What it says agrees with what it does.** The writer of the line is told how the same line was
+    read: an order taken has had its word and gets no second line; a setting changed has to be said;
+    anything else is told to the writer as talk that changes nothing, with what the companion is doing
+    now.
+  - **Asked for what it doesn't do at a word, it says so.** "Cover me", "somebody res me", "go and buy
+    me some reagents" are no orders it takes, and nor are "heal me" and "kill that one for me" with no
+    creature in view: it fights what attacks the party and heals whoever is hurt without being told, and
+    in a fight goes for the creature you name, falls back or heals at once (the orders for the fight,
+    above), and nothing else is done on command. A yes/no of its own for
+    system one, beside the order's: is this line asking me to do something? With no order taken, the
+    line for this companion and a yes at 0.7 or more, it owes an answer whatever the yes/no on
+    answering says, and the writer is told what it will and won't do, so it says no in its own way and
+    promises nothing ("Cover you? I'm a mage, Roland, not your bloody shield."). A line that was
+    nearly an order (0.35 or more for one of them) gets a question back in place of a no: what do you
+    want? Not in a fight, where nobody answers. Before this "cover me" got one answer in three live
+    runs: the yes/no on answering gave it 0.13 to 0.29.
+  - **How well a request is read** ([measured](results.md#a-party-that-goes-in-together), each line
+    for three companions): on 19 lines written after the question was settled and run once, 16 of 21
+    readings of a request, 24 of 27 of talk left as talk, and all 9 of an order with a request in it
+    ("With me, and somebody watch the rear."). "Can anyone gate us home?" was a question to it and
+    not a request, and "all guard me", said to your own pets, a request to all three.
+  - **An answer owed to you isn't dropped because someone spoke.** It waits out the others' lines, and
+    your next line too unless that one is for the same companion and wants an answer itself, which
+    then takes its place.
+  - **You are answered sooner.** Among themselves a reply waits as long as a person takes to read the
+    line and type the answer; to you it is set at four fifths of that, and `pace = 0.7` in the fleet
+    file makes every wait seven tenths of what it was. Measured live, first answers came about 6 s
+    after a line of 30 to 50 characters (5.6 to 8.7 s), about a tenth sooner than before for the same
+    lengths ([results](results.md#a-party-that-goes-in-together)).
+  - **No gap between your lines' answers, and no end to an exchange.** Among themselves each speaks at
+    most every 20 s and two who have traded six lines let it rest; neither holds for a line that is
+    for the companion you spoke to.
+  - **The yes/no is asked differently** (`talk.talk_question`). Among agents saying nothing is the
+    safe answer; to a person it is being ignored.
+  - **Told to be quiet** (the talk setting above) it answers nothing but a word on an order and what
+    it owes on a setting, until you say it can talk again.
+  - **How well who it is for is read** ([measured](results.md#a-party-that-goes-in-together)): right
+    on all 21 lines of a set held back, and each line answered by exactly those it was for on 20 of
+    them. On the 39 lines the yes/no alone was measured with, 38 as wanted against 34, and "the rest of
+    you" 4 of 5 against 0 of 5.
+
+  Nobody answers in a fight, where the callouts speak, and each says at most 40 lines an hour. Speech
+  needs line of sight on ModernUO: a companion on the other side of a wall doesn't hear you, and
+  party chat reaches it wherever it is.
+- **Resting:** when you stand still they stand with you, and each heals itself as it always does (the
+  client's reflexes bandage). There is no rest of their own to call.
+- **The table** (`talk = true`, a persona each): walk them to an inn and tell them to sit down ("who
+  fancies an ale? Take the weight off."), and they hold [the party's talk over the hunt](#a-party-in-a-fight-on-the-road-and-at-the-inn)
+  where they stand. No planner hosts it: each companion who takes the order takes a seat, and the first
+  of those in the file keeps the turns (one in a fight at that moment doesn't sit). What you say while it
+  is open is on the table like anyone's line and the next to speak answers it (a line with a companion's
+  name goes to that one), you are never named for a turn, and an order to move on ("right, we should
+  get moving", "on your feet", "wait here, I'm going to stretch my legs") ends the evening; nothing else
+  you say there is an order ("stay a while, the night is young" is an offer). One killed
+  at the table gets up from it. Each keeps its own memories of it. "Follow me to the inn" is a walk:
+  ask for the table once you are there. Not asked for in a fight.
+- **Its own death:** a companion is resurrected and goes back for its corpse by itself, then comes back
+  to the leader.
+- **The game's own party** (`game_party = true` in the file): you invite the companions from the party
+  gump as you would anyone, and each accepts your invitation and no other.
+- **What isn't here:** forming up and the huddle are a planner's, and a companion has none. It goes
+  nowhere but where you send it, to wait: it doesn't restock, bank, buy or hunt by itself, and doesn't
+  walk into a fight you haven't started unless you name the creature. Of the orders for the fight, three
+  are carried out (go for that one, fall back, heal someone now); "cover me" and "hold them off", which
+  name no creature, raising the dead at a word ("res him now") and orders with a place in the
+  fight ("stand behind the bear", "go round the left") aren't: it reads them as requests, and says what it
+  will and won't do. "Follow me" in a fight is the order to come along and doesn't pull it out of the
+  fight: the client's follow waits while it is engaged. None of the three has been tried live yet.
 
 ## Without a window
 

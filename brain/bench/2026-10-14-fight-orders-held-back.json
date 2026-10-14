@@ -1,0 +1,817 @@
+{
+ "started": "2026-10-14T00:57:57",
+ "cut": 0.6,
+ "target_cut": 0.5,
+ "whom_cut": 0.5,
+ "lines": {
+  "second": 42
+ },
+ "models": {
+  "jev": {
+   "second": {
+    "right": 117,
+    "of": 126,
+    "pct": 92.9,
+    "by_group": {
+     "attack": "38/39",
+     "fall back": "19/21",
+     "heal": "11/15",
+     "stays what it is": "49/51"
+    },
+    "orders_missed": 2,
+    "talk_taken_for_an_order": 3,
+    "one_kind_for_another": 0,
+    "wrong_creature": 1,
+    "attack_with_no_creature_told": 0,
+    "wrong_one_to_heal": 3,
+    "wrong": [
+     {
+      "scene": "orcs",
+      "group": "attack",
+      "line": "Wystan, pull the near one",
+      "who": "Wystan",
+      "want": [
+       "attack",
+       "orc"
+      ],
+      "got": [
+       "attack",
+       "deer"
+      ],
+      "fight": {
+       "attack": 0.94,
+       "fall_back": 0.03,
+       "heal": 0.0,
+       "none": 0.03
+      },
+      "target": {
+       "deer": 0.8,
+       "orc": 0.18
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "fall back",
+      "line": "back off!",
+      "who": "Isolde",
+      "want": "fall_back",
+      "got": null,
+      "fight": {
+       "attack": 0.02,
+       "fall_back": 0.46,
+       "heal": 0.0,
+       "none": 0.52
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "fall back",
+      "line": "back off!",
+      "who": "Wystan",
+      "want": "fall_back",
+      "got": null,
+      "fight": {
+       "attack": 0.02,
+       "fall_back": 0.56,
+       "heal": 0.0,
+       "none": 0.42
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "heal pls",
+      "who": "Isolde",
+      "want": [
+       "heal",
+       "Roland"
+      ],
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.0,
+       "fall_back": 0.0,
+       "heal": 0.92,
+       "none": 0.08
+      },
+      "whom_p": 0.75
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "heal pls",
+      "who": "Wystan",
+      "want": [
+       "heal",
+       "Roland"
+      ],
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.0,
+       "fall_back": 0.0,
+       "heal": 0.89,
+       "none": 0.11
+      },
+      "whom_p": 0.73
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "heal pls",
+      "who": "Thea",
+      "want": [
+       "heal",
+       "Roland"
+      ],
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.0,
+       "fall_back": 0.0,
+       "heal": 0.94,
+       "none": 0.06
+      },
+      "whom_p": 0.78
+     },
+     {
+      "scene": "ettin",
+      "group": "heal",
+      "line": "Isolde, Thea needs healing",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "heal",
+       "Thea"
+      ],
+      "fight": {
+       "attack": 0.0,
+       "fall_back": 0.0,
+       "heal": 0.85,
+       "none": 0.15
+      },
+      "whom_p": 0.98
+     },
+     {
+      "scene": "crypt",
+      "group": "stays what it is",
+      "line": "I'll tank, you lot do damage",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.61,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.39
+      },
+      "target": {
+       "zombie on Wystan": 0.31,
+       "wraith": 0.27,
+       "unclear": 0.42
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "stays what it is",
+      "line": "heal up when you can",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.0,
+       "fall_back": 0.0,
+       "heal": 0.61,
+       "none": 0.39
+      },
+      "whom_p": 0.77
+     }
+    ],
+    "cuts": {
+     "0.4/0.3": {
+      "right": 116,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 5,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.4/0.5": {
+      "right": 116,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 5,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.4/0.7": {
+      "right": 116,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 5,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.5/0.3": {
+      "right": 116,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 5,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.5/0.5": {
+      "right": 116,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 5,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.5/0.7": {
+      "right": 116,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 5,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.6/0.3": {
+      "right": 117,
+      "orders_missed": 2,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.6/0.5": {
+      "right": 117,
+      "orders_missed": 2,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.6/0.7": {
+      "right": 117,
+      "orders_missed": 2,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.7/0.3": {
+      "right": 117,
+      "orders_missed": 4,
+      "talk_taken_for_an_order": 1,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.7/0.5": {
+      "right": 117,
+      "orders_missed": 4,
+      "talk_taken_for_an_order": 1,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.7/0.7": {
+      "right": 117,
+      "orders_missed": 4,
+      "talk_taken_for_an_order": 1,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.8/0.3": {
+      "right": 113,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 1,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.8/0.5": {
+      "right": 113,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 1,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.8/0.7": {
+      "right": 113,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 1,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     }
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 208,
+     "p90": 236
+    },
+    "cost_usd_a_line": 6.79e-05,
+    "input_tokens": 1554,
+    "errors": 0
+   }
+  },
+  "decision1": {
+   "second": {
+    "right": 112,
+    "of": 126,
+    "pct": 88.9,
+    "by_group": {
+     "attack": "34/39",
+     "fall back": "18/21",
+     "heal": "9/15",
+     "stays what it is": "51/51"
+    },
+    "orders_missed": 8,
+    "talk_taken_for_an_order": 3,
+    "one_kind_for_another": 0,
+    "wrong_creature": 0,
+    "attack_with_no_creature_told": 0,
+    "wrong_one_to_heal": 3,
+    "wrong": [
+     {
+      "scene": "crypt",
+      "group": "attack",
+      "line": "Thea, sic Bramble on the lord",
+      "who": "Thea",
+      "want": [
+       "attack",
+       "lich lord"
+      ],
+      "got": null,
+      "fight": {
+       "attack": 0.553,
+       "fall_back": 0.01,
+       "heal": 0.005,
+       "none": 0.431
+      },
+      "target": {
+       "wraith": 0.051,
+       "lich lord": 0.792,
+       "unclear": 0.095
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "attack",
+      "line": "help Thea with that ghoul",
+      "who": "Isolde",
+      "want": [
+       "attack",
+       "ghoul"
+      ],
+      "got": null,
+      "fight": {
+       "attack": 0.117,
+       "fall_back": 0.004,
+       "heal": 0.012,
+       "none": 0.866
+      },
+      "target": {
+       "ghoul": 0.998
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "attack",
+      "line": "help Thea with that ghoul",
+      "who": "Wystan",
+      "want": [
+       "attack",
+       "ghoul"
+      ],
+      "got": null,
+      "fight": {
+       "attack": 0.307,
+       "fall_back": 0.006,
+       "heal": 0.037,
+       "none": 0.65
+      },
+      "target": {
+       "ghoul": 0.996
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "attack",
+      "line": "help Thea with that ghoul",
+      "who": "Thea",
+      "want": [
+       "attack",
+       "ghoul"
+      ],
+      "got": null,
+      "fight": {
+       "attack": 0.321,
+       "fall_back": 0.016,
+       "heal": 0.063,
+       "none": 0.6
+      },
+      "target": {
+       "ghoul": 0.997
+      }
+     },
+     {
+      "scene": "orcs",
+      "group": "attack",
+      "line": "Wystan, pull the near one",
+      "who": "Wystan",
+      "want": [
+       "attack",
+       "orc"
+      ],
+      "got": null,
+      "fight": {
+       "attack": 0.587,
+       "fall_back": 0.404,
+       "heal": 0.002,
+       "none": 0.007
+      },
+      "target": {
+       "deer": 0.242,
+       "orc": 0.745
+      }
+     },
+     {
+      "scene": "ettin",
+      "group": "fall back",
+      "line": "leave it, leave it!",
+      "who": "Isolde",
+      "want": "fall_back",
+      "got": null,
+      "fight": {
+       "attack": 0.052,
+       "fall_back": 0.383,
+       "heal": 0.008,
+       "none": 0.557
+      }
+     },
+     {
+      "scene": "ettin",
+      "group": "fall back",
+      "line": "leave it, leave it!",
+      "who": "Wystan",
+      "want": "fall_back",
+      "got": null,
+      "fight": {
+       "attack": 0.07,
+       "fall_back": 0.403,
+       "heal": 0.009,
+       "none": 0.517
+      }
+     },
+     {
+      "scene": "ettin",
+      "group": "fall back",
+      "line": "leave it, leave it!",
+      "who": "Thea",
+      "want": "fall_back",
+      "got": null,
+      "fight": {
+       "attack": 0.046,
+       "fall_back": 0.561,
+       "heal": 0.008,
+       "none": 0.385
+      }
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "heal pls",
+      "who": "Isolde",
+      "want": [
+       "heal",
+       "Roland"
+      ],
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.002,
+       "fall_back": 0.001,
+       "heal": 0.968,
+       "none": 0.029
+      },
+      "whom_p": 0.737
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "heal pls",
+      "who": "Wystan",
+      "want": [
+       "heal",
+       "Roland"
+      ],
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.004,
+       "fall_back": 0.002,
+       "heal": 0.961,
+       "none": 0.033
+      },
+      "whom_p": 0.75
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "heal pls",
+      "who": "Thea",
+      "want": [
+       "heal",
+       "Roland"
+      ],
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.002,
+       "fall_back": 0.001,
+       "heal": 0.973,
+       "none": 0.023
+      },
+      "whom_p": 0.616
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "patch me up Thea",
+      "who": "Isolde",
+      "want": null,
+      "got": [
+       "heal",
+       "Roland"
+      ],
+      "fight": {
+       "attack": 0.002,
+       "fall_back": 0.001,
+       "heal": 0.977,
+       "none": 0.02
+      },
+      "whom_p": 0.841
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "patch me up Thea",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "heal",
+       "Roland"
+      ],
+      "fight": {
+       "attack": 0.002,
+       "fall_back": 0.001,
+       "heal": 0.983,
+       "none": 0.014
+      },
+      "whom_p": 0.91
+     },
+     {
+      "scene": "crypt",
+      "group": "heal",
+      "line": "someone heal Wystan",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.013,
+       "fall_back": 0.004,
+       "heal": 0.879,
+       "none": 0.105
+      },
+      "whom_p": 0.995
+     }
+    ],
+    "cuts": {
+     "0.4/0.3": {
+      "right": 115,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.4/0.5": {
+      "right": 115,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.4/0.7": {
+      "right": 115,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.5/0.3": {
+      "right": 115,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.5/0.5": {
+      "right": 115,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.5/0.7": {
+      "right": 115,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.6/0.3": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.6/0.5": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.6/0.7": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.7/0.3": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.7/0.5": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.7/0.7": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.8/0.3": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.8/0.5": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     },
+     "0.8/0.7": {
+      "right": 112,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 3
+     }
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 318,
+     "p90": 378
+    },
+    "cost_usd_a_line": 4.82e-05,
+    "input_tokens": 1124,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.014622,
+  "cost_per_hour_usd": 3.5065,
+  "calls": 279,
+  "by_role": {
+   "system1": 0.014622
+  },
+  "by_kind": {
+   "order": {
+    "calls": 279,
+    "input_tokens": 348133,
+    "output_tokens": 14887,
+    "cost_usd": 0.014622,
+    "latency_ms_avg": 266.1
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 140,
+    "input_tokens": 203578,
+    "output_tokens": 14622,
+    "cost_usd": 0.00855,
+    "latency_ms_avg": 215.6
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 139,
+    "input_tokens": 144555,
+    "output_tokens": 265,
+    "cost_usd": 0.006071,
+    "latency_ms_avg": 316.9
+   }
+  }
+ }
+}

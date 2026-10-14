@@ -104,9 +104,27 @@ namespace ClassicUO.Game.Managers
         public bool WalkingFailed;
         public byte WalkSequence;
         public bool WantChangeCoordinates;
+        public int Denied; // steps the server has refused since login, for the agent's travel diagnostics
 
         public void DenyWalk(byte sequence, int x, int y, sbyte z)
         {
+            // With no place given it is the client clearing its own steps (a teleport), not a refusal.
+            if (x != -1)
+            {
+                Denied++;
+
+                // The step sent back, when it was a step and not a turn: the agent's walker leaves that tile be for a while.
+                for (int i = 0; i < StepsCount; i++)
+                {
+                    if (StepInfos[i].Sequence == sequence && (StepInfos[i].X != x || StepInfos[i].Y != y))
+                    {
+                        _player.World.Agent?.StepRefused(StepInfos[i].X, StepInfos[i].Y);
+
+                        break;
+                    }
+                }
+            }
+
             _player.ClearSteps();
 
             Reset();

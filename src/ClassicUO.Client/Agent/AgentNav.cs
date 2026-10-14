@@ -533,6 +533,14 @@ namespace ClassicUO.Agent
 
         public static int Tiles(int ax, int ay, int bx, int by) => Math.Max(Math.Abs(ax - bx), Math.Abs(ay - by));
 
+        // The first tile of the path the player has yet to step onto, given the tile of it nearest the
+        // player. A plan starts at its first step, not under the player: until that step is taken the
+        // nearest tile is itself the next one, and standing on it, the one after.
+        public static int NextOnPath(List<(int X, int Y, sbyte Z)> path, int nearest, int px, int py)
+        {
+            return nearest < path.Count && path[nearest].X == px && path[nearest].Y == py ? nearest + 1 : nearest;
+        }
+
         // The point `hop` tiles (in steps) from the start on the straight line to the goal.
         public static (int X, int Y) HopToward(int sx, int sy, int gx, int gy, int hop)
         {
@@ -764,6 +772,43 @@ namespace ClassicUO.Agent
             _index = Math.Max(_index, index);
 
             return further;
+        }
+    }
+
+    // The tiles the server has sent a step back from, each left alone until it lapses. A refusal
+    // while one is still running starts its time again.
+    internal sealed class RefusedTiles
+    {
+        private readonly Dictionary<(int, int), uint> _until = new Dictionary<(int, int), uint>();
+        private readonly uint _ms;
+
+        public RefusedTiles(uint ms)
+        {
+            _ms = ms;
+        }
+
+        public int Count => _until.Count;
+
+        public void Refuse(int x, int y, uint now)
+        {
+            _until[(x, y)] = now + _ms;
+        }
+
+        public bool Refused(int x, int y, uint now)
+        {
+            if (_until.Count == 0 || !_until.TryGetValue((x, y), out uint until))
+            {
+                return false;
+            }
+
+            if (now < until)
+            {
+                return true;
+            }
+
+            _until.Remove((x, y));
+
+            return false;
         }
     }
 

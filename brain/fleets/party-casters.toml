@@ -1,0 +1,61 @@
+# A second scene for the party (cuo-cym.11): the lich scene's five, staged where they are for it, against
+# creatures that stand off and come from two sides. Every party measure before it was one wave from one side
+# that closes to fight hand to hand (party-lich.toml: a lich, two bone knights, four skeletons, 30 tiles north),
+# and going in together was designed against that: a rally point at the edge, a line held against what comes.
+# Here three skeletal mages and two skeletons stand where that wave stood, north-west of the party, and two
+# ratman archers and a bone magus 18 tiles east of them: six of the eight cast or shoot from range, and whichever
+# group the party turns to, the other is at its side. (At 26 tiles, the first placing, nobody saw the eastern group
+# in two runs: the party fights the first group about 23 tiles from it, beyond the 18 tiles a client sees.)
+# Measure a run with:
+#   uv run python scripts/party_scene.py --wave "skeletal mage,bone magi,ratman archer,skeleton" --boss "" logs/fleet/RUN
+# As in the lich scene the first member's prep clears the last run's spawns and stops the graveyard's own for
+# the run, and the last member's spawns the wave once all are in. One plan: Roland leads, the others follow.
+name = "party-casters"
+server_port = 2593
+strategy = ""
+hours = 0.15
+headless = true
+talk = false
+party = true
+leader = "Roland"
+
+[[agent]]
+name = "Roland"
+account = "life1"
+password = "life1"
+port = 5661
+profile = "default"
+goal = "Hunt the undead at the Britain graveyard with your party: Roland the warrior, Isolde the mage, Wystan the archer, Thea the tamer and Corwin the bard. Stay together."
+prep = ["[AgentDisrupt restore quiet", "[AgentReset", "[AgentGo 1392 1528", "[AgentDisrupt despawn 1384 1492 36 15 quiet", "[AgentKit warrior", "[AgentSupplies bandages 150"]
+
+[[agent]]
+name = "Isolde"
+account = "life2"
+password = "life2"
+port = 5662
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1394 1528", "[AgentKit mage", "[AgentSupplies bandages 40 gold 200"]
+
+[[agent]]
+name = "Wystan"
+account = "life3"
+password = "life3"
+port = 5663
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1390 1528", "[AgentKit archer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Thea"
+account = "talk1"
+password = "talk1"
+port = 5664
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1392 1530", "[AgentKit tamer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Corwin"
+account = "talk2"
+password = "talk2"
+port = 5665
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1394 1530", "[AgentKit bard", "[AgentSupplies bandages 100", "[AgentDisrupt strong 1380 1500 SkeletalMage 3 quiet", "[AgentDisrupt strong 1378 1502 Skeleton 2 quiet", "[AgentDisrupt strong 1398 1500 RatmanArcher 2 quiet", "[AgentDisrupt strong 1400 1498 BoneMagi 1 quiet"]

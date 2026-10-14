@@ -33,7 +33,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-SYSTEM_ONE = ("fight", "routine", "facts", "rerank", "strategy", "recorder", "replay", "memory", "chat")
+SYSTEM_ONE = ("fight", "routine", "facts", "rerank", "strategy", "recorder", "replay", "memory", "chat",
+              "order")
 SYSTEM_TWO = ("planner", "review", "guide", "design", "escalate", "compact", "heartbeat", "daily", "talk", "table",
               "huddle")
 

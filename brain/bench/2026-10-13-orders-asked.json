@@ -1,0 +1,9203 @@
+{
+ "started": "2026-10-13T23:40:41",
+ "cut": 0.6,
+ "lines": {
+  "first": 84,
+  "second": 53,
+  "third": 40,
+  "fourth": 34,
+  "fifth": 14,
+  "sixth": 16,
+  "seventh": 19
+ },
+ "models": {
+  "phrases": {
+   "first": {
+    "right": 146,
+    "of": 252,
+    "pct": 57.9,
+    "by_group": {
+     "plain": "24/24",
+     "follow": "0/36",
+     "stay": "9/30",
+     "table": "3/18",
+     "who": "12/24",
+     "talk": "65/78",
+     "at the table": "33/42"
+    },
+    "orders_missed": 90,
+    "talk_taken_for_an_order": 9,
+    "one_order_for_another": 3,
+    "talk_and_requests_mixed_up": 4,
+    "wrong": [
+     {
+      "group": "follow",
+      "line": "Right, on we go.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Right, on we go.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Right, on we go.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Keep up, you lot.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Keep up, you lot.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Keep up, you lot.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Come along then.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Come along then.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Come along then.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Time we were off.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Time we were off.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Time we were off.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "ok lets move",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "ok lets move",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "ok lets move",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "This way, quickly!",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "This way, quickly!",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "This way, quickly!",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Back to me, all of you!",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Back to me, all of you!",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Back to me, all of you!",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "We're leaving. Now.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "We're leaving. Now.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "We're leaving. Now.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Stick with me through here.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Stick with me through here.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Stick with me through here.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Get over here!",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Get over here!",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Get over here!",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "c'mon",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "c'mon",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "c'mon",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Off we go then, mind the bones.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Off we go then, mind the bones.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Off we go then, mind the bones.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Hold up a moment.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Hold up a moment.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Hold up a moment.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Wait for me by this tree.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Wait for me by this tree.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Wait for me by this tree.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Don't move, I'll scout ahead.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Don't move, I'll scout ahead.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Don't move, I'll scout ahead.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Hang back here, I'll pull one to us.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Hang back here, I'll pull one to us.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Hang back here, I'll pull one to us.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Give me a minute. Nobody move.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Give me a minute. Nobody move.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Give me a minute. Nobody move.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Stop right there, all of you.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Stop right there, all of you.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Stop right there, all of you.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Rest here while I check the path.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Rest here while I check the path.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Rest here while I check the path.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Who fancies an ale? Take the weight off.",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Who fancies an ale? Take the weight off.",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Who fancies an ale? Take the weight off.",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Pull up a chair, all of you.",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Pull up a chair, all of you.",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Pull up a chair, all of you.",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Let's rest our legs and talk it over.",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Let's rest our legs and talk it over.",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Let's rest our legs and talk it over.",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Sit yourselves down, the first round is mine.",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Sit yourselves down, the first round is mine.",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Sit yourselves down, the first round is mine.",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Grab a seat, we've earned a pint.",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Grab a seat, we've earned a pint.",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Grab a seat, we've earned a pint.",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan, hang back here.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan stay, the rest of you with me.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan stay, the rest of you with me.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan stay, the rest of you with me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Everyone but Thea, come on.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Everyone but Thea, come on.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Everyone but Thea, come on.",
+      "who": "Thea",
+      "want": "stay",
+      "got": "follow"
+     },
+     {
+      "group": "who",
+      "line": "Isolde, with me. Wystan and Thea, wait here.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "stay"
+     },
+     {
+      "group": "who",
+      "line": "Thea, keep up!",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Just Isolde with me, you two stay put.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "stay"
+     },
+     {
+      "group": "who",
+      "line": "Just Isolde with me, you two stay put.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Just Isolde with me, you two stay put.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Come on, that was a warning shot?",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "Come on, that was a warning shot?",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "Come on, that was a warning shot?",
+      "who": "Thea",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Isolde",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Wystan",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Thea",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "Isolde, heal me!",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Kill the lich first!",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Kill the lich first!",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Kill the lich first!",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Thea",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "at the table",
+      "line": "Right, we should get moving.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Right, we should get moving.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Right, we should get moving.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Time to go, finish your drinks.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Time to go, finish your drinks.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Time to go, finish your drinks.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Up, all of you, the road's waiting.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Up, all of you, the road's waiting.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Up, all of you, the road's waiting.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     }
+    ]
+   },
+   "second": {
+    "right": 84,
+    "of": 159,
+    "pct": 52.8,
+    "by_group": {
+     "follow": "6/33",
+     "stay": "9/24",
+     "table": "6/12",
+     "who": "10/18",
+     "talk": "38/48",
+     "at the table": "15/24"
+    },
+    "orders_missed": 62,
+    "talk_taken_for_an_order": 6,
+    "one_order_for_another": 3,
+    "talk_and_requests_mixed_up": 4,
+    "wrong": [
+     {
+      "group": "follow",
+      "line": "w/me",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "w/me",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "w/me",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "lets roll",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "lets roll",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "lets roll",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "move it people",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "move it people",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "move it people",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "everyone on me",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "everyone on me",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "everyone on me",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Onwards!",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Onwards!",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Onwards!",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "regroup on me",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "regroup on me",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "regroup on me",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Let's get out of here.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Let's get out of here.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Let's get out of here.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "ok you can come now",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "ok you can come now",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "ok you can come now",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "All clear, come through.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "All clear, come through.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "All clear, come through.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "dont follow me in there",
+      "who": "Isolde",
+      "want": "stay",
+      "got": "follow"
+     },
+     {
+      "group": "stay",
+      "line": "dont follow me in there",
+      "who": "Wystan",
+      "want": "stay",
+      "got": "follow"
+     },
+     {
+      "group": "stay",
+      "line": "dont follow me in there",
+      "who": "Thea",
+      "want": "stay",
+      "got": "follow"
+     },
+     {
+      "group": "stay",
+      "line": "Stay back, it's trapped.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Stay back, it's trapped.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Stay back, it's trapped.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "wait there a sec",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "wait there a sec",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "wait there a sec",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Nobody goes any further.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Nobody goes any further.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Nobody goes any further.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Freeze!",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Freeze!",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "Freeze!",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "beer time, sit",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "beer time, sit",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "beer time, sit",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Park yourselves, I'm buying.",
+      "who": "Isolde",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Park yourselves, I'm buying.",
+      "who": "Wystan",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "table",
+      "line": "Park yourselves, I'm buying.",
+      "who": "Thea",
+      "want": "table",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan with me, the others hold.",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan with me, the others hold.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan with me, the others hold.",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Not you, Wystan. You wait.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Thea and Isolde, come here.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Thea and Isolde, come here.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Wystan, stop following me for a minute.",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "who",
+      "line": "Isolde, you coming or what?",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "heal pls",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "heal pls",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "heal pls",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Isolde, stop casting at my target.",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Come on, you beauty!",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "Come on, you beauty!",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "Come on, you beauty!",
+      "who": "Thea",
+      "want": null,
+      "got": "follow"
+     },
+     {
+      "group": "talk",
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Isolde",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Wystan",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Thea",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "at the table",
+      "line": "ok up we get",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "ok up we get",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "ok up we get",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "That's enough, we're off.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "That's enough, we're off.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "That's enough, we're off.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Let's hit the road.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Let's hit the road.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "at the table",
+      "line": "Let's hit the road.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     }
+    ]
+   },
+   "third": {
+    "right": 69,
+    "of": 120,
+    "pct": 57.5,
+    "by_group": {
+     "go": "17/36",
+     "back": "3/15",
+     "talk": "39/45",
+     "request": "4/15",
+     "follow": "6/9"
+    },
+    "orders_missed": 30,
+    "talk_taken_for_an_order": 6,
+    "one_order_for_another": 1,
+    "talk_and_requests_mixed_up": 14,
+    "wrong": [
+     {
+      "group": "go",
+      "line": "I'll follow you",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "I'll follow you",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "I'll follow you",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "You lot head to the tavern, I'll be along.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "You lot head to the tavern, I'll be along.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "You lot head to the tavern, I'll be along.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Off to the healer with you, all of you.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Off to the healer with you, all of you.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Off to the healer with you, all of you.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Go and wait at the stables.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Go and wait at the stables.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Go and wait at the stables.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Wystan, go on to the inn. The rest of you with me.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Wystan, go on to the inn. The rest of you with me.",
+      "who": "Wystan",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Wystan, go on to the inn. The rest of you with me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Isolde and Thea, off to the bank. Wystan stays with me.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Isolde and Thea, off to the bank. Wystan stays with me.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Isolde and Thea, off to the bank. Wystan stays with me.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Thea, take Bramble to the stables and wait for us there.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Right, come back.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Right, come back.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Right, come back.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Back to me, you lot.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Back to me, you lot.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Back to me, you lot.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "On my way. Order me an ale.",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "On my way. Order me an ale.",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "On my way. Order me an ale.",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Isolde",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Wystan",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Thea",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "request",
+      "line": "cover me",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "cover me",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "cover me",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "heal me",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "heal me",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "heal me",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Isolde, kill that one for me.",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "someone go and buy me some reagents",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "someone go and buy me some reagents",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "someone go and buy me some reagents",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "The inn was dreadful last time.",
+      "who": "Isolde",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "The inn was dreadful last time.",
+      "who": "Wystan",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "The inn was dreadful last time.",
+      "who": "Thea",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "follow",
+      "line": "To the bank, all of you, with me.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "To the bank, all of you, with me.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "To the bank, all of you, with me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     }
+    ]
+   },
+   "fourth": {
+    "right": 47,
+    "of": 102,
+    "pct": 46.1,
+    "by_group": {
+     "go": "2/33",
+     "back": "6/12",
+     "talk": "30/39",
+     "follow": "3/12",
+     "stay": "6/6"
+    },
+    "orders_missed": 37,
+    "talk_taken_for_an_order": 9,
+    "one_order_for_another": 9,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "go",
+      "line": "you guys go to the inn, brb",
+      "who": "Isolde",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "you guys go to the inn, brb",
+      "who": "Wystan",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "you guys go to the inn, brb",
+      "who": "Thea",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Head on to the bank without me.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Head on to the bank without me.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Head on to the bank without me.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "I'll see you lot at the tavern.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "I'll see you lot at the tavern.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "I'll see you lot at the tavern.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "go ahead, I'll catch up",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "go ahead, I'll catch up",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "go ahead, I'll catch up",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Run along to the healer, I'll be right behind.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Run along to the healer, I'll be right behind.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Run along to the healer, I'll be right behind.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Get yourselves to the bank and wait.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Get yourselves to the bank and wait.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Get yourselves to the bank and wait.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "inn. now. I'll join you.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "inn. now. I'll join you.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "inn. now. I'll join you.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Thea, go wait at the stables.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Wystan and Isolde, on to the inn with you. Thea, you're with me.",
+      "who": "Isolde",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Wystan and Isolde, on to the inn with you. Thea, you're with me.",
+      "who": "Wystan",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Wystan and Isolde, on to the inn with you. Thea, you're with me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Go on, then.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Go on, then.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Go on, then.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Where are you? Get back here.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Where are you? Get back here.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "Where are you? Get back here.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "come back to the graveyard",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "come back to the graveyard",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "back",
+      "line": "come back to the graveyard",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "talk",
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Isolde",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Wystan",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Thea",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Isolde",
+      "want": null,
+      "got": "go"
+     },
+     {
+      "group": "talk",
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Wystan",
+      "want": null,
+      "got": "go"
+     },
+     {
+      "group": "talk",
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Thea",
+      "want": null,
+      "got": "go"
+     },
+     {
+      "group": "talk",
+      "line": "He went off to the inn and never came back.",
+      "who": "Isolde",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "He went off to the inn and never came back.",
+      "who": "Wystan",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "talk",
+      "line": "He went off to the inn and never came back.",
+      "who": "Thea",
+      "want": null,
+      "got": "table"
+     },
+     {
+      "group": "follow",
+      "line": "To the inn! Follow me.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "table"
+     },
+     {
+      "group": "follow",
+      "line": "To the inn! Follow me.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": "table"
+     },
+     {
+      "group": "follow",
+      "line": "To the inn! Follow me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": "table"
+     },
+     {
+      "group": "follow",
+      "line": "Let's all go to the bank.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Let's all go to the bank.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Let's all go to the bank.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Off we go again.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Off we go again.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "Off we go again.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     }
+    ]
+   },
+   "fifth": {
+    "right": 21,
+    "of": 42,
+    "pct": 50.0,
+    "by_group": {
+     "request": "6/24",
+     "talk": "12/12",
+     "follow": "0/3",
+     "stay": "3/3"
+    },
+    "orders_missed": 3,
+    "talk_taken_for_an_order": 0,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 18,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "tank that one for me",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "tank that one for me",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "tank that one for me",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Thea, send the bear in.",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "somebody res me",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "somebody res me",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "somebody res me",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Wystan shoot the mage",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "can one of you carry this for me?",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "can one of you carry this for me?",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "can one of you carry this for me?",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "protect Isolde",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "protect Isolde",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "protect Isolde",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Isolde, cast something on it!",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "cover me, I'm going in. Follow!",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "cover me, I'm going in. Follow!",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "cover me, I'm going in. Follow!",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     }
+    ]
+   },
+   "sixth": {
+    "right": 25,
+    "of": 48,
+    "pct": 52.1,
+    "by_group": {
+     "request": "4/18",
+     "talk": "12/12",
+     "follow": "6/6",
+     "stay": "3/9",
+     "go": "0/3"
+    },
+    "orders_missed": 6,
+    "talk_taken_for_an_order": 0,
+    "one_order_for_another": 3,
+    "talk_and_requests_mixed_up": 14,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "kill the archer first",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "kill the archer first",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "kill the archer first",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Thea, patch me up would you",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "one of you go and find a healer",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "one of you go and find a healer",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "one of you go and find a healer",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "keep them off me!",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "keep them off me!",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "keep them off me!",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Isolde, light it up.",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "watch my back",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "watch my back",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "watch my back",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Off to the inn with you, and order me a stew.",
+      "who": "Isolde",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Off to the inn with you, and order me a stew.",
+      "who": "Wystan",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "go",
+      "line": "Off to the inn with you, and order me a stew.",
+      "who": "Thea",
+      "want": "go",
+      "got": "table"
+     },
+     {
+      "group": "stay",
+      "line": "hold up",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "hold up",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "hold up",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "freeze",
+      "who": "Isolde",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "freeze",
+      "who": "Wystan",
+      "want": "stay",
+      "got": null
+     },
+     {
+      "group": "stay",
+      "line": "freeze",
+      "who": "Thea",
+      "want": "stay",
+      "got": null
+     }
+    ]
+   },
+   "seventh": {
+    "right": 34,
+    "of": 57,
+    "pct": 59.6,
+    "by_group": {
+     "request": "4/21",
+     "talk": "27/27",
+     "stay": "3/3",
+     "follow": "0/3",
+     "go": "0/3"
+    },
+    "orders_missed": 6,
+    "talk_taken_for_an_order": 0,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 17,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "someone pull that ogre off me",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "someone pull that ogre off me",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "someone pull that ogre off me",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Wystan, pick that lock for me.",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "give me a hand with this door",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "give me a hand with this door",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "give me a hand with this door",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "Thea, lend me fifty gold.",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "bandage me, quick",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "bandage me, quick",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "bandage me, quick",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "hold this for me a sec",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "hold this for me a sec",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "request",
+      "line": "hold this for me a sec",
+      "who": "Thea",
+      "want": "asked",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "With me, and somebody watch the rear.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "With me, and somebody watch the rear.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "follow",
+      "line": "With me, and somebody watch the rear.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Get to the bank, the lot of you, and guard my pack there.",
+      "who": "Isolde",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Get to the bank, the lot of you, and guard my pack there.",
+      "who": "Wystan",
+      "want": "go",
+      "got": null
+     },
+     {
+      "group": "go",
+      "line": "Get to the bank, the lot of you, and guard my pack there.",
+      "who": "Thea",
+      "want": "go",
+      "got": null
+     }
+    ]
+   }
+  },
+  "decision1": {
+   "first": {
+    "right": 250,
+    "of": 252,
+    "pct": 99.2,
+    "by_group": {
+     "plain": "24/24",
+     "follow": "34/36",
+     "stay": "30/30",
+     "table": "18/18",
+     "who": "24/24",
+     "talk": "78/78",
+     "at the table": "42/42"
+    },
+    "orders_missed": 2,
+    "talk_taken_for_an_order": 0,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "follow",
+      "line": "ok lets move",
+      "who": "Wystan",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.94,
+      "probabilities": {
+       "follow": 0.529,
+       "go": 0.002,
+       "none": 0.467,
+       "stay": 0.0,
+       "table": 0.002
+      }
+     },
+     {
+      "group": "follow",
+      "line": "ok lets move",
+      "who": "Thea",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.932,
+      "probabilities": {
+       "follow": 0.559,
+       "go": 0.003,
+       "none": 0.435,
+       "stay": 0.001,
+       "table": 0.002
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Back to me, all of you! (distance)",
+     "Get over here! (distance)",
+     "Hang back here, I'll pull one to us. (distance)",
+     "Kill the lich first! (target)",
+     "Stay close. (distance)",
+     "Stick with me through here. (distance)",
+     "Wystan, hang back here. (distance)",
+     "You should have stayed back, Isolde. (distance)",
+     "all kill (reach)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 252,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 252,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 252,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 250,
+      "orders_missed": 2,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 249,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 245,
+      "orders_missed": 7,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 250,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 250,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 250,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 250,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 250,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "ok lets move",
+      "who": "Wystan",
+      "want": "follow",
+      "p": 0.94
+     },
+     {
+      "line": "ok lets move",
+      "who": "Thea",
+      "want": "follow",
+      "p": 0.932
+     },
+     {
+      "line": "Wystan, wait here.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "Wystan, wait here.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Wystan, hang back here.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Wystan, hang back here.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Thea, keep up!",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "Thea, keep up!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "Isolde and Wystan, hold here a moment.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.018
+     },
+     {
+      "line": "You should have stayed back, Isolde.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "You should have stayed back, Isolde.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "It came straight to me, and I'll stay alive, thanks.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "It came straight to me, and I'll stay alive, thanks.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "It came straight to me, and I'll stay alive, thanks.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Nice weather for it.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Nice weather for it.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Nice weather for it.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "That lich nearly had me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "That lich nearly had me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "That lich nearly had me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Did you see that shot?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Did you see that shot?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Did you see that shot?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Come on, that was a warning shot?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.016
+     },
+     {
+      "line": "Come on, that was a warning shot?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "Come on, that was a warning shot?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "I could follow that road for days and never tire of it.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I could follow that road for days and never tire of it.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "I could follow that road for days and never tire of it.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "My old dog never stayed when told either.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "My old dog never stayed when told either.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "My old dog never stayed when told either.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Wait, was that a dragon?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Wait, was that a dragon?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Wait, was that a dragon?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Hold on, what did you just say?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "Hold on, what did you just say?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Hold on, what did you just say?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.018
+     },
+     {
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.016
+     },
+     {
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.023
+     },
+     {
+      "line": "vendor buy",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "vendor buy",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "vendor buy",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "bank",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.023
+     },
+     {
+      "line": "bank",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.023
+     },
+     {
+      "line": "bank",
+      "who": "Thea",
+      "want": null,
+      "p": 0.023
+     },
+     {
+      "line": "Thanks for the heal, Isolde.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "Thanks for the heal, Isolde.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Thanks for the heal, Isolde.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "Good fight, all of you.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Good fight, all of you.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Good fight, all of you.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Isolde, heal me!",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 1.0
+     },
+     {
+      "line": "Isolde, heal me!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.269
+     },
+     {
+      "line": "Isolde, heal me!",
+      "who": "Thea",
+      "want": null,
+      "p": 0.076
+     },
+     {
+      "line": "Wystan, how many arrows have you left?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Wystan, how many arrows have you left?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Wystan, how many arrows have you left?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I need to stop drinking so much.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "I need to stop drinking so much.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "I need to stop drinking so much.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Thea, does Bramble ever sit still?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Thea, does Bramble ever sit still?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Thea, does Bramble ever sit still?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "He followed me all the way from Yew, the fool.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "He followed me all the way from Yew, the fool.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "He followed me all the way from Yew, the fool.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "lol",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "lol",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "lol",
+      "who": "Thea",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "Remind me to buy bandages.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.047
+     },
+     {
+      "line": "Remind me to buy bandages.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.033
+     },
+     {
+      "line": "Remind me to buy bandages.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.033
+     },
+     {
+      "line": "Who wants to wait for a dragon? Not me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Who wants to wait for a dragon? Not me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "Who wants to wait for a dragon? Not me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.012
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 310,
+     "p90": 356
+    },
+    "cost_usd_a_question": 4.99e-05,
+    "input_tokens": 1187,
+    "errors": 0
+   },
+   "second": {
+    "right": 148,
+    "of": 159,
+    "pct": 93.1,
+    "by_group": {
+     "follow": "26/33",
+     "stay": "24/24",
+     "table": "9/12",
+     "who": "17/18",
+     "talk": "48/48",
+     "at the table": "24/24"
+    },
+    "orders_missed": 8,
+    "talk_taken_for_an_order": 0,
+    "one_order_for_another": 3,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "follow",
+      "line": "w/me",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null,
+      "asked": 0.133,
+      "probabilities": {
+       "follow": 0.382,
+       "go": 0.022,
+       "none": 0.556,
+       "stay": 0.036,
+       "table": 0.004
+      }
+     },
+     {
+      "group": "follow",
+      "line": "w/me",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null,
+      "asked": 0.119,
+      "probabilities": {
+       "follow": 0.299,
+       "go": 0.022,
+       "none": 0.634,
+       "stay": 0.041,
+       "table": 0.004
+      }
+     },
+     {
+      "group": "follow",
+      "line": "w/me",
+      "who": "Thea",
+      "want": "follow",
+      "got": null,
+      "asked": 0.148,
+      "probabilities": {
+       "follow": 0.449,
+       "go": 0.017,
+       "none": 0.508,
+       "stay": 0.022,
+       "table": 0.003
+      }
+     },
+     {
+      "group": "follow",
+      "line": "lets roll",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.706,
+      "probabilities": {
+       "follow": 0.465,
+       "go": 0.004,
+       "none": 0.527,
+       "stay": 0.001,
+       "table": 0.003
+      }
+     },
+     {
+      "group": "follow",
+      "line": "lets roll",
+      "who": "Wystan",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.777,
+      "probabilities": {
+       "follow": 0.292,
+       "go": 0.003,
+       "none": 0.701,
+       "stay": 0.001,
+       "table": 0.003
+      }
+     },
+     {
+      "group": "follow",
+      "line": "lets roll",
+      "who": "Thea",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.731,
+      "probabilities": {
+       "follow": 0.405,
+       "go": 0.004,
+       "none": 0.589,
+       "stay": 0.001,
+       "table": 0.002
+      }
+     },
+     {
+      "group": "follow",
+      "line": "everyone on me",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null,
+      "asked": 0.924,
+      "probabilities": {
+       "follow": 0.587,
+       "go": 0.005,
+       "none": 0.403,
+       "stay": 0.002,
+       "table": 0.003
+      }
+     },
+     {
+      "group": "table",
+      "line": "Park yourselves, I'm buying.",
+      "who": "Isolde",
+      "want": "table",
+      "got": "stay",
+      "asked": 0.852,
+      "probabilities": {
+       "follow": 0.002,
+       "go": 0.003,
+       "none": 0.012,
+       "stay": 0.946,
+       "table": 0.037
+      }
+     },
+     {
+      "group": "table",
+      "line": "Park yourselves, I'm buying.",
+      "who": "Wystan",
+      "want": "table",
+      "got": "stay",
+      "asked": 0.798,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.005,
+       "none": 0.017,
+       "stay": 0.917,
+       "table": 0.059
+      }
+     },
+     {
+      "group": "table",
+      "line": "Park yourselves, I'm buying.",
+      "who": "Thea",
+      "want": "table",
+      "got": "stay",
+      "asked": 0.852,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.005,
+       "none": 0.013,
+       "stay": 0.927,
+       "table": 0.052
+      }
+     },
+     {
+      "group": "who",
+      "line": "Isolde, you coming or what?",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.924,
+      "probabilities": {
+       "follow": 0.467,
+       "go": 0.002,
+       "none": 0.529,
+       "stay": 0.001,
+       "table": 0.001
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Isolde, stop casting at my target. (target)",
+     "Stay back, it's trapped. (distance)",
+     "dont follow me in there (distance)",
+     "everyone on me (distance)",
+     "heal pls (helping)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 155,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     },
+     "0.4": {
+      "right": 154,
+      "orders_missed": 2,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     },
+     "0.5": {
+      "right": 149,
+      "orders_missed": 7,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     },
+     "0.6": {
+      "right": 148,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     },
+     "0.7": {
+      "right": 145,
+      "orders_missed": 11,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     },
+     "0.8": {
+      "right": 142,
+      "orders_missed": 14,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 145,
+      "talk_and_requests_mixed_up": 3
+     },
+     "0.6": {
+      "right": 146,
+      "talk_and_requests_mixed_up": 2
+     },
+     "0.7": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "w/me",
+      "who": "Isolde",
+      "want": "follow",
+      "p": 0.133
+     },
+     {
+      "line": "w/me",
+      "who": "Wystan",
+      "want": "follow",
+      "p": 0.119
+     },
+     {
+      "line": "w/me",
+      "who": "Thea",
+      "want": "follow",
+      "p": 0.148
+     },
+     {
+      "line": "lets roll",
+      "who": "Isolde",
+      "want": "follow",
+      "p": 0.706
+     },
+     {
+      "line": "lets roll",
+      "who": "Wystan",
+      "want": "follow",
+      "p": 0.777
+     },
+     {
+      "line": "lets roll",
+      "who": "Thea",
+      "want": "follow",
+      "p": 0.731
+     },
+     {
+      "line": "thea stay",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.02
+     },
+     {
+      "line": "thea stay",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "Not you, Wystan. You wait.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Not you, Wystan. You wait.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Thea and Isolde, come here.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Wystan, stop following me for a minute.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "Wystan, stop following me for a minute.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Isolde, you coming or what?",
+      "who": "Isolde",
+      "want": "follow",
+      "p": 0.924
+     },
+     {
+      "line": "Isolde, you coming or what?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Isolde, you coming or what?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "that was close",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "that was close",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "that was close",
+      "who": "Thea",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "I can't stay long tonight.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "I can't stay long tonight.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "I can't stay long tonight.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "anyone need to wait for mana?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.679
+     },
+     {
+      "line": "anyone need to wait for mana?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.593
+     },
+     {
+      "line": "anyone need to wait for mana?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.622
+     },
+     {
+      "line": "Follow the money, as they say.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "Follow the money, as they say.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Follow the money, as they say.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "heal pls",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.996
+     },
+     {
+      "line": "gg",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "gg",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "gg",
+      "who": "Thea",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "who took the gold?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "who took the gold?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "who took the gold?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Isolde, stop casting at my target.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "Isolde, stop casting at my target.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "This place gives me the creeps.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "This place gives me the creeps.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "This place gives me the creeps.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "Should we go left or right?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Should we go left or right?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.042
+     },
+     {
+      "line": "Should we go left or right?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.047
+     },
+     {
+      "line": "Wystan, nice shot.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Wystan, nice shot.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Wystan, nice shot.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "wait for it...",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "wait for it...",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "wait for it...",
+      "who": "Thea",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "Come on, you beauty!",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "Come on, you beauty!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Come on, you beauty!",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Still there? Good.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "Still there? Good.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Still there? Good.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "Two more of them up ahead.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Two more of them up ahead.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Two more of them up ahead.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 303,
+     "p90": 342
+    },
+    "cost_usd_a_question": 5.03e-05,
+    "input_tokens": 1199,
+    "errors": 0
+   },
+   "third": {
+    "right": 115,
+    "of": 120,
+    "pct": 95.8,
+    "by_group": {
+     "go": "36/36",
+     "back": "13/15",
+     "talk": "45/45",
+     "request": "12/15",
+     "follow": "9/9"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 4,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 1,
+    "wrong": [
+     {
+      "group": "back",
+      "line": "On my way. Order me an ale.",
+      "who": "Isolde",
+      "want": "asked",
+      "got": "table",
+      "asked": 0.798,
+      "probabilities": {
+       "follow": 0.082,
+       "go": 0.021,
+       "none": 0.197,
+       "stay": 0.013,
+       "table": 0.688
+      }
+     },
+     {
+      "group": "back",
+      "line": "On my way. Order me an ale.",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null,
+      "asked": 0.651,
+      "probabilities": {
+       "follow": 0.09,
+       "go": 0.02,
+       "none": 0.356,
+       "stay": 0.016,
+       "table": 0.518
+      }
+     },
+     {
+      "group": "request",
+      "line": "someone go and buy me some reagents",
+      "who": "Isolde",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.947,
+      "probabilities": {
+       "follow": 0.004,
+       "go": 0.811,
+       "none": 0.181,
+       "stay": 0.003,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "request",
+      "line": "someone go and buy me some reagents",
+      "who": "Thea",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.958,
+      "probabilities": {
+       "follow": 0.004,
+       "go": 0.645,
+       "none": 0.345,
+       "stay": 0.005,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "request",
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Wystan",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.98,
+      "probabilities": {
+       "follow": 0.01,
+       "go": 0.615,
+       "none": 0.373,
+       "stay": 0.002,
+       "table": 0.001
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Off to the healer with you, all of you. (helping)",
+     "Please go ahead and loot (looting)",
+     "feel free to loot (looting)",
+     "loot (looting)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 115,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 115,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 115,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 115,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 118,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 118,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 116,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 116,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 115,
+      "talk_and_requests_mixed_up": 1
+     },
+     "0.8": {
+      "right": 114,
+      "talk_and_requests_mixed_up": 2
+     },
+     "0.9": {
+      "right": 114,
+      "talk_and_requests_mixed_up": 2
+     }
+    },
+    "asked": [
+     {
+      "line": "Thea, take Bramble to the stables and wait for us there.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.023
+     },
+     {
+      "line": "Thea, take Bramble to the stables and wait for us there.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.016
+     },
+     {
+      "line": "On my way. Order me an ale.",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.651
+     },
+     {
+      "line": "On my way. Order me an ale.",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.706
+     },
+     {
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.202
+     },
+     {
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.119
+     },
+     {
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.269
+     },
+     {
+      "line": "Shall we head to the graveyard? Yay or nay?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.269
+     },
+     {
+      "line": "Shall we head to the graveyard? Yay or nay?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.165
+     },
+     {
+      "line": "Shall we head to the graveyard? Yay or nay?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.269
+     },
+     {
+      "line": "I might go to the bank later.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "I might go to the bank later.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "I might go to the bank later.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "Go on then, tell me about the bear.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Go on then, tell me about the bear.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Go on then, tell me about the bear.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I'll meet you lot in hell.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I'll meet you lot in hell.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I'll meet you lot in hell.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "cover me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.998
+     },
+     {
+      "line": "cover me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.998
+     },
+     {
+      "line": "cover me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.998
+     },
+     {
+      "line": "heal me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.996
+     },
+     {
+      "line": "heal me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.997
+     },
+     {
+      "line": "heal me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.996
+     },
+     {
+      "line": "Isolde, kill that one for me.",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 1.0
+     },
+     {
+      "line": "Isolde, kill that one for me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "Isolde, kill that one for me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "someone go and buy me some reagents",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.947
+     },
+     {
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "here's the plan...",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "here's the plan...",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "here's the plan...",
+      "who": "Thea",
+      "want": null,
+      "p": 0.011
+     },
+     {
+      "line": "So crew how are you all today?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "So crew how are you all today?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "So crew how are you all today?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Graveyard?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "Graveyard?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Graveyard?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "ok",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "ok",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "ok",
+      "who": "Thea",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "The inn was dreadful last time.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "The inn was dreadful last time.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "The inn was dreadful last time.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "Off with his head, I say.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.165
+     },
+     {
+      "line": "Off with his head, I say.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.245
+     },
+     {
+      "line": "Off with his head, I say.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.068
+     },
+     {
+      "line": "Who's off to the bank after this?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.165
+     },
+     {
+      "line": "Who's off to the bank after this?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.133
+     },
+     {
+      "line": "Who's off to the bank after this?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.245
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 313,
+     "p90": 344
+    },
+    "cost_usd_a_question": 5.59e-05,
+    "input_tokens": 1330,
+    "errors": 0
+   },
+   "fourth": {
+    "right": 92,
+    "of": 102,
+    "pct": 90.2,
+    "by_group": {
+     "go": "30/33",
+     "back": "6/12",
+     "talk": "39/39",
+     "follow": "11/12",
+     "stay": "6/6"
+    },
+    "orders_missed": 4,
+    "talk_taken_for_an_order": 3,
+    "one_order_for_another": 3,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Isolde",
+      "want": "go",
+      "got": null,
+      "asked": 0.018,
+      "probabilities": {
+       "follow": 0.004,
+       "go": 0.037,
+       "none": 0.958,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Wystan",
+      "want": "go",
+      "got": null,
+      "asked": 0.018,
+      "probabilities": {
+       "follow": 0.002,
+       "go": 0.012,
+       "none": 0.985,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Thea",
+      "want": "go",
+      "got": null,
+      "asked": 0.026,
+      "probabilities": {
+       "follow": 0.008,
+       "go": 0.023,
+       "none": 0.967,
+       "stay": 0.001,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "back",
+      "line": "come back to the graveyard",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "go",
+      "asked": 0.94,
+      "probabilities": {
+       "follow": 0.629,
+       "go": 0.337,
+       "none": 0.031,
+       "stay": 0.003,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "back",
+      "line": "come back to the graveyard",
+      "who": "Wystan",
+      "want": "follow",
+      "got": "go",
+      "asked": 0.94,
+      "probabilities": {
+       "follow": 0.36,
+       "go": 0.593,
+       "none": 0.043,
+       "stay": 0.004,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "back",
+      "line": "come back to the graveyard",
+      "who": "Thea",
+      "want": "follow",
+      "got": "go",
+      "asked": 0.947,
+      "probabilities": {
+       "follow": 0.426,
+       "go": 0.547,
+       "none": 0.024,
+       "stay": 0.003,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "back",
+      "line": "Nearly there, save me a seat.",
+      "who": "Isolde",
+      "want": null,
+      "got": "go",
+      "asked": 0.593,
+      "probabilities": {
+       "follow": 0.053,
+       "go": 0.65,
+       "none": 0.032,
+       "stay": 0.1,
+       "table": 0.164
+      }
+     },
+     {
+      "group": "back",
+      "line": "Nearly there, save me a seat.",
+      "who": "Wystan",
+      "want": null,
+      "got": "go",
+      "asked": 0.469,
+      "probabilities": {
+       "follow": 0.067,
+       "go": 0.632,
+       "none": 0.036,
+       "stay": 0.141,
+       "table": 0.124
+      }
+     },
+     {
+      "group": "back",
+      "line": "Nearly there, save me a seat.",
+      "who": "Thea",
+      "want": null,
+      "got": "go",
+      "asked": 0.622,
+      "probabilities": {
+       "follow": 0.046,
+       "go": 0.64,
+       "none": 0.032,
+       "stay": 0.098,
+       "table": 0.183
+      }
+     },
+     {
+      "group": "follow",
+      "line": "Off we go again.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null,
+      "asked": 0.014,
+      "probabilities": {
+       "follow": 0.498,
+       "go": 0.002,
+       "none": 0.498,
+       "stay": 0.0,
+       "table": 0.001
+      }
+     }
+    ],
+    "spoken_to_a_setting": [],
+    "cuts": {
+     "0.3": {
+      "right": 93,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 3
+     },
+     "0.4": {
+      "right": 93,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 3
+     },
+     "0.5": {
+      "right": 93,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 3
+     },
+     "0.6": {
+      "right": 92,
+      "orders_missed": 4,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 3
+     },
+     "0.7": {
+      "right": 93,
+      "orders_missed": 5,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 3
+     },
+     "0.8": {
+      "right": 93,
+      "orders_missed": 6,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 3
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 92,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 92,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 92,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 92,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 92,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "Thea, go wait at the stables.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Thea, go wait at the stables.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "yes, there",
+      "who": "Isolde",
+      "want": "go",
+      "p": 0.018
+     },
+     {
+      "line": "yes, there",
+      "who": "Wystan",
+      "want": "go",
+      "p": 0.018
+     },
+     {
+      "line": "yes, there",
+      "who": "Thea",
+      "want": "go",
+      "p": 0.026
+     },
+     {
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "I'm off to bed soon.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "I'm off to bed soon.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "I'm off to bed soon.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "We should go to the bank at some point.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.133
+     },
+     {
+      "line": "We should go to the bank at some point.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.148
+     },
+     {
+      "line": "We should go to the bank at some point.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.148
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.029
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.02
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.037
+     },
+     {
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "He went off to the inn and never came back.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "He went off to the inn and never came back.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "He went off to the inn and never came back.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "What's at the bank that you need?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.037
+     },
+     {
+      "line": "What's at the bank that you need?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "What's at the bank that you need?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.047
+     },
+     {
+      "line": "vendor sell",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.018
+     },
+     {
+      "line": "vendor sell",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.018
+     },
+     {
+      "line": "vendor sell",
+      "who": "Thea",
+      "want": null,
+      "p": 0.023
+     },
+     {
+      "line": "I'll wait.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.029
+     },
+     {
+      "line": "I'll wait.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.029
+     },
+     {
+      "line": "I'll wait.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.053
+     },
+     {
+      "line": "ok",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "ok",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "ok",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "right",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "right",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "right",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "nice",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "nice",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "nice",
+      "who": "Thea",
+      "want": null,
+      "p": 0.002
+     },
+     {
+      "line": "good idea",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "good idea",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "good idea",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Off we go again.",
+      "who": "Wystan",
+      "want": "follow",
+      "p": 0.014
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 311,
+     "p90": 342
+    },
+    "cost_usd_a_question": 5.58e-05,
+    "input_tokens": 1328,
+    "errors": 0
+   },
+   "fifth": {
+    "right": 39,
+    "of": 42,
+    "pct": 92.9,
+    "by_group": {
+     "request": "21/24",
+     "talk": "12/12",
+     "follow": "3/3",
+     "stay": "3/3"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 3,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Isolde",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.999,
+      "probabilities": {
+       "follow": 0.004,
+       "go": 0.985,
+       "none": 0.01,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Wystan",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.999,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.978,
+       "none": 0.018,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Thea",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.999,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.985,
+       "none": 0.011,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Heal thyself, as they say. (helping)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "tank that one for me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.993
+     },
+     {
+      "line": "tank that one for me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.991
+     },
+     {
+      "line": "tank that one for me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.99
+     },
+     {
+      "line": "Thea, send the bear in.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "Thea, send the bear in.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "Thea, send the bear in.",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.993
+     },
+     {
+      "line": "somebody res me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.974
+     },
+     {
+      "line": "somebody res me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.98
+     },
+     {
+      "line": "somebody res me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.982
+     },
+     {
+      "line": "Wystan shoot the mage",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.026
+     },
+     {
+      "line": "Wystan shoot the mage",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 1.0
+     },
+     {
+      "line": "Wystan shoot the mage",
+      "who": "Thea",
+      "want": null,
+      "p": 0.014
+     },
+     {
+      "line": "can one of you carry this for me?",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.94
+     },
+     {
+      "line": "can one of you carry this for me?",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.947
+     },
+     {
+      "line": "can one of you carry this for me?",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.94
+     },
+     {
+      "line": "protect Isolde",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.963
+     },
+     {
+      "line": "protect Isolde",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.997
+     },
+     {
+      "line": "protect Isolde",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.995
+     },
+     {
+      "line": "Isolde, cast something on it!",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.999
+     },
+     {
+      "line": "Isolde, cast something on it!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.01
+     },
+     {
+      "line": "Isolde, cast something on it!",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "I could kill for an ale.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "I could kill for an ale.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "I could kill for an ale.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "That bear could carry all of us.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "That bear could carry all of us.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "That bear could carry all of us.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Somebody shot the mage before I got there.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Somebody shot the mage before I got there.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Somebody shot the mage before I got there.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.006
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 305,
+     "p90": 349
+    },
+    "cost_usd_a_question": 5.57e-05,
+    "input_tokens": 1325,
+    "errors": 0
+   },
+   "sixth": {
+    "right": 45,
+    "of": 48,
+    "pct": 93.8,
+    "by_group": {
+     "request": "18/18",
+     "talk": "12/12",
+     "follow": "3/6",
+     "stay": "9/9",
+     "go": "3/3"
+    },
+    "orders_missed": 3,
+    "talk_taken_for_an_order": 0,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "follow",
+      "line": "Come on, and kill anything that moves.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": null,
+      "asked": 0.998,
+      "probabilities": {
+       "follow": 0.005,
+       "go": 0.001,
+       "none": 0.993,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     },
+     {
+      "group": "follow",
+      "line": "Come on, and kill anything that moves.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": null,
+      "asked": 0.999,
+      "probabilities": {
+       "follow": 0.006,
+       "go": 0.001,
+       "none": 0.992,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     },
+     {
+      "group": "follow",
+      "line": "Come on, and kill anything that moves.",
+      "who": "Thea",
+      "want": "follow",
+      "got": null,
+      "asked": 0.999,
+      "probabilities": {
+       "follow": 0.005,
+       "go": 0.001,
+       "none": 0.993,
+       "stay": 0.001,
+       "table": 0.0
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Come on, and kill anything that moves. (reach)",
+     "kill the archer first (target)",
+     "one of you go and find a healer (helping)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 45,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 45,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 45,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 45,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 45,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 45,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 45,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 45,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 45,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 45,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 45,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "Thea, patch me up would you",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Thea, patch me up would you",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.053
+     },
+     {
+      "line": "Thea, patch me up would you",
+      "who": "Thea",
+      "want": "asked",
+      "p": 1.0
+     },
+     {
+      "line": "one of you go and find a healer",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.98
+     },
+     {
+      "line": "one of you go and find a healer",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.977
+     },
+     {
+      "line": "keep them off me!",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.958
+     },
+     {
+      "line": "keep them off me!",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.953
+     },
+     {
+      "line": "keep them off me!",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.947
+     },
+     {
+      "line": "Isolde, light it up.",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.995
+     },
+     {
+      "line": "Isolde, light it up.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Isolde, light it up.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "watch my back",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.98
+     },
+     {
+      "line": "watch my back",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.982
+     },
+     {
+      "line": "watch my back",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.988
+     },
+     {
+      "line": "That one nearly killed me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "That one nearly killed me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "That one nearly killed me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.003
+     },
+     {
+      "line": "You lot fetch and carry like mules.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.165
+     },
+     {
+      "line": "You lot fetch and carry like mules.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.133
+     },
+     {
+      "line": "You lot fetch and carry like mules.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.107
+     },
+     {
+      "line": "Scouts say the pass is clear.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Scouts say the pass is clear.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.009
+     },
+     {
+      "line": "Scouts say the pass is clear.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.182
+     },
+     {
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.107
+     },
+     {
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.223
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 304,
+     "p90": 341
+    },
+    "cost_usd_a_question": 5.56e-05,
+    "input_tokens": 1325,
+    "errors": 0
+   },
+   "seventh": {
+    "right": 49,
+    "of": 57,
+    "pct": 86.0,
+    "by_group": {
+     "request": "16/21",
+     "talk": "24/27",
+     "stay": "3/3",
+     "follow": "3/3",
+     "go": "3/3"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 1,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 7,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null,
+      "asked": 0.378,
+      "probabilities": {
+       "follow": 0.001,
+       "go": 0.002,
+       "none": 0.992,
+       "stay": 0.003,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null,
+      "asked": 0.202,
+      "probabilities": {
+       "follow": 0.002,
+       "go": 0.002,
+       "none": 0.992,
+       "stay": 0.003,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Thea",
+      "want": "asked",
+      "got": null,
+      "asked": 0.349,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.003,
+       "none": 0.988,
+       "stay": 0.005,
+       "table": 0.002
+      }
+     },
+     {
+      "group": "request",
+      "line": "Thea, lend me fifty gold.",
+      "who": "Thea",
+      "want": "asked",
+      "got": null,
+      "asked": 0.679,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.002,
+       "none": 0.993,
+       "stay": 0.001,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "request",
+      "line": "hold this for me a sec",
+      "who": "Wystan",
+      "want": "asked",
+      "got": "stay",
+      "asked": 0.977,
+      "probabilities": {
+       "follow": 0.009,
+       "go": 0.007,
+       "none": 0.314,
+       "stay": 0.665,
+       "table": 0.003
+      }
+     },
+     {
+      "group": "talk",
+      "line": "all guard me",
+      "who": "Isolde",
+      "want": null,
+      "got": "asked",
+      "asked": 0.867,
+      "probabilities": {
+       "follow": 0.003,
+       "go": 0.002,
+       "none": 0.991,
+       "stay": 0.004,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "talk",
+      "line": "all guard me",
+      "who": "Wystan",
+      "want": null,
+      "got": "asked",
+      "asked": 0.881,
+      "probabilities": {
+       "follow": 0.004,
+       "go": 0.001,
+       "none": 0.99,
+       "stay": 0.004,
+       "table": 0.001
+      }
+     },
+     {
+      "group": "talk",
+      "line": "all guard me",
+      "who": "Thea",
+      "want": null,
+      "got": "asked",
+      "asked": 0.893,
+      "probabilities": {
+       "follow": 0.004,
+       "go": 0.001,
+       "none": 0.989,
+       "stay": 0.005,
+       "table": 0.001
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "don't run, whatever happens (fleeing)",
+     "grab whatever's worth taking (looting)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 47,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 47,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 47,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 49,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 50,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 50,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 50,
+      "talk_and_requests_mixed_up": 6
+     },
+     "0.6": {
+      "right": 50,
+      "talk_and_requests_mixed_up": 6
+     },
+     "0.7": {
+      "right": 49,
+      "talk_and_requests_mixed_up": 7
+     },
+     "0.8": {
+      "right": 49,
+      "talk_and_requests_mixed_up": 7
+     },
+     "0.9": {
+      "right": 52,
+      "talk_and_requests_mixed_up": 4
+     }
+    },
+    "asked": [
+     {
+      "line": "someone pull that ogre off me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.953
+     },
+     {
+      "line": "someone pull that ogre off me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.963
+     },
+     {
+      "line": "someone pull that ogre off me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.958
+     },
+     {
+      "line": "Wystan, pick that lock for me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.006
+     },
+     {
+      "line": "Wystan, pick that lock for me.",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.999
+     },
+     {
+      "line": "Wystan, pick that lock for me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "can anyone gate us home?",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.378
+     },
+     {
+      "line": "can anyone gate us home?",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.202
+     },
+     {
+      "line": "can anyone gate us home?",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.349
+     },
+     {
+      "line": "give me a hand with this door",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.996
+     },
+     {
+      "line": "give me a hand with this door",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.997
+     },
+     {
+      "line": "give me a hand with this door",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.997
+     },
+     {
+      "line": "Thea, lend me fifty gold.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.012
+     },
+     {
+      "line": "Thea, lend me fifty gold.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Thea, lend me fifty gold.",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.679
+     },
+     {
+      "line": "bandage me, quick",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.997
+     },
+     {
+      "line": "bandage me, quick",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.997
+     },
+     {
+      "line": "bandage me, quick",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.995
+     },
+     {
+      "line": "hold this for me a sec",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.967
+     },
+     {
+      "line": "hold this for me a sec",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.98
+     },
+     {
+      "line": "Tell me again how you lost that horse.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.008
+     },
+     {
+      "line": "Tell me again how you lost that horse.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Tell me again how you lost that horse.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.007
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.026
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.026
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.029
+     },
+     {
+      "line": "all guard me",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.867
+     },
+     {
+      "line": "all guard me",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.881
+     },
+     {
+      "line": "all guard me",
+      "who": "Thea",
+      "want": null,
+      "p": 0.893
+     },
+     {
+      "line": "Wait till you see the size of it.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.182
+     },
+     {
+      "line": "Wait till you see the size of it.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.148
+     },
+     {
+      "line": "Wait till you see the size of it.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.148
+     },
+     {
+      "line": "Someone ought to fix that bridge.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.018
+     },
+     {
+      "line": "Someone ought to fix that bridge.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.016
+     },
+     {
+      "line": "Someone ought to fix that bridge.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.016
+     },
+     {
+      "line": "Remind me never to do that again.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.005
+     },
+     {
+      "line": "Remind me never to do that again.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "Remind me never to do that again.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.004
+     },
+     {
+      "line": "vendor sell",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.029
+     },
+     {
+      "line": "vendor sell",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.02
+     },
+     {
+      "line": "vendor sell",
+      "who": "Thea",
+      "want": null,
+      "p": 0.018
+     }
+    ],
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 310,
+     "p90": 342
+    },
+    "cost_usd_a_question": 5.57e-05,
+    "input_tokens": 1325,
+    "errors": 0
+   }
+  },
+  "jev": {
+   "first": {
+    "right": 248,
+    "of": 252,
+    "pct": 98.4,
+    "by_group": {
+     "plain": "24/24",
+     "follow": "36/36",
+     "stay": "30/30",
+     "table": "18/18",
+     "who": "24/24",
+     "talk": "74/78",
+     "at the table": "42/42"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 4,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "talk",
+      "line": "You should have stayed back, Isolde.",
+      "who": "Isolde",
+      "want": null,
+      "got": "stay",
+      "asked": 0.53,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.8,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.2
+      }
+     },
+     {
+      "group": "talk",
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow",
+      "asked": 0.7,
+      "probabilities": {
+       "follow": 0.61,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.37
+      }
+     },
+     {
+      "group": "talk",
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow",
+      "asked": 0.67,
+      "probabilities": {
+       "follow": 0.6,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.38
+      }
+     },
+     {
+      "group": "talk",
+      "line": "We'll sit down when this is done, not before.",
+      "who": "Thea",
+      "want": null,
+      "got": "follow",
+      "asked": 0.7,
+      "probabilities": {
+       "follow": 0.61,
+       "stay": 0.04,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.35
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Back to me, all of you! (distance)",
+     "Don't move, I'll scout ahead. (distance)",
+     "Follow me. (distance)",
+     "Get over here! (distance)",
+     "Give me a minute. Nobody move. (fleeing)",
+     "Hang back here, I'll pull one to us. (distance)",
+     "He followed me all the way from Yew, the fool. (distance)",
+     "Hold position. (fleeing)",
+     "Isolde and Wystan, hold here a moment. (distance)",
+     "Isolde, heal me! (helping)",
+     "Isolde, with me. Wystan and Thea, wait here. (distance)",
+     "Just Isolde with me, you two stay put. (distance)",
+     "Keep up, you lot. (distance)",
+     "Kill the lich first! (target)",
+     "Let's rest our legs and talk it over. (talk)",
+     "Stay close. (distance)",
+     "Stick with me through here. (distance)",
+     "Thea, keep up! (distance)",
+     "This way, quickly! (distance)",
+     "Wait for me by this tree. (distance)",
+     "Wystan stay, the rest of you with me. (distance)",
+     "Wystan, hang back here. (distance)",
+     "Wystan, wait here. (distance)",
+     "You lot stop here, I'm going in alone. (distance)",
+     "You should have stayed back, Isolde. (distance)",
+     "all kill (aggression, reach)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 241,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 11,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 247,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 248,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 248,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 249,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 249,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 248,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 248,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 248,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 248,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 248,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "Wystan, wait here.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.16
+     },
+     {
+      "line": "Wystan, wait here.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "Wystan, hang back here.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.1
+     },
+     {
+      "line": "Wystan, hang back here.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "Thea, keep up!",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "Thea, keep up!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.1
+     },
+     {
+      "line": "Isolde and Wystan, hold here a moment.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.2
+     },
+     {
+      "line": "You should have stayed back, Isolde.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "You should have stayed back, Isolde.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "It came straight to me, and I'll stay alive, thanks.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "It came straight to me, and I'll stay alive, thanks.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "It came straight to me, and I'll stay alive, thanks.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Nice weather for it.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Nice weather for it.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Nice weather for it.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "That lich nearly had me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "That lich nearly had me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "That lich nearly had me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Did you see that shot?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Did you see that shot?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Did you see that shot?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Come on, that was a warning shot?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.39
+     },
+     {
+      "line": "Come on, that was a warning shot?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.3
+     },
+     {
+      "line": "Come on, that was a warning shot?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.31
+     },
+     {
+      "line": "I could follow that road for days and never tire of it.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I could follow that road for days and never tire of it.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "I could follow that road for days and never tire of it.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "My old dog never stayed when told either.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "My old dog never stayed when told either.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "My old dog never stayed when told either.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Wait, was that a dragon?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Wait, was that a dragon?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Wait, was that a dragon?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Hold on, what did you just say?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.29
+     },
+     {
+      "line": "Hold on, what did you just say?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "Hold on, what did you just say?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.23
+     },
+     {
+      "line": "vendor buy",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.12
+     },
+     {
+      "line": "vendor buy",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.12
+     },
+     {
+      "line": "vendor buy",
+      "who": "Thea",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "bank",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.21
+     },
+     {
+      "line": "bank",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.2
+     },
+     {
+      "line": "bank",
+      "who": "Thea",
+      "want": null,
+      "p": 0.17
+     },
+     {
+      "line": "Thanks for the heal, Isolde.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.02
+     },
+     {
+      "line": "Thanks for the heal, Isolde.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Thanks for the heal, Isolde.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Good fight, all of you.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Good fight, all of you.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Good fight, all of you.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Isolde, heal me!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.18
+     },
+     {
+      "line": "Isolde, heal me!",
+      "who": "Thea",
+      "want": null,
+      "p": 0.15
+     },
+     {
+      "line": "Wystan, how many arrows have you left?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Wystan, how many arrows have you left?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Wystan, how many arrows have you left?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I need to stop drinking so much.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "I need to stop drinking so much.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "I need to stop drinking so much.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Thea, does Bramble ever sit still?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Thea, does Bramble ever sit still?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Thea, does Bramble ever sit still?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.23
+     },
+     {
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "Let's go to Covetous tomorrow, I hear it pays.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.2
+     },
+     {
+      "line": "He followed me all the way from Yew, the fool.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "He followed me all the way from Yew, the fool.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "lol",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "lol",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "lol",
+      "who": "Thea",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Remind me to buy bandages.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "Remind me to buy bandages.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "Remind me to buy bandages.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "Who wants to wait for a dragon? Not me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.21
+     },
+     {
+      "line": "Who wants to wait for a dragon? Not me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "Who wants to wait for a dragon? Not me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.23
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 224,
+     "p90": 258
+    },
+    "cost_usd_a_question": 6.84e-05,
+    "input_tokens": 1629,
+    "errors": 0
+   },
+   "second": {
+    "right": 148,
+    "of": 159,
+    "pct": 93.1,
+    "by_group": {
+     "follow": "33/33",
+     "stay": "24/24",
+     "table": "12/12",
+     "who": "16/18",
+     "talk": "39/48",
+     "at the table": "24/24"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 11,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "who",
+      "line": "Not you, Wystan. You wait.",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow",
+      "asked": 0.38,
+      "probabilities": {
+       "follow": 0.6,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.38
+      }
+     },
+     {
+      "group": "who",
+      "line": "Not you, Wystan. You wait.",
+      "who": "Thea",
+      "want": null,
+      "got": "follow",
+      "asked": 0.39,
+      "probabilities": {
+       "follow": 0.62,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.36
+      }
+     },
+     {
+      "group": "talk",
+      "line": "wait for it...",
+      "who": "Isolde",
+      "want": null,
+      "got": "stay",
+      "asked": 0.16,
+      "probabilities": {
+       "follow": 0.05,
+       "stay": 0.71,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.24
+      }
+     },
+     {
+      "group": "talk",
+      "line": "wait for it...",
+      "who": "Wystan",
+      "want": null,
+      "got": "stay",
+      "asked": 0.18,
+      "probabilities": {
+       "follow": 0.08,
+       "stay": 0.66,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.26
+      }
+     },
+     {
+      "group": "talk",
+      "line": "wait for it...",
+      "who": "Thea",
+      "want": null,
+      "got": "stay",
+      "asked": 0.16,
+      "probabilities": {
+       "follow": 0.06,
+       "stay": 0.71,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.23
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Come on, you beauty!",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow",
+      "asked": 0.21,
+      "probabilities": {
+       "follow": 0.67,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.33
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Come on, you beauty!",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow",
+      "asked": 0.17,
+      "probabilities": {
+       "follow": 0.64,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.36
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Come on, you beauty!",
+      "who": "Thea",
+      "want": null,
+      "got": "follow",
+      "asked": 0.15,
+      "probabilities": {
+       "follow": 0.61,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.39
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Still there? Good.",
+      "who": "Isolde",
+      "want": null,
+      "got": "stay",
+      "asked": 0.14,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.76,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.24
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Still there? Good.",
+      "who": "Wystan",
+      "want": null,
+      "got": "stay",
+      "asked": 0.13,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.8,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.2
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Still there? Good.",
+      "who": "Thea",
+      "want": null,
+      "got": "stay",
+      "asked": 0.13,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.8,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.2
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Isolde, stop casting at my target. (target)",
+     "Let's get out of here. (fleeing)",
+     "Nobody goes any further. (reach)",
+     "Stay back, it's trapped. (distance)",
+     "Thea and Isolde, come here. (distance)",
+     "Wystan with me, the others hold. (aggression)",
+     "Wystan with me, the others hold. (distance)",
+     "Wystan, stop following me for a minute. (distance)",
+     "dont follow me in there (distance)",
+     "everyone on me (distance)",
+     "follow (distance)",
+     "heal pls (helping)",
+     "regroup on me (distance)",
+     "stay (distance)",
+     "thea stay (distance)",
+     "w/me (distance)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 142,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 17,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 146,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 13,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 146,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 13,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 148,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 11,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 154,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 149,
+      "orders_missed": 8,
+      "talk_taken_for_an_order": 2,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 148,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "thea stay",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.12
+     },
+     {
+      "line": "thea stay",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.1
+     },
+     {
+      "line": "Thea and Isolde, come here.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "Wystan, stop following me for a minute.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.1
+     },
+     {
+      "line": "Wystan, stop following me for a minute.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.1
+     },
+     {
+      "line": "Isolde, you coming or what?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "Isolde, you coming or what?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.29
+     },
+     {
+      "line": "that was close",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "that was close",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "that was close",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "I can't stay long tonight.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "I can't stay long tonight.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "I can't stay long tonight.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "anyone need to wait for mana?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.18
+     },
+     {
+      "line": "anyone need to wait for mana?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.19
+     },
+     {
+      "line": "anyone need to wait for mana?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.24
+     },
+     {
+      "line": "Follow the money, as they say.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.23
+     },
+     {
+      "line": "Follow the money, as they say.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.24
+     },
+     {
+      "line": "Follow the money, as they say.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "gg",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "gg",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "gg",
+      "who": "Thea",
+      "want": null,
+      "p": 0.15
+     },
+     {
+      "line": "who took the gold?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "who took the gold?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "who took the gold?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Isolde, stop casting at my target.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "Isolde, stop casting at my target.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "This place gives me the creeps.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "This place gives me the creeps.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "This place gives me the creeps.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Should we go left or right?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "Should we go left or right?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.18
+     },
+     {
+      "line": "Should we go left or right?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "Wystan, nice shot.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Wystan, nice shot.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Wystan, nice shot.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "I'd sit down but the chairs here bite.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Two more of them up ahead.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.16
+     },
+     {
+      "line": "Two more of them up ahead.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.17
+     },
+     {
+      "line": "Two more of them up ahead.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.14
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 219,
+     "p90": 248
+    },
+    "cost_usd_a_question": 6.9e-05,
+    "input_tokens": 1643,
+    "errors": 0
+   },
+   "third": {
+    "right": 113,
+    "of": 120,
+    "pct": 94.2,
+    "by_group": {
+     "go": "33/36",
+     "back": "12/15",
+     "talk": "45/45",
+     "request": "14/15",
+     "follow": "9/9"
+    },
+    "orders_missed": 3,
+    "talk_taken_for_an_order": 1,
+    "one_order_for_another": 3,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "go",
+      "line": "Off to the healer with you, all of you.",
+      "who": "Isolde",
+      "want": "go",
+      "got": "follow",
+      "asked": 0.9,
+      "probabilities": {
+       "follow": 0.86,
+       "stay": 0.0,
+       "go": 0.12,
+       "table": 0.0,
+       "none": 0.02
+      }
+     },
+     {
+      "group": "go",
+      "line": "Off to the healer with you, all of you.",
+      "who": "Wystan",
+      "want": "go",
+      "got": "follow",
+      "asked": 0.92,
+      "probabilities": {
+       "follow": 0.88,
+       "stay": 0.0,
+       "go": 0.11,
+       "table": 0.0,
+       "none": 0.01
+      }
+     },
+     {
+      "group": "go",
+      "line": "Off to the healer with you, all of you.",
+      "who": "Thea",
+      "want": "go",
+      "got": "follow",
+      "asked": 0.9,
+      "probabilities": {
+       "follow": 0.9,
+       "stay": 0.0,
+       "go": 0.09,
+       "table": 0.0,
+       "none": 0.01
+      }
+     },
+     {
+      "group": "back",
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Isolde",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.77,
+      "probabilities": {
+       "follow": 0.32,
+       "stay": 0.53,
+       "go": 0.12,
+       "table": 0.0,
+       "none": 0.03
+      }
+     },
+     {
+      "group": "back",
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Wystan",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.84,
+      "probabilities": {
+       "follow": 0.48,
+       "stay": 0.4,
+       "go": 0.1,
+       "table": 0.0,
+       "none": 0.02
+      }
+     },
+     {
+      "group": "back",
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Thea",
+      "want": "follow",
+      "got": "asked",
+      "asked": 0.7,
+      "probabilities": {
+       "follow": 0.3,
+       "stay": 0.51,
+       "go": 0.16,
+       "table": 0.0,
+       "none": 0.03
+      }
+     },
+     {
+      "group": "request",
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Wystan",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.96,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.0,
+       "go": 0.96,
+       "table": 0.0,
+       "none": 0.02
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Back to me, you lot. (distance)",
+     "Go on ahead to the bank, I'll catch you up. (distance)",
+     "I'll follow you (distance)",
+     "Isolde and Thea, off to the bank. Wystan stays with me. (distance)",
+     "Isolde, kill that one for me. (target)",
+     "Please go ahead and loot (looting)",
+     "Stay there, I'm nearly with you. (distance)",
+     "Wystan, scout ahead and tell me what's there. (distance)",
+     "cover me (aggression)",
+     "feel free to loot (looting)",
+     "heal me (helping)",
+     "loot (looting)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 108,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 7,
+      "one_order_for_another": 5
+     },
+     "0.4": {
+      "right": 110,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 5
+     },
+     "0.5": {
+      "right": 112,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 5
+     },
+     "0.6": {
+      "right": 113,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 3
+     },
+     "0.7": {
+      "right": 113,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 3
+     },
+     "0.8": {
+      "right": 109,
+      "orders_missed": 7,
+      "talk_taken_for_an_order": 1,
+      "one_order_for_another": 3
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 113,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 113,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 113,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 113,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 111,
+      "talk_and_requests_mixed_up": 2
+     }
+    },
+    "asked": [
+     {
+      "line": "Thea, take Bramble to the stables and wait for us there.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "Thea, take Bramble to the stables and wait for us there.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Isolde",
+      "want": "follow",
+      "p": 0.77
+     },
+     {
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Wystan",
+      "want": "follow",
+      "p": 0.84
+     },
+     {
+      "line": "I'm at the graveyard gate, come and find me.",
+      "who": "Thea",
+      "want": "follow",
+      "p": 0.7
+     },
+     {
+      "line": "On my way. Order me an ale.",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.94
+     },
+     {
+      "line": "On my way. Order me an ale.",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.94
+     },
+     {
+      "line": "On my way. Order me an ale.",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.93
+     },
+     {
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.33
+     },
+     {
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.43
+     },
+     {
+      "line": "Right, who wants to go off to the inn?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.41
+     },
+     {
+      "line": "Shall we head to the graveyard? Yay or nay?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.37
+     },
+     {
+      "line": "Shall we head to the graveyard? Yay or nay?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.42
+     },
+     {
+      "line": "Shall we head to the graveyard? Yay or nay?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.34
+     },
+     {
+      "line": "I might go to the bank later.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "I might go to the bank later.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "I might go to the bank later.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Go on then, tell me about the bear.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Go on then, tell me about the bear.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Go on then, tell me about the bear.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "I'll meet you lot in hell.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I'll meet you lot in hell.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I'll meet you lot in hell.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "cover me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.95
+     },
+     {
+      "line": "heal me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.91
+     },
+     {
+      "line": "heal me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.92
+     },
+     {
+      "line": "Isolde, kill that one for me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.16
+     },
+     {
+      "line": "Isolde, kill that one for me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "someone go and buy me some reagents",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.86
+     },
+     {
+      "line": "someone go and buy me some reagents",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.9
+     },
+     {
+      "line": "someone go and buy me some reagents",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.87
+     },
+     {
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Wystan, scout ahead and tell me what's there.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "here's the plan...",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.19
+     },
+     {
+      "line": "here's the plan...",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.19
+     },
+     {
+      "line": "here's the plan...",
+      "who": "Thea",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "So crew how are you all today?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "So crew how are you all today?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "So crew how are you all today?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Graveyard?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.21
+     },
+     {
+      "line": "Graveyard?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.2
+     },
+     {
+      "line": "Graveyard?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.25
+     },
+     {
+      "line": "ok",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.15
+     },
+     {
+      "line": "ok",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "ok",
+      "who": "Thea",
+      "want": null,
+      "p": 0.12
+     },
+     {
+      "line": "The inn was dreadful last time.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "The inn was dreadful last time.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "The inn was dreadful last time.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Off with his head, I say.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.41
+     },
+     {
+      "line": "Off with his head, I say.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.49
+     },
+     {
+      "line": "Off with his head, I say.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.42
+     },
+     {
+      "line": "Who's off to the bank after this?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.17
+     },
+     {
+      "line": "Who's off to the bank after this?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.2
+     },
+     {
+      "line": "Who's off to the bank after this?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.16
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 226,
+     "p90": 253
+    },
+    "cost_usd_a_question": 7.54e-05,
+    "input_tokens": 1796,
+    "errors": 0
+   },
+   "fourth": {
+    "right": 90,
+    "of": 102,
+    "pct": 88.2,
+    "by_group": {
+     "go": "29/33",
+     "back": "9/12",
+     "talk": "34/39",
+     "follow": "12/12",
+     "stay": "6/6"
+    },
+    "orders_missed": 4,
+    "talk_taken_for_an_order": 8,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 0,
+    "wrong": [
+     {
+      "group": "go",
+      "line": "you guys go to the inn, brb",
+      "who": "Wystan",
+      "want": "go",
+      "got": null,
+      "asked": 0.53,
+      "probabilities": {
+       "follow": 0.07,
+       "stay": 0.21,
+       "go": 0.46,
+       "table": 0.01,
+       "none": 0.25
+      }
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Isolde",
+      "want": "go",
+      "got": null,
+      "asked": 0.43,
+      "probabilities": {
+       "follow": 0.01,
+       "stay": 0.23,
+       "go": 0.54,
+       "table": 0.0,
+       "none": 0.22
+      }
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Wystan",
+      "want": "go",
+      "got": null,
+      "asked": 0.27,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.16,
+       "go": 0.5,
+       "table": 0.0,
+       "none": 0.32
+      }
+     },
+     {
+      "group": "go",
+      "line": "yes, there",
+      "who": "Thea",
+      "want": "go",
+      "got": null,
+      "asked": 0.22,
+      "probabilities": {
+       "follow": 0.03,
+       "stay": 0.24,
+       "go": 0.36,
+       "table": 0.0,
+       "none": 0.37
+      }
+     },
+     {
+      "group": "back",
+      "line": "Nearly there, save me a seat.",
+      "who": "Isolde",
+      "want": null,
+      "got": "stay",
+      "asked": 0.84,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.76,
+       "go": 0.01,
+       "table": 0.15,
+       "none": 0.06
+      }
+     },
+     {
+      "group": "back",
+      "line": "Nearly there, save me a seat.",
+      "who": "Wystan",
+      "want": null,
+      "got": "stay",
+      "asked": 0.86,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.78,
+       "go": 0.02,
+       "table": 0.12,
+       "none": 0.06
+      }
+     },
+     {
+      "group": "back",
+      "line": "Nearly there, save me a seat.",
+      "who": "Thea",
+      "want": null,
+      "got": "stay",
+      "asked": 0.85,
+      "probabilities": {
+       "follow": 0.03,
+       "stay": 0.76,
+       "go": 0.01,
+       "table": 0.15,
+       "none": 0.05
+      }
+     },
+     {
+      "group": "talk",
+      "line": "I'll wait.",
+      "who": "Isolde",
+      "want": null,
+      "got": "stay",
+      "asked": 0.23,
+      "probabilities": {
+       "follow": 0.15,
+       "stay": 0.66,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.19
+      }
+     },
+     {
+      "group": "talk",
+      "line": "I'll wait.",
+      "who": "Wystan",
+      "want": null,
+      "got": "stay",
+      "asked": 0.3,
+      "probabilities": {
+       "follow": 0.1,
+       "stay": 0.7,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.2
+      }
+     },
+     {
+      "group": "talk",
+      "line": "I'll wait.",
+      "who": "Thea",
+      "want": null,
+      "got": "stay",
+      "asked": 0.27,
+      "probabilities": {
+       "follow": 0.14,
+       "stay": 0.7,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.16
+      }
+     },
+     {
+      "group": "talk",
+      "line": "right",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow",
+      "asked": 0.51,
+      "probabilities": {
+       "follow": 0.58,
+       "stay": 0.01,
+       "go": 0.03,
+       "table": 0.0,
+       "none": 0.38
+      }
+     },
+     {
+      "group": "talk",
+      "line": "right",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow",
+      "asked": 0.45,
+      "probabilities": {
+       "follow": 0.6,
+       "stay": 0.01,
+       "go": 0.01,
+       "table": 0.0,
+       "none": 0.38
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Hold here, I'll go to the bank and come back. (distance)",
+     "Run along to the healer, I'll be right behind. (distance)",
+     "Where are you? Get back here. (distance)",
+     "go ahead, I'll catch up (distance)",
+     "right (distance)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 93,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 92,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 9,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 92,
+      "orders_missed": 1,
+      "talk_taken_for_an_order": 9,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 90,
+      "orders_missed": 4,
+      "talk_taken_for_an_order": 8,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 91,
+      "orders_missed": 6,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 85,
+      "orders_missed": 14,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 90,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 90,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 90,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.8": {
+      "right": 90,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.9": {
+      "right": 90,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "you guys go to the inn, brb",
+      "who": "Wystan",
+      "want": "go",
+      "p": 0.53
+     },
+     {
+      "line": "Thea, go wait at the stables.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Thea, go wait at the stables.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "yes, there",
+      "who": "Isolde",
+      "want": "go",
+      "p": 0.43
+     },
+     {
+      "line": "yes, there",
+      "who": "Wystan",
+      "want": "go",
+      "p": 0.27
+     },
+     {
+      "line": "yes, there",
+      "who": "Thea",
+      "want": "go",
+      "p": 0.22
+     },
+     {
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "Anyone been to the inn in Yew?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I'm off to bed soon.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I'm off to bed soon.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I'm off to bed soon.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "We should go to the bank at some point.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "We should go to the bank at some point.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "We should go to the bank at some point.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "See you there, they said. And then nobody came.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "He went off to the inn and never came back.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "He went off to the inn and never came back.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "He went off to the inn and never came back.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "What's at the bank that you need?",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "What's at the bank that you need?",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "What's at the bank that you need?",
+      "who": "Thea",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "vendor sell",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.26
+     },
+     {
+      "line": "vendor sell",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.28
+     },
+     {
+      "line": "vendor sell",
+      "who": "Thea",
+      "want": null,
+      "p": 0.27
+     },
+     {
+      "line": "ok",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.12
+     },
+     {
+      "line": "ok",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "ok",
+      "who": "Thea",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "nice",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "nice",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.05
+     },
+     {
+      "line": "nice",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "good idea",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.16
+     },
+     {
+      "line": "good idea",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "good idea",
+      "who": "Thea",
+      "want": null,
+      "p": 0.1
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 223,
+     "p90": 262
+    },
+    "cost_usd_a_question": 7.53e-05,
+    "input_tokens": 1794,
+    "errors": 0
+   },
+   "fifth": {
+    "right": 38,
+    "of": 42,
+    "pct": 90.5,
+    "by_group": {
+     "request": "20/24",
+     "talk": "12/12",
+     "follow": "3/3",
+     "stay": "3/3"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 3,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 1,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "protect Isolde",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null,
+      "asked": 0.66,
+      "probabilities": {
+       "follow": 0.35,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.63
+      }
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Isolde",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.97,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.0,
+       "go": 0.99,
+       "table": 0.0,
+       "none": 0.01
+      }
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Wystan",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.97,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.0,
+       "go": 0.98,
+       "table": 0.0,
+       "none": 0.02
+      }
+     },
+     {
+      "group": "request",
+      "line": "go and get me some bandages from town",
+      "who": "Thea",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.97,
+      "probabilities": {
+       "follow": 0.0,
+       "stay": 0.0,
+       "go": 0.98,
+       "table": 0.0,
+       "none": 0.02
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Heal thyself, as they say. (helping)",
+     "Isolde, cast something on it! (main_spell)",
+     "Stay here and cover the gate. (reach)",
+     "Thea, send the bear in. (aggression, target)",
+     "Wystan shoot the mage (target)",
+     "cover me, I'm going in. Follow! (aggression)",
+     "go and get me some bandages from town (helping)",
+     "protect Isolde (target)",
+     "somebody res me (distance)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 37,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 5,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 38,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 38,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 38,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 38,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 38,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.6": {
+      "right": 39,
+      "talk_and_requests_mixed_up": 0
+     },
+     "0.7": {
+      "right": 38,
+      "talk_and_requests_mixed_up": 1
+     },
+     "0.8": {
+      "right": 37,
+      "talk_and_requests_mixed_up": 2
+     },
+     "0.9": {
+      "right": 32,
+      "talk_and_requests_mixed_up": 7
+     }
+    },
+    "asked": [
+     {
+      "line": "tank that one for me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.81
+     },
+     {
+      "line": "tank that one for me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.81
+     },
+     {
+      "line": "tank that one for me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.82
+     },
+     {
+      "line": "Thea, send the bear in.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "Thea, send the bear in.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "Wystan shoot the mage",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.17
+     },
+     {
+      "line": "Wystan shoot the mage",
+      "who": "Thea",
+      "want": null,
+      "p": 0.24
+     },
+     {
+      "line": "can one of you carry this for me?",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.81
+     },
+     {
+      "line": "can one of you carry this for me?",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.86
+     },
+     {
+      "line": "can one of you carry this for me?",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.77
+     },
+     {
+      "line": "protect Isolde",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.66
+     },
+     {
+      "line": "Isolde, cast something on it!",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "Isolde, cast something on it!",
+      "who": "Thea",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "I could kill for an ale.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "I could kill for an ale.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "I could kill for an ale.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Heal thyself, as they say.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "That bear could carry all of us.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "That bear could carry all of us.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "That bear could carry all of us.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "Somebody shot the mage before I got there.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Somebody shot the mage before I got there.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.06
+     },
+     {
+      "line": "Somebody shot the mage before I got there.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.06
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 219,
+     "p90": 243
+    },
+    "cost_usd_a_question": 7.52e-05,
+    "input_tokens": 1790,
+    "errors": 0
+   },
+   "sixth": {
+    "right": 42,
+    "of": 48,
+    "pct": 87.5,
+    "by_group": {
+     "request": "15/18",
+     "talk": "9/12",
+     "follow": "6/6",
+     "stay": "9/9",
+     "go": "3/3"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 3,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 3,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "one of you go and find a healer",
+      "who": "Isolde",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.87,
+      "probabilities": {
+       "follow": 0.01,
+       "stay": 0.0,
+       "go": 0.68,
+       "table": 0.0,
+       "none": 0.31
+      }
+     },
+     {
+      "group": "request",
+      "line": "one of you go and find a healer",
+      "who": "Wystan",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.86,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.0,
+       "go": 0.62,
+       "table": 0.0,
+       "none": 0.36
+      }
+     },
+     {
+      "group": "request",
+      "line": "one of you go and find a healer",
+      "who": "Thea",
+      "want": "asked",
+      "got": "go",
+      "asked": 0.86,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.0,
+       "go": 0.62,
+       "table": 0.0,
+       "none": 0.36
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Isolde",
+      "want": null,
+      "got": "asked",
+      "asked": 0.87,
+      "probabilities": {
+       "follow": 0.05,
+       "stay": 0.05,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.9
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Wystan",
+      "want": null,
+      "got": "asked",
+      "asked": 0.81,
+      "probabilities": {
+       "follow": 0.05,
+       "stay": 0.04,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.91
+      }
+     },
+     {
+      "group": "talk",
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Thea",
+      "want": null,
+      "got": "asked",
+      "asked": 0.86,
+      "probabilities": {
+       "follow": 0.05,
+       "stay": 0.03,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.92
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Come on, and kill anything that moves. (reach)",
+     "Follow me and watch my back. (distance)",
+     "Isolde, light it up. (main_spell)",
+     "Thea, patch me up would you (helping)",
+     "Wait here and guard the packs. (distance)",
+     "freeze (fleeing)",
+     "keep them off me! (distance)",
+     "kill the archer first (target)",
+     "one of you go and find a healer (helping)",
+     "watch my back (distance)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 39,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 6,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 42,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 42,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 42,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 43,
+      "orders_missed": 2,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 42,
+      "orders_missed": 3,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 42,
+      "talk_and_requests_mixed_up": 3
+     },
+     "0.6": {
+      "right": 42,
+      "talk_and_requests_mixed_up": 3
+     },
+     "0.7": {
+      "right": 42,
+      "talk_and_requests_mixed_up": 3
+     },
+     "0.8": {
+      "right": 42,
+      "talk_and_requests_mixed_up": 3
+     },
+     "0.9": {
+      "right": 45,
+      "talk_and_requests_mixed_up": 0
+     }
+    },
+    "asked": [
+     {
+      "line": "Thea, patch me up would you",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.13
+     },
+     {
+      "line": "Thea, patch me up would you",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.1
+     },
+     {
+      "line": "Isolde, light it up.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "Isolde, light it up.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "That one nearly killed me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "That one nearly killed me.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "That one nearly killed me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "You lot fetch and carry like mules.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.17
+     },
+     {
+      "line": "You lot fetch and carry like mules.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.16
+     },
+     {
+      "line": "You lot fetch and carry like mules.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.15
+     },
+     {
+      "line": "Scouts say the pass is clear.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "Scouts say the pass is clear.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.07
+     },
+     {
+      "line": "Scouts say the pass is clear.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.09
+     },
+     {
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.87
+     },
+     {
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.81
+     },
+     {
+      "line": "Cover your ears, Corwin's tuning up.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.86
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 221,
+     "p90": 243
+    },
+    "cost_usd_a_question": 7.52e-05,
+    "input_tokens": 1790,
+    "errors": 0
+   },
+   "seventh": {
+    "right": 49,
+    "of": 57,
+    "pct": 86.0,
+    "by_group": {
+     "request": "17/21",
+     "talk": "23/27",
+     "stay": "3/3",
+     "follow": "3/3",
+     "go": "3/3"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 2,
+    "one_order_for_another": 0,
+    "talk_and_requests_mixed_up": 6,
+    "wrong": [
+     {
+      "group": "request",
+      "line": "someone pull that ogre off me",
+      "who": "Thea",
+      "want": "asked",
+      "got": null,
+      "asked": 0.68,
+      "probabilities": {
+       "follow": 0.01,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.99
+      }
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Isolde",
+      "want": "asked",
+      "got": null,
+      "asked": 0.4,
+      "probabilities": {
+       "follow": 0.03,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.97
+      }
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Wystan",
+      "want": "asked",
+      "got": null,
+      "asked": 0.39,
+      "probabilities": {
+       "follow": 0.03,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.97
+      }
+     },
+     {
+      "group": "request",
+      "line": "can anyone gate us home?",
+      "who": "Thea",
+      "want": "asked",
+      "got": null,
+      "asked": 0.36,
+      "probabilities": {
+       "follow": 0.02,
+       "stay": 0.0,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.98
+      }
+     },
+     {
+      "group": "talk",
+      "line": "all guard me",
+      "who": "Isolde",
+      "want": null,
+      "got": "asked",
+      "asked": 0.75,
+      "probabilities": {
+       "follow": 0.46,
+       "stay": 0.07,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.47
+      }
+     },
+     {
+      "group": "talk",
+      "line": "all guard me",
+      "who": "Thea",
+      "want": null,
+      "got": "asked",
+      "asked": 0.77,
+      "probabilities": {
+       "follow": 0.45,
+       "stay": 0.07,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.48
+      }
+     },
+     {
+      "group": "talk",
+      "line": "don't run, whatever happens",
+      "who": "Isolde",
+      "want": null,
+      "got": "follow",
+      "asked": 0.92,
+      "probabilities": {
+       "follow": 0.61,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.37
+      }
+     },
+     {
+      "group": "talk",
+      "line": "don't run, whatever happens",
+      "who": "Wystan",
+      "want": null,
+      "got": "follow",
+      "asked": 0.92,
+      "probabilities": {
+       "follow": 0.6,
+       "stay": 0.02,
+       "go": 0.0,
+       "table": 0.0,
+       "none": 0.38
+      }
+     }
+    ],
+    "spoken_to_a_setting": [
+     "Stay put and keep an eye on the road. (distance)",
+     "With me, and somebody watch the rear. (distance)",
+     "all guard me (distance)",
+     "bandage me, quick (helping)",
+     "don't run, whatever happens (fleeing)",
+     "grab whatever's worth taking (looting)"
+    ],
+    "cuts": {
+     "0.3": {
+      "right": 47,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 6,
+      "one_order_for_another": 0
+     },
+     "0.4": {
+      "right": 47,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 6,
+      "one_order_for_another": 0
+     },
+     "0.5": {
+      "right": 47,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_order_for_another": 0
+     },
+     "0.6": {
+      "right": 49,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 2,
+      "one_order_for_another": 0
+     },
+     "0.7": {
+      "right": 51,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     },
+     "0.8": {
+      "right": 51,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_order_for_another": 0
+     }
+    },
+    "ask_cuts": {
+     "0.5": {
+      "right": 50,
+      "talk_and_requests_mixed_up": 5
+     },
+     "0.6": {
+      "right": 50,
+      "talk_and_requests_mixed_up": 5
+     },
+     "0.7": {
+      "right": 49,
+      "talk_and_requests_mixed_up": 6
+     },
+     "0.8": {
+      "right": 50,
+      "talk_and_requests_mixed_up": 5
+     },
+     "0.9": {
+      "right": 46,
+      "talk_and_requests_mixed_up": 9
+     }
+    },
+    "asked": [
+     {
+      "line": "someone pull that ogre off me",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.78
+     },
+     {
+      "line": "someone pull that ogre off me",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.82
+     },
+     {
+      "line": "someone pull that ogre off me",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.68
+     },
+     {
+      "line": "Wystan, pick that lock for me.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.08
+     },
+     {
+      "line": "Wystan, pick that lock for me.",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.96
+     },
+     {
+      "line": "Wystan, pick that lock for me.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.14
+     },
+     {
+      "line": "can anyone gate us home?",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.4
+     },
+     {
+      "line": "can anyone gate us home?",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.39
+     },
+     {
+      "line": "can anyone gate us home?",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.36
+     },
+     {
+      "line": "give me a hand with this door",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.91
+     },
+     {
+      "line": "give me a hand with this door",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.92
+     },
+     {
+      "line": "give me a hand with this door",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.93
+     },
+     {
+      "line": "Thea, lend me fifty gold.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.33
+     },
+     {
+      "line": "Thea, lend me fifty gold.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.17
+     },
+     {
+      "line": "Thea, lend me fifty gold.",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.84
+     },
+     {
+      "line": "hold this for me a sec",
+      "who": "Isolde",
+      "want": "asked",
+      "p": 0.9
+     },
+     {
+      "line": "hold this for me a sec",
+      "who": "Wystan",
+      "want": "asked",
+      "p": 0.89
+     },
+     {
+      "line": "hold this for me a sec",
+      "who": "Thea",
+      "want": "asked",
+      "p": 0.82
+     },
+     {
+      "line": "Tell me again how you lost that horse.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Tell me again how you lost that horse.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Tell me again how you lost that horse.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.04
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.15
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.11
+     },
+     {
+      "line": "Go on, laugh.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.15
+     },
+     {
+      "line": "all guard me",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.75
+     },
+     {
+      "line": "all guard me",
+      "who": "Thea",
+      "want": null,
+      "p": 0.77
+     },
+     {
+      "line": "Wait till you see the size of it.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.29
+     },
+     {
+      "line": "Wait till you see the size of it.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.23
+     },
+     {
+      "line": "Wait till you see the size of it.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.34
+     },
+     {
+      "line": "Someone ought to fix that bridge.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.21
+     },
+     {
+      "line": "Someone ought to fix that bridge.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.22
+     },
+     {
+      "line": "Someone ought to fix that bridge.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.25
+     },
+     {
+      "line": "Remind me never to do that again.",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Remind me never to do that again.",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "Remind me never to do that again.",
+      "who": "Thea",
+      "want": null,
+      "p": 0.03
+     },
+     {
+      "line": "vendor sell",
+      "who": "Isolde",
+      "want": null,
+      "p": 0.27
+     },
+     {
+      "line": "vendor sell",
+      "who": "Wystan",
+      "want": null,
+      "p": 0.28
+     },
+     {
+      "line": "vendor sell",
+      "who": "Thea",
+      "want": null,
+      "p": 0.26
+     }
+    ],
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 228,
+     "p90": 266
+    },
+    "cost_usd_a_question": 7.52e-05,
+    "input_tokens": 1790,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.129077,
+  "cost_per_hour_usd": 5.2541,
+  "calls": 2988,
+  "by_role": {
+   "system1": 0.129077
+  },
+  "by_kind": {
+   "order": {
+    "calls": 2988,
+    "input_tokens": 3073258,
+    "output_tokens": 130659,
+    "cost_usd": 0.129077,
+    "latency_ms_avg": 261.5
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 1494,
+    "input_tokens": 1820271,
+    "output_tokens": 128451,
+    "cost_usd": 0.076451,
+    "latency_ms_avg": 219.1
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 1494,
+    "input_tokens": 1252987,
+    "output_tokens": 2208,
+    "cost_usd": 0.052625,
+    "latency_ms_avg": 303.9
+   }
+  }
+ }
+}

@@ -87,6 +87,7 @@ namespace ClassicUO.Agent
                     case "flee":
                     case "kite":
                     case "stop":
+                    case "halt":
                     case "disengage":
                         return AgentBehavior.Move;
 
@@ -213,11 +214,17 @@ namespace ClassicUO.Agent
                 case "follow": return $"follow {target}";
                 case "kite": return "step back";
                 case "disengage": return "let the fight go";
+                case "halt": return "stop walking";
                 case "pet": return Kind == "kill" ? $"set the pet on {target}" : Kind == "follow" ? "call the pet back" : $"pet: {Kind}";
                 case "move": return $"move {Direction}";
                 case "war_mode": return On ? "war mode on" : "peace mode";
                 case "say": return Kind == "emote" ? $"emote {EmoteText(Text)}" : $"say \"{Text}\"";
                 case "use": return $"use {target}";
+                case "party":
+                    return Kind == "invite" ? $"invite {target} to the party" : Kind == "accept" ? "join the party"
+                        : Kind == "decline" ? "decline the party" : Kind == "leave" ? "leave the party"
+                        : Kind == "say" ? $"party: \"{Text}\"" : Kind == "loot" ? (On ? "let the party loot my corpse" : "keep my corpse from the party")
+                        : $"party: {Kind}";
                 case "cast":
                     string spell = AgentSpells.Find(Spell)?.Name ?? Spell;
 

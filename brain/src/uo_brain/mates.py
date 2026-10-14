@@ -32,17 +32,20 @@ from .voice import Voice
 
 GAP_S = 6.0          # at most one spoken callout this often for one member; "nearly dead" goes anyway
 PENDING_S = 8.0      # a callout not said within this has missed its moment
+FAR_AGE_S = 12.0  # a companion out of view is gone to where its report said it was, no older than this
 HEARD_S = 15.0       # the others' callouts stay in the fight state this long
 HURT, BAD, WELL = 50, 33, 60  # health %: hurt below, badly hurt below, well again at or above
 QUIET_S = 15.0       # a creature that isn't dangerous is only called when nothing was said for this long
 AGAIN_S = 45.0       # "falling back" isn't called again within this: one who wavers between leaving and fighting
 #                      shouted it four times in a minute
 FALLEN_S = 20.0      # a companion in view this lately, whose own report now says dead, fell where it was last seen
+RAISE_CALL_S = 60.0  # a raiser says whom it is raising once, not at every try (a try is every 7 to 10 s)
+TAKES_BLOWS = ("warrior", "paladin", "warrior-mage")  # a point of these is the party's front (rally.POINT)
 # A corpse named for what it is made of, as the creature it was ("a skeletal corpse").
 CORPSE_NAMES = {"a skeletal": "a skeleton", "an orcish": "an orc", "a ratman's": "a ratman"}
 # Which pending callout is said first.
 ORDER = ("badly_hurt", "down", "on_me", "leaving", "hurt", "out_of_bandages", "out_of_reagents", "out_of_arrows",
-         "on_target", "helping", "recovered", "clear")
+         "on_target", "helping", "raising", "recovered", "clear")
 
 
 @dataclass
@@ -88,6 +91,7 @@ class Mates:
         self.left_at = -1e9
         self.out: set[str] = set()
         self.down: set[str] = set()
+        self._raise_called: dict[str, float] = {}  # whom it has said it is raising, and when
         self.in_fight = False
         self.heard = 0
         self.roleplay = None   # roleplay.Roleplay: an emote after a fight, and by a fallen companion (cuo-cod.8)
@@ -98,6 +102,14 @@ class Mates:
         self.away = False        # dead, or back from the dead and not yet in a fight again: it calls nothing
         self._seen: dict[str, tuple[float, int, int]] = {}  # companion -> when last in view, how far, its serial
         self._stats: tuple[float, dict[str, dict[str, Any]]] = (0.0, {})
+        self.rally = None        # rally.Rally: where the party formed up, for a run back to it (cuo-cym.1)
+        self.aim = 0             # the creature its last decision went for (seeking or fighting), for the others
+        self.running = False     # its last decision was a leave or a flee: not one still in the fight
+        # Where a callout is said (cuo-cym.3): "say" aloud, over its head, as on the local server and in
+        # footage; "party" in the game's party chat, which only the party reads; "both". Party chat needs the
+        # game's own party (gameparty.GameParty): until the member is in it, a callout is said aloud.
+        self.to = "say"
+        self.game = None
 
     def died(self) -> None:
         """This member died: its fight is over. Without this its first decision after the healer saw "a fight
@@ -132,10 +144,14 @@ class Mates:
         pets = [{"serial": x["serial"], "name": x.get("name") or "", "hits_pct": x.get("hits_pct")}
                 for x in snap.get("pets") or []]
         party.fight({"hits": p.get("hits"), "hits_max": p.get("hits_max"), "dead": bool(p.get("dead")),
-                     "attackers": attackers, "target": snap["agent"].get("engaged", 0), "pets": pets})
+                     "attackers": attackers, "target": snap["agent"].get("engaged", 0), "pets": pets,
+                     **({"aim": self.aim} if self.aim else {}), **({"running": True} if self.running else {})})
         rows = party.fights()
         by_serial = {m["serial"]: m for m in mobiles}
         calls = party.calls(HEARD_S)
+        # One being healed by another is left to them. Not so one being raised: a try works one time in four,
+        # so everyone who can raise tries (live, the mage's fifth cast brought the archer back after 63 s, with
+        # the warrior and his bandages standing by because she had called it).
         helped = {c["about"] for c in calls if c["kind"] == "helping" and time.time() - c["t"] <= 5}
         sit.mates = []
         for m in mobiles:
@@ -182,6 +198,36 @@ class Mates:
             sit.state["party_calls"] = words
         if self.tactics and sit.hostiles:
             sit.state["your_own_lessons_for_fighting_with_this_party"] = self.tactics
+        if self.rally is not None:
+            sit.rally = self.rally.current()
+            sit.rally_back = self.rally.back()  # the second point behind it, when the rally point was chosen (cuo-cym.13)
+            # Who is still in the fight: the ones a member that falls back goes back in for (policy.decide_intent).
+            # ...by each one's own fight row: a "leaving" callout is said once in 45 s and not at all with callouts
+            # off, and one being chased has attackers, so two running members each took the other to be fighting.
+            running = {name for name, row in rows.items() if row.get("running")}
+            sit.party_fighting = sum(1 for name, row in rows.items() if not row.get("dead") and name not in running
+                                     and (row.get("target") or row.get("attackers")))
+            sit.party_running = sum(1 for name in running if name != party.me and not rows[name].get("dead"))
+            # One of them out of view with something on it: where it last said it was, for those with nothing
+            # of their own to fight (policy.to_far_companion). Not one that is only running: live, a tamer
+            # who had called her pet back and walked off to her leader had the mage and the bard walk after
+            # her, away from the bone knight the archer was shooting.
+            away = [name for name, row in rows.items() if name not in in_view and not row.get("dead")
+                    and row.get("attackers")]
+            if away and not p.get("dead"):
+                stats = self.statuses()
+                spots = [(max(abs(st["x"] - p["x"]), abs(st["y"] - p["y"])), name, st["x"], st["y"]) for name in away
+                         if (st := stats.get(name)) and "x" in st and st["age_s"] <= FAR_AGE_S and not st.get("dead")]
+                if spots:
+                    _, name, x, y = min(spots)
+                    sit.mate_far = (name, x, y)
+            # What the point is going for: the others go in on it too (policy.with_the_point).
+            point = self.rally.point()
+            if point and point != party.me and point not in running and not (rows.get(point) or {}).get("dead"):
+                sit.point_name = point
+                sit.point_aim = (rows.get(point) or {}).get("aim") or (rows.get(point) or {}).get("target") or 0
+                if party.companions.get(point) in TAKES_BLOWS:
+                    sit.point_serial = next((m.serial for m in sit.mates if m.name == point and not m.dead), 0)
         self.tell_story(sit, calls, words)
 
     def tell_story(self, sit: Situation, calls: list[dict[str, Any]], words: list[str]) -> None:
@@ -206,6 +252,8 @@ class Mates:
             self._heard_ids.add(c["id"])
             if c["kind"] == "helping" and c["about"] == self.party.me:
                 st.healed_by[c["who"]] = st.healed_by.get(c["who"], 0) + 1
+            if c["kind"] == "raising" and c["about"] == self.party.me:
+                st.raised_by = c["who"]
             if c["kind"] == "down" and c["about"] and c["about"] not in st.fell:
                 st.fell.append(c["about"])
         for w in words:
@@ -220,7 +268,8 @@ class Mates:
         count of seconds would change the state every tick, and the loop would ask Jev again each time."""
         latest: dict[tuple[str, str], dict[str, Any]] = {}
         for c in calls:
-            latest[(c["who"], c["kind"])] = c
+            if c["kind"] != "seat":  # a seat taken at the table (companion.py): not a callout of a fight
+                latest[(c["who"], c["kind"])] = c
         now = time.time()
         out = []
         for c in sorted(latest.values(), key=lambda c: c["t"])[-6:]:
@@ -233,6 +282,8 @@ class Mates:
                 "out_of_bandages": "out of bandages", "out_of_reagents": "out of reagents: no more spells",
                 "out_of_arrows": "out of arrows: the bow can't shoot", "down": f"{c['about']} is dead",
                 "clear": "the fight is over, nothing left", "helping": f"healing {c['about']}",
+                "form_up": "forming the party up before going in", "go_in": "gave the word to go in together",
+                "raising": f"bringing {c['about']} back from the dead",
             }.get(c["kind"])
             if said:
                 who = f"{c['who']} ({self.party.companions.get(c['who'], 'companion')})"
@@ -254,6 +305,9 @@ class Mates:
         st.called[kind] = st.called.get(kind, 0) + 1
         if kind == "helping":
             st.healed[about] = st.healed.get(about, 0) + 1
+        elif kind == "raising":
+            st.raised.setdefault(about, 0)
+            st.raised[about] += 1
         elif kind == "leaving":
             st.ran += 1
         elif kind.startswith("out_of_"):
@@ -333,7 +387,12 @@ class Mates:
                 self.down.discard(mate.name)
 
         if getattr(mem, "helped", None):
-            self.note(sit, "helping", about=mem.helped[0])
+            whom, how = mem.helped[0], mem.helped[1]
+            if how != "raise":
+                self.note(sit, "helping", about=whom)
+            elif time.monotonic() - self._raise_called.get(whom, -1e9) >= RAISE_CALL_S:
+                self._raise_called[whom] = time.monotonic()
+                self.note(sit, "raising", about=whom)
 
         near = [h for h in sit.threats if h.distance <= 12]
         if fighting or sit.agent.get("engaged"):
@@ -348,6 +407,8 @@ class Mates:
         """Call out what this decision showed; the line said, if one was."""
         self.heard += self._calls_now  # decisions, not looks: `before` runs at every look
         self._calls_now = False
+        self.aim = dec.target.serial if dec.intent in ("seek", "fight") and dec.target is not None else 0
+        self.running = dec.intent in ("leave", "flee")
         if not self.callouts or sit.assisting:
             return None
         was_fighting = self.in_fight
@@ -361,6 +422,32 @@ class Mates:
             elif was_fighting:
                 await self.roleplay.act("kill")
         return said
+
+    async def speak(self, rpc: Any, line: str) -> None:
+        """A callout's line, where this party says them."""
+        chat = self.to in ("party", "both") and self.game is not None and self.game.joined
+        if chat:
+            await rpc.call("act", verb="party", kind="say", text=line)
+        if not chat or self.to == "both":
+            await rpc.call("act", verb="say", text=line)
+
+    async def shout(self, rpc: Any, kind: str, **slots: str) -> str | None:
+        """A callout from outside a fight decision (the leader's "form up" and "in we go", rally.py): its
+        meaning to the party store, its line aloud at once."""
+        if not self.callouts or self.away:
+            return None
+        self.party.call(kind)
+        self.called[kind] = self.called.get(kind, 0) + 1
+        line = self.voice.pick(kind, **slots)
+        if not line:
+            return None
+        await self.speak(rpc, line)
+        self.last_said = time.monotonic()
+        self.said += 1
+        if self.floor is not None:
+            self.floor.say(line, kind="callout")
+        self.log({"type": "callout", "t": time.time(), "kind": kind, "text": line, **slots})
+        return line
 
     async def flush(self, rpc: Any, sit: Situation | None = None) -> str | None:
         now = time.monotonic()
@@ -378,7 +465,7 @@ class Mates:
         if not line:
             return None
         try:
-            await rpc.call("act", verb="say", text=line)
+            await self.speak(rpc, line)
         except Exception as e:  # noqa: BLE001 - a callout is never worth a fight decision
             self.log({"type": "callout", "t": time.time(), "kind": nxt.kind, "error": f"{type(e).__name__}: {e}"[:200]})
             return None

@@ -132,14 +132,18 @@ def apply(base: PolicyConfig, k: Knobs) -> PolicyConfig:
     """Strategy settings layered over the command-line policy config."""
     # Cautious players flee on weaker danger signals; relentless ones only when nearly certain.
     flee_danger = 0.3 + 0.65 * k.aggression
+    # A companion of a character a person plays loots nothing, whatever its strategy says (or, with none, the
+    # default): the kills are the player's. Without this every companion looted, and one told to wait walked off
+    # to a corpse (cuo-cym.16).
+    looting = "nothing" if base.escort else k.looting
     return replace(
         base,
         allow_flee=k.allow_flee,
         flee_danger=flee_danger,
         panic_danger=max(base.panic_danger, flee_danger),
         target_priority=k.target_priority,
-        looting=k.looting,
-        take_item={"everything": 0.0, "valuables": base.take_item, "nothing": 2.0}[k.looting],
+        looting=looting,
+        take_item={"everything": 0.0, "valuables": base.take_item, "nothing": 2.0}[looting],
         opening_spell=k.opening_spell,
         main_spell=k.main_spell,
     )

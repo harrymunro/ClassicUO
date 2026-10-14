@@ -28,6 +28,7 @@ public static class AgentTestKit
     private const int ArenaMinRadius = 6;
     private const int ArenaMaxRadius = 10;
     private const int ArenaHomeRange = 10;
+    private const int StrongHomeRange = 12;  // what [AgentDisrupt strong spawns: how restore knows them after a restart
     private const int OrphanSweepRange = 32;
     private const int LaneSpacing = 60;
     private const int MaxLane = 9;
@@ -74,6 +75,7 @@ public static class AgentTestKit
         CommandSystem.Register("AgentKit", _accessLevel, AgentKit_OnCommand);
         CommandSystem.Register("AgentArena", _accessLevel, AgentArena_OnCommand);
         CommandSystem.Register("AgentReset", _accessLevel, AgentReset_OnCommand);
+        CommandSystem.Register("AgentSlay", _accessLevel, AgentSlay_OnCommand);
         CommandSystem.Register("AgentGo", _accessLevel, AgentGo_OnCommand);
         CommandSystem.Register("AgentSpawn", _accessLevel, AgentSpawn_OnCommand);
         CommandSystem.Register("AgentSupplies", _accessLevel, AgentSupplies_OnCommand);
@@ -333,13 +335,34 @@ public static class AgentTestKit
         var removed = ClearArena(from);
         ClearBuilds(from);
 
-        from.SendMessage($"Reset: {(wasDead ? "resurrected, " : "")}vitals restored, removed {removed} arena monsters.");
+        // Out of any party: a character whose client was closed stays in the world for a while, so a party
+        // made in one run was still there in the next one started straight after it, loot rights and all.
+        var party = Server.Engines.PartySystem.Party.Get(from);
+        party?.Remove(from);
+
+        from.SendMessage($"Reset: {(wasDead ? "resurrected, " : "")}vitals restored, removed {removed} arena monsters{(party != null ? ", left the party" : "")}.");
         logger.Information(
             "AgentReset: {Mobile} reset (resurrected {Resurrected}), removed {Removed} arena monsters",
             from,
             wasDead,
             removed
         );
+    }
+
+    [Usage("AgentSlay")]
+    [Description("Kills you where you stand, as a creature would have: your corpse with your things on it, and you a ghost. For staging a death in the middle of a fight.")]
+    public static void AgentSlay_OnCommand(CommandEventArgs e)
+    {
+        var from = e.Mobile;
+
+        if (!from.Alive)
+        {
+            from.SendMessage("Slay: you are dead already.");
+            return;
+        }
+
+        from.Kill();
+        logger.Information("AgentSlay: {Mobile} killed at {Location}", from, from.Location);
     }
 
     [Usage("AgentGo [lane | x y]")]
@@ -1013,7 +1036,7 @@ public static class AgentTestKit
                             kind.CreateInstance<BaseCreature>() is { } creature)
                         {
                             creature.Home = center;
-                            creature.RangeHome = 12;
+                            creature.RangeHome = StrongHomeRange;
                             creature.MoveToWorld(spot, map);
                             _strong.Add(creature);
                             made++;
@@ -1081,6 +1104,34 @@ public static class AgentTestKit
                             creature.Delete();
                             removed++;
                         }
+                    }
+
+                    // What strong spawned before a restart: the list above is not persisted, and a wave left
+                    // standing in the save met the next boot's first run beside its own (2026-10-12: two
+                    // liches and five bone knights for a scene of one and two, and the party was wiped).
+                    // Known by what strong gives them and a spawner's creatures never have together: a home
+                    // with this range, and no spawner (a spawner's are linked to it again on load).
+                    using var leftovers = PooledRefQueue<BaseCreature>.Create();
+                    foreach (var mobile in World.Mobiles.Values)
+                    {
+                        if (mobile is BaseCreature bc && !bc.Deleted && bc.Map == map && bc.Spawner == null &&
+                            !bc.Controlled && !bc.Summoned && !_tracked.Contains(bc) &&
+                            bc.RangeHome == StrongHomeRange && bc.Home != Point3D.Zero)
+                        {
+                            leftovers.Enqueue(bc);
+                        }
+                    }
+
+                    var orphans = leftovers.Count;
+                    while (leftovers.Count > 0)
+                    {
+                        leftovers.Dequeue().Delete();
+                    }
+
+                    removed += orphans;
+                    if (orphans > 0)
+                    {
+                        logger.Information("AgentDisrupt: restore removed {Count} creatures left from before a restart", orphans);
                     }
 
                     Say($"Disrupt: {_stoppedSpawners.Count} spawners restarted, {_soldOut.Count} vendors restocked, {removed} creatures removed.");

@@ -1,0 +1,685 @@
+{
+ "bead": "cuo-4v1",
+ "date": "2026-10-13",
+ "server": "ModernUO, the soak copy (Distribution-dev2, port 2595), UOContent as built 2026-10-13 01:53",
+ "character": "Wayfarer (account runner), [AgentKit warrior, mode auto; `scripts/travel_trip.py 5581 X,Y,D --go X,Y --defend`",
+ "tile": {
+  "stuck_at": [
+   1347,
+   1512
+  ],
+  "refused": [
+   1346,
+   1512
+  ],
+  "static": {
+   "graphic": "0x0CBA",
+   "name": "grasses",
+   "z": 18,
+   "land_z": 10,
+   "flags": "Background, Surface",
+   "drawn_in_desolation_as": "0x1B8D wood"
+  },
+  "steps_onto_it_refused": "8 of 8, and the diagonals past it from 1347,1512 and into 1347,1512 from 1346,1511 and 1346,1513"
+ },
+ "world_store_routes_stuck_there": "10 trips: 2026-10-09 20:05-20:09 (6), 2026-10-11 01:32-01:33 (2), 2026-10-11 21:42-21:43 (2) UTC",
+ "season_swaps_that_change_walking_flags": {
+  "desolation_static_swaps": 72,
+  "changing": 8,
+  "which": [
+   "0x0CB9-0x0CBD grasses: surface -> 0x1B8D wood, not",
+   "0x0D29 flowers: surface -> 0x1B9C twigs, not",
+   "0x0C99 small palm: impassable -> 0x1B8D wood, not (2,076 on the map outside the dungeons)",
+   "0x0CE9 sapling: open -> 0x0ED7 gravestone, impassable"
+  ],
+  "small_palms_tried": "1130,2879, 1309,2863, 1203,2931: the walker reading season art had the step ok, the server refused it"
+ },
+ "clients": {
+  "before": "the travel code as it was (bin/osx-arm64-k0d as first published, 22:16: the errand fix only)",
+  "stuck_fix_only": "TravelStuck rules out from the first tile not yet stepped onto, keeps refused tiles for the trip",
+  "guard_no_season_fix": "and a tile the server refused is closed to the client's pathfinder for 15 s; statics still read by season art",
+  "season_fix_and_guard": "and a static read by its own graphic (the first full build, 23:00)",
+  "final": "the same after RefusedTiles was moved into its own class (23:11)",
+  "last": "the same with only real refusals counted and compass names in the nav view (23:24): the client as left in bin/osx-arm64-k0d"
+ },
+ "trips": {
+  "before": [
+   {
+    "label": "bank to 1294,1482 #1",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 74.2,
+    "still_s": 5.3,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "1347,1512 to 1250,1450 #1",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "stuck",
+    "seconds": 48.1,
+    "still_s": 48.1,
+    "stuck": 6,
+    "replans": 6,
+    "plans": 6,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": [
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1513: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1511: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1513: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1511: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1513: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1511: nobody near"
+    ]
+   },
+   {
+    "label": "bank to 1294,1482 #2",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 70.6,
+    "still_s": 4.1,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "1347,1512 to 1250,1450 #2",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "stuck",
+    "seconds": 48.1,
+    "still_s": 48.1,
+    "stuck": 6,
+    "replans": 6,
+    "plans": 6,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": [
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1513: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1511: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1513: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1511: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1513: nobody near",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1345,1511: nobody near"
+    ]
+   }
+  ],
+  "stuck_fix_only": [
+   {
+    "label": "net only: 1347,1512 to 1250,1450 #1",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "stuck",
+    "seconds": 48.3,
+    "still_s": 48.3,
+    "stuck": 6,
+    "replans": 6,
+    "plans": 7,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": [
+     "stuck at 1347,1512 on the way to 1250,1450; next 1346,1512: nobody near; the server refused 512 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1347,1511: nobody near; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1347,1513: Overseer beside it; the server refused 512 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1348,1512: nobody near; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1348,1512: nobody near; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1346,1512: nobody near; the server refused 496 steps"
+    ]
+   },
+   {
+    "label": "net only: 1347,1512 to 1250,1450 #2",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "stuck",
+    "seconds": 48.1,
+    "still_s": 48.1,
+    "stuck": 6,
+    "replans": 6,
+    "plans": 7,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": [
+     "stuck at 1347,1512 on the way to 1250,1450; next 1346,1512: nobody near; the server refused 512 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1347,1511: nobody near; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1347,1513: Overseer beside it; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1348,1512: nobody near; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1348,1512: nobody near; the server refused 496 steps",
+     "stuck at 1347,1512 on the way to 1250,1450; next 1346,1512: nobody near; the server refused 496 steps"
+    ]
+   }
+  ],
+  "guard_no_season_fix": [
+   {
+    "label": "guard, no season fix: 1347,1512 to 1250,1450 #1",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 23.0,
+    "still_s": 1.3,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 1,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "guard, no season fix: 1347,1512 to 1250,1450 #2",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 23.0,
+    "still_s": 1.3,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 1,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "guard, no season fix: 1347,1512 to 1250,1450 #3",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 23.0,
+    "still_s": 1.0,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 1,
+    "fights": 0,
+    "stuck_events": []
+   }
+  ],
+  "season_fix_and_guard": [
+   {
+    "label": "after: 1347,1512 to 1250,1450 #1",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 98.2,
+    "still_s": 62.8,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 3,
+    "fights": 4,
+    "stuck_events": []
+   },
+   {
+    "label": "after: bank to 1294,1482 #1",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 74.0,
+    "still_s": 4.6,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "after: 1347,1512 to 1250,1450 #2",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 22.8,
+    "still_s": 1.5,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "after: bank to 1294,1482 #2",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 73.4,
+    "still_s": 4.0,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "after: 1347,1512 to 1250,1450 #3",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 22.8,
+    "still_s": 1.0,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "after: bank to 1294,1482 #3",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 73.4,
+    "still_s": 3.5,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   }
+  ],
+  "final": [
+   {
+    "label": "final: 1347,1512 to 1250,1450 #1",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 33.1,
+    "still_s": 11.1,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 1,
+    "fights": 1,
+    "stuck_events": []
+   },
+   {
+    "label": "final: 1347,1512 to 1250,1450 #2",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 22.8,
+    "still_s": 1.0,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: 1347,1512 to 1250,1450 #3",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 22.8,
+    "still_s": 1.5,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: bank to 1294,1482 #1",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 74.2,
+    "still_s": 4.3,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: bank to 1294,1482 #2",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 73.4,
+    "still_s": 4.0,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: West Britain bank to the graveyard",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1384,
+     1492,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 52.2,
+    "still_s": 3.8,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: and back to the bank",
+    "from": [
+     1386,
+     1494
+    ],
+    "goal": [
+     1425,
+     1688,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 50.7,
+    "still_s": 2.8,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 3,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: bank to 1300,1494 (a goal of the 2026-10-09 stuck trips)",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1300,
+     1494,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 70.9,
+    "still_s": 3.8,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "final: bank to 1231,1494 (the other)",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1231,
+     1494,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 85.3,
+    "still_s": 4.8,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   }
+  ],
+  "last": [
+   {
+    "label": "last: 1347,1512 to 1250,1450 #1",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 46.6,
+    "still_s": 25.1,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 1,
+    "stuck_events": []
+   },
+   {
+    "label": "last: 1347,1512 to 1250,1450 #2",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 22.8,
+    "still_s": 1.3,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "last: 1347,1512 to 1250,1450 #3",
+    "from": [
+     1347,
+     1512
+    ],
+    "goal": [
+     1250,
+     1450,
+     2
+    ],
+    "state": "arrived",
+    "seconds": 22.8,
+    "still_s": 1.0,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 1,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   },
+   {
+    "label": "last: bank to 1294,1482",
+    "from": [
+     1425,
+     1688
+    ],
+    "goal": [
+     1294,
+     1482,
+     3
+    ],
+    "state": "arrived",
+    "seconds": 74.2,
+    "still_s": 3.8,
+    "stuck": 0,
+    "replans": 0,
+    "plans": 4,
+    "refused": 0,
+    "fights": 0,
+    "stuck_events": []
+   }
+  ]
+ },
+ "nav_check_radius_40_from_1347_1512": {
+  "before": {
+   "only_the_planner_reaches": 12,
+   "only_the_client": 0
+  },
+  "after": {
+   "only_the_planner_reaches": 3,
+   "only_the_client": 0
+  }
+ }
+}

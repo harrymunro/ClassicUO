@@ -148,6 +148,9 @@ def machine_tool() -> dict[str, Any]:
 
 GOALS = {"travel_to", "hunt", "bank", "buy", "sell", "rest", "set_strategy", "set_machine", "resurrect",
          "recover_corpse", "finish", "restock", "inn"}
+# Goals that are a member's own business: a party forming up for a hunt doesn't wait for one who is on these
+# (rally.expected; a follower says the same of its resurrection, its corpse and its restock, party.Follower.own).
+OWN_BUSINESS = ("bank", "buy", "sell", "restock", "resurrect", "recover_corpse")
 
 
 def inn_tool() -> dict[str, Any]:
@@ -257,6 +260,8 @@ class Planner:
         self.no_tool = 0               # planner calls in a row that ended without a usable goal
         self.escalated_last = False
         self.finished: str | None = None
+        self.ends_at: float | None = None  # when the session's hours are up (run): no hunt is begun to outlast it
+        self.on_errand = False  # carrying out a goal of its own (OWN_BUSINESS): a huddle's rally doesn't wait for it
         self.party_waited = party is None  # a party's planner waits once, at the start, for the others to join
         self.started = time.monotonic()
         # The character's own memory (memory.py), in the shard's store: by default whenever the session has
@@ -584,12 +589,27 @@ class Planner:
         if tool == "recover_corpse" and self.party is not None and self.corpse_at:
             # Where, for the others to come back with the leader (party.Follower.follow).
             args = {**args, "x": self.corpse_at[0], "y": self.corpse_at[1]}
+        if tool == "hunt":
+            try:
+                minutes = max(3.0, min(20.0, float(args.get("minutes") or 10)))
+            except (TypeError, ValueError):
+                minutes = 10.0
+            if self.ends_at is not None:
+                # Not past the session's own end: the run loop looks at the clock between goals, and a
+                # ten-minute hunt begun in a nine-minute run's last second doubled the run (live, a
+                # huddle's tamer hunted on for 9.4 minutes after the other four had finished). Worked out
+                # before the goal is posted, so that a party's followers get the same number.
+                minutes = min(minutes, max(0.5, (self.ends_at - time.monotonic()) / 60))
+            args = {**args, "minutes": int(minutes) if float(minutes).is_integer() else round(minutes, 1)}
         self.log({"type": "goal", "t": time.time(), "tool": tool, "args": args})
+        rev = 0
         if self.party is not None and self.huddle is None and tool in GOALS:
             # The party follows: travel, hunt and rest with the leader; restock (or the leader's own errands)
             # each buys its own (party.Follower).
-            self.log({"type": "party_goal", "t": time.time(), "rev": self.party.post(tool, args, why), "tool": tool})
+            rev = self.party.post(tool, args, why)
+            self.log({"type": "party_goal", "t": time.time(), "rev": rev, "tool": tool})
         before = {a: dict(v) for a, v in getattr(s, "dangers", {}).items()}
+        self.on_errand = tool in OWN_BUSINESS
         try:
             match tool:
                 case "travel_to":
@@ -597,14 +617,24 @@ class Planner:
                     xy = place.split(",")
                     # A party's trip is made together (session.travel_to: walked, where the party walks).
                     together = {"together": True} if self.party is not None and self.huddle is None else {}
-                    if len(xy) == 2 and all(v.strip().lstrip("-").isdigit() for v in xy):
+                    if (hunt := self.into_the_hunt(place)) is not None:
+                        # Into the hunt the party's plan sends this member to: as far as the party's rally point,
+                        # with those gathered there (cuo-cym.14).
+                        r = await s.to_the_rally(*hunt)
+                    elif len(xy) == 2 and all(v.strip().lstrip("-").isdigit() for v in xy):
                         r = await s.defended(s.travel_to(x=int(xy[0]), y=int(xy[1]), **together))
                     else:
                         r = await s.defended(s.travel_to(place, **together))
                 case "hunt":
                     link = getattr(getattr(s, "pcfg", None), "link", None) if self.party is not None else None
                     seen = len(link.story.dead_seen) if link is not None else 0
-                    r = await s.hunt(str(args.get("area", "")), max(3.0, min(20.0, float(args.get("minutes", 10)))))
+                    # A party's hunt is formed up for at the edge, under the goal's own number (rally.py).
+                    forming = {}
+                    if getattr(s, "rally", None) is not None and (rev or self.huddle is not None):
+                        # With a planner each, the rally is for the place, by the name the store knows it under:
+                        # keyed by each planner's own words for it, two of them held two rallies for one hunt.
+                        forming = {"rally_key": f"goal:{rev}" if rev else "area"}
+                    r = await s.hunt(str(args.get("area", "")), float(args["minutes"]), **forming)
                     if link is not None and (dead := link.story.dead_seen[seen:]):
                         # What the party killed, by the corpses its leader saw: its own hunt says "0 kills" when
                         # the others did the killing, and a leader told only that hunted an emptied graveyard
@@ -678,6 +708,7 @@ class Planner:
                     r = Result(True, self.finished)
         except Exception as e:  # a goal that crashed is reported to the planner like a failure
             r = Result(False, f"error: {type(e).__name__}: {e}"[:300])
+        self.on_errand = False
         if hasattr(s, "danger_words") and (seen := s.danger_words(before)):
             r = Result(r.ok, f"{r.summary}; stronger creatures seen: {seen}", r.data)
             s.record_dangers(seen)
@@ -690,6 +721,28 @@ class Planner:
             self.long_events(self.long.note_result(tool, args, step.result))
         self.save_state()
         return step
+
+    def into_the_hunt(self, place: str) -> tuple[str, int, int, int] | None:
+        """The hunt a trip of this member's own goes into, when it is one the party's plan sends it to and the
+        party forms up (a planner each, form_up): the area's name, centre and spread. A trip ends there when it
+        ends within the edge the party forms up at (the place a planner names for an area can be further from
+        its spawn's centre than the spawn's spread: the Britain Graveyard by 17 tiles). Live (2026-10-14) a mage
+        whose planner chose to walk to the graveyard rather than hunt it walked through the rally point to the
+        spawn's centre, the warrior who held the rally went in after her alone, and two died."""
+        s = self.session
+        if self.huddle is None or self.party is None or getattr(s, "rally", None) is None:
+            return None
+        from .rally import EDGE_TILES
+        area = self.huddle.hunt_area()
+        if area is None or self.party.me not in (self.huddle.going(area) or []):
+            return None
+        xy = place.split(",")
+        to = s.resolve(None, int(xy[0]), int(xy[1])) if len(xy) == 2 and all(
+            v.strip().lstrip("-").isdigit() for v in xy) else s.resolve(place, None, None)
+        spot = s.hunt_spot(area)
+        if to is None or spot is None or worlds.tiles(to[0], to[1], spot[0], spot[1]) > spot[3] + EDGE_TILES:
+            return None
+        return spot[2], spot[0], spot[1], spot[3]
 
     HELD_TILES = 15
 
@@ -830,6 +883,7 @@ class Planner:
 
     async def run(self, hours: float = 1.0, stop: Any = None) -> dict[str, Any]:
         began = time.monotonic()
+        self.ends_at = began + hours * 3600
         try:
             while not self.finished and time.monotonic() - began < hours * 3600:
                 if stop is not None and stop.is_set():

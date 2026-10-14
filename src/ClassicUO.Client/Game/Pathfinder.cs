@@ -204,7 +204,13 @@ namespace ClassicUO.Game
 
                             if (!(obj is Mobile))
                             {
-                                var graphic = obj is Item it && it.IsMulti ? it.MultiGraphic : obj.Graphic;
+                                // A static is what the map says it is, not the season's art drawn in its
+                                // place: in Felucca's season the grasses that are a surface are drawn as
+                                // wood that isn't, and small palms that block as wood that doesn't. The
+                                // server goes by the map, so the walker stepped at a tuft of grass above
+                                // the ground (1346,1512, below the Britain graveyard) and was sent back
+                                // every time (cuo-4v1).
+                                var graphic = obj is Item it && it.IsMulti ? it.MultiGraphic : obj is Static st ? st.OriginalGraphic : obj.Graphic;
                                 ref StaticTiles itemdata = ref Client.Game.UO.FileManager.TileData.StaticData[graphic];
 
                                 if (stepState == (int) PATH_STEP_STATE.PSS_ON_SEA_HORSE)
@@ -370,6 +376,12 @@ namespace ClassicUO.Game
 
         public bool CalculateNewZ(int x, int y, ref sbyte z, int direction)
         {
+            // A tile the server has just sent the agent's walker back from.
+            if (_world.Agent != null && _world.Agent.StepIsRefused(x, y))
+            {
+                return false;
+            }
+
             int stepState = (int) PATH_STEP_STATE.PSS_NORMAL;
 
             if (_world.Player.IsDead || _world.Player.Graphic == 0x03DB)

@@ -1,0 +1,551 @@
+{
+ "started": "2026-10-14T02:46:59",
+ "cut": 0.5,
+ "moments": {
+  "first": 42
+ },
+ "rule": {
+  "first": {
+   "right": 29,
+   "missed": 8,
+   "needless": 2,
+   "walk_not_wanted": 0,
+   "wrong_one": 3,
+   "of": 42,
+   "by_part": {
+    "r": "19/22",
+    "w": "10/20"
+   },
+   "wrong": [
+    {
+     "id": "r07",
+     "src": "20261013-012010 Thea 1791865288",
+     "want": [
+      "Wystan"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the archer losing health fast to a bone knight, within reach; the bard is being healed"
+    },
+    {
+     "id": "r11",
+     "src": "20261013-023159 Roland 1791869596",
+     "want": [
+      "Thea"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the tamer falling fast with two on her, within reach, though another heals her"
+    },
+    {
+     "id": "r13",
+     "src": "20261013-024221 Isolde 1791870220",
+     "want": [
+      "Roland"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the warrior still falling fast though another heals him; mana enough"
+    },
+    {
+     "id": "w06",
+     "src": "a mage at low mana, a companion hurt but steady",
+     "want": [
+      null
+     ],
+     "got": [
+      "Thea",
+      "heal"
+     ],
+     "how": "needless",
+     "why": "the tamer steady with nothing on her: the last mana is for the lich or a real need"
+    },
+    {
+     "id": "w07",
+     "src": "a mage at low mana, one heal for two",
+     "want": [
+      "Roland"
+     ],
+     "got": [
+      "Corwin",
+      "heal"
+     ],
+     "how": "wrong_one",
+     "why": "one heal left: the warrior losing health to the lich, not the steady bard"
+    },
+    {
+     "id": "w08",
+     "src": "two healers, the companion still falling fast",
+     "want": [
+      "Roland"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "one heal isn't keeping up with a lich and a bone knight"
+    },
+    {
+     "id": "w11",
+     "src": "near death, a few steps away from the fight",
+     "want": [
+      "Wystan"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the archer near death, nothing on him, the walk away from the fight"
+    },
+    {
+     "id": "w12",
+     "src": "near death, with things between, for a warrior",
+     "want": [
+      "Isolde"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the warrior can take the hits: to the mage's side, near death with a bone knight on her"
+    },
+    {
+     "id": "w13",
+     "src": "two near death, one falling",
+     "want": [
+      "Roland"
+     ],
+     "got": [
+      "Wystan",
+      "heal"
+     ],
+     "how": "wrong_one",
+     "why": "the warrior dies first: falling fast under the lich; the archer has nothing on him"
+    },
+    {
+     "id": "w14",
+     "src": "the helper hurt and falling",
+     "want": [
+      null
+     ],
+     "got": [
+      "Corwin",
+      "bandage"
+     ],
+     "how": "needless",
+     "why": "two on the archer and he is falling; the bard is steady"
+    },
+    {
+     "id": "w15",
+     "src": "the helper hurt, a companion near death beside it",
+     "want": [
+      "Isolde"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the mage dies in seconds; the warrior's own health can wait one bandage"
+    },
+    {
+     "id": "w17",
+     "src": "falling against steady",
+     "want": [
+      "Corwin"
+     ],
+     "got": [
+      "Roland",
+      "bandage"
+     ],
+     "how": "wrong_one",
+     "why": "the bard is losing health to two skeletons; the warrior is steady"
+    },
+    {
+     "id": "w20",
+     "src": "full mana, falling above 60%",
+     "want": [
+      "Roland"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the warrior losing health fast to two, and mana to spare"
+    }
+   ]
+  }
+ },
+ "models": {
+  "jev": {
+   "first": {
+    "right": 37,
+    "missed": 5,
+    "needless": 0,
+    "walk_not_wanted": 0,
+    "wrong_one": 0,
+    "of": 42,
+    "by_part": {
+     "r": "21/22",
+     "w": "16/20"
+    },
+    "wrong": [
+     {
+      "id": "r13",
+      "src": "20261013-024221 Isolde 1791870220",
+      "want": [
+       "Roland"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the warrior still falling fast though another heals him; mana enough",
+      "p": {
+       "h1": 0.4,
+       "h2": 0.26,
+       "h3": 0.0,
+       "none": 0.34
+      },
+      "ids": {
+       "h1": [
+        "Thea",
+        "heal"
+       ],
+       "h2": [
+        "Roland",
+        "heal"
+       ],
+       "h3": [
+        "Wystan",
+        "heal"
+       ]
+      }
+     },
+     {
+      "id": "w08",
+      "src": "two healers, the companion still falling fast",
+      "want": [
+       "Roland"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "one heal isn't keeping up with a lich and a bone knight",
+      "p": {
+       "h1": 0.43,
+       "none": 0.57
+      },
+      "ids": {
+       "h1": [
+        "Roland",
+        "bandage"
+       ]
+      }
+     },
+     {
+      "id": "w11",
+      "src": "near death, a few steps away from the fight",
+      "want": [
+       "Wystan"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the archer near death, nothing on him, the walk away from the fight",
+      "p": {
+       "h1": 0.2,
+       "h2": 0.01,
+       "none": 0.79
+      },
+      "ids": {
+       "h1": [
+        "Wystan",
+        "walk"
+       ],
+       "h2": [
+        "Roland",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "w12",
+      "src": "near death, with things between, for a warrior",
+      "want": [
+       "Isolde"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the warrior can take the hits: to the mage's side, near death with a bone knight on her",
+      "p": {
+       "h1": 0.06,
+       "none": 0.94
+      },
+      "ids": {
+       "h1": [
+        "Isolde",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "w18",
+      "src": "the fight over, a walk to bandage",
+      "want": [
+       "Wystan"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "nothing near: walk over and bandage him",
+      "p": {
+       "h1": 0.11,
+       "none": 0.89
+      },
+      "ids": {
+       "h1": [
+        "Wystan",
+        "walk"
+       ]
+      }
+     }
+    ],
+    "cuts": {
+     "0.3": 37,
+     "0.4": 37,
+     "0.6": 35,
+     "0.7": 34
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 213,
+     "p90": 329
+    },
+    "cost_usd_a_moment": 4.72e-05,
+    "input_tokens": 1125,
+    "errors": 0
+   }
+  },
+  "decision1": {
+   "first": {
+    "right": 35,
+    "missed": 5,
+    "needless": 0,
+    "walk_not_wanted": 1,
+    "wrong_one": 1,
+    "of": 42,
+    "by_part": {
+     "r": "19/22",
+     "w": "16/20"
+    },
+    "wrong": [
+     {
+      "id": "r08",
+      "src": "20261013-014119 Corwin 1791866550",
+      "want": [
+       null
+      ],
+      "got": [
+       "Roland",
+       "walk"
+      ],
+      "how": "walk_not_wanted",
+      "why": "the warrior 4 tiles off with a skeleton on him: the bard doesn't walk into the fight",
+      "p": {
+       "h1": 0.531,
+       "none": 0.469
+      },
+      "ids": {
+       "h1": [
+        "Roland",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "r11",
+      "src": "20261013-023159 Roland 1791869596",
+      "want": [
+       "Thea"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the tamer falling fast with two on her, within reach, though another heals her",
+      "p": {
+       "h1": 0.469,
+       "none": 0.531
+      },
+      "ids": {
+       "h1": [
+        "Thea",
+        "bandage"
+       ]
+      }
+     },
+     {
+      "id": "r13",
+      "src": "20261013-024221 Isolde 1791870220",
+      "want": [
+       "Roland"
+      ],
+      "got": [
+       "Thea",
+       "heal"
+      ],
+      "how": "wrong_one",
+      "why": "the warrior still falling fast though another heals him; mana enough",
+      "p": {
+       "h1": 0.871,
+       "h2": 0.043,
+       "h3": 0.005,
+       "none": 0.081
+      },
+      "ids": {
+       "h1": [
+        "Thea",
+        "heal"
+       ],
+       "h2": [
+        "Roland",
+        "heal"
+       ],
+       "h3": [
+        "Wystan",
+        "heal"
+       ]
+      }
+     },
+     {
+      "id": "w08",
+      "src": "two healers, the companion still falling fast",
+      "want": [
+       "Roland"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "one heal isn't keeping up with a lich and a bone knight",
+      "p": {
+       "h1": 0.223,
+       "none": 0.777
+      },
+      "ids": {
+       "h1": [
+        "Roland",
+        "bandage"
+       ]
+      }
+     },
+     {
+      "id": "w11",
+      "src": "near death, a few steps away from the fight",
+      "want": [
+       "Wystan"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the archer near death, nothing on him, the walk away from the fight",
+      "p": {
+       "h1": 0.315,
+       "h2": 0.018,
+       "none": 0.667
+      },
+      "ids": {
+       "h1": [
+        "Wystan",
+        "walk"
+       ],
+       "h2": [
+        "Roland",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "w13",
+      "src": "two near death, one falling",
+      "want": [
+       "Roland"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the warrior dies first: falling fast under the lich; the archer has nothing on him",
+      "p": {
+       "h1": 0.472,
+       "h2": 0.472,
+       "none": 0.056
+      },
+      "ids": {
+       "h1": [
+        "Wystan",
+        "heal"
+       ],
+       "h2": [
+        "Roland",
+        "heal"
+       ]
+      }
+     },
+     {
+      "id": "w18",
+      "src": "the fight over, a walk to bandage",
+      "want": [
+       "Wystan"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "nothing near: walk over and bandage him",
+      "p": {
+       "h1": 0.047,
+       "none": 0.953
+      },
+      "ids": {
+       "h1": [
+        "Wystan",
+        "walk"
+       ]
+      }
+     }
+    ],
+    "cuts": {
+     "0.3": 35,
+     "0.4": 35,
+     "0.6": 36,
+     "0.7": 36
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 279,
+     "p90": 400
+    },
+    "cost_usd_a_moment": 3.02e-05,
+    "input_tokens": 718,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.003251,
+  "cost_per_hour_usd": 2.6298,
+  "calls": 84,
+  "by_role": {
+   "system1": 0.003251
+  },
+  "by_kind": {
+   "fight": {
+    "calls": 84,
+    "input_tokens": 77398,
+    "output_tokens": 1543,
+    "cost_usd": 0.003251,
+    "latency_ms_avg": 265.5
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 42,
+    "input_tokens": 47238,
+    "output_tokens": 1501,
+    "cost_usd": 0.001984,
+    "latency_ms_avg": 232.0
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 42,
+    "input_tokens": 30160,
+    "output_tokens": 42,
+    "cost_usd": 0.001267,
+    "latency_ms_avg": 299.1
+   }
+  },
+  "cost_per_decision_usd": 3.87e-05
+ }
+}

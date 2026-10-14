@@ -594,6 +594,8 @@ namespace ClassicUO.Agent
         // the same message arrives as text: the number wins, so the text is skipped.
         public void OnCliloc(uint cliloc)
         {
+            OnPartyCliloc(cliloc);
+
             AgentMessage m = AgentMessages.FromCliloc(cliloc);
 
             if (m != AgentMessage.None)
@@ -739,6 +741,7 @@ namespace ClassicUO.Agent
             UpdateSummons(now);
             UpdateRearm(now);
             UpdateDeath(now);
+            UpdateParty(now);
 
             if (Mode == AgentMode.Off && _engaged == 0 && _lootCorpse == 0 && _takeQueue.Count == 0)
             {
@@ -1072,6 +1075,16 @@ namespace ClassicUO.Agent
 
                     return ("done", string.Empty);
 
+                // Stop walking (a trip, a follow) and leave the rest as it is: a fight going on, a spell
+                // being cast, a corpse being looted. `stop` ends those too, which a party closing up on
+                // its leader with something already on it doesn't want.
+                case "halt":
+                    StopTravel("stopped");
+                    StopFollow();
+                    player.Pathfinder.StopAutoWalk();
+
+                    return ("done", string.Empty);
+
                 case "disengage":
                     // Let the fight go and leave the rest as it is: a leave on a trip keeps to the
                     // road, and travel waits while the agent is engaged. Without this a warrior
@@ -1208,6 +1221,10 @@ namespace ClassicUO.Agent
                     GameActions.DoubleClick(_world, a.Target);
 
                     return ("done", string.Empty);
+
+                // UO's own party: invite, accept, decline, leave, say, loot (AgentParty).
+                case "party":
+                    return PartyAct(a);
 
                 case "target":
                     if (!_world.TargetManager.IsTargeting)
@@ -1371,10 +1388,12 @@ namespace ClassicUO.Agent
                 }
 
                 Mobile m = _world.Mobiles.Get(target);
+                // Resurrection is the one spell aimed at a ghost (a companion raised where it fell).
+                bool raises = spell.ID == AgentSpells.RESURRECTION;
 
-                if (m == null || m.IsDead)
+                if (m == null || m.IsDead != raises)
                 {
-                    return ("failed", "no such living mobile");
+                    return ("failed", raises ? "not a ghost" : "no such living mobile");
                 }
 
                 if (spell.TargetType == TargetType.Harmful && !a.Manual && !IsMonsterTarget(m))
@@ -1630,7 +1649,9 @@ namespace ClassicUO.Agent
                         tm.CancelTarget();
                     }
                 }
-                else if (e != null && !(e is Mobile m && m.IsDead) && (tm.TargetingState == CursorTarget.Object || tm.TargetingState == CursorTarget.Position))
+                // A dead target lets the spell go, but for Resurrection, whose target is a ghost.
+                else if (e != null && !(e is Mobile m && m.IsDead && _castSpell != AgentSpells.RESURRECTION)
+                         && (tm.TargetingState == CursorTarget.Object || tm.TargetingState == CursorTarget.Position))
                 {
                     Mobile aimed = e as Mobile;
                     bool unseen = SightChecks && aimed != null && aimed != _world.Player && !InSight(aimed);

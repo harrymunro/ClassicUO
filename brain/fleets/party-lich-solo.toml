@@ -9,6 +9,11 @@
 # once and was wiped in two and a half minutes whatever it did. Runs before that date had whatever stood there.
 name = "party-lich-solo"
 server_port = 2593
+# No standing strategy: each character starts the run with none (the leader's planner may still set its own).
+# Until 2026-10-12 the file said nothing, and the five ran on whatever their clients' profiles held: a video
+# shoot's "never flee: the party stands together" for all of them, with old planner lines after it for some
+# ("flee if health drops below 50%"), so who could leave a fight depended on which client folder was used.
+strategy = ""
 hours = 0.15
 headless = true
 talk = false

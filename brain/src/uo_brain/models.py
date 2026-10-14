@@ -1,7 +1,7 @@
 """Which model answers each AI role (cuo-m70.2).
 
-Every call has a kind (costs.py): fight, routine, facts, rerank, strategy and recorder are
-system one, Jev's typed questions; planner, review, guide and design are system two, the
+Every call has a kind (costs.py): fight, routine, facts, rerank, strategy, recorder, memory, chat
+and order are system one, Jev's typed questions; planner, review, guide and design are system two, the
 planner model's chat. A profile names the model for each, in one place:
 
     [models]

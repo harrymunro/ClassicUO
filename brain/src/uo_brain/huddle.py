@@ -9,6 +9,8 @@ agreed is in front of each of them:
   revision and a time. One system-two call (kind `huddle`, the cheap planner model) writes it,
   shown why the party stopped, every member's state, and what each brings from its own memory,
   so the tamer's "I died here" is said where the plan can answer it instead of acted on alone.
+  With them it names who goes into the hunt (`going`): a party that forms up waits at the edge
+  for those, whatever each planner has said yet (rally.py, cuo-cym.14).
 - **When**: on events, never on a timer, and only between fights (never with a hostile in
   reach): the party has no plan yet; a member's goal for the plan failed, or it had to leave the
   place; someone fell under a third of its health or died since the plan was made; someone ran
@@ -27,12 +29,15 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 from collections.abc import Callable
 from typing import Any
 
 from . import costs, llm
 from . import memory as memories
+from .party import add_column
+from .world import tokens
 
 MIN_GAP_S = 150.0   # between two huddles, unless someone has died since
 BRING_S = 8.0       # how long the one who called it waits for the others to say what they bring
@@ -43,7 +48,7 @@ BRINGS = 2          # memories a member brings
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS party_board (
     id INTEGER PRIMARY KEY, party TEXT NOT NULL, rev INTEGER NOT NULL, target TEXT NOT NULL, roles TEXT, rally TEXT,
-    reason TEXT, by TEXT NOT NULL, t REAL NOT NULL);
+    reason TEXT, by TEXT NOT NULL, t REAL NOT NULL, going TEXT);
 CREATE TABLE IF NOT EXISTS party_huddle (
     id INTEGER PRIMARY KEY, party TEXT NOT NULL, hid INTEGER NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL,
     text TEXT, t REAL NOT NULL);
@@ -54,7 +59,7 @@ SYSTEM = """You are the shared plan of a party of adventurers in the game Ultima
 a moment to agree what to do next. Each of them plans for itself afterwards, with what you write in front
 of it, so it must be one plan that all of them can follow at once. You get why they stopped, what the party
 was asked to do, how each member is, and what each brings from its own memory, in its own words. Call
-blackboard exactly once with three lines:
+blackboard exactly once with three lines and the names of who goes:
 
 - target: what the party does next, all of them together: the place, and the creature or the errand
   ("Hunt the undead at the Britain Graveyard, the lich first, all five, now").
@@ -62,6 +67,9 @@ blackboard exactly once with three lines:
   bear holds the bone knights; Corwin sets the skeletons on each other and bandages").
 - rally: where they regroup if it goes wrong, and what "wrong" is ("Two down, or Roland under a third: back
   to the Britain healer, together").
+- going: when the target is a hunt or a fight, the names of everyone who is to go into it together, so
+  that nobody goes in before the others are there. Leave out one you send elsewhere first or keep out of
+  it, and name nobody when the plan is not to fight now.
 
 Rules. Keep them together: nobody is sent on an errand of their own unless they cannot fight without it,
 and then the line says who, what, and where the others wait. Answer what the members bring: when someone
@@ -72,12 +80,25 @@ were given.
 """
 
 
-def board_tool() -> dict[str, Any]:
+def board_tool(members: list[str] | None = None) -> dict[str, Any]:
     s = {"type": "string"}
+    names = {"type": "array", "items": {"type": "string", **({"enum": list(members)} if members else {})}}
     return {"type": "function", "function": {
-        "name": "blackboard", "description": "The party's plan in three lines.",
-        "parameters": {"type": "object", "properties": {"target": s, "roles": s, "rally": s},
-                       "required": ["target", "roles", "rally"], "additionalProperties": False}}}
+        "name": "blackboard", "description": "The party's plan in three lines, and who goes.",
+        "parameters": {"type": "object", "properties": {"target": s, "roles": s, "rally": s, "going": names},
+                       "required": ["target", "roles", "rally", "going"], "additionalProperties": False}}}
+
+
+def named(value: Any, members: list[str]) -> list[str]:
+    """The members a blackboard's `going` names, in the party's own order. Read as loosely as it may come: the
+    cheap planner model has sent a list as one string before now, and a name it made up is nobody's."""
+    text = " ".join(str(v) for v in value) if isinstance(value, (list, tuple)) else str(value or "")
+    return [m for m in members if re.search(rf"(?<![a-z]){re.escape(m.lower())}(?![a-z])", text.lower())]
+
+
+def ensure(world: Any) -> None:
+    world.db.executescript(SCHEMA)
+    add_column(world, "party_board", "going", "TEXT")  # a store from before the plan named who goes
 
 
 class Huddle:
@@ -93,20 +114,52 @@ class Huddle:
         self.memory, self.picker = memory, picker
         self.chat = chat_fn
         self.log = log or (lambda _: None)
-        self.world.db.executescript(SCHEMA)
+        ensure(self.world)
         self.seen_rev = 0        # the blackboard revision this member has read (and kept a memory of)
         self.answered: set[int] = set()
         self.called = 0
         self.brought = 0
         self.cost = 0.0
         self.dangers_seen: set[str] = set()
+        self._area: tuple[int, str | None] = (0, None)  # the hunting area the plan of that revision names
 
     # ---- the store ------------------------------------------------------------------
 
     def board(self) -> dict[str, Any] | None:
         r = self.world.db.execute("SELECT * FROM party_board WHERE party = ? ORDER BY rev DESC LIMIT 1",
                                   (self.party.party,)).fetchone()
-        return dict(r) if r else None
+        return {**dict(r), "going": json.loads(r["going"] or "[]")} if r else None
+
+    def going(self, area: str = "") -> list[str] | None:
+        """Whom the plan sends into its hunt, for the rally that waits for them (rally.py, cuo-cym.14). None when
+        the plan doesn't say: no plan yet, nobody named, or (asked about an `area`) a target that is some other
+        place. Live, a rally that waited only for those who had said they had set out went in behind a bard,
+        with the warrior the plan sent a second behind on a walk there."""
+        board = self.board()
+        if board is None or not board["going"]:
+            return None
+        if area and not set(tokens(area)) <= set(tokens(board["target"])):
+            return None
+        return [n for n in self.party.members if n in board["going"]] or None
+
+    def hunt_area(self) -> str | None:
+        """The hunting area the plan's target names, by the world store's spawners: of their areas whose name
+        is in the target word for word, the longest (the Britain Graveyard, not Britain). None when it names
+        none. A trip of a member's own into it stops at the party's rally point (Planner.into_the_hunt)."""
+        board = self.board()
+        if board is None:
+            return None
+        if self._area[0] != board["rev"]:
+            words = tokens(board["target"])
+            best: list[str] = []
+            area = None
+            for (name,) in self.world.db.execute(
+                    "SELECT DISTINCT area FROM spawns WHERE stale = 0 AND walk_range IS NOT NULL"):
+                own = tokens(name)
+                if len(own) > len(best) and any(words[i:i + len(own)] == own for i in range(len(words) - len(own) + 1)):
+                    best, area = own, name
+            self._area = (board["rev"], area)
+        return self._area[1]
 
     def rows(self, hid: int) -> list[dict[str, Any]]:
         return [dict(r) for r in self.world.db.execute(
@@ -216,14 +269,15 @@ class Huddle:
                            f"{st.get('x')},{st.get('y')}. Brings: {said}")
         board = self.board()
         was = (f"The plan until now (made {(time.time() - board['t']) / 60:.0f} min ago): target: {board['target']}; "
-               f"roles: {board['roles']}; rally: {board['rally']}\n\n") if board else ""
+               f"roles: {board['roles']}; rally: {board['rally']}"
+               + (f"; going: {', '.join(board['going'])}" if board["going"] else "") + "\n\n") if board else ""
         user = (f"Why they stopped: {why}\n\nWhat the party was asked to do: {self.goal or '(nothing in particular)'}\n\n"
                 + was + "The members:\n" + "\n".join(members) + "\n\nCall blackboard.")
         try:
             with costs.kind("huddle"):
                 res = await self.chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
-                                      tools=[board_tool()], tool_choice="blackboard", model=llm.planner_model(None),
-                                      max_tokens=600)
+                                      tools=[board_tool(self.party.members)], tool_choice="blackboard",
+                                      model=llm.planner_model(None), max_tokens=600)
         except llm.LlmError as e:
             self.add(hid, "done", "failed")
             self.log({"type": "huddle", "t": time.time(), "hid": hid, "error": str(e)[:300]})
@@ -236,12 +290,14 @@ class Huddle:
             return None
         rev = (board["rev"] if board else 0) + 1
         roles, rally = (" ".join(str(args.get(k) or "").split())[:400] for k in ("roles", "rally"))
-        self.world.db.execute("INSERT INTO party_board (party, rev, target, roles, rally, reason, by, t) "
-                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (self.party.party, rev, target, roles, rally, why, self.me, time.time()))
+        going = named(args.get("going"), self.party.members)
+        self.world.db.execute("INSERT INTO party_board (party, rev, target, roles, rally, reason, by, t, going) "
+                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                              (self.party.party, rev, target, roles, rally, why, self.me, time.time(), json.dumps(going)))
         self.world.db.commit()
         self.add(hid, "done", str(rev))
         self.cost += res.usage.cost or 0.0
-        out = {"rev": rev, "target": target, "roles": roles, "rally": rally, "reason": why,
+        out = {"rev": rev, "target": target, "roles": roles, "rally": rally, "going": going, "reason": why,
                "answered": sorted(brings), "brought": {k: v for k, v in brings.items() if v}}
         self.log({"type": "huddle", "t": time.time(), "hid": hid, "called": True, **out, "usage": res.usage.to_log()})
         return out
@@ -310,9 +366,10 @@ class Huddle:
                     "you. There is no plan yet: one is being agreed. Until it is, stay where you are (rest a short "
                     "while).")
         mins = (time.time() - board["t"]) / 60
+        going = f"- Going in, together: {', '.join(board['going'])}\n" if board["going"] else ""
         return (f"Your party's plan, agreed in a huddle {mins:.0f} min ago (because {board['reason']}). Each of you plans "
                 "for yourself, and every one of you has this in front of them:\n"
-                f"- Target: {board['target']}\n- Roles: {board['roles']}\n- Rally point: {board['rally']}\n"
+                f"- Target: {board['target']}\n- Roles: {board['roles']}\n- Rally point: {board['rally']}\n{going}"
                 "Choose your own next goal so that it carries out this plan with the others: go where the party goes, "
                 "now, and do your part of it. Don't go off on an errand of your own unless the plan gives you one or "
                 "you can't fight without it; what you remember was said in the huddle, and the plan has answered it. "

@@ -164,6 +164,7 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
     suggested: tuple[int, float] | None = None  # (target, when) of the last attack suggestion
     strategy_text: str | None = None
     active = pcfg
+    last_live: policy.PolicyConfig | None = None
     last_target = 0
     arch = None
     reading = ""
@@ -277,8 +278,15 @@ async def run(rpc: AgentRpc, judge: Judge, cfg: LoopConfig, pcfg: policy.PolicyC
                     # The quiet is over, or the agent is busy (running, looting, switched off): decide
                     # as soon as it can, not when the stretched clock runs out.
                     calm, next_decide = 0, 0.0
+                # What changes while the loop runs (a companion's settings at its leader's word, standing.py) is
+                # laid over the configuration, and a change is decided on at once: told to loot in the quiet
+                # after a fight, a companion shouldn't stand until the stretched clock runs out.
+                live = active.live(active) if active.live is not None else active
+                if live is not active and live != last_live:
+                    calm, next_decide = 0, 0.0
+                last_live = live
                 if not busy and (now >= next_decide or (sig != last_sig and not slow)):
-                    done = await decide_once(rpc, judge, sit, mem, active, stats, log, on_decision, machine, recall)
+                    done = await decide_once(rpc, judge, sit, mem, live, stats, log, on_decision, machine, recall)
                     for action, res in done:
                         if action["verb"] == "attack" and res["status"] == "suggested":
                             suggested = (action["target"], time.monotonic())
@@ -419,6 +427,8 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
             mem.flee_failed = 0 if res["status"] == "done" else mem.flee_failed + 1
         if action["verb"] == "walk_to" and action.get("reason") == "seek" and action.get("target"):
             mem.seek_result(action["target"], res["status"], str(res.get("detail", "")))
+        if action["verb"] == "walk_to" and action.get("leg") and res["status"] != "done":
+            mem.leg_failed_at = time.monotonic()  # the next walks to it go the whole way (policy.seek_leg)
 
     if pcfg.link is not None:
         # A party member's callout for what this decision showed (mates.py): said after its actions went.
@@ -474,7 +484,7 @@ async def decide_once(rpc: AgentRpc, judge: Judge, sit: state.Situation, mem: po
             "note": dec.note,
             "target": dec.target.serial if dec.target else None,
             "spell": dec.spell.name if dec.spell else None,
-            **({"leave_why": dec.leave_why} if dec.leave_why else {}),
+            **({"leave_why": dec.leave_why} if dec.leave_why else {}), **({"regroup": True} if dec.regroup else {}),
             **({"spot": spot_log(dec, answers)} if dec.spot is not None else {}),
             **({"cornered": True} if dec.cornered else {}),
             **({"called": called} if called else {}),

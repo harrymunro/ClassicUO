@@ -1,0 +1,1064 @@
+{
+ "started": "2026-10-13T11:52:07",
+ "cut": 0.5,
+ "lines": 42,
+ "models": {
+  "decision1": {
+   "as it was": {
+    "following on": {
+     "lines": 6,
+     "as_wanted": 5,
+     "lines_with_a_yes": 5,
+     "yes_of_all_asked": "5/18",
+     "mean_p": 0.327,
+     "by_line": {
+      "And your reagents?": {
+       "Isolde": 0.99,
+       "Thea": 0.02,
+       "Wystan": 0.02
+      },
+      "Enough for another fight?": {
+       "Isolde": 0.04,
+       "Thea": 0.02,
+       "Wystan": 1.0
+      },
+      "What does he eat, anyway?": {
+       "Isolde": 0.07,
+       "Thea": 0.99,
+       "Wystan": 0.03
+      },
+      "Why north?": {
+       "Isolde": 0.13,
+       "Thea": 0.1,
+       "Wystan": 1.0
+      },
+      "Modest as ever.": {
+       "Isolde": 0.32,
+       "Thea": 0.03,
+       "Wystan": 0.03
+      },
+      "You'd say that if it had eaten you.": {
+       "Isolde": 0.09,
+       "Thea": 0.93,
+       "Wystan": 0.1
+      }
+     }
+    },
+    "to the others": {
+     "lines": 5,
+     "as_wanted": 0,
+     "lines_with_a_yes": 4,
+     "yes_of_all_asked": "4/15",
+     "mean_p": 0.313,
+     "by_line": {
+      "What did the rest of you make of it?": {
+       "Isolde": 0.99,
+       "Thea": 0.04,
+       "Wystan": 0.02
+      },
+      "Anyone else?": {
+       "Isolde": 0.04,
+       "Thea": 0.02,
+       "Wystan": 0.99
+      },
+      "And you two?": {
+       "Isolde": 0.05,
+       "Thea": 0.98,
+       "Wystan": 0.04
+      },
+      "What about the others, how are your supplies?": {
+       "Isolde": 0.03,
+       "Thea": 0.01,
+       "Wystan": 1.0
+      },
+      "Right, come along, you lot.": {
+       "Isolde": 0.44,
+       "Thea": 0.02,
+       "Wystan": 0.01
+      }
+     }
+    },
+    "to the party": {
+     "lines": 12,
+     "as_wanted": 7,
+     "lines_with_a_yes": 7,
+     "yes_of_all_asked": "17/36",
+     "mean_p": 0.5,
+     "by_line": {
+      "You'd have stayed in bed if I'd let you.": {
+       "Isolde": 0.75,
+       "Thea": 0.59,
+       "Wystan": 0.8
+      },
+      "That was a good fight. Well done, all of you.": {
+       "Isolde": 0.18,
+       "Thea": 0.18,
+       "Wystan": 0.2
+      },
+      "What did you all make of that bone knight?": {
+       "Isolde": 0.56,
+       "Thea": 0.82,
+       "Wystan": 0.78
+      },
+      "Anyone hurt?": {
+       "Isolde": 0.32,
+       "Thea": 0.38,
+       "Wystan": 0.35
+      },
+      "Which way now, do you think?": {
+       "Isolde": 0.47,
+       "Thea": 0.68,
+       "Wystan": 0.68
+      },
+      "I nearly died back there, you know.": {
+       "Isolde": 0.68,
+       "Thea": 0.56,
+       "Wystan": 0.62
+      },
+      "Who's got bandages to spare?": {
+       "Isolde": 0.44,
+       "Thea": 0.47,
+       "Wystan": 0.75
+      },
+      "Ready for another one?": {
+       "Isolde": 0.56,
+       "Thea": 0.41,
+       "Wystan": 0.8
+      },
+      "I've never seen so many skeletons in one place.": {
+       "Isolde": 0.32,
+       "Thea": 0.32,
+       "Wystan": 0.29
+      },
+      "Good evening, all.": {
+       "Isolde": 0.2,
+       "Thea": 0.16,
+       "Wystan": 0.15
+      },
+      "So what brought you lot out here in the first place?": {
+       "Isolde": 0.8,
+       "Thea": 0.78,
+       "Wystan": 0.82
+      },
+      "This graveyard gives me the creeps.": {
+       "Isolde": 0.41,
+       "Thea": 0.35,
+       "Wystan": 0.38
+      }
+     }
+    },
+    "by name": {
+     "lines": 8,
+     "as_wanted": 8,
+     "lines_with_a_yes": 8,
+     "yes_of_all_asked": "8/8",
+     "mean_p": 0.996,
+     "by_line": {
+      "Isolde, how are you holding up?": {
+       "Isolde": 1.0
+      },
+      "Wystan, how many arrows have you left?": {
+       "Wystan": 1.0
+      },
+      "Thea, how's Bramble?": {
+       "Thea": 1.0
+      },
+      "Isolde, nice Fireball.": {
+       "Isolde": 0.98
+      },
+      "Wystan, run back to town and buy me some bandages, would you?": {
+       "Wystan": 1.0
+      },
+      "Thea, what's your story anyway?": {
+       "Thea": 1.0
+      },
+      "Isolde, and what did you make of that bone knight?": {
+       "Isolde": 1.0
+      },
+      "Wystan, you call that a shot?": {
+       "Wystan": 1.0
+      }
+     }
+    },
+    "nothing to answer": {
+     "lines": 8,
+     "as_wanted": 8,
+     "lines_with_a_yes": 0,
+     "yes_of_all_asked": "0/24",
+     "mean_p": 0.16,
+     "by_line": {
+      "brb": {
+       "Isolde": 0.05,
+       "Thea": 0.06,
+       "Wystan": 0.05
+      },
+      "lol": {
+       "Isolde": 0.2,
+       "Thea": 0.18,
+       "Wystan": 0.22
+      },
+      "ok": {
+       "Isolde": 0.15,
+       "Thea": 0.13,
+       "Wystan": 0.13
+      },
+      "one sec": {
+       "Isolde": 0.13,
+       "Thea": 0.15,
+       "Wystan": 0.18
+      },
+      "hmm": {
+       "Isolde": 0.12,
+       "Thea": 0.12,
+       "Wystan": 0.11
+      },
+      "afk a minute": {
+       "Isolde": 0.18,
+       "Thea": 0.18,
+       "Wystan": 0.2
+      },
+      "right": {
+       "Isolde": 0.16,
+       "Thea": 0.2,
+       "Wystan": 0.15
+      },
+      "oops, wrong key": {
+       "Isolde": 0.25,
+       "Thea": 0.27,
+       "Wystan": 0.25
+      }
+     }
+    },
+    "an order": {
+     "lines": 3,
+     "as_wanted": null,
+     "lines_with_a_yes": 0,
+     "yes_of_all_asked": "0/9",
+     "mean_p": 0.184,
+     "by_line": {
+      "Hold up a moment, I'll scout ahead.": {
+       "Isolde": 0.15,
+       "Thea": 0.25,
+       "Wystan": 0.27
+      },
+      "All clear. Come along, you lot.": {
+       "Isolde": 0.11,
+       "Thea": 0.15,
+       "Wystan": 0.16
+      },
+      "Right, on we go. Keep up.": {
+       "Isolde": 0.2,
+       "Thea": 0.15,
+       "Wystan": 0.22
+      }
+     }
+    },
+    "as_wanted": "28/39",
+    "asked": 110,
+    "errors": 0,
+    "latency_ms_median": 279,
+    "cost_usd_a_question": 2.05e-05
+   },
+   "for a person who leads": {
+    "following on": {
+     "lines": 6,
+     "as_wanted": 6,
+     "lines_with_a_yes": 6,
+     "yes_of_all_asked": "6/18",
+     "mean_p": 0.388,
+     "by_line": {
+      "And your reagents?": {
+       "Isolde": 1.0,
+       "Thea": 0.04,
+       "Wystan": 0.02
+      },
+      "Enough for another fight?": {
+       "Isolde": 0.1,
+       "Thea": 0.06,
+       "Wystan": 1.0
+      },
+      "What does he eat, anyway?": {
+       "Isolde": 0.03,
+       "Thea": 1.0,
+       "Wystan": 0.05
+      },
+      "Why north?": {
+       "Isolde": 0.2,
+       "Thea": 0.16,
+       "Wystan": 1.0
+      },
+      "Modest as ever.": {
+       "Isolde": 0.99,
+       "Thea": 0.03,
+       "Wystan": 0.02
+      },
+      "You'd say that if it had eaten you.": {
+       "Isolde": 0.16,
+       "Thea": 1.0,
+       "Wystan": 0.13
+      }
+     }
+    },
+    "to the others": {
+     "lines": 5,
+     "as_wanted": 0,
+     "lines_with_a_yes": 5,
+     "yes_of_all_asked": "5/15",
+     "mean_p": 0.396,
+     "by_line": {
+      "What did the rest of you make of it?": {
+       "Isolde": 0.99,
+       "Thea": 0.38,
+       "Wystan": 0.2
+      },
+      "Anyone else?": {
+       "Isolde": 0.08,
+       "Thea": 0.05,
+       "Wystan": 0.99
+      },
+      "And you two?": {
+       "Isolde": 0.05,
+       "Thea": 0.9,
+       "Wystan": 0.09
+      },
+      "What about the others, how are your supplies?": {
+       "Isolde": 0.09,
+       "Thea": 0.08,
+       "Wystan": 1.0
+      },
+      "Right, come along, you lot.": {
+       "Isolde": 0.95,
+       "Thea": 0.07,
+       "Wystan": 0.04
+      }
+     }
+    },
+    "to the party": {
+     "lines": 12,
+     "as_wanted": 12,
+     "lines_with_a_yes": 12,
+     "yes_of_all_asked": "36/36",
+     "mean_p": 0.991,
+     "by_line": {
+      "You'd have stayed in bed if I'd let you.": {
+       "Isolde": 0.99,
+       "Thea": 0.98,
+       "Wystan": 0.99
+      },
+      "That was a good fight. Well done, all of you.": {
+       "Isolde": 1.0,
+       "Thea": 0.99,
+       "Wystan": 0.99
+      },
+      "What did you all make of that bone knight?": {
+       "Isolde": 1.0,
+       "Thea": 1.0,
+       "Wystan": 1.0
+      },
+      "Anyone hurt?": {
+       "Isolde": 0.99,
+       "Thea": 0.99,
+       "Wystan": 0.99
+      },
+      "Which way now, do you think?": {
+       "Isolde": 1.0,
+       "Thea": 1.0,
+       "Wystan": 1.0
+      },
+      "I nearly died back there, you know.": {
+       "Isolde": 0.99,
+       "Thea": 0.99,
+       "Wystan": 0.99
+      },
+      "Who's got bandages to spare?": {
+       "Isolde": 0.95,
+       "Thea": 0.98,
+       "Wystan": 0.99
+      },
+      "Ready for another one?": {
+       "Isolde": 0.99,
+       "Thea": 0.98,
+       "Wystan": 0.99
+      },
+      "I've never seen so many skeletons in one place.": {
+       "Isolde": 0.99,
+       "Thea": 0.99,
+       "Wystan": 0.99
+      },
+      "Good evening, all.": {
+       "Isolde": 0.99,
+       "Thea": 0.99,
+       "Wystan": 1.0
+      },
+      "So what brought you lot out here in the first place?": {
+       "Isolde": 1.0,
+       "Thea": 1.0,
+       "Wystan": 1.0
+      },
+      "This graveyard gives me the creeps.": {
+       "Isolde": 0.99,
+       "Thea": 0.99,
+       "Wystan": 0.99
+      }
+     }
+    },
+    "by name": {
+     "lines": 8,
+     "as_wanted": 8,
+     "lines_with_a_yes": 8,
+     "yes_of_all_asked": "8/8",
+     "mean_p": 0.998,
+     "by_line": {
+      "Isolde, how are you holding up?": {
+       "Isolde": 1.0
+      },
+      "Wystan, how many arrows have you left?": {
+       "Wystan": 1.0
+      },
+      "Thea, how's Bramble?": {
+       "Thea": 1.0
+      },
+      "Isolde, nice Fireball.": {
+       "Isolde": 1.0
+      },
+      "Wystan, run back to town and buy me some bandages, would you?": {
+       "Wystan": 0.99
+      },
+      "Thea, what's your story anyway?": {
+       "Thea": 1.0
+      },
+      "Isolde, and what did you make of that bone knight?": {
+       "Isolde": 1.0
+      },
+      "Wystan, you call that a shot?": {
+       "Wystan": 1.0
+      }
+     }
+    },
+    "nothing to answer": {
+     "lines": 8,
+     "as_wanted": 8,
+     "lines_with_a_yes": 0,
+     "yes_of_all_asked": "0/24",
+     "mean_p": 0.039,
+     "by_line": {
+      "brb": {
+       "Isolde": 0.0,
+       "Thea": 0.01,
+       "Wystan": 0.01
+      },
+      "lol": {
+       "Isolde": 0.02,
+       "Thea": 0.01,
+       "Wystan": 0.02
+      },
+      "ok": {
+       "Isolde": 0.03,
+       "Thea": 0.05,
+       "Wystan": 0.04
+      },
+      "one sec": {
+       "Isolde": 0.01,
+       "Thea": 0.01,
+       "Wystan": 0.01
+      },
+      "hmm": {
+       "Isolde": 0.04,
+       "Thea": 0.06,
+       "Wystan": 0.06
+      },
+      "afk a minute": {
+       "Isolde": 0.03,
+       "Thea": 0.03,
+       "Wystan": 0.03
+      },
+      "right": {
+       "Isolde": 0.13,
+       "Thea": 0.15,
+       "Wystan": 0.15
+      },
+      "oops, wrong key": {
+       "Isolde": 0.02,
+       "Thea": 0.02,
+       "Wystan": 0.01
+      }
+     }
+    },
+    "an order": {
+     "lines": 3,
+     "as_wanted": null,
+     "lines_with_a_yes": 3,
+     "yes_of_all_asked": "7/9",
+     "mean_p": 0.715,
+     "by_line": {
+      "Hold up a moment, I'll scout ahead.": {
+       "Isolde": 0.47,
+       "Thea": 0.82,
+       "Wystan": 0.65
+      },
+      "All clear. Come along, you lot.": {
+       "Isolde": 0.71,
+       "Thea": 0.85,
+       "Wystan": 0.89
+      },
+      "Right, on we go. Keep up.": {
+       "Isolde": 0.44,
+       "Thea": 0.78,
+       "Wystan": 0.84
+      }
+     }
+    },
+    "as_wanted": "34/39",
+    "asked": 110,
+    "errors": 0,
+    "latency_ms_median": 273,
+    "cost_usd_a_question": 2.46e-05
+   }
+  },
+  "jev": {
+   "as it was": {
+    "following on": {
+     "lines": 6,
+     "as_wanted": 6,
+     "lines_with_a_yes": 6,
+     "yes_of_all_asked": "6/18",
+     "mean_p": 0.362,
+     "by_line": {
+      "And your reagents?": {
+       "Isolde": 0.83,
+       "Thea": 0.14,
+       "Wystan": 0.15
+      },
+      "Enough for another fight?": {
+       "Isolde": 0.15,
+       "Thea": 0.13,
+       "Wystan": 0.76
+      },
+      "What does he eat, anyway?": {
+       "Isolde": 0.14,
+       "Thea": 0.8,
+       "Wystan": 0.12
+      },
+      "Why north?": {
+       "Isolde": 0.28,
+       "Thea": 0.2,
+       "Wystan": 0.83
+      },
+      "Modest as ever.": {
+       "Isolde": 0.54,
+       "Thea": 0.12,
+       "Wystan": 0.16
+      },
+      "You'd say that if it had eaten you.": {
+       "Isolde": 0.25,
+       "Thea": 0.68,
+       "Wystan": 0.23
+      }
+     }
+    },
+    "to the others": {
+     "lines": 5,
+     "as_wanted": 0,
+     "lines_with_a_yes": 4,
+     "yes_of_all_asked": "4/15",
+     "mean_p": 0.349,
+     "by_line": {
+      "What did the rest of you make of it?": {
+       "Isolde": 0.48,
+       "Thea": 0.4,
+       "Wystan": 0.34
+      },
+      "Anyone else?": {
+       "Isolde": 0.16,
+       "Thea": 0.13,
+       "Wystan": 0.55
+      },
+      "And you two?": {
+       "Isolde": 0.24,
+       "Thea": 0.71,
+       "Wystan": 0.23
+      },
+      "What about the others, how are your supplies?": {
+       "Isolde": 0.14,
+       "Thea": 0.12,
+       "Wystan": 0.82
+      },
+      "Right, come along, you lot.": {
+       "Isolde": 0.58,
+       "Thea": 0.14,
+       "Wystan": 0.19
+      }
+     }
+    },
+    "to the party": {
+     "lines": 12,
+     "as_wanted": 10,
+     "lines_with_a_yes": 10,
+     "yes_of_all_asked": "30/36",
+     "mean_p": 0.623,
+     "by_line": {
+      "You'd have stayed in bed if I'd let you.": {
+       "Isolde": 0.8,
+       "Thea": 0.75,
+       "Wystan": 0.8
+      },
+      "That was a good fight. Well done, all of you.": {
+       "Isolde": 0.31,
+       "Thea": 0.31,
+       "Wystan": 0.34
+      },
+      "What did you all make of that bone knight?": {
+       "Isolde": 0.71,
+       "Thea": 0.72,
+       "Wystan": 0.73
+      },
+      "Anyone hurt?": {
+       "Isolde": 0.61,
+       "Thea": 0.64,
+       "Wystan": 0.68
+      },
+      "Which way now, do you think?": {
+       "Isolde": 0.85,
+       "Thea": 0.87,
+       "Wystan": 0.83
+      },
+      "I nearly died back there, you know.": {
+       "Isolde": 0.68,
+       "Thea": 0.65,
+       "Wystan": 0.74
+      },
+      "Who's got bandages to spare?": {
+       "Isolde": 0.54,
+       "Thea": 0.65,
+       "Wystan": 0.59
+      },
+      "Ready for another one?": {
+       "Isolde": 0.8,
+       "Thea": 0.81,
+       "Wystan": 0.87
+      },
+      "I've never seen so many skeletons in one place.": {
+       "Isolde": 0.53,
+       "Thea": 0.5,
+       "Wystan": 0.59
+      },
+      "Good evening, all.": {
+       "Isolde": 0.26,
+       "Thea": 0.28,
+       "Wystan": 0.33
+      },
+      "So what brought you lot out here in the first place?": {
+       "Isolde": 0.59,
+       "Thea": 0.68,
+       "Wystan": 0.7
+      },
+      "This graveyard gives me the creeps.": {
+       "Isolde": 0.56,
+       "Thea": 0.53,
+       "Wystan": 0.61
+      }
+     }
+    },
+    "by name": {
+     "lines": 8,
+     "as_wanted": 8,
+     "lines_with_a_yes": 8,
+     "yes_of_all_asked": "8/8",
+     "mean_p": 0.894,
+     "by_line": {
+      "Isolde, how are you holding up?": {
+       "Isolde": 0.91
+      },
+      "Wystan, how many arrows have you left?": {
+       "Wystan": 0.93
+      },
+      "Thea, how's Bramble?": {
+       "Thea": 0.92
+      },
+      "Isolde, nice Fireball.": {
+       "Isolde": 0.77
+      },
+      "Wystan, run back to town and buy me some bandages, would you?": {
+       "Wystan": 0.89
+      },
+      "Thea, what's your story anyway?": {
+       "Thea": 0.91
+      },
+      "Isolde, and what did you make of that bone knight?": {
+       "Isolde": 0.9
+      },
+      "Wystan, you call that a shot?": {
+       "Wystan": 0.92
+      }
+     }
+    },
+    "nothing to answer": {
+     "lines": 8,
+     "as_wanted": 4,
+     "lines_with_a_yes": 4,
+     "yes_of_all_asked": "6/24",
+     "mean_p": 0.439,
+     "by_line": {
+      "brb": {
+       "Isolde": 0.39,
+       "Thea": 0.34,
+       "Wystan": 0.36
+      },
+      "lol": {
+       "Isolde": 0.36,
+       "Thea": 0.28,
+       "Wystan": 0.4
+      },
+      "ok": {
+       "Isolde": 0.44,
+       "Thea": 0.41,
+       "Wystan": 0.49
+      },
+      "one sec": {
+       "Isolde": 0.43,
+       "Thea": 0.54,
+       "Wystan": 0.5
+      },
+      "hmm": {
+       "Isolde": 0.5,
+       "Thea": 0.48,
+       "Wystan": 0.47
+      },
+      "afk a minute": {
+       "Isolde": 0.5,
+       "Thea": 0.34,
+       "Wystan": 0.4
+      },
+      "right": {
+       "Isolde": 0.43,
+       "Thea": 0.41,
+       "Wystan": 0.48
+      },
+      "oops, wrong key": {
+       "Isolde": 0.64,
+       "Thea": 0.41,
+       "Wystan": 0.54
+      }
+     }
+    },
+    "an order": {
+     "lines": 3,
+     "as_wanted": null,
+     "lines_with_a_yes": 1,
+     "yes_of_all_asked": "1/9",
+     "mean_p": 0.39,
+     "by_line": {
+      "Hold up a moment, I'll scout ahead.": {
+       "Isolde": 0.38,
+       "Thea": 0.31,
+       "Wystan": 0.49
+      },
+      "All clear. Come along, you lot.": {
+       "Isolde": 0.3,
+       "Thea": 0.28,
+       "Wystan": 0.39
+      },
+      "Right, on we go. Keep up.": {
+       "Isolde": 0.47,
+       "Thea": 0.34,
+       "Wystan": 0.55
+      }
+     }
+    },
+    "as_wanted": "28/39",
+    "asked": 110,
+    "errors": 0,
+    "latency_ms_median": 228,
+    "cost_usd_a_question": 3.31e-05
+   },
+   "for a person who leads": {
+    "following on": {
+     "lines": 6,
+     "as_wanted": 6,
+     "lines_with_a_yes": 6,
+     "yes_of_all_asked": "6/18",
+     "mean_p": 0.457,
+     "by_line": {
+      "And your reagents?": {
+       "Isolde": 0.91,
+       "Thea": 0.14,
+       "Wystan": 0.2
+      },
+      "Enough for another fight?": {
+       "Isolde": 0.25,
+       "Thea": 0.19,
+       "Wystan": 0.91
+      },
+      "What does he eat, anyway?": {
+       "Isolde": 0.2,
+       "Thea": 0.94,
+       "Wystan": 0.17
+      },
+      "Why north?": {
+       "Isolde": 0.23,
+       "Thea": 0.25,
+       "Wystan": 0.93
+      },
+      "Modest as ever.": {
+       "Isolde": 0.87,
+       "Thea": 0.15,
+       "Wystan": 0.26
+      },
+      "You'd say that if it had eaten you.": {
+       "Isolde": 0.37,
+       "Thea": 0.88,
+       "Wystan": 0.38
+      }
+     }
+    },
+    "to the others": {
+     "lines": 5,
+     "as_wanted": 0,
+     "lines_with_a_yes": 5,
+     "yes_of_all_asked": "10/15",
+     "mean_p": 0.601,
+     "by_line": {
+      "What did the rest of you make of it?": {
+       "Isolde": 0.79,
+       "Thea": 0.72,
+       "Wystan": 0.74
+      },
+      "Anyone else?": {
+       "Isolde": 0.29,
+       "Thea": 0.41,
+       "Wystan": 0.81
+      },
+      "And you two?": {
+       "Isolde": 0.64,
+       "Thea": 0.87,
+       "Wystan": 0.61
+      },
+      "What about the others, how are your supplies?": {
+       "Isolde": 0.38,
+       "Thea": 0.37,
+       "Wystan": 0.91
+      },
+      "Right, come along, you lot.": {
+       "Isolde": 0.54,
+       "Thea": 0.38,
+       "Wystan": 0.56
+      }
+     }
+    },
+    "to the party": {
+     "lines": 12,
+     "as_wanted": 12,
+     "lines_with_a_yes": 12,
+     "yes_of_all_asked": "36/36",
+     "mean_p": 0.842,
+     "by_line": {
+      "You'd have stayed in bed if I'd let you.": {
+       "Isolde": 0.87,
+       "Thea": 0.77,
+       "Wystan": 0.84
+      },
+      "That was a good fight. Well done, all of you.": {
+       "Isolde": 0.78,
+       "Thea": 0.73,
+       "Wystan": 0.83
+      },
+      "What did you all make of that bone knight?": {
+       "Isolde": 0.9,
+       "Thea": 0.88,
+       "Wystan": 0.9
+      },
+      "Anyone hurt?": {
+       "Isolde": 0.85,
+       "Thea": 0.86,
+       "Wystan": 0.86
+      },
+      "Which way now, do you think?": {
+       "Isolde": 0.9,
+       "Thea": 0.9,
+       "Wystan": 0.9
+      },
+      "I nearly died back there, you know.": {
+       "Isolde": 0.84,
+       "Thea": 0.79,
+       "Wystan": 0.85
+      },
+      "Who's got bandages to spare?": {
+       "Isolde": 0.85,
+       "Thea": 0.85,
+       "Wystan": 0.84
+      },
+      "Ready for another one?": {
+       "Isolde": 0.87,
+       "Thea": 0.84,
+       "Wystan": 0.9
+      },
+      "I've never seen so many skeletons in one place.": {
+       "Isolde": 0.81,
+       "Thea": 0.77,
+       "Wystan": 0.83
+      },
+      "Good evening, all.": {
+       "Isolde": 0.82,
+       "Thea": 0.76,
+       "Wystan": 0.85
+      },
+      "So what brought you lot out here in the first place?": {
+       "Isolde": 0.88,
+       "Thea": 0.88,
+       "Wystan": 0.89
+      },
+      "This graveyard gives me the creeps.": {
+       "Isolde": 0.81,
+       "Thea": 0.78,
+       "Wystan": 0.82
+      }
+     }
+    },
+    "by name": {
+     "lines": 8,
+     "as_wanted": 8,
+     "lines_with_a_yes": 8,
+     "yes_of_all_asked": "8/8",
+     "mean_p": 0.927,
+     "by_line": {
+      "Isolde, how are you holding up?": {
+       "Isolde": 0.94
+      },
+      "Wystan, how many arrows have you left?": {
+       "Wystan": 0.95
+      },
+      "Thea, how's Bramble?": {
+       "Thea": 0.94
+      },
+      "Isolde, nice Fireball.": {
+       "Isolde": 0.9
+      },
+      "Wystan, run back to town and buy me some bandages, would you?": {
+       "Wystan": 0.89
+      },
+      "Thea, what's your story anyway?": {
+       "Thea": 0.93
+      },
+      "Isolde, and what did you make of that bone knight?": {
+       "Isolde": 0.93
+      },
+      "Wystan, you call that a shot?": {
+       "Wystan": 0.94
+      }
+     }
+    },
+    "nothing to answer": {
+     "lines": 8,
+     "as_wanted": 7,
+     "lines_with_a_yes": 1,
+     "yes_of_all_asked": "2/24",
+     "mean_p": 0.289,
+     "by_line": {
+      "brb": {
+       "Isolde": 0.14,
+       "Thea": 0.1,
+       "Wystan": 0.13
+      },
+      "lol": {
+       "Isolde": 0.25,
+       "Thea": 0.2,
+       "Wystan": 0.23
+      },
+      "ok": {
+       "Isolde": 0.18,
+       "Thea": 0.17,
+       "Wystan": 0.18
+      },
+      "one sec": {
+       "Isolde": 0.15,
+       "Thea": 0.12,
+       "Wystan": 0.16
+      },
+      "hmm": {
+       "Isolde": 0.46,
+       "Thea": 0.4,
+       "Wystan": 0.45
+      },
+      "afk a minute": {
+       "Isolde": 0.25,
+       "Thea": 0.17,
+       "Wystan": 0.23
+      },
+      "right": {
+       "Isolde": 0.45,
+       "Thea": 0.39,
+       "Wystan": 0.43
+      },
+      "oops, wrong key": {
+       "Isolde": 0.62,
+       "Thea": 0.46,
+       "Wystan": 0.61
+      }
+     }
+    },
+    "an order": {
+     "lines": 3,
+     "as_wanted": null,
+     "lines_with_a_yes": 3,
+     "yes_of_all_asked": "9/9",
+     "mean_p": 0.64,
+     "by_line": {
+      "Hold up a moment, I'll scout ahead.": {
+       "Isolde": 0.63,
+       "Thea": 0.5,
+       "Wystan": 0.67
+      },
+      "All clear. Come along, you lot.": {
+       "Isolde": 0.68,
+       "Thea": 0.61,
+       "Wystan": 0.73
+      },
+      "Right, on we go. Keep up.": {
+       "Isolde": 0.7,
+       "Thea": 0.51,
+       "Wystan": 0.73
+      }
+     }
+    },
+    "as_wanted": "33/39",
+    "asked": 110,
+    "errors": 0,
+    "latency_ms_median": 230,
+    "cost_usd_a_question": 3.73e-05
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.012699,
+  "cost_per_hour_usd": 1.7933,
+  "calls": 440,
+  "by_role": {
+   "system1": 0.012699
+  },
+  "by_kind": {
+   "chat": {
+    "calls": 440,
+    "input_tokens": 302358,
+    "output_tokens": 4620,
+    "cost_usd": 0.012699,
+    "latency_ms_avg": 269.8
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 220,
+    "input_tokens": 184396,
+    "output_tokens": 4400,
+    "cost_usd": 0.007745,
+    "latency_ms_avg": 247.2
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 220,
+    "input_tokens": 117962,
+    "output_tokens": 220,
+    "cost_usd": 0.004954,
+    "latency_ms_avg": 292.5
+   }
+  }
+ }
+}

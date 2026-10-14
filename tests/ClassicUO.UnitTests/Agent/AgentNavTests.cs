@@ -488,5 +488,39 @@ namespace ClassicUO.UnitTests.Agent
             progress.Restart(150);
             progress.Note(150, 3).Should().BeTrue("a new plan counts its path from the start");
         }
+
+        [Fact]
+        public void The_next_tile_of_a_plan_not_yet_set_out_on_is_its_first()
+        {
+            // cuo-4v1: a plan starts at its first step, not under the player. Stuck before that step, a
+            // walk ruled out the tiles after it and planned through it again, six times running.
+            NavGrid g = Field("...........");
+            var path = AgentNav.Plan(g, 110, 200, 0, 100, 200, 0);
+
+            path[0].Should().Be((109, 200, (sbyte) 0), "the path leaves out the tile the player stands on");
+            AgentNav.NextOnPath(path, 0, 110, 200).Should().Be(0, "beside the first tile, that one is next");
+            AgentNav.NextOnPath(path, 0, 109, 200).Should().Be(1, "standing on it, the one after");
+            AgentNav.NextOnPath(path, 4, 105, 200).Should().Be(5);
+            AgentNav.NextOnPath(path, 4, 106, 201).Should().Be(4, "beside the path, its nearest tile is still to come");
+            AgentNav.NextOnPath(path, path.Count, 100, 200).Should().Be(path.Count, "past the end there is none");
+        }
+
+        [Fact]
+        public void A_tile_the_server_sent_a_step_back_from_is_left_alone_until_it_lapses()
+        {
+            // cuo-4v1: the walker stepped at one tile the server lets nobody onto 60 times a second.
+            var refused = new RefusedTiles(15_000);
+
+            refused.Refused(1346, 1512, 1000).Should().BeFalse();
+            refused.Refuse(1346, 1512, 1000);
+            refused.Refused(1346, 1512, 1001).Should().BeTrue();
+            refused.Refused(1346, 1511, 1001).Should().BeFalse("only the tile the step was for");
+            refused.Refused(1346, 1512, 15_999).Should().BeTrue();
+
+            refused.Refuse(1346, 1512, 10_000);
+            refused.Refused(1346, 1512, 20_000).Should().BeTrue("refused again, its time starts again");
+            refused.Refused(1346, 1512, 25_000).Should().BeFalse("lapsed: it may be tried again");
+            refused.Count.Should().Be(0, "and it is forgotten");
+        }
     }
 }

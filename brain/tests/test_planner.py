@@ -308,3 +308,24 @@ def test_a_logged_planner_moment_can_be_put_to_another_model(tmp_path):
     assert r["moments"] == 1 and r["usable_tool_call"] == 1.0 and r["same_tool"] == 0.0
     assert r["logged_to_new"] == {"hunt->bank": 1}
     assert other.seen[0]["messages"][0]["content"] == planner.SYSTEM
+
+
+def test_a_hunt_is_not_begun_to_outlast_the_session(tmp_path):
+    """The run loop looks at the clock between goals. Live (2026-10-13), a ten-minute hunt chosen as a
+    nine-minute run's time ran out kept one member of a party at it for 9.4 minutes after the others were done."""
+    import time as clock
+    w = world(tmp_path)
+    s = FakeSession(w)
+    chat = scripted(reply(call("hunt", {"area": "Britain Graveyard", "minutes": 10, "why": "the party is here"})),
+                    reply(call("hunt", {"area": "Britain Graveyard", "minutes": 10, "why": "again"}, "c2")))
+    p = planner.Planner(s, "hunt the graveyard", chat_fn=chat)
+    asyncio.run(p.step())
+    assert s.goals[-1] == ("hunt", "Britain Graveyard", 10.0)   # no session clock (a step by hand): as asked
+    p.ends_at = clock.monotonic() + 90
+    logged = []
+    p.log = logged.append
+    asyncio.run(p.step())
+    assert s.goals[-1][:2] == ("hunt", "Britain Graveyard") and 1.3 < s.goals[-1][2] <= 1.5
+    # The goal as it is logged, and as a party's followers get it, carries the same number.
+    assert next(r for r in logged if r.get("type") == "goal")["args"]["minutes"] == s.goals[-1][2]
+    w.close()

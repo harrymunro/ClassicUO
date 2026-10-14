@@ -8,10 +8,20 @@
 #   (13 kills to Jev's 31).
 # - strategy: Jev. Told "finish the creature off with Lightning", Decision 1 said no preference.
 # - facts, rerank, memory, recorder, chat: Decision 1; nothing measured either way beyond agreement.
+# - order (a companion reading what the player who leads it says, cuo-cym.15): Decision 1. On 53 lines neither
+#   had been tried on it read 149 of 159 as written to Jev's 144, and took talk for an order 4 times to Jev's 15.
+#   The same kind now also reads a line for the settings it changes, for whom it is for, and where a companion is
+#   sent and whether it goes (cuo-cym.18 to .21, 2026-10-13). On lines neither had been tried on: orders with
+#   the one to go somewhere 92 of 102 to Jev's 91; settings 134 of 156 to 132; who a line is for 21 of 21 to
+#   19; whether to go 12 moments of 12 to 7. Close but for the last, so it stays Decision 1's. Orders for the fight
+#   itself (cuo-cym.24, 2026-10-14): on 42 held-back lines 112 of 126 to Jev's 117, Jev sending a companion at the
+#   wrong creature once and Decision 1 never, its misses no order at all; it stays Decision 1's.
+# - chat, when the one speaking is a person who leads the party (cuo-cym.16): Decision 1 gave the answer wanted on
+#   34 lines of 34, Jev on 33 (it says yes to "oops, wrong key").
 # `--profile jev` is Jev in every system-one call, as before.
 # For Sonnet's planning, which follows more of a goal (banking, restocking): --profile sonnet.
 # Copy this file to make another profile, then: uo-brain run --profile <name>
-# Kinds: system one = fight, routine, facts, rerank, strategy, recorder, memory;
+# Kinds: system one = fight, routine, facts, rerank, strategy, recorder, memory, chat, order;
 #        system two = planner, review, guide, design, escalate, compact, heartbeat, daily.
 #        A kind's own line beats its system's. escalate (the planner's hard moments), review and guide
 #        are Sonnet unless named, here or in any profile; the lines below say so for this one.

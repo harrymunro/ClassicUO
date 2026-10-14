@@ -75,6 +75,7 @@ class Session:
         self.archetype = archetype
         self._log = log or (lambda _: None)
         self.interrupt = asyncio.Event()  # set to cut the current goal short (handover, shutdown)
+        self.chosen: dict[str, Any] | None = None  # the vendor the last shop errand picked: serial, name, tiles off
         self._threat_noted: dict[str, float] = {}
         self.recorder = None  # recorder.Recorder: what the character sees goes into the world store
         self.routine = {"questions": 0, "input_tokens": 0, "cost_usd": 0.0, "hunt_minutes": 0.0}  # all hunts
@@ -92,8 +93,12 @@ class Session:
         # None leaves it to the client's own setting (agent_travel_pace), read from the snapshot.
         self.travel_pace: str | None = None
         self.leads = False
+        self.leads_party = False        # its goals are a party's (the leader on the leader's plan)
         self.beside: str | None = None  # a follower: the leader it walks beside
         self.roleplay = None  # roleplay.Roleplay: small things done in character on events (cuo-cod.8)
+        self.rally = None     # rally.Rally: a party forms up at the edge of a hunt and goes in as one (cuo-cym.1)
+        self.hunting_area = ""  # the hunt it is on or on its way to: whom a huddle's rally waits for (cuo-cym.5)
+        self.raise_fallen = False  # a party raises its fallen where they fell: a ghost waits for it (cuo-cym.4)
 
     def paced(self) -> dict[str, str]:
         """The pace for a short walk of the session's own, when every trip has one (travel_pace)."""
@@ -322,7 +327,7 @@ class Session:
         self.world.add_route(from_name, name, trail, outcome="ok" if ok else "stuck",
                              stuck_at=stuck or None, duration_s=seconds)
         self.log("travelled", to=name, state=state, seconds=seconds, stuck_at=stuck,
-                 **{k: travel[k] for k in ("why", "stuck_why", "replans", "doors", "hops", "plans", "plan_ms_max")
+                 **{k: travel[k] for k in ("why", "stuck_why", "refused", "replans", "doors", "hops", "plans", "plan_ms_max")
                     if travel.get(k) not in (None, [])})
         if ok:
             return Result(True, f"arrived at {name} in {seconds} s" + (", at a walk with the party" if walking else ""),
@@ -524,7 +529,18 @@ class Session:
                     best = m
         if best is None:
             return place, 0, Result(False, f"no {'/'.join(titles)} in sight at {place['name']}")
+        self.chosen = {"serial": best["serial"], "name": best.get("label") or best.get("name"), "tiles": best["distance"]}
         return place, best["serial"], None
+
+    def asked(self, serial: int, e: dict[str, Any]) -> dict[str, Any]:
+        """Which vendor an errand went to, for the log: its name and how far off it stood when it was
+        chosen, how the errand ended, how many times the client asked it and its last words, and who else
+        within a tile heard them no later than it did (`nearer`). "vendor buy" goes to the nearest vendor
+        of any kind: a soak's first three buys went to the healer guildmistress, who shows no list, and
+        the log couldn't say who had been asked (cuo-k0d)."""
+        who = self.chosen if self.chosen and self.chosen["serial"] == serial else {"serial": serial}
+        return {k: v for k, v in {**who, "state": e.get("state"), "asks": e.get("asks"), "said": e.get("said"),
+                                  "nearer": e.get("nearer")}.items() if v is not None}
 
     async def pack_read(self, timeout_s: float = 10.0) -> bool:
         """Wait (up to timeout_s) until the client has looked into every bag in the pack, so the
@@ -568,6 +584,7 @@ class Session:
         tried: set[int] = set()
         done_places: set[str] = set()
         spent, notes, place = 0, [], None
+        asked: list[dict[str, Any]] = []
         last_place = None
         while await self.held(item) - start < count and len(tried) < 8 and len(done_places) < 3:
             place, serial, failed = await self.vendor(vendor_kind or item, (), exclude=tried, skip=done_places, sells=item,
@@ -594,6 +611,7 @@ class Session:
             e = await self.errand("buy", target=serial, items=f"{item}:{want}")
             spent += -(e.get("gold_change") or 0)
             notes.append(e.get("detail") or e.get("state", "?"))
+            asked.append(self.asked(serial, e))
         got = await self.held(item) - start
         # The gold carried before and after: the client's count at the moment an errand ends can
         # come before the server's gold update (a soak run logged 20 bandages "for 0 gold").
@@ -601,7 +619,7 @@ class Session:
         spent = max(spent, gold0 - (await self.snap())["player"].get("gold", gold0))
         ok = got >= count
         self.log("buy", place=place["name"] if place else None, item=item, count=count, got=got, ok=ok,
-                 detail=notes, gold=-spent)
+                 detail=notes, gold=-spent, vendors=asked)
         if got and place:
             self.world.add_place(place["kind"], place["name"], place["x"], place["y"], z=place.get("z"),
                                  sells=place.get("sells"), source="seen")
@@ -669,7 +687,8 @@ class Session:
             return failed
         e = await self.errand("sell", target=serial, items=items)
         ok = e.get("state") == "done"
-        self.log("sell", place=place["name"], items=items, ok=ok, detail=e.get("detail"), gold=e.get("gold_change"))
+        self.log("sell", place=place["name"], items=items, ok=ok, detail=e.get("detail"), gold=e.get("gold_change"),
+                 vendors=[self.asked(serial, e)])
         return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}", {"gold_change": e.get("gold_change")})
 
     async def defended(self, work: Any) -> Any:
@@ -712,6 +731,35 @@ class Session:
 
     # ------------------------------------------------------------ hunting
 
+    def fallen_beside(self, snap: dict[str, Any]) -> bool:
+        """A companion's ghost in view, in a party that raises its fallen: no wandering off round the spawn
+        while one of them lies there (a walk further than two tiles breaks a bandage on the dead)."""
+        return self.raise_fallen and any(m.get("dead") and m.get("name") in self.pcfg.companions and m["distance"] <= 20
+                                         for m in snap.get("mobiles") or [])
+
+    PARTY_FIGHT_S = 90.0  # how long a hunt's stop waits for the party's fight to end
+
+    def party_fights_on(self, stop: str, held: list[float]) -> bool:
+        """Whether a hunt's stop waits: a party that formed up is still in the fight (cuo-cym.1). Its leader's
+        hunt is the party's: live, the warrior had run from a bone knight at 22% when Jev's "not worth
+        staying here" (asked at a kill, with four creatures about) ended his hunt, his planner chose the
+        next goal, and that cut the other four off in the middle of the fight they were winning. A death
+        doesn't wait, and nothing waits longer than PARTY_FIGHT_S."""
+        link = self.pcfg.link
+        if stop == "died" or link is None or getattr(link, "rally", None) is None:
+            return False
+        try:
+            rows = link.party.fights()
+        except Exception:  # noqa: BLE001 - a store busy for a moment: the stop stands
+            return False
+        if not any(not r.get("dead") and (r.get("target") or r.get("attackers")) for r in rows.values()):
+            return False
+        now = time.monotonic()
+        if not held:
+            held.append(now)
+            self.log("hunt_goes_on", stop=stop, why="the party is still fighting")
+        return now - held[0] < self.PARTY_FIGHT_S
+
     def hunt_spot(self, area: str) -> tuple[int, int, str, int] | None:
         """Where a hunt of an area goes: the centre of its spawn (or the place of that name), its name, and
         how far round it the creatures spawn."""
@@ -721,24 +769,68 @@ class Session:
         target = self.resolve(area, None, None)
         return (*target, 10) if target else None
 
+    async def to_the_rally(self, name: str, cx: int, cy: int, radius: int) -> Result:
+        """A trip of this member's own into the hunt its party's plan sends it to (a party with a planner each that
+        forms up, cuo-cym.14): it goes no further than the party's rally point at the hunt's edge, or holds the
+        rally there when it is the first, and is one of those gathered until the word to go in. Its planner
+        chooses its next goal after that, the hunt they went in on as a rule. A trip to a place it left
+        creatures at lately is refused, as any trip there is."""
+        if refused := self.avoided(cx, cy):
+            return Result(False, refused)
+        self.hunting_area = name  # on its way to that hunt, for the others' reports of whom to wait for
+        try:
+            formed = await self.defended(self.rally.before_hunt(f"hunt:{name.lower()}", name, cx, cy, radius))
+        finally:
+            self.hunting_area = ""
+        data = {"formed_up": formed}
+        if self.interrupt.is_set():
+            return Result(False, f"did not get to {name}: interrupted while the party formed up", data)
+        if not formed.get("formed"):
+            why = formed.get("why") or formed.get("error") or "no word to go in"
+            return Result(False, f"stopped at the edge of {name} to go in with the party, and didn't: {why}", data)
+        return Result(True, f"at the party's rally point at the edge of {name}, and the word to go in has been given: "
+                            f"hunt {name} now to go in with them", data)
+
     async def hunt(self, area: str, minutes: float = 10, min_bandages: int = 10, max_weight_pct: int = 85,
-                   log_path: Path | None = None) -> Result:
+                   log_path: Path | None = None, rally_key: str | None = None) -> Result:
         """Go to a hunting area and let Jev fight there until time is up, or until Jev judges it's
         time to head back or the spot isn't worth it (routine.py). Code still stops on the floors
         (dead, out of supplies, a full bag); without Jev, min_bandages and max_weight_pct are the
-        old fixed rules. Walks around the spawn when it is quiet."""
+        old fixed rules. Walks around the spawn when it is quiet. rally_key: a party's hunt, which it
+        forms up for at the edge and goes into as one (rally.py)."""
+        forming = self.rally if rally_key else None
         spot = self.hunt_spot(area)
-        if spot is None:
-            return Result(False, f"no hunting area called {area!r} in the world store")
+        if spot is not None and rally_key == "area":
+            # A party with a planner each: one rally for the place, whatever each planner called it.
+            rally_key = f"hunt:{spot[2].lower()}"
+        if spot is None or (refused := self.avoided(spot[0], spot[1])):
+            if forming is not None and self.leads_party:
+                forming.off(rally_key)  # the others don't wait at the edge for a hunt that isn't coming
+            return Result(False, refused if spot else f"no hunting area called {area!r} in the world store")
         cx, cy, name, radius = spot
-        if refused := self.avoided(cx, cy):
-            return Result(False, refused)
+        self.hunting_area = name
+        try:
+            return await self._hunt(name, cx, cy, radius, minutes, min_bandages, max_weight_pct, log_path, forming, rally_key)
+        finally:
+            self.hunting_area = ""
 
-        # The walk there fights what attacks, as every other goal's walk does (cuo-sj2: a warrior walked
-        # into the graveyard's lich with no decision for 32 s and died "on the way"). A party's follower
-        # walks it beside the leader (cuo-cod.7).
-        r = await self.defended(self.walk_with(self.beside, name, cx, cy) if self.beside and self.pace == "walk"
-                                else self.travel_to(name, cx, cy, distance=3, together=True))
+    async def _hunt(self, name: str, cx: int, cy: int, radius: int, minutes: float, min_bandages: int,
+                    max_weight_pct: int, log_path: Path | None, forming: Any, rally_key: str | None) -> Result:
+        # A party forms up at the edge first, and with creatures in view from there the hunt starts where it
+        # stands: the walk to the centre of the spawn took the first one in through the wave (cuo-cym.1).
+        formed: dict[str, Any] = {}
+        if forming is not None:
+            formed = await self.defended(forming.before_hunt(rally_key, name, cx, cy, radius))
+            if self.interrupt.is_set():
+                return Result(False, f"did not hunt {name}: interrupted while the party formed up", {"formed_up": formed})
+        if formed.get("formed") and formed.get("sighted"):
+            r = Result(True, f"formed up with the party at the edge of {name}")
+        else:
+            # The walk there fights what attacks, as every other goal's walk does (cuo-sj2: a warrior walked
+            # into the graveyard's lich with no decision for 32 s and died "on the way"). A party's follower
+            # walks it beside the leader (cuo-cod.7).
+            r = await self.defended(self.walk_with(self.beside, name, cx, cy) if self.beside and self.pace == "walk"
+                                    else self.travel_to(name, cx, cy, distance=3, together=True))
         if not r.ok:
             return Result(False, f"could not get to {name}: {r.summary}", r.data)
         if self.judge is None:
@@ -754,12 +846,14 @@ class Session:
                        log=self._log, archetype=self.archetype, radius=radius, bestiary=self.world.bestiary())
         asking: list[asyncio.Task] = []
 
+        held: list[float] = []  # when a stop was first held back for the party's fight
+
         def watch(snap: dict[str, Any]) -> None:
             nonlocal first, last
             first = first or snap
             last = snap
             look = hw.observe(snap)
-            if look.stop:
+            if look.stop and not self.party_fights_on(look.stop, held):
                 why.append(look.stop)
             elif self.interrupt.is_set():
                 why.append("interrupted")
@@ -769,7 +863,8 @@ class Session:
             self.seen(snap)
             if look.ask:
                 asking.append(asyncio.get_running_loop().create_task(hw.ask(snap, look.ask)))
-            if look.patrol and not (snap["agent"].get("travel") or {}).get("state") == "walking":
+            if look.patrol and not (snap["agent"].get("travel") or {}).get("state") == "walking" \
+                    and not self.fallen_beside(snap):
                 # Quiet: wander to another spot of the spawn to find something.
                 a = random.uniform(0, 6.283)
                 tx, ty = cx + round(radius * 0.7 * math.cos(a)), cy + round(radius * 0.7 * math.sin(a))
@@ -778,7 +873,8 @@ class Session:
                 stop.set()
 
         def decided(_sit: Any, dec: policy.Decision) -> None:
-            if dec.intent == "leave" and dec.leave_why:
+            # A fall back to the party's rally point isn't a leave: the hunt goes on from there (cuo-cym.1).
+            if dec.intent == "leave" and dec.leave_why and not dec.regroup:
                 hw.left(dec.leave_why)
 
         lcfg = loop.LoopConfig(duration_s=minutes * 60)
@@ -822,6 +918,8 @@ class Session:
         }
         if retreat:
             data["then"] = retreat
+        if formed:
+            data["formed_up"] = formed
         if self.machine is not None:
             data["plan"] = self.machine.summary()
         from .state import archetype_of
@@ -855,6 +953,16 @@ class Session:
         if not snap["player"]["dead"]:
             return Result(True, "already alive")
         began = time.monotonic()
+        # In a party that raises its fallen, by its corpse first, for a companion to bring it back (cuo-cym.4).
+        if (by := await self.wait_to_be_raised()):
+            secs = round(time.monotonic() - began)
+            self.log("resurrected", by=by, seconds=secs)
+            healed = await self.defended(self.recover_health())
+            return Result(True, f"raised where it fell by {by}, in {secs} s; {healed}",
+                          {"seconds": secs, "raised_by": by})
+        snap = await self.snap()
+        if not snap.get("in_game") or not snap["player"]["dead"]:
+            return Result(bool(snap.get("in_game")), "already alive" if snap.get("in_game") else "not in game")
         here = self.where(snap)
         healers = self.world.find_place("healer", near=list(here), limit=12)
         # A ghost can't be hurt on the way, but a character resurrected out in the wilds comes back with
@@ -901,6 +1009,72 @@ class Session:
             tried.append(f"{h['name']}: {why}")
         return Result(False, "not resurrected: " + ("; ".join(tried) or "no healer in the world store"),
                       {"seconds": round(time.monotonic() - began)})
+
+    RAISE_WAIT_S = 60.0    # a ghost waits this long by its corpse to be raised, once the party's fight is over
+    RAISE_MAX_S = 240.0    # ...and no longer than this in all, however long the fight goes on
+    RAISE_NOBODY_S = 6.0   # ...nor more than this once nobody who could raise it is near and alive
+    RAISE_TILES = 20       # near: a companion this close to the ghost (as far as a raiser walks, policy.RAISE_WALK)
+    RAISE_BESIDE = 3       # ...and one this close is at it: the wait doesn't run out under its hands
+
+    def raisers(self, here: tuple[int, int]) -> list[str]:
+        """The companions who could raise this character now: alive, heard from, near, with the bandages
+        and skill or the spell for it (by their own reports, party.raises_with)."""
+        link = self.pcfg.link
+        if link is None:
+            return []
+        return sorted(n for n, st in link.party.statuses().items()
+                      if n != link.party.me and not st.get("dead") and st.get("raises") and st["age_s"] < 30
+                      and tiles(st["x"], st["y"], *here) <= self.RAISE_TILES)
+
+    async def wait_to_be_raised(self) -> str:
+        """A ghost in a party that raises its fallen stays where it fell, in war mode so that the living can
+        see it (ModernUO shows a ghost to the living only then), while a companion who could raise it is near
+        and alive; the client accepts the offer. Nobody raises anyone in a fight, so the wait is counted from
+        when the party's fight is over: RAISE_WAIT_S of quiet, RAISE_MAX_S in all. Who raised it ("a
+        companion" when nobody called it), or "" when it is still a ghost: nobody could, nobody did, or the
+        goal was cut short. Then it walks to a healer as before. Before this a member that died was out of
+        the fight for the walk to town and back, alone, and a dead leader took the party's plan with it."""
+        link = self.pcfg.link
+        if link is None or not self.raise_fallen:
+            return ""
+        began, died = time.monotonic(), time.time()
+        quiet = 0.0
+        nobody_since: float | None = None
+        shown = False
+        while quiet < self.RAISE_WAIT_S and time.monotonic() - began < self.RAISE_MAX_S and not self.interrupt.is_set():
+            snap = await self.snap()
+            if not snap.get("in_game"):
+                return ""
+            if not snap["player"]["dead"]:
+                # Whoever said they were at it: a raiser says so once, and the ghost can't tell whose try it was.
+                calls = link.party.calls(within_s=self.RAISE_MAX_S + 30, kind="raising")
+                who = list(dict.fromkeys(c["who"] for c in calls if c["about"] == link.party.me and c["t"] >= died - 5))
+                return " and ".join(who) or "a companion"
+            if self.raisers(self.where(snap)):
+                nobody_since = None
+                if not shown:
+                    shown = True
+                    await self.act("war_mode", on=True, source="manual")
+                    self.log("waiting_to_be_raised", who=self.raisers(self.where(snap)))
+            else:
+                nobody_since = nobody_since or time.monotonic()
+                if time.monotonic() - nobody_since >= self.RAISE_NOBODY_S:
+                    break
+            try:
+                fighting = any(not r.get("dead") and not r.get("running") and (r.get("target") or r.get("attackers"))
+                               for r in link.party.fights().values())
+            except Exception:  # noqa: BLE001 - a store busy for a moment: counted as quiet
+                fighting = False
+            # A raiser beside it is trying: at one try in four, eight tries fit in the minute, and about one
+            # ghost in ten would have walked off with a bandage on it. RAISE_MAX_S still ends the wait.
+            can = self.raisers(self.where(snap))
+            at_it = any(m.get("name") in can and not m.get("dead") and m["distance"] <= self.RAISE_BESIDE
+                        for m in snap.get("mobiles") or [])
+            await asyncio.sleep(1.0)
+            quiet += 0.0 if fighting or at_it else 1.0
+        if shown:
+            await self.act("war_mode", on=False, source="manual")
+        return ""
 
     async def recover_health(self, pct: float = 70, timeout_s: float = 120, mana_pct: float = 50) -> str:
         """Stand and heal (the client's reflexes bandage) until health is back to `pct`, and a caster's mana

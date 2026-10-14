@@ -250,6 +250,21 @@ class Situation:
     traveling: bool = False    # on a long walk (travel): no seeking or looting on the way
     party_near: int = 0        # companions within PARTY_TILES, alive (cuo-4ar)
     mates: list[Mate] = field(default_factory=list)  # the companions in view (mates.Mates.before fills it)
+    rally: tuple[int, int] | None = None  # where its party formed up for this fight, and falls back to (rally.py)
+    rally_back: tuple[int, int] | None = None  # ...and a second point behind it, for one badly hurt at the first
+    past_rally: bool = False  # ...which its last run was for: it doesn't turn round half way (policy.goes_on)
+    # Companions still in the fight (alive, on something or set upon, not running themselves), by their own
+    # reports: while there are any, a member that leaves is falling back, and comes back in (mates.Mates.before).
+    party_fighting: int = 0
+    party_running: int = 0  # ...and companions who are running themselves (falling back): on their way to the rally
+    # A companion out of view that is set upon, by its own reports: its name and where it last said it was. One
+    # with nothing of its own to fight goes there (policy.to_far_companion, cuo-cym.10).
+    mate_far: tuple[str, int, int] | None = None
+    # What the party's point (the one who goes in first) is going for, and who that is: the others go for it
+    # with it when their own pick is nobody (policy.with_the_point).
+    point_aim: int = 0
+    point_name: str = ""
+    point_serial: int = 0  # ...and its serial when it is one who takes the blows: nobody stands in front of it
     engage: str = "defend"     # combat assist: follow (the player's target), defend (+ attackers), nearby
     known: list[str] = field(default_factory=list)  # world facts picked for this situation (facts.py)
     plan: dict[str, str] = field(default_factory=dict)  # the plan being followed and its step (machine.py)

@@ -1,0 +1,281 @@
+{
+ "started": "2026-10-14T02:49:19",
+ "cut": 0.5,
+ "moments": {
+  "second": 28
+ },
+ "rule": {
+  "second": {
+   "right": 24,
+   "missed": 3,
+   "needless": 0,
+   "walk_not_wanted": 0,
+   "wrong_one": 1,
+   "of": 28,
+   "by_part": {
+    "s": "14/14",
+    "x": "10/14"
+   },
+   "wrong": [
+    {
+     "id": "x02",
+     "src": "written",
+     "want": [
+      "Thea"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the tamer losing health fast to a bone knight, beside the archer"
+    },
+    {
+     "id": "x03",
+     "src": "written",
+     "want": [
+      "Corwin"
+     ],
+     "got": [
+      "Wystan",
+      "heal"
+     ],
+     "how": "wrong_one",
+     "why": "one heal left: the bard losing health to two skeletons, not the steady archer"
+    },
+    {
+     "id": "x08",
+     "src": "written",
+     "want": [
+      "Corwin"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the bard near death, nothing on him, the walk away from the fight"
+    },
+    {
+     "id": "x10",
+     "src": "written",
+     "want": [
+      "Wystan"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the archer losing health fast, mana to spare"
+    }
+   ]
+  }
+ },
+ "models": {
+  "jev": {
+   "second": {
+    "right": 26,
+    "missed": 2,
+    "needless": 0,
+    "walk_not_wanted": 0,
+    "wrong_one": 0,
+    "of": 28,
+    "by_part": {
+     "s": "14/14",
+     "x": "12/14"
+    },
+    "wrong": [
+     {
+      "id": "x08",
+      "src": "written",
+      "want": [
+       "Corwin"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the bard near death, nothing on him, the walk away from the fight",
+      "p": {
+       "h1": 0.16,
+       "h2": 0.01,
+       "none": 0.83
+      },
+      "ids": {
+       "h1": [
+        "Corwin",
+        "walk"
+       ],
+       "h2": [
+        "Roland",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "x09",
+      "src": "written",
+      "want": [
+       "Isolde"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the fight over: walk over and bandage the mage",
+      "p": {
+       "h1": 0.4,
+       "none": 0.6
+      },
+      "ids": {
+       "h1": [
+        "Isolde",
+        "walk"
+       ]
+      }
+     }
+    ],
+    "cuts": {
+     "0.3": 26,
+     "0.4": 26,
+     "0.6": 26,
+     "0.7": 26
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 213,
+     "p90": 303
+    },
+    "cost_usd_a_moment": 4.86e-05,
+    "input_tokens": 1157,
+    "errors": 0
+   }
+  },
+  "decision1": {
+   "second": {
+    "right": 25,
+    "missed": 2,
+    "needless": 0,
+    "walk_not_wanted": 1,
+    "wrong_one": 0,
+    "of": 28,
+    "by_part": {
+     "s": "13/14",
+     "x": "12/14"
+    },
+    "wrong": [
+     {
+      "id": "s06",
+      "src": "20261013-065806 Roland 1791885622",
+      "want": [
+       null
+      ],
+      "got": [
+       "Isolde",
+       "walk"
+      ],
+      "how": "walk_not_wanted",
+      "why": "the mage falling but not near death, 6 tiles off: the warrior goes for the bone knight, not to bandage",
+      "p": {
+       "h1": 0.731,
+       "none": 0.269
+      },
+      "ids": {
+       "h1": [
+        "Isolde",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "x08",
+      "src": "written",
+      "want": [
+       "Corwin"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the bard near death, nothing on him, the walk away from the fight",
+      "p": {
+       "h1": 0.43,
+       "h2": 0.019,
+       "none": 0.552
+      },
+      "ids": {
+       "h1": [
+        "Corwin",
+        "walk"
+       ],
+       "h2": [
+        "Roland",
+        "walk"
+       ]
+      }
+     },
+     {
+      "id": "x09",
+      "src": "written",
+      "want": [
+       "Isolde"
+      ],
+      "got": null,
+      "how": "missed",
+      "why": "the fight over: walk over and bandage the mage",
+      "p": {
+       "h1": 0.378,
+       "none": 0.622
+      },
+      "ids": {
+       "h1": [
+        "Isolde",
+        "walk"
+       ]
+      }
+     }
+    ],
+    "cuts": {
+     "0.3": 25,
+     "0.4": 25,
+     "0.6": 25,
+     "0.7": 25
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 277,
+     "p90": 422
+    },
+    "cost_usd_a_moment": 3.18e-05,
+    "input_tokens": 757,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.002251,
+  "cost_per_hour_usd": 2.4,
+  "calls": 56,
+  "by_role": {
+   "system1": 0.002251
+  },
+  "by_kind": {
+   "fight": {
+    "calls": 56,
+    "input_tokens": 53592,
+    "output_tokens": 963,
+    "cost_usd": 0.002251,
+    "latency_ms_avg": 274.6
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 28,
+    "input_tokens": 32396,
+    "output_tokens": 935,
+    "cost_usd": 0.001361,
+    "latency_ms_avg": 229.0
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 28,
+    "input_tokens": 21196,
+    "output_tokens": 28,
+    "cost_usd": 0.00089,
+    "latency_ms_avg": 320.1
+   }
+  },
+  "cost_per_decision_usd": 4.02e-05
+ }
+}

@@ -49,6 +49,7 @@ namespace ClassicUO.Agent
             WritePlayer(w, world, p, agent);
             WriteMobiles(w, world, p, radius);
             WritePets(w, world, p);
+            WriteParty(w, world, p);
             WriteCorpses(w, world, radius);
             WriteJournal(w, agent.Journal, journalSince);
             WriteMagic(w, p, agent);
@@ -327,6 +328,54 @@ namespace ClassicUO.Agent
             }
 
             w.WriteEndArray();
+        }
+
+        // UO's own party, as the server told the client: its leader, its members (the player among
+        // them; a name is known once the member has been seen), whether the party may loot the
+        // player's corpse, and an invitation waiting for an answer. Absent when there is neither.
+        private static void WriteParty(Utf8JsonWriter w, World world, PlayerMobile p)
+        {
+            PartyManager party = world.Party;
+
+            if (party.Leader == 0 && party.Inviter == 0)
+            {
+                return;
+            }
+
+            w.WriteStartObject("party");
+
+            if (party.Leader != 0)
+            {
+                w.WriteNumber("leader", party.Leader);
+                w.WriteBoolean("leading", party.Leader == p.Serial);
+                w.WriteBoolean("can_loot", party.CanLoot);
+                w.WriteStartArray("members");
+
+                foreach (PartyMember m in party.Members)
+                {
+                    if (m == null || m.Serial == 0)
+                    {
+                        continue;
+                    }
+
+                    w.WriteStartObject();
+                    w.WriteNumber("serial", m.Serial);
+                    w.WriteString("name", world.Mobiles.Get(m.Serial)?.Name ?? string.Empty);
+                    w.WriteEndObject();
+                }
+
+                w.WriteEndArray();
+            }
+
+            if (party.Inviter != 0)
+            {
+                w.WriteStartObject("invited_by");
+                w.WriteNumber("serial", party.Inviter);
+                w.WriteString("name", world.Mobiles.Get(party.Inviter)?.Name ?? string.Empty);
+                w.WriteEndObject();
+            }
+
+            w.WriteEndObject();
         }
 
         // The player's pets in sight, with their health and what they were last told.
@@ -735,6 +784,22 @@ namespace ClassicUO.Agent
                 w.WriteString("detail", agent.Errands.Detail);
                 w.WriteNumber("moved", agent.Errands.Moved);
                 w.WriteNumber("gold_change", agent.Errands.GoldChange);
+
+                // A buy or a sale: which vendor, how often and how it was asked, and who else within a
+                // tile heard the words no later than it did.
+                if (agent.Errands.Vendor != 0)
+                {
+                    w.WriteNumber("vendor", agent.Errands.Vendor);
+                    w.WriteString("vendor_name", agent.Errands.VendorName);
+                    w.WriteNumber("asks", agent.Errands.Asks);
+                    w.WriteString("said", agent.Errands.Said);
+
+                    if (agent.Errands.Nearer.Length != 0)
+                    {
+                        w.WriteString("nearer", agent.Errands.Nearer);
+                    }
+                }
+
                 w.WriteEndObject();
             }
 
@@ -777,6 +842,12 @@ namespace ClassicUO.Agent
                 w.WriteNumber("plans", agent.TravelPlans);
                 w.WriteNumber("plan_ms", Math.Round(agent.TravelPlanMs, 1));
                 w.WriteNumber("plan_ms_max", Math.Round(agent.TravelPlanMsMax, 1));
+
+                // Steps the server sent back on this trip: the tiles are gone round (cuo-4v1).
+                if (agent.TravelStepsRefused != 0)
+                {
+                    w.WriteNumber("refused", agent.TravelStepsRefused);
+                }
 
                 if (agent.TravelWhy.Length != 0)
                 {

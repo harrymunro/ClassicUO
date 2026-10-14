@@ -24,12 +24,16 @@ choices can answer it (mates.py: cuo-cod.2, cuo-4ti).
 
 While the leader is down (dead, or seeing to its own resurrection and corpse) the others don't wait:
 they carry on the hunt it last set, beside each other, in short spells (cuo-e1p).
+
+Before a hunt the party forms up: the leader stops at the edge and gives the word once the others are
+beside it, and the place is where they fall back to (party_rally; rally.py, cuo-cym.1).
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import sqlite3
 import time
 from collections.abc import Callable
 from typing import Any
@@ -49,6 +53,10 @@ CREATE TABLE IF NOT EXISTS party_calls (
     id INTEGER PRIMARY KEY, party TEXT NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL, target INTEGER,
     about TEXT, hits INTEGER, hits_max INTEGER, said TEXT, t REAL NOT NULL);
 CREATE INDEX IF NOT EXISTS party_calls_party ON party_calls(party, t);
+CREATE TABLE IF NOT EXISTS party_rally (
+    party TEXT NOT NULL, key TEXT NOT NULL, x INTEGER NOT NULL, y INTEGER NOT NULL, point TEXT, state TEXT NOT NULL,
+    sighted INTEGER NOT NULL DEFAULT 0, t REAL NOT NULL, go_t REAL, host TEXT, back_x INTEGER, back_y INTEGER,
+    PRIMARY KEY (party, key));
 """
 
 FOLLOW_TILES = 10    # a follower further than this from the leader between goals walks back to it
@@ -69,6 +77,23 @@ TABLE_WAIT_S = 180.0  # a follower at the inn waits this long for the table: lon
 
 def ensure(world: World) -> None:
     world.db.executescript(SCHEMA)
+    # A store from before the huddle's rally (host), or the second point behind the rally point (cuo-cym.13).
+    for column, kind in (("host", "TEXT"), ("back_x", "INTEGER"), ("back_y", "INTEGER")):
+        add_column(world, "party_rally", column, kind)
+
+
+def add_column(world: World, table: str, column: str, kind: str) -> None:
+    """A column an older store's table hasn't got. A party's brains start together, each its own process: one
+    of five adding the same column a moment after another was refused it ("duplicate column name"), and that
+    brain's session ended there."""
+    if column in {r["name"] for r in world.db.execute(f"PRAGMA table_info({table})")}:
+        return
+    try:
+        world.db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
+        world.db.commit()
+    except sqlite3.OperationalError as e:
+        if "duplicate column" not in str(e):  # anything else (a store locked for too long) leaves it missing
+            raise
 
 
 class Party:
@@ -114,9 +139,12 @@ class Party:
 
     # ---- the members' state ------------------------------------------------------
 
-    def report(self, snap: dict[str, Any], plays_as: str, doing: str = "", left: dict[str, Any] | None = None) -> None:
+    def report(self, snap: dict[str, Any], plays_as: str, doing: str = "", left: dict[str, Any] | None = None,
+               busy: bool = False, hunting: str = "") -> None:
         """This member's state, for the leader's planner and the followers' "stay with the leader". left: where
-        it last left creatures behind (Session.last_leave), so the others know a place wasn't won."""
+        it last left creatures behind (Session.last_leave), so the others know a place wasn't won. busy: on
+        business of its own (its resurrection, its corpse, a restock), so a party forming up doesn't wait for it.
+        hunting: the area of the hunt it is on or on its way to, which is whom a huddle's rally waits for."""
         if not snap.get("in_game"):
             return
         p = snap["player"]
@@ -128,13 +156,33 @@ class Party:
             if self.on_death:
                 self.on_death()
         self._dead = dead
-        status = {"plays_as": plays_as, "x": p["x"], "y": p["y"], "hits": p.get("hits"), "hits_max": p.get("hits_max"),
+        status = {"plays_as": plays_as, "serial": p.get("serial") or 0, "x": p["x"], "y": p["y"],
+                  "hits": p.get("hits"), "hits_max": p.get("hits_max"),
                   "dead": bool(p.get("dead")), "supplies": supplies_words(plays_as, s), "doing": doing[:120],
+                  **({"busy": True} if busy else {}), **({"hunting": hunting} if hunting else {}),
+                  **({"raises": how} if (how := raises_with(snap)) and not dead else {}),
                   **({"died_at": self._died_at} if dead else {}),
                   **({"last_death": self._died_at} if self._died_at else {}),
                   **({"left": {**left, "t": time.time() - left.get("ago_s", 0)}} if left else {})}
         self.world.db.execute("INSERT OR REPLACE INTO party_members (party, name, status, t) VALUES (?, ?, ?, ?)",
                               (self.party, self.me, json.dumps(status), time.time()))
+        self.world.db.commit()
+
+    def setting_out(self, area: str) -> None:
+        """Say at once that this member is on its way to a hunt, without waiting for its next report: a huddle's
+        rally waits for those whose reports say so (cuo-cym.5), and with a report every REPORT_EVERY_S the first
+        to reach the edge saw nobody on the way and went in alone (live, 2026-10-13). Only that one word of its
+        last report changes: where it stood then is still where it is said to be."""
+        row = self.world.db.execute("SELECT status FROM party_members WHERE party = ? AND name = ?",
+                                    (self.party, self.me)).fetchone()
+        if row is None:
+            return
+        status = json.loads(row["status"])
+        if status.get("hunting") == area:
+            return
+        status["hunting"] = area
+        self.world.db.execute("UPDATE party_members SET status = ? WHERE party = ? AND name = ?",
+                              (json.dumps(status), self.party, self.me))
         self.world.db.commit()
 
     def statuses(self) -> dict[str, dict[str, Any]]:
@@ -189,6 +237,60 @@ class Party:
                  "hits": r["hits"], "hits_max": r["hits_max"], "said": r["said"] or "", "t": r["t"]}
                 for r in self.world.db.execute(sql + " ORDER BY t", args)]
 
+    # ---- the rally point (rally.py) -------------------------------------------------
+
+    def rally_open(self, key: str, x: int, y: int, point: str = "", sighted: bool = False,
+                   back: tuple[int, int] | None = None) -> None:
+        """The party forms up here for the goal `key`: the others close up on whoever opened it. back: a second
+        point further from the hunt, for one badly hurt at this one (cuo-cym.13)."""
+        self.world.db.execute(
+            "INSERT OR REPLACE INTO party_rally (party, key, x, y, point, state, sighted, t, go_t, host, back_x, back_y) "
+            "VALUES (?, ?, ?, ?, ?, 'gathering', ?, ?, NULL, ?, ?, ?)",
+            (self.party, key, x, y, point or None, int(sighted), time.time(), self.me, *(back or (None, None))))
+        self.world.db.commit()
+
+    def rally_claim(self, key: str, x: int, y: int, sighted: bool = False, stale_s: float = 20.0,
+                    back: tuple[int, int] | None = None) -> dict[str, Any]:
+        """A rally with no leader to open it (a party that plans by huddle): the first to arrive holds it here,
+        and the others close up on that one. The row either way. One that went more than `stale_s` ago, or that
+        nobody gave the word for in two minutes, is over: the next to arrive holds a new one."""
+        now = time.time()
+        made = self.world.db.execute(
+            "INSERT OR IGNORE INTO party_rally (party, key, x, y, host, state, sighted, t, back_x, back_y) VALUES (?, ?, "
+            "?, ?, ?, 'gathering', ?, ?, ?, ?)",
+            (self.party, key, x, y, self.me, int(sighted), now, *(back or (None, None)))).rowcount
+        if not made:
+            self.world.db.execute(
+                "UPDATE party_rally SET x = ?, y = ?, host = ?, point = NULL, state = 'gathering', sighted = ?, t = ?, "
+                "go_t = NULL, back_x = ?, back_y = ? WHERE party = ? AND key = ? AND ((state != 'gathering' AND "
+                "COALESCE(go_t, t) < ?) OR (state = 'gathering' AND t < ?))",
+                (x, y, self.me, int(sighted), now, *(back or (None, None)), self.party, key, now - stale_s, now - 120.0))
+        self.world.db.commit()
+        return self.rally(key)  # type: ignore[return-value]
+
+    def rally_go(self, key: str, state: str = "go") -> None:
+        """The word to go in ("go"), or that there is nothing to form up for after all ("off")."""
+        self.world.db.execute("UPDATE party_rally SET state = ?, go_t = ? WHERE party = ? AND key = ?",
+                              (state, time.time(), self.party, key))
+        if state == "off":
+            self.world.db.execute(
+                "INSERT OR IGNORE INTO party_rally (party, key, x, y, state, t, go_t) VALUES (?, ?, 0, 0, 'off', ?, ?)",
+                (self.party, key, time.time(), time.time()))
+        self.world.db.commit()
+
+    def rally(self, key: str | None = None) -> dict[str, Any] | None:
+        """The rally for a goal, or with no key the last one the party went in from."""
+        if key is None:
+            r = self.world.db.execute("SELECT * FROM party_rally WHERE party = ? AND state = 'go' ORDER BY go_t DESC "
+                                      "LIMIT 1", (self.party,)).fetchone()
+        else:
+            r = self.world.db.execute("SELECT * FROM party_rally WHERE party = ? AND key = ?", (self.party, key)).fetchone()
+        if r is None:
+            return None
+        return {"key": r["key"], "x": r["x"], "y": r["y"], "point": r["point"] or "", "state": r["state"],
+                "sighted": bool(r["sighted"]), "t": r["t"], "go_t": r["go_t"], "host": r["host"] or "",
+                "back": (r["back_x"], r["back_y"]) if r["back_x"] is not None and r["back_y"] is not None else None}
+
     def section(self, me_at: tuple[int, int] | None = None, leading: bool = True) -> str:
         """The party, for a planner: for its leader, who follows it and how each is; for a member of a
         party that plans by huddle (leading=False), how the others are."""
@@ -222,18 +324,41 @@ class Party:
 
     async def keep_reporting(self, snap: Callable[[], Any], plays_as: Callable[[dict[str, Any]], str],
                              doing: Callable[[], str], stop: asyncio.Event,
-                             left: Callable[[], dict[str, Any] | None] | None = None) -> None:
+                             left: Callable[[], dict[str, Any] | None] | None = None,
+                             busy: Callable[[], bool] | None = None,
+                             hunting: Callable[[], str] | None = None) -> None:
         """Report this member's state every REPORT_EVERY_S until stopped."""
         while not stop.is_set():
             try:
                 s = await snap()
-                self.report(s, plays_as(s) if s.get("in_game") else "", doing(), left() if left else None)
+                self.report(s, plays_as(s) if s.get("in_game") else "", doing(), left() if left else None,
+                            busy() if busy else False, hunting() if hunting else "")
             except Exception:  # noqa: BLE001 - the next report will do
                 pass
             try:
                 await asyncio.wait_for(stop.wait(), REPORT_EVERY_S)
             except asyncio.TimeoutError:
                 pass
+
+
+RAISE_SKILL = 80.0  # ModernUO: a bandage raises the dead only with Healing and Anatomy both at this
+
+
+def raises_with(snap: dict[str, Any]) -> str:
+    """How this character could raise a fallen companion right now (cuo-cym.4): "bandages" (Healing and
+    Anatomy at RAISE_SKILL, and a bandage), "spell" (Resurrection in its book, with the mana and reagents for
+    it), or "" for not at all."""
+    p = snap.get("player") or {}
+    skills = p.get("skills") or {}
+    if skills.get("Healing", 0) >= RAISE_SKILL and skills.get("Anatomy", 0) >= RAISE_SKILL \
+            and (p.get("supplies") or {}).get("bandages", 0) > 0:
+        return "bandages"
+    # In its book with the reagents for it. Short of mana for the moment still counts: just after a fight a mage
+    # often is, and a ghost whose only raiser she was walked off to the healer six seconds later.
+    if any(sp.get("name") == "Resurrection" and sp.get("missing") in (None, "", "mana")
+           for sp in (snap.get("magic") or {}).get("spells") or []):
+        return "spell"
+    return ""
 
 
 def number(value: Any, default: float) -> float:
@@ -273,6 +398,7 @@ class Follower:
         self.doing = "waiting for the leader's first goal"
         self.goals = 0
         self.finished = False
+        self.ends_at: float | None = None  # when its session's hours are up (run): no hunt outlasts it
         # Its own business, not cut short by the leader's goals: being resurrected and taking its corpse
         # back. In the first party run the leader's goals cut a ghost's walk to the healer short every 2 s,
         # and it took 2.5 minutes to come back.
@@ -381,6 +507,10 @@ class Follower:
         g = self.party.latest()
         if g is not None and g["rev"] > self.rev:
             self.rev = g["rev"]
+            # The watcher's interrupt, set while this step was looking, was for this very goal. Left set, a
+            # member that joined after the leader's first goal had it cut short at once ("interrupted") and
+            # then only kept up with the party until the next one.
+            s.interrupt.clear()
             await self.carry_out(g)
             return
         if g is not None and g["tool"] == "finish":
@@ -430,7 +560,14 @@ class Follower:
             self.last_hunt = dict(args)
             self.hunting = True
             try:
-                r = await s.hunt(str(args.get("area", "")), number(args.get("minutes"), 10.0))
+                # Formed up for with the leader, under the goal's own number (rally.py).
+                forming = {"rally_key": f"goal:{g['rev']}"} if getattr(s, "rally", None) is not None else {}
+                minutes = number(args.get("minutes"), 10.0)
+                if self.ends_at is not None:
+                    # Not past this member's own session: its leader's brain may be gone by then, and nothing
+                    # else would end the hunt (live, a nine-minute run's followers hunted on to 15.6 minutes).
+                    minutes = min(minutes, max(0.5, (self.ends_at - time.monotonic()) / 60))
+                r = await s.hunt(str(args.get("area", "")), minutes, **forming)
             finally:
                 self.hunting = False
         elif tool == "rest":
@@ -551,6 +688,7 @@ class Follower:
 
     async def run(self, stop: asyncio.Event, hours: float) -> dict[str, Any]:
         began = time.monotonic()
+        self.ends_at = began + hours * 3600
         watcher = asyncio.get_running_loop().create_task(self.watch(stop))
         try:
             while not stop.is_set() and not self.finished and time.monotonic() - began < hours * 3600:
@@ -562,4 +700,4 @@ class Follower:
         finally:
             watcher.cancel()
         return {"goals_followed": self.goals, "carried_on_without_leader": self.carried_on,
-                "finished": "finished" if self.finished else "time up"}
+                "finished": "finished" if self.finished else "stopped" if stop.is_set() else "time up"}

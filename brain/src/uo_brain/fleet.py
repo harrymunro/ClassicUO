@@ -46,6 +46,7 @@ cost an hour together, with the judge errors (rate limits show there) and the lo
 import asyncio
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -76,6 +77,7 @@ class Agent:
     headless: bool = False  # its client hides its window and draws nothing (client.py)
     env: dict[str, str] = field(default_factory=dict)  # for its brain, e.g. UO_BRAIN_ASK_EVERY_TICK = "1"
     travel: str = ""        # walk or run: the pace of its trips, over the fleet's (cuo-der)
+    strategy: str | None = None  # its standing strategy for the run, over the fleet's; None: the fleet's
 
 
 @dataclass
@@ -91,14 +93,30 @@ class Fleet:
     help: bool = True      # ...and heal, bandage and take creatures off each other (cuo-4ti)
     small_talk: bool = True  # characters who talk also chat when they have time (cuo-cod.6)
     pace: bool = True        # ...and answer at a human pace, one speaker at a time (cuo-cod.9)
+    # ...for this share of the time a person takes to read and type (`pace = 0.7` in the file; true is 1). A
+    # person who leads is answered in four fifths of it whatever it is (talk.PERSON_PACE, cuo-cym.22).
+    pace_factor: float = 1.0
+    # A companion sent somewhere without the leader a person plays goes if it is willing: a yes/no on the
+    # moment, and it may say no (Harry: "if I can persuade them to do so"). false: it goes when told (cuo-cym.19).
+    persuade: bool = True
     roleplay: bool = False   # a party's members emote and gesture in character (cuo-cod.8)
     memory: bool = True      # false: every brain runs without its character's memory, so repeat runs are independent
     plan: str = "leader"     # a party's one plan: the leader's (cuo-4ar), or agreed in a huddle, a planner each (cuo-bih)
     walk: bool = False       # a party walks its trips together and runs only in danger (cuo-cod.7)
+    form_up: bool = False    # a party forms up at the edge of a hunt, goes in as one and falls back there (cuo-cym.1)
+    rally_map: bool = False  # ...to a rally point chosen from the client's map, with a second one behind it (cuo-cym.13)
+    game_party: bool = False  # the party is made in the game too: invitations, loot rights, party chat (cuo-cym.3)
+    raise_fallen: bool = False  # a party raises its fallen where they fell (cuo-cym.4); `raise` in the file
+    callouts_to: str = "say"  # where callouts are said: say (aloud), party (the game's party chat) or both
     party_id: str = ""       # this run's party in the store (set when the run starts)
     use: list[str] = field(default_factory=list)  # KIND=MODEL for every brain, over its profile (session --use)
     travel: str = ""         # walk or run: every trip's pace; "" leaves it to each client's agent_travel_pace (cuo-der)
     rules: str = ""          # the set of rules of play under these settings (brain/rules/, cuo-der)
+    # Every character's standing strategy for the run ("" for none); None leaves each as its client has it.
+    # A character keeps its strategy between runs (it is the player's own words, saved with its profile), so
+    # a fleet that measures something says what it is: the lich scene's five had carried a video shoot's
+    # "never flee: the party stands together" into every later run, some with old planner lines after it.
+    strategy: str | None = None
 
 
 def parse_setting(spec: str) -> tuple[str, Any]:
@@ -131,15 +149,27 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                     {str(k): str(v) for k, v in (a.get("persona") or {}).items()},
                     [str(g) for g in a.get("long_goals") or []], [str(m) for m in a.get("memories") or []],
                     bool(a.get("talk", data.get("talk", True))), bool(a.get("headless", headless)),
-                    {str(k): str(v) for k, v in (a.get("env") or {}).items()}, str(a.get("travel") or ""))
+                    {str(k): str(v) for k, v in (a.get("env") or {}).items()}, str(a.get("travel") or ""),
+                    str(a["strategy"]) if "strategy" in a else None)
               for a in data.get("agent") or []]
     party = bool(data.get("party", False))
     leader = str(data.get("leader") or (agents[0].name if party and agents else ""))
-    if party and leader not in {a.name for a in agents}:
-        raise ValueError(f"{path}: the party's leader {leader!r} isn't one of its agents")
     plan = str(data.get("plan", "leader"))
-    if plan not in ("leader", "huddle"):
-        raise ValueError(f"{path}: plan should be leader or huddle, not {plan!r}")
+    if plan not in ("leader", "huddle", "player"):
+        raise ValueError(f"{path}: plan should be leader, huddle or player, not {plan!r}")
+    # The player's party (cuo-cym.6): its leader is a character a person plays, and not one of the agents.
+    if party and plan == "player" and (not data.get("leader") or leader in {a.name for a in agents}):
+        raise ValueError(f"{path}: with plan = \"player\" the leader is the character the person plays, by name, "
+                         "and not one of the agents")
+    if party and plan != "player" and leader not in {a.name for a in agents}:
+        raise ValueError(f"{path}: the party's leader {leader!r} isn't one of its agents")
+    callouts_to = str(data.get("callouts_to", "say"))
+    if callouts_to not in ("say", "party", "both"):
+        raise ValueError(f"{path}: callouts_to should be say, party or both, not {callouts_to!r}")
+    pace = data.get("pace", True)  # true, false, or the share of a person's time a reply waits
+    if not isinstance(pace, (bool, int, float)) or pace < 0:
+        raise ValueError(f"{path}: pace should be true, false or a number from 0 up (0.7: seven tenths of the wait), "
+                         f"not {pace!r}")
     if party and plan == "huddle":
         # A planner each: one who has no goal of its own is given the party's (the leader's).
         shared = next((a.goal for a in agents if a.name == leader), "")
@@ -147,7 +177,7 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
             a.goal = a.goal or shared
     for a in agents:
         if not a.goal and not a.long_goals and not (party and a.name != leader):
-            raise ValueError(f"{path}: {a.name} needs a goal or long_goals")
+            raise ValueError(f"{path}: {a.name} needs a goal or long_goals")  # a companion of the player needs none
     if not agents:
         raise ValueError(f"{path}: no [[agent]] entries")
     if len({a.port for a in agents}) != len(agents) or len({a.account for a in agents}) != len(agents):
@@ -155,11 +185,17 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
     return Fleet(str(data.get("name") or Path(path).stem), agents, float(data.get("hours", 0.5)),
                  int(data.get("server_port", 2593)), str(data.get("host", "127.0.0.1")), party, leader,
                  callouts=bool(data.get("callouts", True)), help=bool(data.get("help", True)),
-                 small_talk=bool(data.get("small_talk", True)), pace=bool(data.get("pace", True)),
+                 small_talk=bool(data.get("small_talk", True)), pace=bool(pace),
+                 pace_factor=1.0 if isinstance(pace, bool) else float(pace),
+                 persuade=bool(data.get("persuade", True)),
                  roleplay=bool(data.get("roleplay", False)), walk=bool(data.get("walk", False)),
+                 form_up=bool(data.get("form_up", False)), game_party=bool(data.get("game_party", False)),
+                 rally_map=bool(data.get("rally_map", False)),
+                 callouts_to=callouts_to, raise_fallen=bool(data.get("raise", False)),
                  memory=bool(data.get("memory", True)), plan=plan,
                  use=[str(u) for u in ([data["use"]] if isinstance(data.get("use"), str) else data.get("use") or [])],
-                 travel=travel, rules=str(data.get("rules") or ""))
+                 travel=travel, rules=str(data.get("rules") or ""),
+                 strategy=str(data["strategy"]) if "strategy" in data else None)
 
 
 # ---------------------------------------------------------------- running it
@@ -180,8 +216,17 @@ async def log_in(fleet: Fleet, agent: Agent) -> str:
             # Once more: a login can stick between the login server and the game server (the server
             # "force disconnecting stuck socket", 2026-10-10), and a party then ran without its fifth member,
             # whose prep spawns what the others were to fight.
-            again = await client.log_in(rpc, agent.account, agent.password, agent.name, fleet.host, fleet.server_port,
-                                        create=client.warrior(agent.name))
+            try:
+                again = await client.log_in(rpc, agent.account, agent.password, agent.name, fleet.host, fleet.server_port,
+                                            create=client.warrior(agent.name))
+            except (asyncio.TimeoutError, RpcError) as e:
+                # A client busy connecting doesn't answer for some seconds: give it a moment, then ask once more.
+                await asyncio.sleep(10)
+                try:
+                    again = await client.log_in(rpc, agent.account, agent.password, agent.name, fleet.host,
+                                                fleet.server_port, create=client.warrior(agent.name))
+                except (asyncio.TimeoutError, RpcError):
+                    again = f"not in game: {type(e).__name__}"
             if not again.startswith("in game"):
                 return f"{result} (and at a second try: {again[:120]})"
             result = f"{again} (at the second try)"
@@ -190,6 +235,9 @@ async def log_in(fleet: Fleet, agent: Agent) -> str:
             await rpc.call("window", visible=False)
         await rpc.call("mode", mode="off")
         await rpc.call("goal", clear=True)
+        strategy = agent.strategy if agent.strategy is not None else fleet.strategy
+        if strategy is not None:
+            await rpc.call("strategy", **({"text": strategy} if strategy else {"clear": True}))
         for cmd in agent.prep:
             await rpc.call("act", verb="say", text=cmd, source="manual")
             await asyncio.sleep(1.5)
@@ -268,23 +316,34 @@ def start_brain(fleet: Fleet, agent: Agent, out_dir: Path) -> subprocess.Popen:
         cmd += ["--no-memory"]
     if fleet.party:
         # One party a run: its id is the fleet's name and the run's folder.
-        cmd += ["--party", fleet.party_id or f"{fleet.name}-{out_dir.name}", "--party-members", ",".join(a.name for a in fleet.agents),
+        members = [a.name for a in fleet.agents]
+        if fleet.plan == "player":
+            members.insert(0, fleet.leader)  # the character a person plays: one of the party, with no brain here
+        cmd += ["--party", fleet.party_id or f"{fleet.name}-{out_dir.name}", "--party-members", ",".join(members),
                 "--leader", fleet.leader]
         cmd += [] if fleet.callouts else ["--no-callouts"]
         cmd += [] if fleet.help else ["--no-party-help"]
         cmd += ["--roleplay"] if fleet.roleplay else []
         cmd += ["--party-walk"] if fleet.walk else []
-        cmd += ["--party-plan", "huddle"] if fleet.plan == "huddle" else []
+        cmd += ["--party-form-up"] if fleet.form_up else []
+        cmd += ["--party-rally-map"] if fleet.rally_map else []
+        cmd += ["--game-party"] if fleet.game_party else []
+        cmd += ["--party-raise"] if fleet.raise_fallen else []
+        cmd += ["--callouts-to", fleet.callouts_to] if fleet.callouts_to != "say" else []
+        cmd += ["--party-plan", fleet.plan] if fleet.plan != "leader" else []
+        cmd += ["--no-persuade"] if fleet.plan == "player" and not fleet.persuade else []
     if agent.persona:
         persona = out_dir / f"{agent.name}.persona.json"
         persona.write_text(json.dumps({"name": agent.name, **agent.persona}, indent=2))
         cmd += ["--persona", str(persona)]
     # NPCs with lives of their own hear the fleet's other characters, and only them (cuo-x2q.2); a party
     # hears itself, persona or not (cuo-cod.1). `talk = false` in the file: nobody hears anybody.
-    if agent.talk and (agent.persona or fleet.party) and (others := [a.name for a in fleet.agents if a.name != agent.name]):
+    others = [a.name for a in fleet.agents if a.name != agent.name] + ([fleet.leader] if fleet.plan == "player" else [])
+    if agent.talk and (agent.persona or fleet.party) and others:
         cmd += ["--hear", ",".join(others)]
         cmd += [] if fleet.small_talk else ["--no-small-talk"]
         cmd += [] if fleet.pace else ["--no-pace"]
+        cmd += ["--pace-factor", str(fleet.pace_factor)] if fleet.pace and fleet.pace_factor != 1.0 else []
     return subprocess.Popen(cmd, cwd=BRAIN_DIR, stdout=(out_dir / f"{agent.name}.out").open("w"),
                             stderr=subprocess.STDOUT, env={**os.environ, **agent.env} if agent.env else None)
 
@@ -337,6 +396,27 @@ async def loop_rates(agents: list[Agent]) -> dict[str, dict[str, Any]]:
     return rates
 
 
+BRAIN_ENDS_S = 15.0  # a brain asked to stop has this long to write its summary before it is ended
+
+
+def stop_brains(brains: dict[str, subprocess.Popen], within_s: float = BRAIN_ENDS_S) -> None:
+    """The brains still running are asked to stop (Ctrl-C: each ends its run and writes its summary), and one
+    that hasn't gone in time is ended. They were left to outlive the fleet before: stopped by hand, a run's
+    brains played on against clients that had been closed, until someone ended each by its process id."""
+    running = [b for b in brains.values() if b.poll() is None]
+    for b in running:
+        try:
+            b.send_signal(signal.SIGINT)
+        except OSError:
+            pass
+    gone_by = time.monotonic() + within_s
+    for b in running:
+        try:
+            b.wait(max(0.1, gone_by - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            b.terminate()
+
+
 def pid_listening(port: int) -> int:
     """The process listening on a TCP port (the game server), or 0."""
     out = subprocess.run(["lsof", "-nP", f"-iTCP:{port}", "-sTCP:LISTEN", "-t"], capture_output=True, text=True).stdout
@@ -344,6 +424,9 @@ def pid_listening(port: int) -> int:
 
 
 async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, Any]:
+    # The brains are started from the brain folder: a folder given relative to somewhere else (the repository's
+    # root, with `uv run --project brain`) was made here and then not found by them, and nobody played.
+    out_dir = out_dir.resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     # One party a run. A second run into a folder used before (`--out`) is another party: with the first one's id
     # its followers would carry out that run's last goal at once (a "finish" ends all of them).
@@ -357,19 +440,43 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
 
     note({"type": "fleet", "name": fleet.name, "hours": fleet.hours,
           **({"party": True, "party_id": fleet.party_id, "leader": fleet.leader, "callouts": fleet.callouts, "help": fleet.help,
-              "roleplay": fleet.roleplay, "walk": fleet.walk, "small_talk": fleet.small_talk, "pace": fleet.pace,
+              "roleplay": fleet.roleplay, "walk": fleet.walk, "form_up": fleet.form_up, "game_party": fleet.game_party,
+              **({"rally_map": True} if fleet.rally_map else {}),
+              "raise": fleet.raise_fallen,
+              **({"callouts_to": fleet.callouts_to} if fleet.callouts_to != "say" else {}),
+              "small_talk": fleet.small_talk, "pace": fleet.pace if fleet.pace_factor == 1.0 or not fleet.pace else fleet.pace_factor,
+              **({"persuade": fleet.persuade} if fleet.plan == "player" else {}),
               "travel": fleet.travel, "rules": fleet.rules}
              if fleet.party else {}), **({} if fleet.memory else {"memory": False}),
           **({"plan": fleet.plan} if fleet.plan != "leader" else {}), **({"use": fleet.use} if fleet.use else {}),
+          **({"strategy": fleet.strategy} if fleet.strategy is not None else {}),
           "agents": [{"name": a.name, "port": a.port, "profile": a.profile, "goal": a.goal, "headless": a.headless,
                       **({"env": a.env} if a.env else {})}
                      for a in fleet.agents]})
     clients = {a.name: start_client(a, out_dir) for a in fleet.agents}
+    # Ctrl-C, a closed terminal or a `kill` ends the run in order: the brains first, each with its summary, then
+    # the clients. A playtest's run that went with its terminal left no summaries at all (cuo-cym.23).
+    stopping = asyncio.Event()
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        try:
+            asyncio.get_running_loop().add_signal_handler(sig, stopping.set)
+        except (NotImplementedError, RuntimeError, ValueError):  # not the main thread (a test): Ctrl-C as before
+            pass
+    brains: dict[str, subprocess.Popen] = {}
+    stopped = asyncio.ensure_future(stopping.wait())
     try:
-        brains: dict[str, subprocess.Popen] = {}
         for a in fleet.agents:
+            if stopping.is_set():
+                break
             try:
-                result = await log_in(fleet, a)
+                # A login takes up to minutes (a client still starting, a stuck login tried again): stopped
+                # meanwhile, the run ends now and not when the last of them is in.
+                login = asyncio.ensure_future(log_in(fleet, a))
+                await asyncio.wait({login, stopped}, return_when=asyncio.FIRST_COMPLETED)
+                if not login.done():
+                    login.cancel()
+                    break
+                result = login.result()
             except (OSError, RpcError, RuntimeError) as e:
                 # A client that didn't answer in time (a TimeoutError, whose text is empty) ended a whole fleet
                 # with the message "fleet: " and nothing else; that agent sits the run out and the others play.
@@ -382,25 +489,43 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
                 # while a stray bone knight killed it and the archer beside it.
                 brains[a.name] = start_brain(fleet, a, out_dir)
         for a in fleet.agents:
-            if a.name not in brains:
+            if a.name not in brains and not stopping.is_set():
                 brains[a.name] = start_brain(fleet, a, out_dir)
         pids = {"server": pid_listening(fleet.server_port)}
         for a in fleet.agents:
             proc = clients[a.name]
             pids[f"{a.name}/client"] = proc.pid if proc else pid_listening(a.port)
-            pids[f"{a.name}/brain"] = brains[a.name].pid
-        while any(b.poll() is None for b in brains.values()):
-            await asyncio.sleep(every_s)
+            if a.name in brains:
+                pids[f"{a.name}/brain"] = brains[a.name].pid
+        while any(b.poll() is None for b in brains.values()) and not stopping.is_set():
+            try:
+                await asyncio.wait_for(stopping.wait(), every_s)
+                break
+            except asyncio.TimeoutError:
+                pass
             note({"type": "load", "processes": sample(pids), "loops": await loop_rates(fleet.agents)})
             for a in fleet.agents:
                 if brains[a.name].poll() is None and (result := await relog(fleet, a)):
                     note({"type": "relogin", "agent": a.name, "result": result})
     finally:
+        stopped.cancel()
+        if stopping.is_set():
+            note({"type": "stopped", "brains_running": sorted(n for n, b in brains.items() if b.poll() is None)})
+        stop_brains(brains)
         # Whatever ended the run, the clients it started go with it: left running, three of them held their
         # ports and the next run waited on them for good.
         for c in clients.values():
             if c is not None:
                 c.terminate()
+        # ...and one that doesn't go when asked is killed: a client hung in a stuck login ignored the request
+        # and held its port (2026-10-12), so the next run waited on it until someone looked.
+        gone_by = time.monotonic() + 10
+        for c in clients.values():
+            if c is not None:
+                try:
+                    c.wait(max(0.1, gone_by - time.monotonic()))
+                except subprocess.TimeoutExpired:
+                    c.kill()
         events.close()
     return report(out_dir)
 

@@ -414,3 +414,340 @@ def test_what_is_said_at_the_table_isnt_kept_twice():
     ears.paused = False
     ears.hear(snap([{"seq": 2, "name": "Wystan", "text": "Thea, that rug of yours still scares me.", "source": "speech"}], 2))
     assert [ln["text"] for ln in ears.open["Wystan"]] == ["Thea, that rug of yours still scares me."]
+
+
+def test_a_person_who_leads_is_answered_without_the_gap_and_their_talk_isnt_cut_short():
+    """A companion of a character a person plays (cuo-cym.16): the limits were made for agents talking to agents."""
+    rpc, chat = Rpc(), line_chat("Half my reagents and all my patience.", gives="none", about="")
+    ears = talk.Ears(rpc, "Isolde", {"Roland", "Wystan"}, judge=YesJudge(), chat_fn=chat, person="Roland")
+    ears.said_at.append(time.time() - 5)  # she spoke five seconds ago
+    # A companion's line that names her waits for the gap, and so does the person's when it names nobody.
+    for seq, (who, text) in enumerate([("Wystan", "Isolde, how are your reagents?"), ("Roland", "How is everyone?")], 1):
+        s = snap([{"seq": seq, "name": who, "text": text, "source": "speech"}], seq)
+        ears.hear(s)
+        assert asyncio.run(ears.consider(s)) is None and rpc.said == []
+    # The person's line that names her is answered now.
+    s = snap([{"seq": 3, "name": "Roland", "text": "Isolde, how are your reagents?", "source": "speech"}], 3)
+    ears.hear(s)
+    assert asyncio.run(ears.consider(s)) == "Half my reagents and all my patience."
+    system = chat.seen[0][0]["content"]
+    assert "Roland leads this party and is played by a person" in system and "never promise" in system
+    # The yes/no before it was the one for a person who leads, and a companion's is the one it always was.
+    asked = [qs["talk"]["instructions"]["question"] for _, qs in ears.judge.asked]
+    assert asked == ["Should Isolde say something back to Roland now?"]
+    assert "ignored" in ears.judge.asked[0][1]["talk"]["criteria"]["true"]
+    assert talk.talk_question("Isolde", "Wystan")["instructions"]["question"] == "Should Isolde say something to Wystan now?"
+    # The hourly cap holds for the person too.
+    ears.said_at.extend([time.time() - 3500 + i for i in range(talk.MAX_PER_HOUR)])
+    assert not ears.allowed(direct=True)
+    # Six lines back and forth with the person isn't an exchange that has run its course: they say when it is over.
+    ears = talk.Ears(Rpc(), "Isolde", {"Roland", "Wystan"}, judge=YesJudge(), chat_fn=chat, person="Roland")
+    now = time.time()
+    for i in range(6):
+        who = "Roland" if i % 2 == 0 else "Isolde"
+        ears.lines.append({"t": now - 60 + 10 * i, "who": who, "text": f"line {i}", "to": [], "answered": True})
+    ears.lines.append({"t": now, "who": "Roland", "text": "And another thing, Isolde.", "to": ["Isolde"], "answered": False})
+    assert ears.due(snap([], 0)) == ("Roland", "answer") and not ears.dropped
+    # A line of the person's with no name in it, straight after her answer to them, follows on from it: she is
+    # told so, answers without the gap, and another companion is told whose answer it follows.
+    rpc = Rpc()
+    ears = talk.Ears(rpc, "Isolde", {"Roland", "Wystan"}, judge=YesJudge(), chat_fn=chat, person="Roland")
+    wystan = talk.Ears(Rpc(), "Wystan", {"Roland", "Isolde"}, judge=YesJudge(), chat_fn=chat, person="Roland")
+    s = snap([{"seq": 1, "name": "Roland", "text": "Isolde, how are your reagents?", "source": "speech"}], 1)
+    ears.hear(s)
+    wystan.hear(s)
+    assert asyncio.run(ears.consider(s)) == rpc.said[0]
+    journal = [{"seq": 2, "name": "Isolde", "text": rpc.said[0], "source": "speech"},
+               {"seq": 3, "name": "Roland", "text": "Enough for another fight?", "source": "speech"}]
+    s = snap(journal[1:], 3)
+    assert ears.hear(s)[0]["after"] == "Isolde" and wystan.hear(snap(journal, 3))[-1]["after"] == "Isolde"
+    assert asyncio.run(ears.consider(s)) == rpc.said[1]  # five seconds haven't passed, let alone twenty
+    assert "follows straight on from Isolde's own answer to Roland" in ears.judge.asked[-1][0]["said_to"]
+    assert wystan.said_to("Roland", s) == ("no one by name; it follows straight on from Isolde's answer to Roland, so it "
+                                           "is most likely said to Isolde")
+    # Nobody a person plays among those it hears: nothing of this is in what the writer is told.
+    assert "played by a person" not in talk.Ears(Rpc(), "Isolde", {"Wystan"}).system
+
+
+# ---------------------------------------------------------------- a person who leads: how each line was read (cuo-cym.18 to .22)
+
+class Read:
+    """How a companion took a line of its leader's (companion.Reading), as its talk sees it."""
+
+    def __init__(self, to=None, said="", owed="", plain="", note=""):
+        self.to, self.said, self.owed, self.plain, self.note = to, said, owed, plain, note
+
+
+def led(w, name, readings, chat=None, judge=None, **kw):
+    """The talk of one companion of Roland, whom a person plays, with its readings of his lines by their number."""
+    ears = party_ears(w, name, chat=chat or line_chat(f"All well with {name}.", "none", ""), judge=judge, person="Roland", **kw)
+    ears.reader = readings.get
+    return ears
+
+
+def roland(seq, text):
+    return {"seq": seq, "name": "Roland", "text": text, "source": "speech"}
+
+
+def test_a_person_who_leads_is_answered_a_fifth_sooner(tmp_path, monkeypatch):
+    """Harry, after playing it: "the text replies could be maybe like 20% faster than they actually were"."""
+    monkeypatch.setattr(talk, "reply_delay", lambda heard, reply, rnd=None: 10.0)
+    line = "Isolde, how are your reagents?"
+    worlds = iter(World(tmp_path / f"w{i}.sqlite") for i in range(4))  # a floor each: the same line is claimed on each
+
+    def wait(ears, who):
+        s = snap([{"seq": 1, "name": who, "text": line, "source": "speech"}], 1, around(who))
+        heard = ears.hear(s)[0]
+        asyncio.run(ears.consider(s))
+        return round(ears.ready.say_at - heard["t"], 2)
+
+    assert wait(party_ears(next(worlds), "Isolde", pace=True), "Wystan") == 10.0             # among agents, the whole of it
+    assert wait(party_ears(next(worlds), "Isolde", pace=True, person="Roland"), "Roland") == 8.0
+    assert wait(party_ears(next(worlds), "Isolde", pace=True, person="Roland"), "Wystan") == 10.0
+    # A fleet can ask for more or less of the wait, for everyone.
+    assert wait(party_ears(next(worlds), "Isolde", pace=True, person="Roland", pace_factor=0.5), "Roland") == 4.0
+    assert talk.PERSON_PACE == 0.8
+
+
+def test_the_floor_gives_turns_to_those_a_line_is_for(tmp_path):
+    w = World(tmp_path / "w.sqlite")
+    floors = {n: talk.Floor(w, n, PARTY) for n in ("Isolde", "Wystan", "Thea")}
+    rows = {n: f.turn("Roland:abc") for n, f in floors.items()}
+    assert floors["Isolde"].ahead("Roland:abc", rows["Isolde"]) == []
+    assert floors["Wystan"].ahead("Roland:abc", rows["Wystan"]) == ["Isolde"]
+    assert floors["Thea"].ahead("Roland:abc", rows["Thea"]) == ["Isolde", "Wystan"]
+    assert floors["Thea"].ahead("Roland:other", floors["Thea"].turn("Roland:other")) == []
+    # Once the one ahead has spoken, the next is up; and one who gives its turn up isn't waited for.
+    floors["Isolde"].say("Fine, thank you.")
+    assert floors["Wystan"].ahead("Roland:abc", rows["Wystan"]) == []
+    floors["Wystan"].release(rows["Wystan"])
+    assert floors["Thea"].ahead("Roland:abc", rows["Thea"]) == []
+    # A turn holds only so long: one that never speaks doesn't keep the others waiting for good.
+    late = floors["Isolde"].turn("Roland:late")
+    w.db.execute("UPDATE talk_floor SET until = ? WHERE id = ?", (time.time() - 1, late))
+    w.db.commit()
+    assert floors["Wystan"].ahead("Roland:late", floors["Wystan"].turn("Roland:late")) == []
+    # Turns don't hold the floor itself: nothing is over anyone's head.
+    w.db.execute("DELETE FROM talk_floor WHERE kind = 'line'")
+    assert floors["Thea"].busy_until() == 0.0
+
+
+def test_a_line_to_the_whole_party_is_answered_by_each_it_is_for_in_turn(tmp_path):
+    """Harry: "I seemed to only be able to talk to one character at a time": "how are you all today?" got one
+    answer, from whoever claimed it first, and the other two left it."""
+    w = World(tmp_path / "w.sqlite")
+    everyone = ["Isolde", "Thea", "Wystan"]
+    reads = {1: Read(to=everyone)}
+    ears = {n: led(w, n, reads, pace=True) for n in everyone}
+    s = snap([roland(1, "So crew how are you all today?")], 1, around("Roland", *everyone))
+    for e in ears.values():
+        e.hear(s)
+        asyncio.run(e.consider(s))
+    # The first to take a turn has written its answer; the others wait to hear it before they write theirs.
+    assert ears["Isolde"].ready is not None and ears["Isolde"].ready.text == "All well with Isolde."
+    assert [ears[n].turn is not None and ears[n].ready is None for n in ("Thea", "Wystan")] == [True, True]
+    assert "each of them is spoken to, and each answers for themselves" in ears["Isolde"].judge.asked[0][0]["said_to"]
+    assert not any(e.dropped for e in ears.values())
+    asyncio.run(ears["Thea"].next_turn(s))
+    assert ears["Thea"].ready is None  # Isolde hasn't spoken yet
+    # Isolde says hers; Thea hears it, writes with it in front of her, and says hers a moment after.
+    ears["Isolde"].ready.say_at = time.time() - 0.1
+    assert asyncio.run(ears["Isolde"].deliver(s)) == "All well with Isolde."
+    s2 = snap([{"seq": 2, "name": "Isolde", "text": "All well with Isolde.", "source": "speech"}], 2, around("Roland", *everyone))
+    ears["Thea"].hear(s2)
+    asyncio.run(ears["Thea"].next_turn(s2))
+    r = ears["Thea"].ready
+    assert r is not None and r.turn and "Isolde: All well with Isolde." in ears["Thea"].chat.seen[0][1]["content"]
+    assert 0 < r.say_at - time.time() <= talk.TURN_GAP_S + 0.1
+    # Wystan is still behind Thea, and what the others say meanwhile doesn't cost him his turn or his answer.
+    ears["Wystan"].hear(s2)
+    asyncio.run(ears["Wystan"].next_turn(s2))
+    assert ears["Wystan"].turn is not None and ears["Wystan"].ready is None
+    r.say_at = time.time() - 0.1
+    assert asyncio.run(ears["Thea"].deliver(s2)) == "All well with Thea." and ears["Thea"].turns == 1
+    s3 = snap([{"seq": 3, "name": "Thea", "text": "All well with Thea.", "source": "speech"}], 3, around("Roland", *everyone))
+    ears["Wystan"].hear(s3)
+    asyncio.run(ears["Wystan"].next_turn(s3))
+    ears["Wystan"].ready.say_at = time.time() - 0.1
+    assert asyncio.run(ears["Wystan"].deliver(s3)) == "All well with Wystan."
+    assert [e.rpc.said for e in ears.values()] == [["All well with Isolde."], ["All well with Thea."], ["All well with Wystan."]]
+
+
+def test_who_a_line_is_for_is_its_reading_and_not_the_names_in_it(tmp_path):
+    w = World(tmp_path / "w.sqlite")
+    # "What did the rest of you make of it?" after Isolde's answer: hers to leave, the others' to take.
+    reads = {1: Read(to=["Thea", "Wystan"]), 2: Read(to=["Wystan"]), 3: Read(to=[])}
+    isolde, wystan = led(w, "Isolde", reads), led(w, "Wystan", reads)
+    s = snap([roland(1, "What did the rest of you make of it?")], 1, around("Roland", "Isolde", "Wystan", "Thea"))
+    isolde.hear(s)
+    assert asyncio.run(isolde.consider(s)) is None and isolde.dropped == {"for another": 1} and isolde.judge.asked == []
+    # A line that names nobody and is for one alone is that one's, with no claim to win and no gap to wait out.
+    wystan.said_at.append(time.time() - 2)
+    s = snap([roland(2, "Our archer, how many arrows have you left?")], 2, around("Roland", "Isolde", "Thea"))
+    wystan.hear(s)
+    assert asyncio.run(wystan.consider(s)) == "All well with Wystan."
+    assert wystan.judge.asked[0][0]["said_to"] == "Wystan, and nobody else"
+    # A line that only mentions a companion isn't that one's alone: it is for whom its reading says.
+    isolde.hear(snap([roland(4, "Wystan shot it first, I saw it.")], 4))
+    assert isolde.lines[-1]["answered"] is False and isolde.lines[-1]["to"] == ["Wystan"]
+    # Read as for none of them ("bank", a word to themselves): nobody answers, and nobody is asked.
+    s = snap([roland(3, "bank of the river, that's where I'd build")], 3, around("Roland"))
+    wystan.hear(s)
+    asked = len(wystan.judge.asked)
+    assert asyncio.run(wystan.consider(s)) is None and len(wystan.judge.asked) == asked
+    # Until the line has been read, the answer waits for the reading; with none after a few seconds it goes by
+    # the names in the line, as before.
+    late = led(w, "Thea", {})
+    s = snap([roland(9, "Thea, how's Bramble?")], 9, around("Roland"))
+    late.hear(s)
+    assert asyncio.run(late.consider(s)) is None and late.judge.asked == []
+    late.lines[-1]["t"] -= talk.READ_WAIT_S + 0.5
+    assert asyncio.run(late.consider(s)) == "All well with Thea."
+
+
+def test_what_it_says_agrees_with_what_it_does(tmp_path):
+    """Sent to the inn, one said "Lead on" and stood still: the writer of the line knew nothing of how the same
+    line had been read for orders (cuo-cym.20)."""
+    w = World(tmp_path / "w.sqlite")
+    reads = {1: Read(to=["Isolde"], said="Right behind you."),
+             2: Read(to=["Isolde"], note="as talk: she can't cover anyone on command"),
+             3: Read(to=["Isolde"]),
+             4: Read(to=["Isolde"], owed="Isolde now takes what is worth having from the corpses.", plain="I'll loot what's worth taking.")}
+    chat = line_chat("As you wish.", "none", "")
+    ears = led(w, "Isolde", reads, chat=chat, pace=True)
+    near = around("Roland")
+    # An order it took and said its word on: that was its answer, and nothing more is written.
+    s = snap([roland(1, "Off you go then")], 1, near)
+    ears.hear(s)
+    assert asyncio.run(ears.consider(s)) is None and ears.judge.asked == [] and ears.ready is None and not chat.seen
+    # Talk: the writer is told how the line was taken, so the answer doesn't promise what she isn't doing.
+    s = snap([roland(2, "cover me")], 2, near)
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    assert "How Isolde took Roland's last line: as talk: she can't cover anyone on command." in chat.seen[-1][1]["content"]
+    assert "never says they\nwill do what they aren't doing" in ears.system
+    ears.ready = None
+    s = snap([roland(3, "nice night")], 3, near)
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    assert "as talk. It is no order Isolde can carry out and changes nothing" in chat.seen[-1][1]["content"]
+    ears.ready = None
+    # A setting changed: what it owes the line is said whatever the yes/no would say, and without the wait.
+    ears.judge = YesJudge(0.01)
+    s = snap([roland(4, "feel free to loot")], 4, near)
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    assert ears.judge.asked == [] and ears.ready.owed and ears.ready.say_at <= time.time()
+    assert "has to get across, whatever else it says: Isolde now takes what is worth having" in chat.seen[-1][1]["content"]
+    assert asyncio.run(ears.deliver(s)) == "As you wish."
+    # In a fight no line is written: its plain word is said at once, as a callout is.
+    reads[5] = Read(to=["Isolde"], owed="Isolde never runs from a fight.", plain="No running. Understood.")
+    fight = snap([roland(5, "don't you dare run")], 5, [*near, {"name": "a lich", "distance": 2, "attacking_me": True}])
+    ears.hear(fight)
+    wrote = len(chat.seen)
+    assert asyncio.run(ears.consider(fight)) == "No running. Understood." and len(chat.seen) == wrote
+    assert ears.rpc.said[-1] == "No running. Understood." and ears.lines[-1]["aside"]
+    # ...and when the line can't be written (the call fails), the same.
+    async def broken(messages, **_):
+        raise talk.llm.LlmError("no answer")
+    ears.chat = broken
+    reads[6] = Read(to=["Isolde"], owed="Isolde leaves the corpses alone.", plain="Leaving the loot alone.")
+    s = snap([roland(6, "leave the rest")], 6, near)
+    ears.hear(s)
+    assert asyncio.run(ears.consider(s)) == "Leaving the loot alone."
+
+
+def test_an_answer_owed_to_the_leader_outlives_what_is_said_meanwhile(tmp_path):
+    """Three answers written for the leader were thrown away in five minutes because it, or a companion, had
+    spoken again before they were due (cuo-cym.21)."""
+    w = World(tmp_path / "w.sqlite")
+    reads = {1: Read(to=["Isolde", "Wystan"]), 3: Read(to=["Wystan"]), 4: Read(to=["Isolde", "Wystan"])}
+    ears = led(w, "Isolde", reads, pace=True)
+    near = around("Roland", "Wystan")
+    s = snap([roland(1, "here's the plan...")], 1, near)
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    first = ears.ready
+    assert first is not None
+    ears.lines[0]["t"] -= 2  # said two seconds ago
+    first.heard_t -= 2
+    # A companion speaks, and the leader says something that isn't for her: her answer still comes.
+    s = snap([{"seq": 2, "name": "Wystan", "text": "A plan, he says.", "source": "speech"}, roland(3, "Wystan, quiet.")], 3, near)
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    assert ears.ready is first and ears.dropped == {"for another": 1}
+    assert asyncio.run(ears.deliver(s)) is None and ears.ready is first  # not its moment yet, and not dropped
+    # The leader says something else that she answers: that takes the place of the answer that waited.
+    s = snap([roland(4, "cover me")], 4, near)
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    assert ears.ready is not first and ears.ready.heard_t > first.heard_t and ears.dropped["the leader said something else"] == 1
+    # Among agents the talk still moves on: an answer nobody was asked for by name gives way to the next line.
+    plain = party_ears(w, "Thea", pace=True)
+    plain.ready = talk.Ready("About that lich...", "Corwin", "answer", 0.9, time.time() + 5, time.time() - 5, heard_t=time.time() - 5)
+    plain.lines.append({"t": time.time(), "who": "Wystan", "text": "We were magnificent.", "answered": False})
+    assert asyncio.run(plain.deliver(snap([], 1))) is None and plain.dropped == {"the talk moved on": 1}
+
+
+def test_told_to_be_quiet_it_answers_nothing_but_what_it_owes(tmp_path):
+    w = World(tmp_path / "w.sqlite")
+    reads = {1: Read(to=["Isolde"]), 2: Read(to=["Isolde"], owed="Isolde talks freely again.", plain="Talking again, then.")}
+    ears = led(w, "Isolde", reads)
+    ears.muted = True
+    ears.greeted["Roland"] = time.time()  # they have met
+    s = snap([roland(1, "Isolde, how are you holding up?")], 1, around("Roland"))
+    ears.hear(s)
+    assert asyncio.run(ears.consider(s)) is None and ears.judge.asked == [] and ears.rpc.said == []
+    assert ears.due(s) is None  # and the line isn't kept to answer later
+    s = snap([roland(2, "ok you can chat")], 2, around("Roland"))
+    ears.hear(s)
+    assert asyncio.run(ears.consider(s)) == "All well with Isolde."
+
+
+def test_a_leaders_words_arent_dropped_as_a_pets_when_they_are_read(tmp_path):
+    """ "Wystan stay" and "thea come" match the pattern for a tamer's orders to its pets, and were left out of the
+    talk; said by a leader a person plays they are orders to companions, and its reading says whom a line is for."""
+    w = World(tmp_path / "w.sqlite")
+    reads = {1: Read(to=["Wystan"], said="Staying here."), 2: Read(to=[])}
+    wystan = led(w, "Wystan", reads)
+    assert [ln["text"] for ln in wystan.hear(snap([roland(1, "Wystan stay"), roland(2, "bank")], 2))] == ["Wystan stay", "bank"]
+    assert asyncio.run(wystan.consider(snap([], 2))) is None and wystan.judge.asked == []  # nothing in either to answer
+    # Among agents, and for a leader whose lines nobody reads, they are left out as before.
+    plain = party_ears(w, "Wystan", person="Roland")
+    assert plain.hear(snap([roland(1, "Wystan stay"), roland(2, "bank")], 2)) == []
+
+
+def test_an_answer_to_the_leader_doesnt_wait_for_what_was_said_before_it(tmp_path):
+    """Live an answer due at once was held six seconds by the line its own speaker had said just before the
+    leader spoke: the floor keeps a line until it has been read, and the leader had read it."""
+    w = World(tmp_path / "w.sqlite")
+    ears = led(w, "Isolde", {1: Read(to=["Isolde"])}, pace=True)
+    ears.floor.say("Reagents enough for three fights, Roland, and I counted them twice.")  # still over her head
+    assert ears.floor.busy_until() > time.time()
+    s = snap([roland(1, "Isolde, off we go?")], 1, around("Roland"))
+    other = led(w, "Wystan", {1: Read(to=["Wystan"])}, pace=True)
+    ears.hear(s)
+    other.hear(s)
+    asyncio.run(ears.consider(s))
+    ears.ready.say_at = time.time() - 0.1
+    assert asyncio.run(ears.deliver(s)) == "All well with Isolde."
+    # What a companion says after the leader's line still holds the floor for the next to answer it...
+    asyncio.run(other.consider(s))
+    other.ready.say_at = time.time() - 0.1
+    assert asyncio.run(other.deliver(s)) is None and other.ready is not None
+    # ...and among agents a line waits for whatever is up, as before.
+    plain = party_ears(w, "Thea", pace=True)
+    plain.ready = talk.Ready("Aye.", "Corwin", "answer", 0.9, time.time() - 1, time.time() - 2, heard_t=time.time() - 1, addressed=True)
+    assert asyncio.run(plain.deliver(snap([], 0))) is None and plain.ready is not None
+
+
+def test_a_ready_line_is_said_at_its_moment_not_at_the_next_look():
+    """Every answer was said 0.6 to 1.0 s after it was due, waiting for the next look a second on (cuo-cym.30)."""
+    import time as _time
+    e = talk.Ears.__new__(talk.Ears)
+    e.ready = None
+    assert e.pause_s(1.0) == 1.0
+    e.ready = talk.Ready("Fine.", "Harry", "answer", 0.9, say_at=_time.time() + 0.3, made_at=_time.time())
+    assert 0.2 < e.pause_s(1.0) <= 0.3
+    e.ready.say_at = _time.time() - 2  # written after its moment: said at once
+    assert e.pause_s(1.0) == 0.05

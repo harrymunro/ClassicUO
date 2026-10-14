@@ -1,0 +1,45 @@
+# A party for the player (cuo-cym.6): three companions for a character a person plays. The leader isn't one of
+# the agents: it is logged in and played by a person (here Roland, account life1), and the companions take
+# their cues from what their own clients see of it: they keep beside it, fight what attacks it or them, heal
+# it, call out, and take its orders to come along or to wait, said in its own words, from its speech and nobody
+# else's (system one reads each line: cuo-cym.15).
+# To play it: log the leader in yourself, stand near 1392,1528 (south of the Britain graveyard), then
+#   uv run uo-brain fleet fleets/party-player.toml --windowed
+# To check it without a person: scripts/party_player.py plays the leader's part with walks and attacks only
+# (it starts the leader's client, then this fleet), and says what the companions did; with --own-words it gives
+# its orders as a person might.
+# Local server only for the talk and the acknowledgements, as all talk.
+name = "party-player"
+server_port = 2593
+hours = 0.12
+headless = true
+party = true
+plan = "player"
+leader = "Roland"
+strategy = ""
+game_party = true   # the companions accept the leader's invitation to the game's own party
+talk = false
+
+[[agent]]
+name = "Isolde"
+account = "life2"
+password = "life2"
+port = 5662
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1394 1528", "[AgentKit mage", "[AgentSupplies bandages 40 gold 200"]
+
+[[agent]]
+name = "Wystan"
+account = "life3"
+password = "life3"
+port = 5663
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1390 1528", "[AgentKit archer", "[AgentSupplies bandages 100"]
+
+[[agent]]
+name = "Thea"
+account = "talk1"
+password = "talk1"
+port = 5664
+profile = "default"
+prep = ["[AgentReset", "[AgentGo 1392 1530", "[AgentKit tamer", "[AgentSupplies bandages 100"]

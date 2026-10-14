@@ -88,7 +88,11 @@ namespace ClassicUO.Agent
             );
 
             // Only server text and our own lines may move agent state; anyone nearby can say anything.
-            if (!agent && (e.TextType == TextType.SYSTEM || e.Parent == null || e.Parent == _world.Player))
+            // Party, guild and alliance chat comes with no speaker object, as server text does, and is
+            // what another player typed.
+            bool chat = e.Type == MessageType.Party || e.Type == MessageType.Guild || e.Type == MessageType.Alliance;
+
+            if (!agent && !chat && (e.TextType == TextType.SYSTEM || e.Parent == null || e.Parent == _world.Player))
             {
                 _world.Agent?.OnMessage(e.Text);
             }

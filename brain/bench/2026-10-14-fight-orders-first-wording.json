@@ -1,0 +1,815 @@
+{
+ "started": "2026-10-14T00:53:56",
+ "cut": 0.6,
+ "target_cut": 0.5,
+ "whom_cut": 0.5,
+ "lines": {
+  "first": 51
+ },
+ "models": {
+  "jev": {
+   "first": {
+    "right": 145,
+    "of": 153,
+    "pct": 94.8,
+    "by_group": {
+     "attack": "43/45",
+     "fall back": "24/24",
+     "heal": "12/12",
+     "stays what it is": "66/72"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 8,
+    "one_kind_for_another": 0,
+    "wrong_creature": 0,
+    "attack_with_no_creature_told": 0,
+    "wrong_one_to_heal": 0,
+    "wrong": [
+     {
+      "scene": "graveyard",
+      "group": "attack",
+      "line": "Isolde, the bone knight!",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "attack",
+       "bone knight"
+      ],
+      "fight": {
+       "attack": 0.65,
+       "fall_back": 0.0,
+       "heal": 0.01,
+       "none": 0.34
+      },
+      "target": {
+       "bone knight": 0.99
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "attack",
+      "line": "Isolde, the bone knight!",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "attack",
+       "bone knight"
+      ],
+      "fight": {
+       "attack": 0.66,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.34
+      },
+      "target": {
+       "bone knight": 0.98
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Isolde",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.0,
+       "fall_back": 0.74,
+       "heal": 0.0,
+       "none": 0.26
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Wystan",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.02,
+       "fall_back": 0.63,
+       "heal": 0.0,
+       "none": 0.35
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Thea",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.01,
+       "fall_back": 0.69,
+       "heal": 0.0,
+       "none": 0.3
+      }
+     },
+     {
+      "scene": "orcs",
+      "group": "stays what it is",
+      "line": "Let's take them.",
+      "who": "Isolde",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.61,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.39
+      },
+      "target": {
+       "orc": 0.34,
+       "unclear": 0.64
+      }
+     },
+     {
+      "scene": "orcs",
+      "group": "stays what it is",
+      "line": "Let's take them.",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.73,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.27
+      },
+      "target": {
+       "orc": 0.33,
+       "unclear": 0.62
+      }
+     },
+     {
+      "scene": "orcs",
+      "group": "stays what it is",
+      "line": "Let's take them.",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.65,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.35
+      },
+      "target": {
+       "orc": 0.37,
+       "unclear": 0.62
+      }
+     }
+    ],
+    "cuts": {
+     "0.4/0.3": {
+      "right": 144,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.5": {
+      "right": 144,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.7": {
+      "right": 144,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.3": {
+      "right": 144,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.5": {
+      "right": 144,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.7": {
+      "right": 144,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.3": {
+      "right": 145,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 8,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.5": {
+      "right": 145,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 8,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.7": {
+      "right": 145,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 8,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.3": {
+      "right": 151,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 2,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.5": {
+      "right": 151,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 2,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.7": {
+      "right": 151,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 2,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.3": {
+      "right": 153,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.5": {
+      "right": 153,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.7": {
+      "right": 153,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     }
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 219,
+     "p90": 255
+    },
+    "cost_usd_a_line": 6.02e-05,
+    "input_tokens": 1397,
+    "errors": 0
+   }
+  },
+  "decision1": {
+   "first": {
+    "right": 138,
+    "of": 153,
+    "pct": 90.2,
+    "by_group": {
+     "attack": "42/45",
+     "fall back": "24/24",
+     "heal": "12/12",
+     "stays what it is": "60/72"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 12,
+    "one_kind_for_another": 0,
+    "wrong_creature": 2,
+    "attack_with_no_creature_told": 1,
+    "wrong_one_to_heal": 0,
+    "wrong": [
+     {
+      "scene": "graveyard",
+      "group": "attack",
+      "line": "Kill the mage first!",
+      "who": "Isolde",
+      "want": [
+       "attack",
+       "mage"
+      ],
+      "got": [
+       "attack",
+       "lich"
+      ],
+      "fight": {
+       "attack": 0.999,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.0
+      },
+      "target": {
+       "lich": 0.848,
+       "mage": 0.13
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "attack",
+      "line": "Kill the mage first!",
+      "who": "Wystan",
+      "want": [
+       "attack",
+       "mage"
+      ],
+      "got": [
+       "attack",
+       "lich"
+      ],
+      "fight": {
+       "attack": 0.999,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.0
+      },
+      "target": {
+       "lich": 0.6,
+       "mage": 0.364
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "attack",
+      "line": "Thea, send the bear at the lich",
+      "who": "Thea",
+      "want": [
+       "attack",
+       "lich"
+      ],
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.998,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.001
+      },
+      "target": {
+       "lich": 0.331,
+       "unclear": 0.618
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Isolde",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.013,
+       "fall_back": 0.691,
+       "heal": 0.008,
+       "none": 0.288
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Wystan",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.009,
+       "fall_back": 0.719,
+       "heal": 0.007,
+       "none": 0.265
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Thea",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.007,
+       "fall_back": 0.746,
+       "heal": 0.005,
+       "none": 0.242
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Heal thyself, as they say.",
+      "who": "Isolde",
+      "want": null,
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.003,
+       "fall_back": 0.002,
+       "heal": 0.863,
+       "none": 0.132
+      },
+      "whom_p": 0.998
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Heal thyself, as they say.",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.003,
+       "fall_back": 0.002,
+       "heal": 0.831,
+       "none": 0.164
+      },
+      "whom_p": 0.998
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Heal thyself, as they say.",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "heal",
+       null
+      ],
+      "fight": {
+       "attack": 0.001,
+       "fall_back": 0.001,
+       "heal": 0.98,
+       "none": 0.018
+      },
+      "whom_p": 0.998
+     },
+     {
+      "scene": "ogre",
+      "group": "stays what it is",
+      "line": "Get off me, you brute!",
+      "who": "Isolde",
+      "want": null,
+      "got": [
+       "attack",
+       "ogre"
+      ],
+      "fight": {
+       "attack": 0.867,
+       "fall_back": 0.026,
+       "heal": 0.003,
+       "none": 0.104
+      },
+      "target": {
+       "ogre": 0.984
+      }
+     },
+     {
+      "scene": "ogre",
+      "group": "stays what it is",
+      "line": "Get off me, you brute!",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "attack",
+       "ogre"
+      ],
+      "fight": {
+       "attack": 0.874,
+       "fall_back": 0.03,
+       "heal": 0.004,
+       "none": 0.092
+      },
+      "target": {
+       "ogre": 0.99
+      }
+     },
+     {
+      "scene": "ogre",
+      "group": "stays what it is",
+      "line": "Get off me, you brute!",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "attack",
+       "ogre"
+      ],
+      "fight": {
+       "attack": 0.86,
+       "fall_back": 0.02,
+       "heal": 0.004,
+       "none": 0.116
+      },
+      "target": {
+       "ogre": 0.984
+      }
+     },
+     {
+      "scene": "ogre",
+      "group": "stays what it is",
+      "line": "Ogre's mine, you lot keep out of it.",
+      "who": "Isolde",
+      "want": null,
+      "got": [
+       "attack",
+       "ogre"
+      ],
+      "fight": {
+       "attack": 0.973,
+       "fall_back": 0.011,
+       "heal": 0.001,
+       "none": 0.016
+      },
+      "target": {
+       "ogre": 0.982
+      }
+     },
+     {
+      "scene": "ogre",
+      "group": "stays what it is",
+      "line": "Ogre's mine, you lot keep out of it.",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "attack",
+       "ogre"
+      ],
+      "fight": {
+       "attack": 0.974,
+       "fall_back": 0.01,
+       "heal": 0.001,
+       "none": 0.016
+      },
+      "target": {
+       "ogre": 0.992
+      }
+     },
+     {
+      "scene": "ogre",
+      "group": "stays what it is",
+      "line": "Ogre's mine, you lot keep out of it.",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "attack",
+       "ogre"
+      ],
+      "fight": {
+       "attack": 0.941,
+       "fall_back": 0.025,
+       "heal": 0.002,
+       "none": 0.032
+      },
+      "target": {
+       "ogre": 0.988
+      }
+     }
+    ],
+    "cuts": {
+     "0.4/0.3": {
+      "right": 138,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.5": {
+      "right": 138,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.7": {
+      "right": 136,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 4,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.3": {
+      "right": 138,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.5": {
+      "right": 138,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.7": {
+      "right": 136,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 4,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.3": {
+      "right": 138,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.5": {
+      "right": 138,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.7": {
+      "right": 136,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 12,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 4,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.3": {
+      "right": 139,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 11,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.5": {
+      "right": 139,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 11,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.7": {
+      "right": 137,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 11,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 4,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.3": {
+      "right": 141,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.5": {
+      "right": 141,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 2,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.7": {
+      "right": 139,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 9,
+      "one_kind_for_another": 0,
+      "wrong_creature": 1,
+      "attack_with_no_creature_told": 4,
+      "wrong_one_to_heal": 0
+     }
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 323,
+     "p90": 386
+    },
+    "cost_usd_a_line": 4.17e-05,
+    "input_tokens": 974,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.015592,
+  "cost_per_hour_usd": 2.8967,
+  "calls": 329,
+  "by_role": {
+   "system1": 0.015592
+  },
+  "by_kind": {
+   "order": {
+    "calls": 329,
+    "input_tokens": 371246,
+    "output_tokens": 16963,
+    "cost_usd": 0.015592,
+    "latency_ms_avg": 277.4
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 163,
+    "input_tokens": 219260,
+    "output_tokens": 16644,
+    "cost_usd": 0.009209,
+    "latency_ms_avg": 225.3
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 166,
+    "input_tokens": 151986,
+    "output_tokens": 319,
+    "cost_usd": 0.006383,
+    "latency_ms_avg": 328.5
+   }
+  }
+ }
+}

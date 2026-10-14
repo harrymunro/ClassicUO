@@ -1,0 +1,1925 @@
+{
+ "started": "2026-10-13T22:58:07",
+ "which_cut": 0.25,
+ "set_cut": 0.6,
+ "lines": {
+  "first": 57,
+  "second": 52
+ },
+ "models": {
+  "decision1": {
+   "first": {
+    "right": 171,
+    "of": 171,
+    "pct": 100.0,
+    "by_group": {
+     "looting": "27/27",
+     "fleeing": "9/9",
+     "aggression": "6/6",
+     "target": "9/9",
+     "spell": "6/6",
+     "helping": "9/9",
+     "raising": "6/6",
+     "callouts": "6/6",
+     "talk": "12/12",
+     "distance": "6/6",
+     "reach": "6/6",
+     "several": "6/6",
+     "after a change": "15/15",
+     "none": "48/48"
+    },
+    "missed_not_named": 0,
+    "missed_left_as_it_was": 0,
+    "changes_nobody_asked_for": 0,
+    "wrong_values": 0,
+    "also_read_as_an_order": 3,
+    "wrong": [],
+    "by_cut": {
+     "0.15/0.5": {
+      "right": 169,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 2,
+      "wrong_values": 0
+     },
+     "0.15/0.6": {
+      "right": 169,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 2,
+      "wrong_values": 0
+     },
+     "0.15/0.7": {
+      "right": 169,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 2,
+      "wrong_values": 0
+     },
+     "0.2/0.5": {
+      "right": 170,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 1,
+      "wrong_values": 0
+     },
+     "0.2/0.6": {
+      "right": 170,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 1,
+      "wrong_values": 0
+     },
+     "0.2/0.7": {
+      "right": 170,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 1,
+      "wrong_values": 0
+     },
+     "0.25/0.5": {
+      "right": 171,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.25/0.6": {
+      "right": 171,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.25/0.7": {
+      "right": 171,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.3/0.5": {
+      "right": 171,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.3/0.6": {
+      "right": 171,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.3/0.7": {
+      "right": 171,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.4/0.5": {
+      "right": 168,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.4/0.6": {
+      "right": 168,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.4/0.7": {
+      "right": 168,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     }
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "the_first_step": 328,
+     "the_settings": 282
+    },
+    "cost_usd": {
+     "the_first_step_with_the_order": 5.57e-05,
+     "the_settings": 1.38e-05
+    },
+    "readings_that_went_on_to_the_settings": 111,
+    "errors": 0
+   },
+   "second": {
+    "right": 134,
+    "of": 156,
+    "pct": 85.9,
+    "by_group": {
+     "looting": "21/21",
+     "fleeing": "9/12",
+     "aggression": "6/9",
+     "target": "12/12",
+     "spell": "5/6",
+     "helping": "9/9",
+     "raising": "6/6",
+     "callouts": "6/6",
+     "talk": "12/15",
+     "distance": "6/6",
+     "reach": "6/6",
+     "several": "6/6",
+     "none": "30/42"
+    },
+    "missed_not_named": 3,
+    "missed_left_as_it_was": 0,
+    "changes_nobody_asked_for": 19,
+    "wrong_values": 3,
+    "also_read_as_an_order": 3,
+    "wrong": [
+     {
+      "group": "fleeing",
+      "line": "we fight to the death here",
+      "who": "Isolde",
+      "want": {
+       "fleeing": "never"
+      },
+      "got": {
+       "aggression": "relentless",
+       "fleeing": "never"
+      },
+      "which": {
+       "aggression": 0.508,
+       "fleeing": 0.449
+      },
+      "picks": {
+       "aggression": {
+        "choice": "relentless",
+        "p": 0.998
+       },
+       "fleeing": {
+        "choice": "never",
+        "p": 0.957
+       }
+      }
+     },
+     {
+      "group": "fleeing",
+      "line": "we fight to the death here",
+      "who": "Wystan",
+      "want": {
+       "fleeing": "never"
+      },
+      "got": {
+       "aggression": "relentless",
+       "fleeing": "never"
+      },
+      "which": {
+       "aggression": 0.451,
+       "fleeing": 0.511
+      },
+      "picks": {
+       "aggression": {
+        "choice": "relentless",
+        "p": 0.998
+       },
+       "fleeing": {
+        "choice": "never",
+        "p": 0.959
+       }
+      }
+     },
+     {
+      "group": "fleeing",
+      "line": "we fight to the death here",
+      "who": "Thea",
+      "want": {
+       "fleeing": "never"
+      },
+      "got": {
+       "aggression": "relentless",
+       "fleeing": "never"
+      },
+      "which": {
+       "aggression": 0.448,
+       "fleeing": 0.508
+      },
+      "picks": {
+       "aggression": {
+        "choice": "relentless",
+        "p": 0.998
+       },
+       "fleeing": {
+        "choice": "never",
+        "p": 0.959
+       }
+      }
+     },
+     {
+      "group": "aggression",
+      "line": "be careful in there, pull back early",
+      "who": "Isolde",
+      "want": {
+       "aggression": "cautious"
+      },
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "aggression": 0.053,
+       "fleeing": 0.941
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 0.999
+       }
+      }
+     },
+     {
+      "group": "aggression",
+      "line": "be careful in there, pull back early",
+      "who": "Wystan",
+      "want": {
+       "aggression": "cautious"
+      },
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "aggression": 0.163,
+       "fleeing": 0.829
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.998
+       },
+       "fleeing": {
+        "choice": "allowed",
+        "p": 0.998
+       }
+      }
+     },
+     {
+      "group": "aggression",
+      "line": "be careful in there, pull back early",
+      "who": "Thea",
+      "want": {
+       "aggression": "cautious"
+      },
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "aggression": 0.075,
+       "fleeing": 0.917
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 0.999
+       }
+      }
+     },
+     {
+      "group": "spell",
+      "line": "Isolde, just Fireball them once it's started.",
+      "who": "Isolde",
+      "want": {
+       "main_spell": "Fireball"
+      },
+      "got": {
+       "main_spell": "Fireball",
+       "opening_spell": "Fireball"
+      },
+      "which": {
+       "main_spell": 0.52,
+       "opening_spell": 0.459
+      },
+      "picks": {
+       "main_spell": {
+        "choice": "Fireball",
+        "p": 0.997
+       },
+       "opening_spell": {
+        "choice": "Fireball",
+        "p": 0.836
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "only speak when I ask you something",
+      "who": "Isolde",
+      "want": {
+       "talk": "answers"
+      },
+      "got": {
+       "talk": "silent"
+      },
+      "which": {
+       "talk": 0.997
+      },
+      "picks": {
+       "talk": {
+        "choice": "silent",
+        "p": 0.903
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "only speak when I ask you something",
+      "who": "Wystan",
+      "want": {
+       "talk": "answers"
+      },
+      "got": {
+       "talk": "silent"
+      },
+      "which": {
+       "talk": 0.997
+      },
+      "picks": {
+       "talk": {
+        "choice": "silent",
+        "p": 0.951
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "only speak when I ask you something",
+      "who": "Thea",
+      "want": {
+       "talk": "answers"
+      },
+      "got": {
+       "talk": "silent"
+      },
+      "which": {
+       "talk": 0.998
+      },
+      "picks": {
+       "talk": {
+        "choice": "silent",
+        "p": 0.913
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "run for it!",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "fleeing": 0.985
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 0.999
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "run for it!",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "fleeing": 0.969
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 1.0
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "run for it!",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "fleeing": 0.969
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 1.0
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I always go for the biggest one",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "target": "strongest_first"
+      },
+      "which": {
+       "target": 0.958
+      },
+      "picks": {
+       "target": {
+        "choice": "strongest_first",
+        "p": 0.996
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I always go for the biggest one",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "target": "strongest_first"
+      },
+      "which": {
+       "none": 0.053,
+       "target": 0.94
+      },
+      "picks": {
+       "target": {
+        "choice": "strongest_first",
+        "p": 0.996
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I always go for the biggest one",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "target": "strongest_first"
+      },
+      "which": {
+       "none": 0.06,
+       "target": 0.934
+      },
+      "picks": {
+       "target": {
+        "choice": "strongest_first",
+        "p": 0.996
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "heal pls",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "helping": "on"
+      },
+      "which": {
+       "helping": 0.267,
+       "none": 0.727
+      },
+      "picks": {
+       "helping": {
+        "choice": "on",
+        "p": 0.954
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "heal pls",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "helping": "on"
+      },
+      "which": {
+       "helping": 0.293,
+       "none": 0.704
+      },
+      "picks": {
+       "helping": {
+        "choice": "on",
+        "p": 0.943
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "heal pls",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "helping": "on"
+      },
+      "which": {
+       "helping": 0.294,
+       "none": 0.704
+      },
+      "picks": {
+       "helping": {
+        "choice": "on",
+        "p": 0.944
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "nice and safe, that one",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "aggression": "cautious"
+      },
+      "which": {
+       "aggression": 0.573,
+       "none": 0.394
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.887
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "nice and safe, that one",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "aggression": "cautious"
+      },
+      "which": {
+       "aggression": 0.454,
+       "none": 0.514
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.909
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "nice and safe, that one",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "aggression": "cautious"
+      },
+      "which": {
+       "aggression": 0.452,
+       "none": 0.512
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.918
+       }
+      }
+     }
+    ],
+    "by_cut": {
+     "0.15/0.5": {
+      "right": 133,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 20,
+      "wrong_values": 3
+     },
+     "0.15/0.6": {
+      "right": 133,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 20,
+      "wrong_values": 3
+     },
+     "0.15/0.7": {
+      "right": 133,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 1,
+      "changes_nobody_asked_for": 19,
+      "wrong_values": 3
+     },
+     "0.2/0.5": {
+      "right": 133,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 20,
+      "wrong_values": 3
+     },
+     "0.2/0.6": {
+      "right": 133,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 20,
+      "wrong_values": 3
+     },
+     "0.2/0.7": {
+      "right": 133,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 1,
+      "changes_nobody_asked_for": 19,
+      "wrong_values": 3
+     },
+     "0.25/0.5": {
+      "right": 134,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 19,
+      "wrong_values": 3
+     },
+     "0.25/0.6": {
+      "right": 134,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 19,
+      "wrong_values": 3
+     },
+     "0.25/0.7": {
+      "right": 133,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 1,
+      "changes_nobody_asked_for": 19,
+      "wrong_values": 3
+     },
+     "0.3/0.5": {
+      "right": 136,
+      "missed_not_named": 4,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 3
+     },
+     "0.3/0.6": {
+      "right": 136,
+      "missed_not_named": 4,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 3
+     },
+     "0.3/0.7": {
+      "right": 135,
+      "missed_not_named": 4,
+      "missed_left_as_it_was": 1,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 3
+     },
+     "0.4/0.5": {
+      "right": 135,
+      "missed_not_named": 5,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 3
+     },
+     "0.4/0.6": {
+      "right": 135,
+      "missed_not_named": 5,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 3
+     },
+     "0.4/0.7": {
+      "right": 134,
+      "missed_not_named": 5,
+      "missed_left_as_it_was": 1,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 3
+     }
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "the_first_step": 324,
+     "the_settings": 288
+    },
+    "cost_usd": {
+     "the_first_step_with_the_order": 5.56e-05,
+     "the_settings": 1.37e-05
+    },
+    "readings_that_went_on_to_the_settings": 114,
+    "errors": 0
+   }
+  },
+  "jev": {
+   "first": {
+    "right": 154,
+    "of": 171,
+    "pct": 90.1,
+    "by_group": {
+     "looting": "25/27",
+     "fleeing": "9/9",
+     "aggression": "6/6",
+     "target": "9/9",
+     "spell": "6/6",
+     "helping": "9/9",
+     "raising": "3/6",
+     "callouts": "6/6",
+     "talk": "9/12",
+     "distance": "6/6",
+     "reach": "6/6",
+     "several": "2/6",
+     "after a change": "15/15",
+     "none": "43/48"
+    },
+    "missed_not_named": 1,
+    "missed_left_as_it_was": 9,
+    "changes_nobody_asked_for": 7,
+    "wrong_values": 0,
+    "also_read_as_an_order": 4,
+    "wrong": [
+     {
+      "group": "looting",
+      "line": "Help yourselves to whatever they drop.",
+      "who": "Wystan",
+      "want": {
+       "looting": [
+        "valuables",
+        "everything"
+       ]
+      },
+      "got": {},
+      "which": {
+       "looting": 1.0
+      },
+      "picks": {
+       "looting": {
+        "choice": "everything",
+        "p": 0.49
+       }
+      }
+     },
+     {
+      "group": "looting",
+      "line": "Help yourselves to whatever they drop.",
+      "who": "Thea",
+      "want": {
+       "looting": [
+        "valuables",
+        "everything"
+       ]
+      },
+      "got": {},
+      "which": {
+       "looting": 1.0
+      },
+      "picks": {
+       "looting": {
+        "choice": "everything",
+        "p": 0.59
+       }
+      }
+     },
+     {
+      "group": "raising",
+      "line": "If someone drops, get them back up.",
+      "who": "Isolde",
+      "want": {
+       "raising": "on"
+      },
+      "got": {},
+      "which": {
+       "raising": 0.99
+      },
+      "picks": {
+       "raising": {
+        "choice": "on",
+        "p": 0.49
+       }
+      }
+     },
+     {
+      "group": "raising",
+      "line": "If someone drops, get them back up.",
+      "who": "Wystan",
+      "want": {
+       "raising": "on"
+      },
+      "got": {},
+      "which": {
+       "raising": 0.99
+      },
+      "picks": {
+       "raising": {
+        "choice": "off",
+        "p": 0.48
+       }
+      }
+     },
+     {
+      "group": "raising",
+      "line": "If someone drops, get them back up.",
+      "who": "Thea",
+      "want": {
+       "raising": "on"
+      },
+      "got": {},
+      "which": {
+       "raising": 0.99
+      },
+      "picks": {
+       "raising": {
+        "choice": "on",
+        "p": 0.49
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "You can talk again.",
+      "who": "Isolde",
+      "want": {
+       "talk": [
+        "chatty",
+        "answers"
+       ]
+      },
+      "got": {},
+      "which": {
+       "talk": 1.0
+      },
+      "picks": {
+       "talk": {
+        "choice": "answers",
+        "p": 0.56
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "You can talk again.",
+      "who": "Wystan",
+      "want": {
+       "talk": [
+        "chatty",
+        "answers"
+       ]
+      },
+      "got": {},
+      "which": {
+       "talk": 1.0
+      },
+      "picks": {
+       "talk": {
+        "choice": "chatty",
+        "p": 0.53
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "You can talk again.",
+      "who": "Thea",
+      "want": {
+       "talk": [
+        "chatty",
+        "answers"
+       ]
+      },
+      "got": {},
+      "which": {
+       "talk": 1.0
+      },
+      "picks": {
+       "talk": {
+        "choice": "chatty",
+        "p": 0.53
+       }
+      }
+     },
+     {
+      "group": "several",
+      "line": "Loot what you like, and no running.",
+      "who": "Thea",
+      "want": {
+       "looting": [
+        "valuables",
+        "everything"
+       ],
+       "fleeing": "never"
+      },
+      "got": {
+       "fleeing": "never"
+      },
+      "which": {
+       "looting": 0.6,
+       "fleeing": 0.39
+      },
+      "picks": {
+       "looting": {
+        "choice": "valuables",
+        "p": 0.54
+       },
+       "fleeing": {
+        "choice": "never",
+        "p": 1.0
+       }
+      }
+     },
+     {
+      "group": "several",
+      "line": "Isolde, open with Explosion and leave the loot.",
+      "who": "Isolde",
+      "want": {
+       "opening_spell": "Explosion",
+       "looting": "nothing"
+      },
+      "got": {
+       "opening_spell": "Explosion"
+      },
+      "which": {
+       "opening_spell": 0.97
+      },
+      "picks": {
+       "opening_spell": {
+        "choice": "Explosion",
+        "p": 0.99
+       }
+      }
+     },
+     {
+      "group": "several",
+      "line": "Isolde, open with Explosion and leave the loot.",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "looting": "nothing"
+      },
+      "which": {
+       "looting": 0.38,
+       "none": 0.61
+      },
+      "picks": {
+       "looting": {
+        "choice": "nothing",
+        "p": 0.87
+       }
+      }
+     },
+     {
+      "group": "several",
+      "line": "Isolde, open with Explosion and leave the loot.",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "looting": "nothing"
+      },
+      "which": {
+       "looting": 0.25,
+       "none": 0.74
+      },
+      "picks": {
+       "looting": {
+        "choice": "nothing",
+        "p": 0.8
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I never run from a fight, me.",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "fleeing": "never"
+      },
+      "which": {
+       "fleeing": 0.3,
+       "none": 0.7
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "never",
+        "p": 0.93
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I never run from a fight, me.",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "fleeing": "never"
+      },
+      "which": {
+       "fleeing": 0.28,
+       "none": 0.72
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "never",
+        "p": 0.97
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "The weakest ones always die first.",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "target": "weakest_first"
+      },
+      "which": {
+       "target": 0.25,
+       "none": 0.75
+      },
+      "picks": {
+       "target": {
+        "choice": "weakest_first",
+        "p": 0.69
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "The weakest ones always die first.",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "target": "weakest_first"
+      },
+      "which": {
+       "target": 0.27,
+       "none": 0.73
+      },
+      "picks": {
+       "target": {
+        "choice": "weakest_first",
+        "p": 0.72
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "The weakest ones always die first.",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "target": "weakest_first"
+      },
+      "which": {
+       "target": 0.25,
+       "none": 0.75
+      },
+      "picks": {
+       "target": {
+        "choice": "weakest_first",
+        "p": 0.63
+       }
+      }
+     }
+    ],
+    "by_cut": {
+     "0.15/0.5": {
+      "right": 156,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 4,
+      "changes_nobody_asked_for": 10,
+      "wrong_values": 0
+     },
+     "0.15/0.6": {
+      "right": 153,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 9,
+      "changes_nobody_asked_for": 8,
+      "wrong_values": 0
+     },
+     "0.15/0.7": {
+      "right": 153,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 11,
+      "changes_nobody_asked_for": 6,
+      "wrong_values": 0
+     },
+     "0.2/0.5": {
+      "right": 158,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 4,
+      "changes_nobody_asked_for": 8,
+      "wrong_values": 0
+     },
+     "0.2/0.6": {
+      "right": 154,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 9,
+      "changes_nobody_asked_for": 7,
+      "wrong_values": 0
+     },
+     "0.2/0.7": {
+      "right": 154,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 11,
+      "changes_nobody_asked_for": 5,
+      "wrong_values": 0
+     },
+     "0.25/0.5": {
+      "right": 158,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 4,
+      "changes_nobody_asked_for": 8,
+      "wrong_values": 0
+     },
+     "0.25/0.6": {
+      "right": 154,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 9,
+      "changes_nobody_asked_for": 7,
+      "wrong_values": 0
+     },
+     "0.25/0.7": {
+      "right": 154,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 11,
+      "changes_nobody_asked_for": 5,
+      "wrong_values": 0
+     },
+     "0.3/0.5": {
+      "right": 162,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 4,
+      "changes_nobody_asked_for": 3,
+      "wrong_values": 0
+     },
+     "0.3/0.6": {
+      "right": 158,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 9,
+      "changes_nobody_asked_for": 2,
+      "wrong_values": 0
+     },
+     "0.3/0.7": {
+      "right": 157,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 11,
+      "changes_nobody_asked_for": 2,
+      "wrong_values": 0
+     },
+     "0.4/0.5": {
+      "right": 163,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 4,
+      "changes_nobody_asked_for": 1,
+      "wrong_values": 0
+     },
+     "0.4/0.6": {
+      "right": 160,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 9,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     },
+     "0.4/0.7": {
+      "right": 159,
+      "missed_not_named": 3,
+      "missed_left_as_it_was": 11,
+      "changes_nobody_asked_for": 0,
+      "wrong_values": 0
+     }
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "the_first_step": 222,
+     "the_settings": 214
+    },
+    "cost_usd": {
+     "the_first_step_with_the_order": 7.53e-05,
+     "the_settings": 2.78e-05
+    },
+    "readings_that_went_on_to_the_settings": 124,
+    "errors": 0
+   },
+   "second": {
+    "right": 132,
+    "of": 156,
+    "pct": 84.6,
+    "by_group": {
+     "looting": "18/21",
+     "fleeing": "12/12",
+     "aggression": "9/9",
+     "target": "12/12",
+     "spell": "6/6",
+     "helping": "9/9",
+     "raising": "6/6",
+     "callouts": "6/6",
+     "talk": "10/15",
+     "distance": "6/6",
+     "reach": "4/6",
+     "several": "5/6",
+     "none": "29/42"
+    },
+    "missed_not_named": 1,
+    "missed_left_as_it_was": 8,
+    "changes_nobody_asked_for": 15,
+    "wrong_values": 0,
+    "also_read_as_an_order": 9,
+    "wrong": [
+     {
+      "group": "looting",
+      "line": "go on, grab the loot",
+      "who": "Isolde",
+      "want": {
+       "looting": [
+        "valuables",
+        "everything"
+       ]
+      },
+      "got": {},
+      "which": {
+       "looting": 0.98
+      },
+      "picks": {
+       "looting": {
+        "choice": "everything",
+        "p": 0.53
+       }
+      }
+     },
+     {
+      "group": "looting",
+      "line": "go on, grab the loot",
+      "who": "Wystan",
+      "want": {
+       "looting": [
+        "valuables",
+        "everything"
+       ]
+      },
+      "got": {},
+      "which": {
+       "looting": 0.99
+      },
+      "picks": {
+       "looting": {
+        "choice": "valuables",
+        "p": 0.56
+       }
+      }
+     },
+     {
+      "group": "looting",
+      "line": "go on, grab the loot",
+      "who": "Thea",
+      "want": {
+       "looting": [
+        "valuables",
+        "everything"
+       ]
+      },
+      "got": {},
+      "which": {
+       "looting": 0.99
+      },
+      "picks": {
+       "looting": {
+        "choice": "valuables",
+        "p": 0.5
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "enough talking",
+      "who": "Isolde",
+      "want": {
+       "talk": [
+        "silent",
+        "answers"
+       ]
+      },
+      "got": {},
+      "which": {
+       "talk": 0.96
+      },
+      "picks": {
+       "talk": {
+        "choice": "silent",
+        "p": 0.5
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "enough talking",
+      "who": "Wystan",
+      "want": {
+       "talk": [
+        "silent",
+        "answers"
+       ]
+      },
+      "got": {},
+      "which": {
+       "talk": 0.96
+      },
+      "picks": {
+       "talk": {
+        "choice": "silent",
+        "p": 0.5
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "enough talking",
+      "who": "Thea",
+      "want": {
+       "talk": [
+        "silent",
+        "answers"
+       ]
+      },
+      "got": {},
+      "which": {
+       "talk": 0.97
+      },
+      "picks": {
+       "talk": {
+        "choice": "silent",
+        "p": 0.55
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "only speak when I ask you something",
+      "who": "Isolde",
+      "want": {
+       "talk": "answers"
+      },
+      "got": {},
+      "which": {
+       "talk": 1.0
+      },
+      "picks": {
+       "talk": {
+        "choice": "answers",
+        "p": 0.58
+       }
+      }
+     },
+     {
+      "group": "talk",
+      "line": "only speak when I ask you something",
+      "who": "Thea",
+      "want": {
+       "talk": "answers"
+      },
+      "got": {},
+      "which": {
+       "talk": 1.0
+      },
+      "picks": {
+       "talk": {
+        "choice": "answers",
+        "p": 0.59
+       }
+      }
+     },
+     {
+      "group": "reach",
+      "line": "clear this whole place out",
+      "who": "Isolde",
+      "want": {
+       "reach": "wide"
+      },
+      "got": {
+       "aggression": "relentless",
+       "reach": "wide"
+      },
+      "which": {
+       "aggression": 0.3,
+       "reach": 0.65
+      },
+      "picks": {
+       "aggression": {
+        "choice": "relentless",
+        "p": 0.66
+       },
+       "reach": {
+        "choice": "wide",
+        "p": 0.91
+       }
+      }
+     },
+     {
+      "group": "reach",
+      "line": "clear this whole place out",
+      "who": "Thea",
+      "want": {
+       "reach": "wide"
+      },
+      "got": {
+       "aggression": "relentless",
+       "reach": "wide"
+      },
+      "which": {
+       "aggression": 0.38,
+       "reach": 0.55,
+       "none": 0.05
+      },
+      "picks": {
+       "aggression": {
+        "choice": "relentless",
+        "p": 0.65
+       },
+       "reach": {
+        "choice": "wide",
+        "p": 0.9
+       }
+      }
+     },
+     {
+      "group": "several",
+      "line": "No looting and no running, understood?",
+      "who": "Isolde",
+      "want": {
+       "looting": "nothing",
+       "fleeing": "never"
+      },
+      "got": {
+       "looting": "nothing"
+      },
+      "which": {
+       "looting": 0.77,
+       "fleeing": 0.22
+      },
+      "picks": {
+       "looting": {
+        "choice": "nothing",
+        "p": 1.0
+       },
+       "fleeing": {
+        "choice": "never",
+        "p": 1.0
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "Wystan never shuts up, does he",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "talk": "answers"
+      },
+      "which": {
+       "talk": 0.7,
+       "none": 0.3
+      },
+      "picks": {
+       "talk": {
+        "choice": "answers",
+        "p": 0.67
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "run for it!",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "fleeing": 0.98
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 0.99
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "run for it!",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "fleeing": 0.98
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 0.99
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "run for it!",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "fleeing": "allowed"
+      },
+      "which": {
+       "fleeing": 0.97
+      },
+      "picks": {
+       "fleeing": {
+        "choice": "allowed",
+        "p": 1.0
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I always go for the biggest one",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "target": "strongest_first"
+      },
+      "which": {
+       "target": 0.78,
+       "none": 0.21
+      },
+      "picks": {
+       "target": {
+        "choice": "strongest_first",
+        "p": 0.77
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I always go for the biggest one",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "target": "strongest_first"
+      },
+      "which": {
+       "target": 0.89,
+       "none": 0.11
+      },
+      "picks": {
+       "target": {
+        "choice": "strongest_first",
+        "p": 0.82
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "I always go for the biggest one",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "target": "strongest_first"
+      },
+      "which": {
+       "target": 0.85,
+       "none": 0.15
+      },
+      "picks": {
+       "target": {
+        "choice": "strongest_first",
+        "p": 0.73
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "heal pls",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "helping": "on"
+      },
+      "which": {
+       "helping": 0.64,
+       "none": 0.34
+      },
+      "picks": {
+       "helping": {
+        "choice": "on",
+        "p": 0.88
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "heal pls",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "helping": "on"
+      },
+      "which": {
+       "helping": 0.68,
+       "none": 0.32
+      },
+      "picks": {
+       "helping": {
+        "choice": "on",
+        "p": 0.81
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "heal pls",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "helping": "on"
+      },
+      "which": {
+       "helping": 0.67,
+       "none": 0.33
+      },
+      "picks": {
+       "helping": {
+        "choice": "on",
+        "p": 0.86
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "nice and safe, that one",
+      "who": "Isolde",
+      "want": {},
+      "got": {
+       "aggression": "cautious"
+      },
+      "which": {
+       "aggression": 0.41,
+       "none": 0.55
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.75
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "nice and safe, that one",
+      "who": "Wystan",
+      "want": {},
+      "got": {
+       "aggression": "cautious"
+      },
+      "which": {
+       "aggression": 0.45,
+       "distance": 0.08,
+       "none": 0.47
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.77
+       }
+      }
+     },
+     {
+      "group": "none",
+      "line": "nice and safe, that one",
+      "who": "Thea",
+      "want": {},
+      "got": {
+       "aggression": "cautious"
+      },
+      "which": {
+       "aggression": 0.44,
+       "distance": 0.06,
+       "none": 0.5
+      },
+      "picks": {
+       "aggression": {
+        "choice": "cautious",
+        "p": 0.76
+       }
+      }
+     }
+    ],
+    "by_cut": {
+     "0.15/0.5": {
+      "right": 136,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 20,
+      "wrong_values": 0
+     },
+     "0.15/0.6": {
+      "right": 130,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 8,
+      "changes_nobody_asked_for": 18,
+      "wrong_values": 0
+     },
+     "0.15/0.7": {
+      "right": 127,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 15,
+      "changes_nobody_asked_for": 14,
+      "wrong_values": 0
+     },
+     "0.2/0.5": {
+      "right": 138,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 18,
+      "wrong_values": 0
+     },
+     "0.2/0.6": {
+      "right": 132,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 8,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 0
+     },
+     "0.2/0.7": {
+      "right": 129,
+      "missed_not_named": 0,
+      "missed_left_as_it_was": 15,
+      "changes_nobody_asked_for": 12,
+      "wrong_values": 0
+     },
+     "0.25/0.5": {
+      "right": 139,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 0
+     },
+     "0.25/0.6": {
+      "right": 132,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 8,
+      "changes_nobody_asked_for": 15,
+      "wrong_values": 0
+     },
+     "0.25/0.7": {
+      "right": 128,
+      "missed_not_named": 1,
+      "missed_left_as_it_was": 15,
+      "changes_nobody_asked_for": 12,
+      "wrong_values": 0
+     },
+     "0.3/0.5": {
+      "right": 138,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 16,
+      "wrong_values": 0
+     },
+     "0.3/0.6": {
+      "right": 131,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 8,
+      "changes_nobody_asked_for": 15,
+      "wrong_values": 0
+     },
+     "0.3/0.7": {
+      "right": 127,
+      "missed_not_named": 2,
+      "missed_left_as_it_was": 15,
+      "changes_nobody_asked_for": 12,
+      "wrong_values": 0
+     },
+     "0.4/0.5": {
+      "right": 135,
+      "missed_not_named": 7,
+      "missed_left_as_it_was": 0,
+      "changes_nobody_asked_for": 14,
+      "wrong_values": 0
+     },
+     "0.4/0.6": {
+      "right": 128,
+      "missed_not_named": 7,
+      "missed_left_as_it_was": 8,
+      "changes_nobody_asked_for": 13,
+      "wrong_values": 0
+     },
+     "0.4/0.7": {
+      "right": 122,
+      "missed_not_named": 7,
+      "missed_left_as_it_was": 15,
+      "changes_nobody_asked_for": 12,
+      "wrong_values": 0
+     }
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "the_first_step": 221,
+     "the_settings": 213
+    },
+    "cost_usd": {
+     "the_first_step_with_the_order": 7.52e-05,
+     "the_settings": 2.72e-05
+    },
+    "readings_that_went_on_to_the_settings": 115,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.053351,
+  "cost_per_hour_usd": 3.021,
+  "calls": 1143,
+  "by_role": {
+   "system1": 0.053351
+  },
+  "by_kind": {
+   "order": {
+    "calls": 1143,
+    "input_tokens": 1270273,
+    "output_tokens": 65619,
+    "cost_usd": 0.053351,
+    "latency_ms_avg": 271.6
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 583,
+    "input_tokens": 759431,
+    "output_tokens": 64714,
+    "cost_usd": 0.031896,
+    "latency_ms_avg": 222.5
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 560,
+    "input_tokens": 510842,
+    "output_tokens": 905,
+    "cost_usd": 0.021455,
+    "latency_ms_avg": 322.8
+   }
+  }
+ }
+}

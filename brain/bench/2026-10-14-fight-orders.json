@@ -1,0 +1,511 @@
+{
+ "started": "2026-10-14T00:56:34",
+ "cut": 0.6,
+ "target_cut": 0.5,
+ "whom_cut": 0.5,
+ "lines": {
+  "first": 51
+ },
+ "models": {
+  "jev": {
+   "first": {
+    "right": 150,
+    "of": 153,
+    "pct": 98.0,
+    "by_group": {
+     "attack": "45/45",
+     "fall back": "24/24",
+     "heal": "12/12",
+     "stays what it is": "69/72"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 3,
+    "one_kind_for_another": 0,
+    "wrong_creature": 0,
+    "attack_with_no_creature_told": 0,
+    "wrong_one_to_heal": 0,
+    "wrong": [
+     {
+      "scene": "orcs",
+      "group": "stays what it is",
+      "line": "Let's take them.",
+      "who": "Isolde",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.73,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.27
+      },
+      "target": {
+       "orc": 0.13,
+       "unclear": 0.85
+      }
+     },
+     {
+      "scene": "orcs",
+      "group": "stays what it is",
+      "line": "Let's take them.",
+      "who": "Wystan",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.7,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.3
+      },
+      "target": {
+       "orc": 0.13,
+       "unclear": 0.85
+      }
+     },
+     {
+      "scene": "orcs",
+      "group": "stays what it is",
+      "line": "Let's take them.",
+      "who": "Thea",
+      "want": null,
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.71,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.29
+      },
+      "target": {
+       "orc": 0.21,
+       "unclear": 0.79
+      }
+     }
+    ],
+    "cuts": {
+     "0.4/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 2,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 4,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 2,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.3": {
+      "right": 150,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.5": {
+      "right": 150,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.7": {
+      "right": 148,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 2,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.3": {
+      "right": 150,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.5": {
+      "right": 150,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.7": {
+      "right": 148,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 2,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.3": {
+      "right": 153,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.5": {
+      "right": 153,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 0,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.7": {
+      "right": 151,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 0,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 2,
+      "wrong_one_to_heal": 0
+     }
+    },
+    "judge": "jev/openrouter",
+    "served_by": [
+     "typesafe/jev-1.13-20260917"
+    ],
+    "latency_ms": {
+     "median": 210,
+     "p90": 269
+    },
+    "cost_usd_a_line": 6.49e-05,
+    "input_tokens": 1510,
+    "errors": 0
+   }
+  },
+  "decision1": {
+   "first": {
+    "right": 149,
+    "of": 153,
+    "pct": 97.4,
+    "by_group": {
+     "attack": "44/45",
+     "fall back": "24/24",
+     "heal": "12/12",
+     "stays what it is": "69/72"
+    },
+    "orders_missed": 0,
+    "talk_taken_for_an_order": 3,
+    "one_kind_for_another": 0,
+    "wrong_creature": 0,
+    "attack_with_no_creature_told": 1,
+    "wrong_one_to_heal": 0,
+    "wrong": [
+     {
+      "scene": "graveyard",
+      "group": "attack",
+      "line": "Thea, send the bear at the lich",
+      "who": "Thea",
+      "want": [
+       "attack",
+       "lich"
+      ],
+      "got": [
+       "attack",
+       null
+      ],
+      "fight": {
+       "attack": 0.997,
+       "fall_back": 0.0,
+       "heal": 0.0,
+       "none": 0.002
+      },
+      "target": {
+       "lich": 0.286,
+       "unclear": 0.685
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Isolde",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.007,
+       "fall_back": 0.857,
+       "heal": 0.004,
+       "none": 0.131
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Wystan",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.007,
+       "fall_back": 0.87,
+       "heal": 0.005,
+       "none": 0.118
+      }
+     },
+     {
+      "scene": "graveyard",
+      "group": "stays what it is",
+      "line": "Off to the inn with you, I'll deal with these.",
+      "who": "Thea",
+      "want": null,
+      "got": "fall_back",
+      "fight": {
+       "attack": 0.006,
+       "fall_back": 0.845,
+       "heal": 0.003,
+       "none": 0.147
+      }
+     }
+    ],
+    "cuts": {
+     "0.4/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.4/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 3,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.5/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 3,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.6/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 3,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.7/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 3,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.3": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.5": {
+      "right": 149,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 1,
+      "wrong_one_to_heal": 0
+     },
+     "0.8/0.7": {
+      "right": 147,
+      "orders_missed": 0,
+      "talk_taken_for_an_order": 3,
+      "one_kind_for_another": 0,
+      "wrong_creature": 0,
+      "attack_with_no_creature_told": 3,
+      "wrong_one_to_heal": 0
+     }
+    },
+    "judge": "microsoft-decision-1/openrouter",
+    "served_by": [
+     "microsoft/microsoft-decision-1-20261009"
+    ],
+    "latency_ms": {
+     "median": 317,
+     "p90": 368
+    },
+    "cost_usd_a_line": 4.63e-05,
+    "input_tokens": 1087,
+    "errors": 0
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.017015,
+  "cost_per_hour_usd": 3.1313,
+  "calls": 326,
+  "by_role": {
+   "system1": 0.017015
+  },
+  "by_kind": {
+   "order": {
+    "calls": 326,
+    "input_tokens": 405123,
+    "output_tokens": 16956,
+    "cost_usd": 0.017015,
+    "latency_ms_avg": 272.3
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.13-20260917": {
+    "calls": 163,
+    "input_tokens": 236549,
+    "output_tokens": 16640,
+    "cost_usd": 0.009935,
+    "latency_ms_avg": 222.5
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 163,
+    "input_tokens": 168574,
+    "output_tokens": 316,
+    "cost_usd": 0.00708,
+    "latency_ms_avg": 322.1
+   }
+  }
+ }
+}

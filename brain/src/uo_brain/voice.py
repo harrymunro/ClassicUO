@@ -3,10 +3,10 @@
 A fight has no time for a model call per line (a yes/no and a line take about 2 s, and the moment
 has passed), so the lines are written once: at the start of a session the cheap planner model
 (kind `talk`) writes a few lines for each kind of callout and emote in the character's persona,
-with slots for the creature's and the companion's name, and code fills the slot and picks a line
-not said lately. A pack is kept in the shard's store (table voice_packs) under the character and
-its persona, so the next session of the same character doesn't pay again. Without a persona, or
-when the call fails, the plain lines below are used.
+with slots for the creature's and the companion's name and for a place it is sent to, and code
+fills the slot and picks a line not said lately. A pack is kept in the shard's store (table
+voice_packs) under the character and its persona, so the next session of the same character
+doesn't pay again. Without a persona, or when the call fails, the plain lines below are used.
 
 Local server only, as all talk (talk.py): nothing here speaks on a real shard.
 """
@@ -24,7 +24,9 @@ from . import costs, llm
 from .world import World
 
 LINE_CAP = 60   # one overhead line; the client wraps at about that
-VERSION = 3     # of the kinds and the prompt: a new one writes new packs
+VERSION = 6     # of the kinds and the prompt: a new one writes new packs
+# What fills a slot when nothing was given for it.
+BLANK = {"target": "it", "name": "them", "place": "there"}
 # A word before a slot that already says which one: the slot's own article is left out after it ("Get this
 # {target} off me" with "the bone knight" was said as "this the bone knight").
 DETERMINER = r"(?:the|this|that|these|those|a|an|my|your|his|her|its|our|their|some|another|every|each|no)"
@@ -57,6 +59,32 @@ KINDS: dict[str, tuple[str, str, list[str]]] = {
               ["All clear.", "That's the last of them.", "It's done."]),
     "helping": ("name", "said to a hurt companion while bandaging or healing them",
                 ["Hold still, {name}.", "I've got you, {name}.", "Patching you up, {name}."]),
+    "raising": ("name", "said over a fallen companion while bringing them back from the dead",
+                ["Hold on, {name}. I'll bring you back.", "Not today, {name}. Up you get.", "Come back, {name}."]),
+    "form_up": ("", "called to the party at the edge of a fight, before going in: stop here and close up on me",
+                ["Hold here. Form up on me.", "Close up, all of you.", "Wait for the others."]),
+    "go_in": ("", "the word to go in together, once the party has formed up",
+              ["In we go. Together.", "Now. With me!", "All here? Then in."]),
+    # A companion's word to a leader a person plays, on taking its order (companion.py, cuo-cym.16).
+    "staying": ("", "said to the party's leader on being told to wait here while the leader goes on",
+                ["Staying here.", "I'll wait here.", "Not moving."]),
+    "coming": ("", "said to the party's leader on being told to come along again",
+               ["Right behind you.", "Coming.", "With you."]),
+    "sitting": ("", "said when the party's leader tells everyone to sit down for a drink",
+                ["Aye, I'll drink to that.", "About time.", "Mine's an ale."]),
+    # ...on being sent somewhere without the leader, and on getting there (cuo-cym.19).
+    "going": ("place", "said to the party's leader on being sent off to a place without them, to wait there",
+              ["Off to {place}, then.", "See you at {place}.", "{place} it is. Don't be long."]),
+    "arrived": ("place", "said on arriving at the place the leader sent them to, where they now wait",
+                ["Here we are: {place}.", "Made it to {place}.", "{place}. Now we wait."]),
+    # ...and on being told to do what they are already doing, so the leader sees the line was read as an order
+    # at all (cuo-cym.20): "off you go then", read as "come along" by companions who were following, got no word.
+    "still_coming": ("", "said to the party's leader on being told to come along when already at their side",
+                     ["Still with you.", "Right here.", "Haven't left your side."]),
+    "still_staying": ("", "said to the party's leader on being told to wait when already waiting where they are",
+                      ["Still here.", "Not going anywhere.", "Haven't moved."]),
+    "still_going": ("", "said to the party's leader on being told to go on ahead when already on the way there",
+                    ["On my way.", "Going, going.", "Already off."]),
     # Emotes (cuo-cod.8): what the character does, shown as *...*.
     "e_set_out": ("", "an emote on setting out on a trip", ["shoulders their pack", "checks their gear"]),
     "e_rest": ("", "an emote while resting", ["sits down for a moment", "stretches and looks about"]),
@@ -85,9 +113,10 @@ their companions are. Call voice exactly once, with three or four lines for ever
 - In character and in the game world. Blunt, rude and funny is good; they don't hold back with each other,
   and swearing is fine. No real-world slurs. Never mention being an AI or a program.
 - Where a kind names a slot, every line of it must contain that slot exactly as written: {target} is the
-  creature (code puts in "the lich", "a bone knight"), {name} a companion's name. No other slots, and no
-  companion's name written out: code fills it in. {target} brings its own article: never write "the", "this",
-  "that" or an adjective in front of it ("{target} is mine!", not "the {target} is mine!").
+  creature (code puts in "the lich", "a bone knight"), {name} a companion's name, {place} where they are sent
+  (code puts in "the inn", "the bank"). No other slots, and no companion's name written out: code fills it in.
+  {target} and {place} bring their own article: never write "the", "this", "that" or an adjective in front of
+  one ("{target} is mine!", not "the {target} is mine!"; "Off to {place}.", not "Off to the {place}.").
 - The kinds beginning e_ are emotes: what the character does, in the third person and present tense,
   without asterisks or the character's own name ("has a swig of ale", "checks his bowstring"). Use the
   pronoun that fits the character.
@@ -141,7 +170,7 @@ class Voice:
         self.said.append(line)
         slot = KINDS[kind][0]
         if slot:
-            value = slots.get(slot) or {"target": "it", "name": "them"}[slot]
+            value = slots.get(slot) or BLANK[slot]
             bare = ARTICLE.sub("", value)
             line = re.sub(rf"\b({DETERMINER})\s+\{{{slot}\}}", lambda m: f"{m[1]} {bare}", line, flags=re.I)
             line = line.replace("{" + slot + "}", value)
@@ -186,7 +215,7 @@ async def make(world: World | None, character: str, persona: dict[str, str] | No
     try:
         with costs.kind("talk"):
             res = await chat_fn([{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}],
-                                tools=[voice_tool()], tool_choice="voice", model=llm.planner_model(None), max_tokens=2500)
+                                tools=[voice_tool()], tool_choice="voice", model=llm.planner_model(None), max_tokens=3200)
     except llm.LlmError as e:
         log({"type": "voice", "t": time.time(), "character": character, "error": str(e)[:300]})
         return Voice()

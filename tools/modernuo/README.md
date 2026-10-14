@@ -79,7 +79,8 @@ Green Acres stays empty, so the arena tests are unaffected.
   - All: stats locked, 5 greater heal and 5 greater cure potions. Removes Young status.
   - Wipes the old equipment and backpack first.
 - **`[AgentArena [count] [mix|orc|ratman|headless|mongbat|zombie|skeleton|<type>]`:** clears your last arena, then spawns monsters in a ring 6–10 tiles out.
-- **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, cancels pending spawns, and removes your arena monsters, the corpses around you and what you built with `[AgentBuild`.
+- **`[AgentReset`:** resurrects you if dead, restores vitals, cures poison, cancels pending spawns, and removes your arena monsters, the corpses around you and what you built with `[AgentBuild`. It also takes you out of any party (a party made in one run outlived the logout into the next run).
+- **`[AgentSlay`:** kills you where you stand, as a creature would have: your corpse with your things on it, and you a ghost. For staging a death in the middle of a fight (the party's raise check).
 - **`[AgentGo [lane | x y]`:** lanes 1-9 are copies of the test spot 60 tiles east of each other; `x y` goes to any tile of the test map.
 - **`[AgentSpawn <kind> [count] [distance] [direction] [delay] [still]`:** creatures at a bearing and distance, optionally after a delay; `still` anywhere makes them stay where they are (they never walk).
 - **`[AgentSupplies [bandages N] [heal N] [cure N] [reagents N] [gold N] [loot N]`:** sets supplies.

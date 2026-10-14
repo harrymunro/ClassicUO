@@ -22,6 +22,9 @@ namespace ClassicUO.Agent
     internal sealed class AgentErrands
     {
         private const uint OPEN_TIMEOUT_MS = 6000;
+        private const uint LIST_TIMEOUT_MS = 4000;  // a vendor's list comes at once or not at all
+        private const int VENDOR_ASKS = 3;          // the first NAMED_ASKS by the vendor's name, the rest as "vendor buy"
+        internal const int NAMED_ASKS = 2;
         private const uint MOVE_INTERVAL_MS = 1100; // ModernUO refuses item moves much closer together
         private const int MOVE_TRIES = 4;
         private const uint ERRAND_TIMEOUT_MS = 90_000;
@@ -33,6 +36,7 @@ namespace ClassicUO.Agent
         private uint _started, _askedAt, _nextStep, _movedAt;
         private int _asks, _approaches;
         private uint _vendor;
+        private string _vendorName = string.Empty, _said = string.Empty, _nearer = string.Empty;
         private string _items = string.Empty;
         private List<string> _deposit = new List<string>();
         private int _goldBefore;
@@ -49,6 +53,13 @@ namespace ClassicUO.Agent
         public int Moved { get; private set; }
         public int GoldChange => _world.Player == null ? 0 : (int) _world.Player.Gold - _goldBefore;
         public bool Busy => State == "opening" || State == "moving" || State == "approaching" || State == "waiting";
+
+        // Which vendor a buy or a sale went to and how it was asked, for the snapshot and the brain's log.
+        public uint Vendor => _vendor;
+        public string VendorName => _vendorName;
+        public int Asks => _asks;
+        public string Said => _said;
+        public string Nearer => _nearer;
 
         private sealed class Move
         {
@@ -105,6 +116,7 @@ namespace ClassicUO.Agent
                 return Fail(buy ? "nothing to buy" : "nothing to sell");
             }
 
+            _vendorName = _world.Mobiles.Get(_vendor) is Mobile v ? Called(v) : string.Empty;
             State = "approaching";
 
             return ("done", string.Empty);
@@ -129,6 +141,7 @@ namespace ClassicUO.Agent
             _asks = 0;
             _approaches = 0;
             _vendor = 0;
+            _vendorName = _said = _nearer = string.Empty;
             _started = Time.Ticks;
             _goldBefore = (int) (_world.Player?.Gold ?? 0);
         }
@@ -153,6 +166,7 @@ namespace ClassicUO.Agent
         {
             _askedAt = Time.Ticks;
             _asks++;
+            _said = words;
             GameActions.Say(words);
         }
 
@@ -466,7 +480,82 @@ namespace ClassicUO.Agent
 
             State = "waiting";
             UIManager.GetGump<ShopGump>()?.Dispose();
-            Ask(Kind == "buy" ? "vendor buy" : "vendor sell");
+            _vendorName = Called(v);
+            _nearer = HeardFirst(v);
+            Ask(VendorWords(Kind == "buy", v.Name, _agent.LabelOf(v), _asks));
+        }
+
+        // What to say to a vendor for its list: "Minerva buy" the first NAMED_ASKS times, then
+        // "vendor buy". The server gives "vendor buy" to the nearest vendor within a tile of the
+        // speaker, whatever it sells, and to that one only (ModernUO sorts those in earshot by distance,
+        // and the first vendor to hear marks the words handled). At the Britain healer that was the
+        // healer guildmistress whenever she stood nearer than the healer: she shows no list, and a
+        // soak run's first three buys failed with the healer a tile away (cuo-k0d). Only a vendor of
+        // that name answers to it. Twice by name, as a vendor that steps away as it is asked doesn't
+        // hear; "vendor buy" last, for a server that doesn't know its vendors by name.
+        internal static string VendorWords(bool buy, string name, string label, int asked)
+        {
+            string who = asked < NAMED_ASKS ? CalledBy(name, label) : string.Empty;
+
+            // The server reads *sell* before *buy*: "Giselle buy" would bring her sell list.
+            if (who.Length == 0 || buy && who.Contains("sell", StringComparison.OrdinalIgnoreCase)
+                || who.Contains("vendor", StringComparison.OrdinalIgnoreCase))
+            {
+                who = "vendor";
+            }
+
+            return $"{who} {(buy ? "buy" : "sell")}";
+        }
+
+        // The name a townsperson answers to: its own, or its label's, without the title
+        // ("Minerva" of "Minerva the healer"), whose words could mean something else to the server.
+        internal static string CalledBy(string name, string label)
+        {
+            string who = string.IsNullOrWhiteSpace(name) ? label ?? string.Empty : name;
+            int title = who.IndexOf(" the ", StringComparison.OrdinalIgnoreCase);
+
+            return (title > 0 ? who.Substring(0, title) : who).Trim();
+        }
+
+        // How soon one who stands (dx, dy, dz) from the speaker hears it, as ModernUO orders those in
+        // earshot (LocationComparer): a tile straight on comes before a tile diagonally, and a
+        // floor counts for little.
+        internal static int HearingOrder(int dx, int dy, int dz) => 121 * (dx * dx + dy * dy) + dz * dz;
+
+        // A townsperson as the log names it: with its title when the client knows it.
+        private string Called(Mobile m) => _agent.LabelOf(m) ?? (string.IsNullOrWhiteSpace(m.Name) ? "someone" : m.Name.Trim());
+
+        private int Hears(Mobile m)
+        {
+            int x = m.X, y = m.Y;
+
+            if (m.Steps.Count != 0)
+            {
+                ref Mobile.Step step = ref m.Steps.Back();
+                x = step.X;
+                y = step.Y;
+            }
+
+            return HearingOrder(x - _world.RangeSize.X, y - _world.RangeSize.Y, m.Z - _world.Player.Z);
+        }
+
+        // The other townsfolk within a tile who hear the character no later than the vendor does: any
+        // of them that is a vendor takes "vendor buy" before it. For the log, when a list doesn't come.
+        private string HeardFirst(Mobile vendor)
+        {
+            int limit = Hears(vendor);
+            var names = new List<string>();
+
+            foreach (Mobile m in _world.Mobiles.Values)
+            {
+                if (m != _world.Player && m != vendor && !m.IsDead && m.IsHuman && m.Distance <= 1
+                    && m.NotorietyFlag == NotorietyFlag.Invulnerable && Hears(m) <= limit)
+                {
+                    names.Add(Called(m));
+                }
+            }
+
+            return string.Join(", ", names);
         }
 
         private void WaitForList(uint now)
@@ -475,15 +564,17 @@ namespace ClassicUO.Agent
 
             if (gump == null || gump.IsBuyGump != (Kind == "buy"))
             {
-                if (now - _askedAt > OPEN_TIMEOUT_MS)
+                if (now - _askedAt > LIST_TIMEOUT_MS)
                 {
-                    if (_asks < 2)
+                    if (_asks < VENDOR_ASKS)
                     {
                         State = "approaching";
                     }
                     else
                     {
-                        Finish("failed", Kind == "buy" ? "the vendor did not show its goods" : "the vendor wants nothing you carry");
+                        Finish("failed", Kind != "buy" ? "the vendor wants nothing you carry"
+                            : _nearer.Length == 0 ? "the vendor did not show its goods"
+                            : $"the vendor did not show its goods ({_nearer} stood as near and may have taken the words)");
                     }
                 }
 

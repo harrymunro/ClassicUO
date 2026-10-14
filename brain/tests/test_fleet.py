@@ -223,3 +223,163 @@ def test_a_client_that_doesnt_answer_sits_the_run_out_and_the_others_play(tmp_pa
     asyncio.run(fleet.run(f, tmp_path / "run"))
     logins = [json.loads(line) for line in (tmp_path / "run" / "fleet.jsonl").open() if '"login"' in line]
     assert [r["result"] for r in logins] == ["in game as Garrick", "not in game: TimeoutError", "in game as Torv"]
+
+
+def test_a_fleet_file_says_what_strategy_its_characters_start_with(tmp_path, monkeypatch):
+    """A character keeps its strategy between runs, in its client's profile: the lich scene's five carried a
+    video shoot's "never flee" into every later run. A fleet file's `strategy` is set at each login ("" clears
+    it), an agent's own wins, and a file that names none leaves every character's as it is."""
+    import asyncio
+    calls = []
+
+    class Rpc:
+        def __init__(self, port):
+            self.port = port
+
+        async def connect(self, attempts=1):
+            pass
+
+        async def close(self):
+            pass
+
+        async def call(self, method, **params):
+            calls.append((self.port, method, params))
+            return {}
+
+    async def log_in(rpc, account, password, character, host, port, **_):
+        return f"in game as {character}"
+
+    async def no_sleep(_):
+        pass
+
+    monkeypatch.setattr(fleet, "AgentRpc", Rpc)
+    monkeypatch.setattr(fleet.client, "log_in", log_in)
+    monkeypatch.setattr(fleet.asyncio, "sleep", no_sleep)
+    f = tmp_path / "p.toml"
+    body = ('name = "p"\nparty = true\nleader = "A"\n{top}[[agent]]\nname = "A"\naccount = "a"\npassword = "a"\nport = 1\n'
+            'goal = "hunt"\n[[agent]]\nname = "B"\naccount = "b"\npassword = "b"\nport = 2\n{own}')
+    f.write_text(body.format(top="", own=""))
+    fl = fleet.load(f)
+    assert fl.strategy is None and not fl.form_up
+    asyncio.run(fleet.log_in(fl, fl.agents[0]))
+    assert not [c for c in calls if c[1] == "strategy"]  # left as the client has it
+    f.write_text(body.format(top='strategy = ""\nform_up = true\n', own='strategy = "Stay behind the warrior."\n'))
+    fl = fleet.load(f)
+    assert fl.strategy == "" and fl.form_up and fl.agents[1].strategy == "Stay behind the warrior."
+    for a in fl.agents:
+        asyncio.run(fleet.log_in(fl, a))
+    assert [c for c in calls if c[1] == "strategy"] == [(1, "strategy", {"clear": True}),
+                                                       (2, "strategy", {"text": "Stay behind the warrior."})]
+    assert fleet.load(f, ['strategy="Never flee."']).strategy == "Never flee."
+    started = []
+    monkeypatch.setattr(fleet.subprocess, "Popen", lambda cmd, **kw: started.append(cmd))
+    fleet.start_brain(fl, fl.agents[1], tmp_path)
+    assert "--party-form-up" in started[0]
+
+
+def test_a_login_stuck_at_the_server_list_is_given_up_early(monkeypatch):
+    """The server drops a socket stuck between its login and game servers after about 18 s; the client waits
+    on. The login says so after STUCK_S instead of waiting its full minute and a half."""
+    import asyncio
+    from uo_brain import client
+    polls = []
+
+    class Rpc:
+        async def call(self, method, **params):
+            polls.append(method)
+            return {"in_game": False, "login_state": "server_selected"} if method == "status" else {}
+
+    async def no_sleep(_):
+        pass
+
+    monkeypatch.setattr(client.asyncio, "sleep", no_sleep)
+    monkeypatch.setattr(client, "STUCK_S", 3)
+    r = asyncio.run(client.log_in(Rpc(), "life3", "life3", "Wystan"))
+    assert r.startswith("not in game") and "server_selected" in r and polls.count("status") == 1 + 3
+
+
+PLAYERS_PARTY = ('name = "p"\nparty = true\nplan = "player"\nleader = "Harry"\n{extra}[[agent]]\nname = "Isolde"\naccount = "a"\n'
+                 'password = "a"\nport = 1\n[[agent]]\nname = "Wystan"\naccount = "b"\npassword = "b"\nport = 2\n')
+
+
+def test_a_fleet_file_sets_the_pace_of_replies_and_whether_companions_go_when_told(tmp_path, monkeypatch):
+    started = []
+    monkeypatch.setattr(fleet.subprocess, "Popen", lambda cmd, **kw: started.append(cmd))
+    f = tmp_path / "p.toml"
+
+    def brain(extra):
+        f.write_text(PLAYERS_PARTY.format(extra=extra))
+        fl = fleet.load(f)
+        fleet.start_brain(fl, fl.agents[0], tmp_path)
+        return started[-1]
+
+    cmd = brain("")
+    assert not {"--pace-factor", "--no-pace", "--no-persuade"} & set(cmd)
+    # A number for the pace is the share of a person's time a reply waits; going when told is asked for outright.
+    cmd = brain("pace = 0.7\npersuade = false\n")
+    assert cmd[cmd.index("--pace-factor") + 1] == "0.7" and "--no-persuade" in cmd and "--no-pace" not in cmd
+    cmd = brain("pace = false\n")
+    assert "--no-pace" in cmd and "--pace-factor" not in cmd
+    with pytest.raises(ValueError, match="pace should be true, false or a number"):
+        brain('pace = "fast"\n')
+
+
+def test_brains_asked_to_stop_write_their_summaries_and_one_that_wont_go_is_ended():
+    import signal
+
+    class Brain:
+        def __init__(self, goes, ended=False):
+            self.goes, self.ended, self.asked = goes, ended, []
+
+        def poll(self):
+            return 0 if self.ended else None
+
+        def send_signal(self, sig):
+            self.asked.append(sig)
+            self.ended = self.goes
+
+        def wait(self, timeout=None):
+            if not self.ended:
+                raise fleet.subprocess.TimeoutExpired("brain", timeout)
+
+        def terminate(self):
+            self.asked.append("terminate")
+            self.ended = True
+
+    goes, hangs, gone = Brain(True), Brain(False), Brain(True, ended=True)
+    fleet.stop_brains({"a": goes, "b": hangs, "c": gone}, within_s=0.2)
+    assert goes.asked == [signal.SIGINT] and hangs.asked == [signal.SIGINT, "terminate"] and gone.asked == []
+
+
+def test_a_run_ended_by_a_closed_terminal_or_a_kill_stops_its_brains_first(tmp_path, monkeypatch):
+    """A playtest's run went with its terminal and left no summaries: the brains were never asked to stop (cuo-cym.23)."""
+    import asyncio
+    import os
+    import signal
+
+    class Brain:
+        pid = 1
+
+        def poll(self):
+            return None  # playing on, until asked to stop
+
+    async def log_in(fl, a):
+        return f"in game as {a.name}"
+
+    stopped = []
+    monkeypatch.setattr(fleet, "start_client", lambda a, out: None)
+    monkeypatch.setattr(fleet, "log_in", log_in)
+    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out: Brain())
+    monkeypatch.setattr(fleet, "pid_listening", lambda port: 0)
+    monkeypatch.setattr(fleet, "report", lambda out: {})
+    monkeypatch.setattr(fleet, "stop_brains", lambda brains, within_s=0: stopped.append(sorted(brains)))
+    f = fleet.load(fleet.BRAIN_DIR / "fleets" / "britain-lives.toml")
+    for sig in (signal.SIGHUP, signal.SIGTERM):
+        async def run(sig=sig):
+            asyncio.get_running_loop().call_later(0.2, os.kill, os.getpid(), sig)
+            await asyncio.wait_for(fleet.run(f, tmp_path / f"run-{sig}", every_s=30), 10)
+
+        asyncio.run(run())
+        last = [json.loads(line) for line in (tmp_path / f"run-{sig}" / "fleet.jsonl").open()][-1]
+        assert last["type"] == "stopped" and last["brains_running"] == ["Garrick", "Ilsa", "Torv"]
+    assert stopped == [["Garrick", "Ilsa", "Torv"]] * 2

@@ -71,6 +71,9 @@ def clients_running() -> int:
     return len(out.split())
 
 
+STUCK_S = 25  # a login this long at "server selected" isn't coming: the caller tries again
+
+
 async def log_in(rpc: AgentRpc, account: str, password: str, character: str | None = None,
                  host: str | None = None, server_port: int | None = None, create: dict[str, Any] | None = None,
                  wait_s: int = 90) -> str:
@@ -88,10 +91,17 @@ async def log_in(rpc: AgentRpc, account: str, password: str, character: str | No
         if create:
             params["create"] = create
         await rpc.call("login", **params)
+        stuck = 0
         for _ in range(wait_s):
             await asyncio.sleep(1)
             st = await rpc.call("status")
             if st.get("in_game") or st.get("login_error"):
+                break
+            # Stuck between the login server and the game server: the server drops such a socket after about
+            # 18 s and the client waits on. Waited out in full, one stuck login held a fleet's other logins
+            # back a minute and a half, past its leader's wait for the party.
+            stuck = stuck + 1 if st.get("login_state") == "server_selected" else 0
+            if stuck >= STUCK_S:
                 break
     if not st.get("in_game"):
         return f"not in game: {st.get('login_error') or st}"

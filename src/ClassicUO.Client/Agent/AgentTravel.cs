@@ -22,6 +22,7 @@ namespace ClassicUO.Agent
         private const int TRAVEL_MAX_REPLANS = 5;
         private const int TRAVEL_MAX_HOPS = 40;
         private const uint DOOR_SWING_MS = 1200;     // time a door gets to open before it's tried again
+        private const uint STEP_REFUSED_MS = 15_000; // a tile the server sent a step back from is left alone this long
 
         private static readonly TripLimits TravelLimits = new TripLimits();
 
@@ -40,6 +41,9 @@ namespace ClassicUO.Agent
         private readonly List<(int X, int Y)> _travelStuck = new List<(int, int)>();
         private readonly List<string> _travelStuckWhy = new List<string>();
         private readonly HashSet<(int, int)> _travelBlocked = new HashSet<(int, int)>(); // impassable items seen on this trip
+        private readonly HashSet<(int, int)> _travelRefused = new HashSet<(int, int)>(); // tiles the walker couldn't step onto on this trip, nobody on them
+        private int _travelDenied;                                                       // the server's refused steps (Walker.Denied) at the last plan
+        private int _travelStepsRefused0;                                                // StepsRefused when the trip set off
         private readonly TravelMemory _travelMemory = new TravelMemory();
         private readonly Dictionary<(int, int), Item> _doorsInView = new Dictionary<(int, int), Item>();
         private readonly HashSet<(int, int)> _travelNewlyBlocked = new HashSet<(int, int)>();
@@ -85,6 +89,8 @@ namespace ClassicUO.Agent
             _travelStuck.Clear();
             _travelStuckWhy.Clear();
             _travelBlocked.Clear();
+            _travelRefused.Clear();
+            _travelStepsRefused0 = StepsRefused;
             _doorSerial = 0;
             _travelStarted = Time.Ticks;
 
@@ -208,6 +214,7 @@ namespace ClassicUO.Agent
             _travelIndex = 0;
             _travelProgress.Restart(TravelLeft);
             _travelProgressAt = Time.Ticks;
+            _travelDenied = p.Walker.Denied;
             RememberWhatIsInView();
 
             if (!AgentNav.SameLandmass(map, p.X, _travelGoalX))
@@ -639,11 +646,25 @@ namespace ClassicUO.Agent
             // "no way there on the map" in two runs of three, a companion on its next tile (cuo-0jz).
             var avoid = PeopleOnPathAhead(4);
             bool someone = avoid.Count != 0;
+            int next = AgentNav.NextOnPath(_travelPath, _travelIndex, p.X, p.Y);
 
-            for (int i = _travelIndex + 1; !someone && i < _travelPath.Count && i <= _travelIndex + 4; i++)
+            // Nobody there: a step the map allows and the game doesn't. The tile the walker couldn't
+            // step onto stays out of this trip's plans, as well as the few after it out of the next
+            // one. Below the wall of the Britain graveyard (1347,1512) no step west is taken, and
+            // the plans from there went west by one of two ways turn and turn about, each stuck
+            // forgetting what the one before had ruled out, and never ruling out the first step
+            // itself: six times stuck on the one tile and the trip given up, on three days (cuo-4v1).
+            if (!someone && next < _travelPath.Count)
+            {
+                _travelRefused.Add((_travelPath[next].X, _travelPath[next].Y));
+            }
+
+            for (int i = next; !someone && i < _travelPath.Count && i < next + 4; i++)
             {
                 avoid.Add((_travelPath[i].X, _travelPath[i].Y));
             }
+
+            avoid.UnionWith(_travelRefused);
 
             if (someone)
             {
@@ -662,7 +683,7 @@ namespace ClassicUO.Agent
         // as one does in a doorway. A follower its leader faces that way makes way (AgentPace.InTheWay).
         private void FaceWhoeverIsInTheWay(PlayerMobile p, uint now)
         {
-            int next = _travelIndex + 1;
+            int next = AgentNav.NextOnPath(_travelPath, _travelIndex, p.X, p.Y);
 
             if (now - _travelProgressAt < TRAVEL_FACE_MS || next >= _travelPath.Count || p.Steps.Count != 0 || p.Pathfinder.AutoWalking)
             {
@@ -689,7 +710,8 @@ namespace ClassicUO.Agent
         // west Britain with townsfolk about, and nothing said whether one stood in the way (cuo-4v1).
         private string NextTileAndWhoIsOnIt()
         {
-            int next = _travelIndex + 1;
+            PlayerMobile p = _world.Player;
+            int next = AgentNav.NextOnPath(_travelPath, _travelIndex, p.X, p.Y);
 
             if (next >= _travelPath.Count)
             {
@@ -707,15 +729,22 @@ namespace ClassicUO.Agent
                 }
             }
 
-            return $"next {x},{y}: {(who.Count == 0 ? "nobody near" : string.Join(", ", who))}";
+            // Whose refusal it was: the client's own walker (its rules for heights and what stands
+            // there), or the server's, which sends the step back.
+            int denied = p.Walker.Denied - _travelDenied;
+            string refusal = denied > 0 ? $"; the server refused {denied} step{(denied == 1 ? "" : "s")}"
+                : AgentNav.Tiles(p.X, p.Y, x, y) == 1 && !CanStepTo(p, x, y) ? "; the client's walker won't step there" : string.Empty;
+
+            return $"next {x},{y}: {(who.Count == 0 ? "nobody near" : string.Join(", ", who))}{refusal}";
         }
 
         private HashSet<(int, int)> PeopleOnPathAhead(int steps)
         {
             var ahead = new HashSet<(int, int)>();
             var people = new HashSet<(int, int)>();
+            int next = AgentNav.NextOnPath(_travelPath, _travelIndex, _world.Player.X, _world.Player.Y);
 
-            for (int i = _travelIndex + 1; i < _travelPath.Count && i <= _travelIndex + steps; i++)
+            for (int i = next; i < _travelPath.Count && i < next + steps; i++)
             {
                 ahead.Add((_travelPath[i].X, _travelPath[i].Y));
             }
@@ -730,6 +759,32 @@ namespace ClassicUO.Agent
 
             return people;
         }
+
+        // Tiles the server sent a step back from, and until when the walker leaves each alone. The
+        // client's walker and the server don't always agree on a tile (a static the client reads
+        // differently, something hidden standing there), and a walker that thinks a step is fine
+        // takes it again the moment it is sent back: below the Britain graveyard it stepped at one
+        // tuft of grass 60 times a second for 48 s, whatever way round the planner chose, since each
+        // leg is walked by the client's own pathfinder (cuo-4v1). A refused tile counts as blocked to
+        // that pathfinder until it lapses, so the next leg goes round it. Only while the agent is on:
+        // a player's own walking is as it was.
+        private readonly RefusedTiles _stepRefused = new RefusedTiles(STEP_REFUSED_MS);
+
+        public int StepsRefused { get; private set; }
+        public int TravelStepsRefused => StepsRefused - _travelStepsRefused0;
+
+        public void StepRefused(int x, int y)
+        {
+            if (Mode == AgentMode.Off)
+            {
+                return;
+            }
+
+            StepsRefused++;
+            _stepRefused.Refuse(x, y, Time.Ticks);
+        }
+
+        public bool StepIsRefused(int x, int y) => Mode != AgentMode.Off && _stepRefused.Refused(x, y, Time.Ticks);
 
         // An errand walking up to a vendor: travel without needing the move authority, since the
         // errand itself was allowed.

@@ -12,7 +12,7 @@
 - **Models:** [Models for each role](#models-for-each-role), [Haiku or Sonnet for plans, reviews and guides](#haiku-or-sonnet-for-plans-reviews-and-guides), [Opus for the planner's one-off calls](#opus-for-the-planners-one-off-calls), [Sonnet for the planner's hard moments](#sonnet-for-the-planners-hard-moments), [Jev and Microsoft's Decision 1](#jev-and-microsofts-decision-1)
 - **Sessions towards a goal:** [Unattended runs](#unattended-runs), [Travel and errands](#travel-and-errands), [Routine hunt calls](#routine-hunt-calls), [After a death](#after-a-death), [After-action review run](#after-action-review-run)
 - **World knowledge and memory:** [World store and fact picking](#world-store-and-fact-picking), [UO Renaissance's map page](#uo-renaissances-map-page), [Map markers](#map-markers), [The planner with memories](#the-planner-with-memories), [Long-range memory over a long soak](#long-range-memory-over-a-long-soak)
-- **Several agents:** [Several agents on one server](#several-agents-on-one-server), [Headless clients](#headless-clients), [A party on one plan](#a-party-on-one-plan), [A party that helps, calls out and talks](#a-party-that-helps-calls-out-and-talks), [NPCs with lives of their own](#npcs-with-lives-of-their-own)
+- **Several agents:** [Several agents on one server](#several-agents-on-one-server), [Headless clients](#headless-clients), [A party on one plan](#a-party-on-one-plan), [A party that helps, calls out and talks](#a-party-that-helps-calls-out-and-talks), [A party that goes in together](#a-party-that-goes-in-together), [NPCs with lives of their own](#npcs-with-lives-of-their-own)
 - **Public shards:** [Renaissance rules rehearsal](#renaissance-rules-rehearsal)
 
 ## Arena
@@ -800,7 +800,8 @@ the pair's two from the day before:
 - **The routine calls behave as Jev's again:** no hunt ended early, and "stay here" sat where Jev's
   did (0.77 against 0.76; never under the 0.35 cut in 95 questions).
 - **Fewer kills and less gold than Jev's hour, for reasons outside system one:** the first three
-  bandage buys failed ("the vendor did not show its goods", cuo-k0d), so it hunted 14 minutes on 30
+  bandage buys failed ("the vendor did not show its goods", cuo-k0d: the healer guildmistress
+  took the words, [found and fixed since](#asking-a-vendor-by-name)), so it hunted 14 minutes on 30
   bandages; and after the gargoyles chased it out at minute 24 the planner took it east to goats,
   pigs and boars for the last half hour (7 kills and 53 gold a hunt), where Jev's hour had gone back to
   orcs and lizardmen.
@@ -1524,6 +1525,125 @@ on the way, as more of the row is sent) and from the start once known; going rou
 route behind the row about 7 s. Alleys one tile wide are walked through, as fast as with no houses.
 This change leaves houses as they were (base and after match).
 
+### Asking a vendor by name
+
+2026-10-13, a copy of the local server (port 2595), a warrior, one to three clients running
+(cuo-k0d). A soak hour's first three buys at the Britain healer had failed with "the vendor did
+not show its goods", and the same buy worked 16 minutes later
+([above](#the-default-system-one-split-by-kind)). The checks are `brain/scripts/buy_check.py`;
+"before" is a copy of the client that soak ran (`bin/osx-arm64-next`). Every "before" run and the
+first run after of each check were made with the script's first draft, the same steps under
+another name; the later runs with the script as it is kept.
+
+**Who answers which words** (`uv run python scripts/buy_check.py words logs/k0d-final-words.jsonl`):
+the character is put on a tile within one of both the healer and the healer guildmistress, who
+stand a tile apart, and says the words. Three tries each, and the same three of three in an
+earlier run of it (`logs/k0d-who-answers.jsonl`):
+
+| the character stands | says | the healer's list opened |
+|---|---|---|
+| nearer the guildmistress (beside her, the healer on the diagonal) | "vendor buy" | 0 of 3 |
+| on the same tiles | "Minerva buy" | 3 of 3 |
+| nearer the healer | "vendor buy" | 3 of 3 |
+
+ModernUO hands what is said to those in earshot nearest first (`Mobile.DoSpeech` sorts them by
+`LocationComparer`, in which a tile straight on is nearer than a tile on the diagonal), and the
+first vendor within a tile to hear "vendor buy" marks it handled (`VendorAI.OnSpeech`). A
+guildmaster is a vendor to the server that sells nothing (`BaseGuildmaster`, `IsActiveVendor`
+false): it takes the words and shows no list. Words that begin with a vendor's name are answered
+by that vendor alone.
+
+**The client's buy errand from such a tile** (`... buy_check.py staged logs/k0d-staged-before.jsonl`
+with the client before; after, five runs on each of four builds of the fix, the last of them
+the client as it is now, `logs/k0d-last-staged.jsonl`): 5 bandages from the healer, the
+character put where the guildmistress hears it first.
+
+| | before | after |
+|---|---|---|
+| bought | 2 of 5 | 20 of 20 |
+| the first ask answered | 0 of 5 | 20 of 20 ("Minerva buy") |
+| time | 8.3 to 12.6 s | 1.8 s each |
+
+The two the old client bought came on its second ask, 6 s on, after someone had moved. In 19 of
+the 20 runs after, the client's own count had the guildmistress as near as the healer when it
+asked (`nearer` in the errand); in the other she had stepped off as it asked. At another shop,
+the Cove healer, with its guildmistress as near as the healer, "Abby sell" sold 52 bandages and
+"Abby buy" bought 10, each on the first ask (`act sell` and `act buy` over the RPC, single runs).
+
+**A soak's prep and first buy, over and over** (`... buy_check.py soak logs/k0d-before.jsonl --runs 5 --shard k0d`
+twice with the client before; after, `logs/k0d-after.jsonl --runs 15`, `logs/k0d-final-soak.jsonl --runs 10`
+and `logs/k0d-last-soak.jsonl --runs 5` on three builds of the fix, the last the client as it is
+now): the prep of `soak_prep.py`, then the session's buy of 30 bandages, which walks the 100 tiles
+from the bank to the shop. `k0d` is a copy of the world store, so other runs' stores were left
+alone. Results in `brain/bench/2026-10-13-buy-check.json`.
+
+| | before | after |
+|---|---|---|
+| bought all 30 | 8 of 10 | 30 of 30 (15, 10 and 5) |
+| asks in a run | 1 in the eight that bought, 2 in the two that didn't | 1 in every run |
+| seconds a buy, median (least to most) | 33.5 (30.8 to 81.0) | 31.8 (30.7 to 33.7) |
+
+In both failures the guildmistress stood within a tile of the character, and nearer than the
+healer, at each of the two asks; in every run that bought, the healer was the nearer or the
+guildmistress out of reach (read from where the watcher saw them; the old client didn't say).
+After, the client had the guildmistress as near as the healer at the ask in 4 of the 30 runs, and
+all four bought. One of the two failures before also spent 42 s unable to get next to the
+healer, the guildmistress standing in the one-tile way to her ([known limits](known-limits.md),
+cuo-cgy); that wasn't seen after. The session's `buy` log line now names
+each vendor it asked, how, and who else was as near (`vendors`).
+
+### A tile the server lets nobody onto
+
+2026-10-13, the same server (cuo-4v1). In a soak on 2026-10-11 two trips west from Britain ended
+"stuck" after six replans, every one at 1347,1512, below the wall of the Britain graveyard. The
+world store's routes had the same from two more days: ten trips in all, at 2026-10-09 20:05 to
+20:09 and 2026-10-11 01:32 and 21:42 UTC, each stuck six times on that tile
+(`sqlite3 worlds/local/world.sqlite "SELECT from_name, to_name, stuck_at, duration_s, last_seen FROM routes WHERE stuck_at LIKE '%1347, 1512%'"`).
+
+**The cause:** a tuft of grass. The map has a static 0x0CBA ("grasses") at 1346,1512 at height
+18, over ground at 10, and the tile data flags it a surface. To the server (ModernUO's movement
+rules) a surface between a walker's feet and head closes the tile, and this one is too high to
+step up onto: every one of the eight steps onto 1346,1512 was sent back, and the two diagonal
+steps past it from 1347,1512 (`act walk_to` from each neighbour, the `nav` view's `denied`
+counting). In Felucca's season the client draws those grasses as dead wood (0x1B8D, in its
+`seasons.txt`), which is no surface, and its walker went by what it draws: all eight steps from
+1347,1512 were `ok` to it (`nav` with `steps`). Of that season's 72 swaps of statics, 8 change
+whether a thing blocks or bears a walker: five grasses and a flower (a surface, drawn as wood or
+twigs), the small palm (impassable, drawn as wood) and the sapling (open, drawn as a gravestone).
+The map has 2,076 small palms outside the dungeons; at each of three tried (1130,2879, 1309,2863
+and 1203,2931) the walker that read the season's art had the step onto it `ok` and the server
+sent it back.
+
+So the walker stepped west, was sent back, and stepped again: 496 to 512 refused steps in each 8
+seconds before a replan (counted on the second client of the table below). No replan helped. The
+planner's map takes the tuft for something to step up onto as well, each leg of a plan is walked
+by the client's own pathfinder, which went through the tile whatever the plan, and the tiles a
+stuck walk ruled out began one after the tile it couldn't step onto.
+
+`uv run python scripts/travel_trip.py 5581 1250,1450,2 --go 1347,1512 --defend`, the second of
+the soak's two trips, a client at each stage of the change (results in
+`brain/bench/2026-10-13-stuck-tile.json`):
+
+| client | trips | outcome |
+|---|---|---|
+| before | 2 | stuck six times in 48.1 s, never off the tile, both |
+| with the stuck handling's fix alone | 2 | the same (48.1 and 48.3 s): the planner tried a first step north, south and east, and the legs still went west |
+| and a refused tile left alone for 15 s (the season's art still read) | 3 | arrived in 23.0 s, one step refused, no stuck spot, all three |
+| and a static read as the map has it (three builds, the last the client as it is now) | 9 | all arrived, no stuck spot: 22.8 s in the six with no fight on the way and no step refused; 33.1, 46.6 and 98.2 s with fights |
+
+The soak's first trip, `... 1294,1482,3 --go 1425,1688 --defend` (the bank to the hunting ground,
+272 tiles), arrived both times with the client before (70.6 and 74.2 s) and six times of six
+after (73.4 to 74.2 s): its plan didn't cross the tile on these runs, so its failure on the day
+wasn't repeated, only the tile's. Four more routes after, single runs, all arrived with no stuck
+spot and no step refused: the bank to the graveyard (1384,1492) in 52.2 s and back in 50.7 s, and
+the bank to 1300,1494 and to 1231,1494, the goals of the stuck trips of 2026-10-09, in 70.9 and
+85.3 s.
+
+After, the `nav` view at 1347,1512 has the steps west, north-west and south-west not `ok` and
+the grass under `things`; within 40 tiles the planner and the client's pathfinder differ on 3
+tiles, 12 before. The client's own `walk_to` from 1348,1512 to 1340,1512, which had stopped on
+1347,1512, goes along the row above.
+
 ## Routine hunt calls
 
 Jev's routine hunt calls, 2026-10-07, one run over 10 hand-made situations with no game
@@ -2027,7 +2147,8 @@ uv run python scripts/party_scene.py logs/fleet/RUN ; uv run python scripts/part
 - **With callouts the lich died sooner, in all three runs** (10 to 15 s, against 20 to 37 s with
   help alone, and 12 s, 34 s and never with neither). Each member says which creature it has and
   which is on it, and the others' target question has that in front of it. Three runs each, so a
-  lead to follow and not a result.
+  lead to follow and not a result. Followed at six runs each on 2026-10-13, with Decision 1 in the
+  fights, it [didn't hold](#a-party-that-goes-in-together).
 - **Neither made anything worse,** which is what the bead asked of the callouts: no more deaths, no
   slower kill.
 - **Callouts reach the others' decisions:** 83 to 90% of them were in the fight state of a
@@ -2122,7 +2243,9 @@ uv run uo-brain fleet fleets/party-walk.toml --set memory=false --hours 0.1 --se
   at the median. Deaths 1, 0 and 2 against 3, 1 and 1 running; the lich dead in 20.4 s and 22.6 s
   and once not at all, against 9.8, 12.7 and 15.4 s; "falling back" called 10 times against 2,
   six of them in the run where the lich lived. So no more deaths, a slower lich and more leaves, in
-  three runs each: not enough to say walking in costs anything, and not ruled out.
+  three runs each: not enough to say walking in costs anything, and not ruled out. At six runs each
+  on 2026-10-13 it was the other way round: [fewer leaves and fewer deaths](#a-party-that-goes-in-together)
+  for the party that walks together.
 - **An earlier revision crawled:** 40 waits on one trip and 179 tiles unfinished after 9 minutes,
   the leader waiting 20 s at a time for a follower that was resting 9 tiles behind it. The leader
   now waits once for each member until it has caught up, and a follower in a walking party closes
@@ -2161,6 +2284,1069 @@ tile, and the replan round the stuck spot blocked the next four tiles, which clo
 
 Over the two runs the leader walked round someone 8 times and followers made way 6 times. Two runs; the
 failure came in two of three before.
+
+## A party that goes in together
+
+The lich scene again ([how a party goes in together](fleets.md#a-party-in-a-fight-on-the-road-and-at-the-inn)),
+2026-10-12 and 13 on 2593, headless, no personas or talk, every brain's memory off. Two things about
+the scene changed first, so nothing here is for setting beside the sections above:
+
+- **No standing strategy.** The five had carried a video shoot's "never flee: the party stands
+  together" in their client profiles into every earlier party run, some with old planner lines after
+  it. `party-lich.toml` now says `strategy = ""`.
+- **A clean scene after a restart.** The first run after the server was restarted met two liches and
+  five bone knights (waves left in the save) and all five died within a minute; it is not counted.
+  `[AgentDisrupt restore` now removes them.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false                                # today's defaults
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set 'use="system1=jev"'      # Jev in every system-one call
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set form_up=true             # going in together
+uv run python scripts/party_walk.py sample --ports 5661-5665 --out logs/fleet/RUN/where.jsonl  # beside each run
+uv run python scripts/party_scene.py logs/fleet/RUN
+uv run uo-brain party-report logs/fleet/RUN
+```
+
+The runs took turns (baseline, form-up, Jev, three rounds), nothing else on the machine but one idle
+client, and a run in which a member never logged in was stopped and started again.
+
+**Today's defaults against Jev** (cuo-cym.2). Decision 1 has made the fight calls since 2026-10-12 and
+had never played a party run:
+
+| three runs each | the default (Decision 1 fights) | Jev in every system-one call |
+|---|---|---|
+| reached the fight | 5, 5, 5 of 5 | 5, 4, 5 of 5 |
+| members who died | 0, 0, 1 | 1, 1, 0 |
+| the lich dead, from first sight | 14.1 s, 26.1 s, 17.2 s | 13.2 s, never, 12.3 s |
+| the wave last seen, from first sight | 88 s, 112 s, 119 s | 74 s, 357 s, 207 s |
+| leaves called in the run | 1, 3, 6 | 2, 15, 11 |
+| seconds of the fight's first minute somebody stood apart from all the others | 23, 50, 17 | 33, 49, 51 |
+| members who fell under a third of their health | 0, 0, 3 | 2, 2, 3 |
+| what the run cost | $0.047, $0.029, $0.046 | $0.068, $0.056, $0.058 |
+
+"Apart" is more than 10 tiles from every other member, the distance at which the odds stop counting a
+companion as beside you.
+
+- **A party plays at least as well on the default,** at about two thirds of the cost ($0.041 a run
+  against $0.061; nine minutes, five characters). One death in three runs against two, and the lich
+  dead in all three against two. Three runs each: a sign, not a measure.
+- **Jev leaves more:** 2, 15 and 11 leaves a run against 1, 3 and 6. In its second run the lich was
+  never killed, the wave was still there six minutes on and the archer died twice.
+- **Both scatter.** With no standing strategy a member may leave, and in every one of the six runs
+  somebody stood apart from all the others for 17 to 51 seconds of the fight's first minute.
+- **The default stays as it is** for a party: nothing here argues for Jev in the fights.
+
+**Going in together** (cuo-cym.1): `--set form_up=true` against the default, which by the end of the
+night had six runs. The code changed between runs, each time for what the runs before it had shown, so
+the form-up runs are given by version and no two versions are one sample:
+
+| | runs | members who died | the lich dead, from first sight | first under 90% of health | seconds of the first minute somebody stood apart | leaves called | runs back to the rally point | members under a third of health |
+|---|---|---|---|---|---|---|---|---|
+| `form_up` off (22:26 to 04:02) | 6 | 0, 0, 1, 1, 0, 2 | 14.1 s, 26.1 s, 17.2 s, 17.0 s, 35.7 s, never | the warrior in 3, the archer in 2, the mage in 1 | 23, 50, 17, 34, 48, 44 | 1, 3, 6, 6, 6, 6 | none | 0, 0, 3, 3, 1, 3 |
+| first version (22:40) | 1 | 0 | 16.7 s | the mage | 0 | 0 | 0 | 0 |
+| second (23:24 to 00:19) | 3 | 0, 0, 0 | 24.0 s, 295.9 s, 24.7 s | the warrior, the tamer, the archer | 0, 45, 0 | 1, 10, 0 | 1, 9, 0 | 1, 2, 0 |
+| third (00:40 to 03:30) | 3 | 0, 0, 0 | 26.7 s, 16.1 s, 20.3 s | the warrior in all 3 | 0, 0, 0 | 2, 0, 0 | 3, 0, 1 | 3, 0, 1 |
+| fourth (04:43) | 1 | 1 (the tamer) | 16.1 s | the tamer | 7 | 0 | 3 | 2 |
+| fifth (06:15 to 06:58) | 4 | 0, 0, 0, 1 (the warrior) | 22.3 s, 26.7 s, 26.6 s, 23.6 s | the warrior in all 4 | 0, 0, 0, 0 | 0, 0, 0, 0 | 0, 4, 1, 0 | 0, 2, 0, 2 |
+| fifth, as the night ended (09:32 to 10:04) | 3 | 0, 0, 1 (the tamer) | 25.4 s, 14.1 s, 52.5 s | the warrior in all 3 | 4, 0, 0 | 1, 0, 2 | 4, 0, 2 | 3, 0, 1 |
+
+- **What each version was.** First: the rally point, the word, the warrior first, a leave turned into a
+  fall back. Second, after a review of the first found that "waiting" sent no action and a walk begun a
+  second earlier carried on: holding stops the feet, and a hunt doesn't end under a party still fighting.
+  Third, after the second's worst run (the lich alive for five minutes while the tamer, the mage and the
+  archer walked forward to their own reach and were the party's front): the ranged members keep behind
+  the warrior until he is in it. Fourth: the twelve findings of a second review. Fifth, after the
+  fourth's run: a tamer's runs go to the rally point too, and a member with nothing of its own to fight
+  goes to a companion that is set upon (below). The fifth's first run had that rule as first written,
+  the next three as narrowed after its staged check, and the last three as narrowed once more (a tamer
+  tending a hurt pet stays with it)
+  ([what it does now](fleets.md#a-party-in-a-fight-on-the-road-and-at-the-inn)).
+- **The party stays in one place.** Somebody stood apart from all the others for 17 to 50 of the first
+  60 seconds in every run without it, and for none in twelve of the fifteen with it (the others: 45
+  s in the second version's worst run, 7 s and 4 s). As the fight began the furthest member was 2 to 8
+  tiles from the leader in twelve of them and 11 or 12 in three, against 9 to 11.
+- **Who is hit first.** The warrior in three of six runs without it, and in all ten runs of the
+  third and fifth versions, in which the others wait for him.
+- **Three deaths in fifteen runs with it, against four in six without:** the tamer twice (below), and
+  the warrior once, at the line with a bone knight and skeletons on him, from 56% of his health to 7%
+  in half a second. The fights of the four staged checks below, which are ordinary form-up fights on
+  the fifth version's code until the staging, lost the warrior twice more, the same way.
+- **The danger is the warrior's now.** From the third version on the wave lands on him, as it is meant
+  to: over a fight's first half minute 1.3 creatures stood beside him on average, against 0.7 in the
+  first two versions, when the ranged members walked forward and were the front. Formed up, the party
+  fights within a few tiles of its rally point (he stood 1 to 8 tiles from it), so falling back
+  takes him a few steps and no further.
+- **The fourth version's run lost the tamer,** to something every version had: a tamer's short runs
+  (from a creature beside her, or when she calls a hurt pet back) went away from the creature and not
+  toward the rally point. She ran three times in nine seconds with a bone knight after her, each time
+  further from the party, and died out of everyone's reach while the others, their own fight over,
+  looted. A tamer's runs go to the rally point now, her pet following.
+- **The night's last run lost her again, another way.** Her pet was gone, so she had nothing to fight
+  with, and the rule that keeps a member from leaving a party that is still fighting kept her standing
+  at the rally point for eight seconds with a bone knight beside her, from all of her health to 22%.
+  One with nothing to fight with and something on it isn't held now; that change is later than every
+  run here.
+- **It costs no more:** $0.030 to $0.052 a run against $0.029 to $0.054.
+- **The first to act and the last are further apart with it** (2.1 to 8.5 s against 1.0 to 3.3 s):
+  the others hold their fire until the warrior is in it. And fewer members get to the lich at all
+  before it is dead (2 of 5 in the fourth version's run): the rest are on the skeletons.
+
+**To a companion that is set upon** (cuo-cym.10), part of the fifth version, 2026-10-13:
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set form_up=true &
+uv run python scripts/party_stray.py --port 5663      # the archer's client; 5661 for the leader's
+# the fifth staged run: out of the others' view, held there, and moved only once it has stopped looting
+uv run python scripts/party_stray.py --port 5663 --hold 40 --tiles 24 --quiet 6 --idle
+```
+
+- **In the three runs of the rule as it is now** it decided 4, 7 and 2 of a run's decisions: the bard
+  turning to the bone knight that was on the warrior (5 times), the tamer keeping or sending her pet
+  at what was on the warrior (6), and once the case it was written for. In the third run's second
+  fight the bard was looting, the archer out of his view with a bone knight on him. He walked toward
+  where the archer had last reported, had the bone knight in view a second and a half later, closed
+  to his song's reach and played Discordance on it. The archer, down to 32%, lived.
+- **And once wrongly,** in the fight of the second staged run below: the tamer, bandaging a pet at 2%
+  that she had just called back, was walked to within a few steps of the lich that was on the
+  warrior, with nothing to send at it. A tamer whose pet is called back or under half its health
+  keeps at it now, which the night's last three form-up runs had (the rule decided 2, 0 and 1 of
+  their decisions).
+- **The staged check couldn't make the case it was written for.** Once the fight was over one member
+  was put 14 tiles from the others with a bone knight two tiles beyond it
+  ([`[AgentGo` and `[AgentSpawn`](reference.md#test-server-commands)). The archer, and in a second
+  run the leader, were among the others again within 2.5 s, well ahead of the bone knight: each was
+  looting when it was moved, and its client walked it back to the corpse. The bone knight followed
+  into the whole party and was dead 25 s and 17 s after it appeared; nobody fell. A third run, with
+  the archer's own walking switched off, went the same way (looting is not walking, to the client).
+- **A fourth held him** (looting off too), though only after he was back beside the bard. The bone
+  knight reached him 9 s after it appeared and had him at 54% of his health six seconds later. The
+  mage walked up from 10 tiles, cast at it and healed him twice, the tamer sent her pet, and it was
+  dead 14 s after it reached him. They did that by their own pick, which was to fight: the rule acts
+  only where a member would loot or rest, so none of those four put it to work. The bard walked away: the warrior had died in the fight, the party's goal had just
+  become his resurrection, and a member on a trip is not sent anywhere by this rule.
+- **A fifth made the case** (2026-10-13 23:56, `logs/fleet/20261013-235608-party-lich`, one run,
+  staged). The archer was moved only once he had stopped looting, 24 tiles south of the others, and
+  held there for 40 s with a bone knight two tiles beyond him. It was on him 10.6 s after the move
+  and had him at 83% at 13.2 s. The bard, looting a skeleton's corpse, turned to him at 15.1 s ("to
+  Wystan: set upon out of view"), the warrior, looting the lich's, at 16.8 s, and the mage at 17.4 s,
+  each with a walk toward where he had last reported. The warrior was beside him at 20.8 s and
+  fighting it, the mage's Explosion and the bard's Discordance landed at 22.2 s and 22.4 s, the
+  warrior bandaged him and the mage healed him at 26.7 s, and the bone knight was dead at 28.4 s. His
+  lowest was 55%. The tamer had him in view at 15 tiles throughout, so the rule wasn't hers: she
+  went for the bone knight by her own pick and kept behind the warrior until he went.
+- **What the first staged run did show** was the rule as first written doing harm in the fight before
+  the staging: the mage, at 2% to 10% of her mana, had her rest (a trance, to have mana again) turned
+  into a fight at every decision for 40 seconds, eleven Magic Arrows and seven decisions that cast
+  nothing. And after it, the mage and the bard walked after the tamer, who was out of view and merely
+  running, away from the bone knight the archer beside them was shooting. Both are excluded now.
+
+**Callouts, and walking together, at six runs each** (cuo-cym.8). Two leads from 2026-10-11 rested on
+three runs each, taken with Jev in the fights: with callouts the lich died sooner in all three, and a
+party that walks its trips together called a leave more often. On today's defaults, `form_up` off, the
+three conditions in turn through the night of 2026-10-13 (02:19 to 05:41; the baseline's first three
+runs are the ones above):
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false                        # callouts on, each walks its own trips
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set callouts=false
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set walk=true
+```
+
+| six runs each | the default | callouts off | walking together |
+|---|---|---|---|
+| members who died | 0, 0, 1, 1, 0, 2 | 1, 0, 1, 0, 2, 0 | 0, 0, 1, 0, 0, 0 |
+| the lich dead, from first sight | 14.1 s, 26.1 s, 17.2 s, 17.0 s, 35.7 s, never | 12.6 s, 49.7 s, 10.5 s, 82.6 s, 12.1 s, 99.7 s | 15.2 s, 15.0 s, 227.5 s, 13.7 s, 24.5 s, 31.1 s |
+| leaves called in the run | 1, 3, 6, 6, 6, 6 | 1, 3, 6, 5, 4, 3 | 0, 0, 3, 0, 0, 0 |
+| the furthest member from the leader as the fight began | 9, 9, 9, 10, 9, 11 tiles | 9, 11, 9, 10, 9, 10 | 3, 4, 4, 3, 4, 4 |
+| seconds of the first minute somebody stood apart | 23, 50, 17, 34, 48, 44 | 25, 43, 47, 53, 46, 27 | 0, 2, 28, 0, 0, 3 |
+| first under 90% of health | the warrior in 3, the archer in 2, the mage in 1 | the archer in 3, the warrior in 2, the mage in 1 | the warrior in all 6 |
+| members under a third of health | 0, 0, 3, 3, 1, 3 | 1, 1, 3, 1, 3, 3 | 1, 0, 2, 1, 0, 1 |
+| what a run cost (mean) | $0.044 | $0.045 | $0.039 |
+
+- **Callouts don't show in the lich's time to die.** The three fastest kills of the twelve runs were
+  without callouts, and so were the three slowest; the one run in which the lich wasn't killed had them
+  on. Four members died with them and four without. The lead of 2026-10-11 doesn't hold on today's
+  defaults at six runs.
+- **Walking together is the other way round from the lead.** 3 leaves in six runs against 28, one
+  death against four, and nobody apart for more than 3 seconds in five runs of six. A party that walks
+  its trips together is together when the fight begins, and a member with the party beside it doesn't
+  leave.
+- **It does most of what forming up does, on this scene.** The two are different ways to the same
+  place: one walks the whole trip as a group, the other gathers at the edge of the hunt however each
+  got there, and gives the party a place to fall back to. They can be on together.
+- **One frozen copy of the code** (as it was at 22:26 on 2026-10-12) played all three conditions, so
+  that they differ in the one setting. Two later fixes that reach a party with the new settings off are
+  not in them: a hunt capped at the session's time, and which creatures count as coming when a member
+  thinks of helping.
+
+**One plan, three ways, with every brain's memory on** (cuo-cym.5), 2026-10-13, 05:41 to 08:44, three
+runs each in turn (with other runs between them), on the fourth form-up version's code. By now each
+character's own memory holds three days of deaths at this graveyard. The two party plans are formed up;
+on 2026-10-11 the same three-way, without forming up, had one or two runs a cell
+([above](#a-party-that-helps-calls-out-and-talks)).
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich-solo.toml                                  # a planner each
+uv run uo-brain fleet fleets/party-lich.toml --set form_up=true                    # the leader's plan
+uv run uo-brain fleet fleets/party-lich.toml --set plan=huddle --set form_up=true  # a planner each, with the huddle
+```
+
+| three runs each | a planner each | the leader's plan, formed up | the huddle, formed up |
+|---|---|---|---|
+| in the fight within 45 s of the first one | 3, 1, 2 of 5 | 5, 5, 5 | 4, 4, 3 |
+| the first of those to the last | 14.1 s, alone, 4.7 s | 3.4 s, 3.6 s, 3.5 s | 6.4 s, 38.5 s (three within 4.5 s), 15.4 s |
+| never came | 0, 2, 3 | 0, 0, 0 | 1, 1, 2 |
+| members who died | 2, 1, 1 | 1, 0, 2 | 2, 0, 2 |
+| the lich dead, from first sight | 157 s, never, never | 21.5 s, 17.3 s, 19.4 s | 18.9 s, 17.4 s, never |
+| seconds of the first minute somebody stood apart | 55, 60, 51 | 2, 0, 11 | 60, 46, 60 |
+| planner calls in the run | 38, 30, 22 | 8, 12, 10 | 47, 50, 44 |
+| what the run cost | $0.152, $0.104, $0.071 | $0.053, $0.067, $0.055 | $0.075, $0.076, $0.072 |
+
+- **The leader's plan, formed up, is the one that brings five to the fight:** all five within 3.4 to
+  3.6 s of each other in every run, whatever each remembers, and the lich dead in about 20 s each time.
+  Its one memory-on run of 2026-10-11, not formed up, had all five walk in, three die and the lich
+  live. Memory still shows in what the planner does around the fight: in the second run it had the
+  party rest three times at the healer before hunting, and in the third it ended the session after six
+  minutes and two deaths.
+- **The huddle's gathering works for those who set out together, and doesn't make them set out
+  together.** Those who came were in the fight within 6.4, 4.5 and 15.4 s of each other, where on
+  2026-10-11 the first were in half a minute before the warrior. But in every run one or two never
+  came (shopping, or resting in town), and in the second the archer came 38 s behind the rest. In the
+  third the bard reached the edge first, heard of nobody on the way in the four seconds the first one
+  there allows, and went in as the party's point; the mage and the archer followed 9 and 15 s behind
+  him, the warrior and the tamer not at all, and two of the three died with the lich alive.
+- **A planner each scatters, as before:** 3, 1 and 2 of 5 in the fight in its first 45 s, the lich
+  killed once in three runs, and the dearest of the three at $0.109 a run against $0.074 and $0.058
+  (its planners ask Sonnet at their hard moments).
+- **Where that leaves it:** as on 2026-10-11, with more behind it. The leader's plan is the one for a
+  party that fights. What the huddle still lacks is a way to make five planners choose the same
+  moment: the first at the edge waits for those who have said they are on their way, and a planner
+  that chooses the hunt ten seconds later hasn't said so yet.
+- **With memory off every planner chooses the hunt, and the huddle formed up has all five in the fight
+  within seconds:** 7.0, 5.2 and 3.6 s from first to last in three runs
+  (`--set memory=false --set plan=huddle --set form_up=true`; 01:09 and 01:20, before two fixes to the
+  gathering, and 09:22 on the night's last code), the lich dead in 62, 22 and 31.5 s, deaths 0, 0 and
+  1. On 2026-10-11, not formed up, the others were in half a minute before the warrior. In the last of
+  the three the bard was first at the edge and was made the party's point, with the warrior, whose
+  planner had him walking there, a second behind.
+- Three runs a cell, on the fourth form-up version's code (the fifth's changes are in none of them),
+  and every run added to the memories the next one read.
+
+**Everything on at once,** one run, 2026-10-13 08:52: the talking party (`fleets/party-inn.toml`:
+personas, talk, walking together, roleplay, the inn, memory on, 28 minutes) with forming up, the game's
+own party, raising and callouts both aloud and in party chat, on the code as it stood at the end of
+the night.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-inn.toml --set form_up=true --set game_party=true --set raise=true --set 'callouts_to="both"'
+```
+
+- The party was made in the game (four invited, four accepted) and formed up for both its hunts, all
+  four others closed up on the leader each time.
+- Four fights, the second a lich and three skeletons at the graveyard: nobody hurt below 85% of their
+  health, nobody dead, and somebody apart for 5 seconds of one ten-second fight.
+- 30 callouts (where each was heard wasn't checked in this run), then the inn: 20 lines from all five
+  at the table and 30 memories kept of it.
+- $0.12 for the run. Nobody fell, so nothing was raised: the settings were on together and nothing
+  got in anything else's way, which is all one run says.
+
+**The game's own party** (cuo-cym.3), single runs on 2026-10-13, headless, memory off:
+
+| what | command (beside `fleets/party-lich.toml --set memory=false --set form_up=true`) | result |
+|---|---|---|
+| the party is made | `--set game_party=true` | the leader invited the four one at a time and each accepted: all five in the game's party 32.5 s after the first invitation |
+| looting a companion's kill | the same run, against the run before it without | "Looting this monster corpse will be a criminal act!" was among the recent events of no decision in the run; in the run before it, of 88 decisions, by all five members |
+| callouts in party chat | `--set game_party=true --set 'callouts_to="party"'` | the five logged 29 callouts; a probe on the mage's client heard 29 party-chat lines from them and none aloud |
+| a stranger's invitation | `uv run python scripts/party_player.py --stranger talk2:5665:Corwin` | the two companions it invited declined ("Thea : Does not wish to join the party."), then all three accepted their leader's |
+
+- **A party outlives a logout into the next run.** A character whose client is closed stays in the world
+  for a while, so the party made at 00:50 was still there in the four runs started straight after it,
+  loot rights and all (no such warning in any of them; the measured runs above were all earlier). `[AgentReset` now
+  takes a character out of any party, so every run starts without one.
+
+**Raising the fallen** (cuo-cym.4), 2026-10-13, two runs, memory off, the death staged
+([`[AgentSlay`](reference.md#test-server-commands) said by the archer 20 s and 9 s into the fight;
+nothing in the fight killed him). The second was run windowed with the screen recorder on, though it
+recorded nothing.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-raise.toml --set memory=false &   # form_up and raise are on in the file
+uv run python scripts/party_slay.py --port 5663                      # the archer's client
+```
+
+| from the archer's death | walked to the healer (four deaths in the runs above) | raised where he fell (two runs) |
+|---|---|---|
+| on his feet again | 37 s, 41 s, 57 s, 58 s | 63 s, 73 s |
+| healed enough to go on | 120 s more each time (the wait's limit: alone, his bandages on his corpse) | 12 s, 30 s |
+| his things back from his corpse | 193 s, 205 s, 235 s, 237 s | 77 s, 104 s |
+
+- **Less than half the time to be back with everything,** with a healer 40 tiles from the fight; the
+  healer is rarely that near a hunt.
+- **The ghost waited by his corpse in war mode** for the fight to end (40 s and 44 s long), and the
+  party won it without him both times.
+- **First run, one raiser at a time:** the mage cast Resurrection as the fight ended and four times
+  more, and her fifth cast worked; the warrior, who could have bandaged him, stood by because she had
+  called it. Changed after that run: everyone who can raise tries.
+- **Second run, both at it:** seven casts and four bandages before one worked ("raised where it fell by
+  Isolde and Roland": the ghost can't tell whose try it was). A try is said to work one time in four at
+  these skills; 2 of 16 did.
+- **The first try at staging it failed:** the archer placed 26 tiles ahead to meet the wave alone walked
+  back to his leader in six seconds, before the wave was spawned, and nobody died.
+
+**A party for the player** (cuo-cym.6), 2026-10-13: `uv run python scripts/party_player.py`, twice (the second
+with `--stranger`). A script plays the leader's part with walks, attacks and three lines of speech; the
+three companions are agents.
+
+| | first run | second run |
+|---|---|---|
+| companions beside the leader | 29 s after it logged in | 29 s |
+| furthest companion while the leader walked (18 samples) | median 4 tiles, most 5 | median 4, most 6 |
+| a bone knight and three skeletons spawned ahead | all three in the fight within 0.1 s of each other; over in 18 s | within 0.3 s; 25 s |
+| the leader (no brain, bandaging itself by reflex) | down to 22% of its health; bandaged by them 3 times | 46%; healed or bandaged twice |
+| "Stay here.", then 12 tiles away | all three stayed | all three |
+| "Follow me.", then back to the start | all three beside it | all three |
+| cost | $0.006 | $0.008 |
+
+**The player's table**, one run, 2026-10-13 08:44 (`uv run python scripts/party_player.py --fleet
+fleets/party-player-talk.toml --table`: the same script with personas and talk, and after "Follow
+me." the leader says "Sit down, drinks are on me.", puts one question to a companion half a minute
+in, and two minutes later says "Right. Follow me."). The tamer's client never got past the login
+screen, so this is two companions, the mage and the archer, and the run is void for any measure:
+
+- **Both took "sit down" as the table,** 3 s after it was said, and the mage kept it: 13 lines in 1.6
+  minutes, six from each of them and the leader's question, through toast, stories, banter and a
+  lesson each.
+- **They talked to each other about the fight they had just had with it,** and to the leader by name
+  once it had spoken ("Roland, I'd have shot the skeleton again just to watch Isolde wave her hands
+  at it."). Each kept six memories of the table, a lesson among them ("Stay behind Roland's wall and
+  shoot only the single skeleton that's already pulled").
+- **"Right. Follow me." had both beside it again.** Before the table: in the fight within 0.1 s of each
+  other, the leader down to 33% and healed or bandaged five times, both stayed at "Stay here.", both
+  came at "Follow me.".
+- The run cost $0.016, the table $0.005 of it.
+
+**Orders in the leader's own words** (cuo-cym.15), 2026-10-13. A companion took its leader's three
+orders by matching a short list of phrases; now each line the leader says is a question for system
+one ([how](fleets.md#a-party-for-the-player)). First without the game, one run:
+
+```bash
+cd brain
+uv run python scripts/orders_check.py --out bench/2026-10-13-orders.json
+```
+
+Lines a leader might say, each read for three companions (Isolde, Wystan and Thea, led by Roland): by
+the phrases, and by each model through the question a companion asks, an order at 0.6 or more. A
+reading is right when it is the order written down for that companion beforehand: come along, wait,
+sit down, or none.
+
+| | the phrases | Jev | Decision 1 |
+|---|---|---|---|
+| first set, 84 lines, 252 readings: written with the question, and the cut chosen on it | 150 (59.5%) | 245 (97.2%) | 252 (100%) |
+| **second set, 53 lines, 159 readings: written after that, put to the models once** | 88 (55.3%) | 144 (90.6%) | 149 (93.7%) |
+| second set: orders read as talk | 62 | 0 | 3 |
+| second set: talk taken for an order | 6 | 15 | 4 |
+| second set: one order taken for another | 3 | 0 | 3 |
+| a question (median) | none | 0.22 s, $0.00003, 722 tokens in | 0.27 s, $0.000016, 387 tokens in |
+
+- **The second set is the one to go by:** shorter and looser, as people type in a game ("w/me", "lets
+  roll", "hold here pls"), some said to companions who are waiting. The first set shaped the cut.
+- **The phrases read an order said any other way as talk:** none of the first set's twelve ways to
+  say "come along" (0 of 36), and "Wystan stay, the rest of you with me" as an order for Wystan alone.
+- **Decision 1 got four lines of the 53 wrong:** "w/me" was talk to all three; "Park yourselves, I'm
+  buying." an order to wait where it meant the table; "wait for it..." an order to wait; and "Come
+  on, you beauty!" an order to come along for one of the three.
+- **Jev missed no order in either set and took talk for an order more often:** "Follow the money, as
+  they say.", "wait for it...", "Come on, you beauty!", "Still there? Good." (said to companions
+  who were waiting) and, for the two it wasn't said to, "Not you, Wystan. You wait.".
+- **So the kind is Decision 1's,** as system one is by default; `--profile jev` reads with Jev.
+- **The cut:** at 0.5 Decision 1 took "Hold on, what did you just say?" for an order to wait (0.52)
+  in the first set, so 0.6. On the second set 0.5 and 0.6 give it the same 149, 0.7 gives 147 and 0.8
+  gives 144.
+- **One answer was changed after the first run.** "Everyone but Thea, come on." had "none" written
+  down for Thea, and both models read "wait" for her, which is what the line means: left to follow as
+  before, she comes along. Counted as first written, the first set is 251 for Decision 1 and 244 for Jev.
+
+Then live, the leader's part played by the script with its orders said as a person might
+(`uv run python scripts/party_player.py --own-words`, 11:13, the second of two runs; three companions
+without talk, Decision 1 reading):
+
+| the leader said | read by | what they did |
+|---|---|---|
+| "Right, on we go. Keep up." | two as come along (1.00); the third's brain started after it | all three beside it 18 tiles north |
+| "You'd have stayed in bed if I'd let you." | all three as no order (0.99) | went on with it, and into the fight (a bone knight and three skeletons, 26 s) |
+| "Hold up a moment, I'll scout ahead." | all three as wait (1.00) | all three stayed while it walked 12 tiles off and back |
+| "All clear. Come along, you lot." | all three as come along (1.00) | all three beside it back at the start |
+| "Wystan, hang back here a moment." | Wystan as wait (1.00), the other two as no order (0.99) | Wystan stayed; Isolde and Thea walked the 12 tiles with it |
+| "Wystan, catch up!" | Wystan as come along (1.00), the other two as no order | all three beside it 3 s later |
+
+- **Every reading was the one meant,** 17 of 17, each within 0.8 s of the first companion's (a look a
+  second); a question took 0.39 s at the median with the three clients running, 0.54 s at most.
+- **Reading cost $0.0003** of the run's $0.0069; the rest was the fight.
+- **The run before it (11:09) read its 18 lines the same way,** and the script was wrong, not the
+  companions: it told Wystan to hang back while the other two were still waiting from "Hold up a
+  moment", so nobody came along. The order to follow again now comes first.
+- **The third companion missed the first line** because the run began three minutes after the last:
+  her character was still standing there from it, the script counted her as beside the leader, and her
+  brain started after the line was said.
+
+The same with the companions who talk, and the table (`uv run python scripts/party_player.py --fleet
+fleets/party-player-talk.toml --table --own-words`, 11:20, one run): all 27 readings as meant.
+
+- **"Who fancies an ale? Take the weight off." was the table** for all three (0.98 and 0.99): 12 lines
+  in two minutes, with the leader's question to Wystan half a minute in read as no order (0.99).
+- **"Right, we should get moving." ended it** (come along, 1.00, asked as the question for the table),
+  and all three were beside the leader 8 tiles on.
+- The run cost $0.016: reading the lines $0.0004, the table $0.005, the fight $0.007.
+
+**Talking with the companions** (cuo-cym.16), 2026-10-13. In that run nobody answered any of the four
+things the leader said to the party on the road: the yes/no before a line (kind `chat`, Decision 1)
+gave "You'd have stayed in bed if I'd let you." 0.25 to 0.41 and "All clear. Come along, you lot."
+0.07 to 0.11. One answer came, to an order by name, 9 s after it: "Hang back? Fine by me, Roland.
+Wall's between me and those bones." "Wystan, catch up!", said four seconds after that answer, was never
+considered: he had spoken within 20 s. The yes/no and the gap were made for agents talking to agents. The
+yes/no put to the models without the game, as it was and as it now is for a leader a person plays:
+
+```bash
+cd brain
+uv run python scripts/answer_check.py --out bench/2026-10-13-answer.json
+```
+
+39 lines the leader might say, each asked as the three companions of `fleets/party-player-talk.toml`
+would ask it, a yes at 0.5 or more. Lines as wanted, of those in each group:
+
+| | Jev, as it was | Jev, for a person | Decision 1, as it was | Decision 1, for a person |
+|---|---|---|---|---|
+| said to the party (12): somebody says yes | 10 | 12 | 7 | 12 |
+| said to one by name (8): that one says yes | 8 | 8 | 8 | 8 |
+| following on from one's answer, no name in it (6): that one says yes and nobody else | 6 | 6 | 5 | 6 |
+| nothing to answer (8: "brb", "lol", "hmm"): nobody says yes | 4 | 7 | 8 | 8 |
+| meant for the others, straight after one's answer (5): another says yes, that one doesn't | 0 | 0 | 0 | 0 |
+| **all 39** | 28 | 33 | 28 | **34** |
+| a question (median) | 0.23 s, $0.00003 | 0.23 s, $0.00004 | 0.28 s, $0.00002 | 0.27 s, $0.00002 |
+
+- **As it was, Decision 1 left five of twelve lines to the party with no yes from anyone:** "Anyone
+  hurt?", "Good evening, all.", "That was a good fight. Well done, all of you.", "I've never seen so
+  many skeletons in one place." and "This graveyard gives me the creeps."
+- **For a person, every line to the party had all three at 0.97 or more,** and one answer is given:
+  the first to claim it.
+- **A line that follows on is its own companion's.** "And your reagents?" after Isolde's answer:
+  Isolde 1.00, the other two 0.04 and 0.02. The yes/no is told whose answer the line follows, in both
+  columns; before, such a line was anyone's.
+- **A line meant for the others goes to the wrong one, 0 of 5.** "What did the rest of you make of
+  it?" after Isolde's answer: Isolde 0.99, the others 0.38 and 0.20. The same words that give her
+  "And your reagents?" give her this. Told instead to judge it from the line
+  (`bench/2026-10-13-answer-third.json`), the yes/no got these five wrong another way (the one who
+  had just answered still said yes, or nobody did) and one of the six that follow on besides, so the
+  plain words stayed. Who a
+  line is for wants one question with the party as its options, not a yes/no from each (cuo-cym.17).
+- **Jev says yes to some of what has no answer:** "oops, wrong key" (about 0.6) with either
+  question, and its answers near 0.5 move from run to run (7, 6, 6 and 4 of these eight as wanted
+  with the old question, over the four runs). The kind stays Decision 1's.
+- **Four of the eight lines with nothing to answer are the question's own examples** ("brb", "lol",
+  "ok", "one sec"); Decision 1 gave the other four 0.02 to 0.15.
+- **Orders** (three lines, not counted: each companion has already said its word): two or three of
+  the three now say yes to each, so an order may get a line in character after the word.
+- **Run four times as the lines grew.** 28 lines first (25, 25, 23 and 28:
+  `bench/2026-10-13-answer-first.json`); then the six that follow on, with the words about them in
+  the question (30, 33, 28 and 34 of 34: `-second.json`); then the five meant for the others, with
+  the wording that judged them from the line (`-third.json`), and last with the plain wording back,
+  which is the table above. Nothing else in the question was changed after its first run.
+- **The bench's states are barer than a live one's.** Live, the old question gave "You'd have stayed
+  in bed if I'd let you." 0.25 to 0.41; here, with nothing said before it, about 0.75.
+
+Then live (`uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --table
+--own-words`, 11:45, the second of two runs with the new talk; the script now also talks with them):
+
+| the leader said | who answered, and after how long |
+|---|---|
+| "Isolde, how are you holding up?" | Isolde, 9 s: "Upright, Roland, and still annoyingly unsinged. Ask me again after the bones." |
+| "And what did you make of that bone knight?" (2 s after her answer, no name) | Isolde, 9 s: "That knight took three Fireballs and a bear's worth of nerve, Roland." The other two gave it 0.05 and 0.04. |
+| "Isolde, run back to town and buy me some bandages, would you?" | Isolde, 10 s: "Buy your own bandages, Roland. I have a reputation to keep and reagents to count." |
+| "What did the rest of you make of it?" | Isolde again, 9 s (0.99; the other two 0.12 and 0.18): the line meant for the others, as measured above |
+
+- **Ten answers to the leader in the run, 8.2 s after its line at the median** (6.5 to 9.9 s): the
+  time a person takes to read and type, with the model's 1.3 s inside it.
+- **The errand was turned down both times it was asked** (11:30: "Buy your own bandages, Roland. I'm
+  not your errand girl, though I'd stay for the wall."), and read as no order by all three (0.98 to
+  1.00).
+- **An order now gets a word from each in its own voice,** and often a line after it. To "Hold up a
+  moment, I'll scout ahead." (11:30): "Stay here? Me? Only because you asked nicely." (Wystan),
+  "Fine, I will wait here and count the bruises I did not get." (Isolde), then Wystan again 7 s on:
+  "Scouting's your business, Roland. Mine's the arrows, so I'll cover you here."
+- **All 39 readings of 13 lines were the ones meant,** the table and the order to leave it included.
+- **The run cost $0.018:** the fight $0.007, the table $0.005, 15 lines of talk $0.004, 43 yes/no
+  $0.0012, 39 readings for orders $0.0006. The voice packs with the new words were written once in the
+  run before, $0.0014 a character.
+- **Companions had been looting the player's kills since they were built** (10 to 16 loot decisions a
+  run in six runs, last night's included), though the guide said they take nothing: the fight loop
+  lays the strategy's settings over its own, and with no strategy those say "valuables". Seen here
+  because two who had been told to wait walked five tiles to a corpse. Fixed after this run
+  (`strategy.apply`).
+- **The script's "stayed" was wrong too:** it counted who was no longer within 6 tiles of the leader,
+  and one standing where the leader walked to was beside it without having moved (this run's report
+  says only Wystan stayed). It now measures how far each moved.
+- **Run once more with both put right** (11:57, the same command): told to wait, none of the three
+  moved a tile while the leader walked 12 off; with Wystan alone told to hang back he moved none and
+  the other two 11 and 10. No loot decision in 196. All 39 readings as meant, ten answers to the
+  leader 8 s after its line at the median (5.9 to 12 s), the errand turned down a third time ("Buy
+  your bandages yourself, Roland. I'm not your errand-girl, and I'm staying put."), and "What did the
+  rest of you make of it?" answered by Isolde again. $0.018.
+
+**Played by a person for the first time,** 2026-10-13, 21:18, one run of five minutes: Harry as Roland
+in a client with a window (`bin/osx-arm64-cym3`), the three companions without one. The command as it
+was given to him: `UO_CLIENT_DIR=bin/osx-arm64-cym3 uv run uo-brain fleet fleets/party-player-talk.toml --hours 1`
+(`logs/fleet/20261013-211845-party-player-talk`; its record has the hour and the windowless clients,
+not which build they ran from). The run ended without its summaries, so these are counted from the
+records. What he found is in beads cuo-cym.18 to .22.
+
+- **He said 16 lines and 8 were answered, each by one companion:** Wystan the first three, Thea one,
+  Wystan one, Isolde the last three. "So crew how are you all today?" and "So, what do you all fancy
+  doing next?" got one answer each, the other two giving way. Three more answers were written and
+  dropped because he had spoken again before they were due.
+- **The answers came 6.3 s after his line at the median** (4.6 to 9.0 s), against 8 s in the scripted
+  runs: the pace counts the length of the line heard and of the answer, and his lines were shorter
+  than the script's. He asked for about a fifth less.
+- **Asked to loot, nobody did or said anything:** "feel free to loo", "loot" and "Please go ahead and
+  loot" were each read as no order by all three (0.90 to 0.97), and the yes/no on answering gave 0.10
+  to 0.22. There is no such order. "cover me" was read the same way (0.85 to 0.89).
+- **Sent to the inn without him, nobody went, and what was said didn't match:** "Right - off to the
+  inn for you all - see you there" was read as come along by all three (0.99), which they were already
+  doing, and Isolde answered "Off to the inn, Roland? Finally, a sensible order from you. Lead on."
+  "I'll follow you" was read as no order, and she said "Following me, are you? Wise. Someone in this
+  party ought to know the way." and stood still. "Off you go then" was come along again (0.96).
+- **In the fights they did as in the scripted runs:** 14 callouts over a zombie, a spectre and
+  another zombie, and each of the three called that it was seeing to his wounds ("Hold still, Roland,
+  this'll sting a bit.").
+- **Two of his 16 lines were read as an order, both wrongly** (the two above). The 48 readings took
+  0.40 s each at the median (0.25 to 0.69 s).
+
+**What the playtest asked for** (cuo-cym.18 to .23), 2026-10-13, 21:50 to midnight: a companion's
+settings changed by the leader's word, a fourth order (go somewhere without the leader), a word on an
+order already in force, an answer to a request it doesn't carry out, an answer from each a line is
+for, and answers a fifth sooner ([how](fleets.md#a-party-for-the-player)). Each of a companion's readings of a line is a question for
+system one, so each was put to the models without the game first, as the day's first two were:
+lines with the reading wanted written down beforehand, a set the question was written with, and a
+set written after that and run once. Decision 1 and Jev both, each line as three companions
+(Isolde, Wystan and Thea, led by Roland) would ask it.
+
+```bash
+cd brain
+uv run python scripts/orders_check.py --out bench/2026-10-13-orders-asked.json
+uv run python scripts/settings_check.py --out bench/2026-10-13-settings.json
+uv run python scripts/answer_check.py --no-yes-no --out bench/2026-10-13-answer-asked.json
+uv run python scripts/go_check.py --out bench/2026-10-13-go.json
+```
+
+Two earlier runs of the evening are kept beside them: `bench/2026-10-13-orders-go.json` (the orders
+before requests were read) and `bench/2026-10-13-answer-for.json` (who a line is for, with the yes/no
+alone beside it).
+
+*Orders, with the one to go somewhere, and requests.* The order question has a fifth option now (go
+somewhere without the leader), and the question about settings rides in the same request. Beside it,
+in a request of its own, goes a yes/no: is this line asking this companion to do something? A line
+with no order in it that asks for something all the same ("cover me") is a request, and the companion
+answers it with what it will and won't do. Readings as written: an order at 0.6 or more; a request
+when no order is taken and the yes/no gives 0.7 or more; a line that speaks to a setting is left to
+the settings' questions below. The run of 23:40:
+
+| | lines, readings | the phrases | Jev | Decision 1 |
+|---|---|---|---|---|
+| first set, as on the morning of 2026-10-13 | 84, 252 | 146 | 248 | 250 |
+| second set, unseen that morning | 53, 159 | 84 | 148 | 148 |
+| third set: being sent somewhere and the playtest's own lines; the new wording was settled on it | 40, 120 | 69 | 113 | 115 |
+| **fourth set: written after that; the order question wasn't changed on it** | 34, 102 | 47 (46.1%) | 90 (88.2%) | **92 (90.2%)** |
+| fourth set: orders read as talk; talk taken for an order; one order taken for another | | 37; 9; 9 | 4; 8; 0 | 4; 3; 3 |
+| fifth set: requests; the yes/no's wording was settled on it | 14, 42 | 21 | 38 | 39 |
+| sixth set: requests, written before the yes/no was a question of its own | 16, 48 | 25 | 42 | 45 |
+| **seventh set: requests, talk that sounds like one, orders with a request in them; written after the last change and run once** | 19, 57 | 34 (59.6%) | 49 (86.0%) | **49 (86.0%)** |
+| seventh set: requests read as requests; talk left as talk; orders | | | 17 of 21; 23 of 27; 9 of 9 | 16 of 21; 24 of 27; 9 of 9 |
+| a reading (median): the order with the settings question; the yes/no beside it | none | 0.22 s, $0.000075; $0.000029 | 0.31 s, $0.000056; $0.000016 |
+
+- **The fourth order didn't cost the first three:** Decision 1 read the two sets of the morning 250 and
+  148 as written, against 252 and 149 then. Not the same lines: "wait for it..." and "Come on, you
+  beauty!" are talk now, and "lets roll" (0.29 to 0.47), "w/me" (0.30 to 0.45) and, for two of three,
+  "ok lets move" (0.53 and 0.56) fall under the cut. Lines near the cut move a reading or two between
+  runs. One that is nearly an order and asks for something ("ok lets move": the yes/no 0.93) gets a
+  question back from the companion, what is wanted, in place of silence.
+- **Decision 1 on the fourth set:** all 39 readings of talk right ("We should go to the bank at some
+  point.", "He went off to the inn and never came back.", "ok", "right"), 30 of 33 of being sent.
+  Wrong: "yes, there" (after "Go and wait for me at the bank." / "The west one?") was talk to all three;
+  "Nearly there, save me a seat.", said to companions waiting at the inn, was an order to go to all
+  three; "come back to the graveyard" was being sent there for all three (which takes them to the
+  leader all the same); "Off we go again." was talk for one (0.50).
+- **The fourth set has been put to the models five times,** as the rule for taking an order changed
+  (next point) and not the question: 91, 89, 92, 92 and 92 on Decision 1, and 88, 87, 92, 92 and 90 on
+  Jev.
+- **A line that points back at what was said is the weak place:** the state now carries the talk just
+  before the line (`said_before`), which reads "Off you go then" and "Go on, then." after the inn was
+  named, and not "yes, there".
+- **The first wording read the playtest's line wrongly.** "Right - off to the inn for you all - see you
+  there" was come along at 0.94 to 0.96 on Decision 1 until the option said what the tell is (the
+  leader stays behind or comes later); the bare word "bank" was an order to go to the bank (0.84) until
+  the option said a word for a banker isn't one. Four wordings on the third set: 92, 104, 107, 108 of
+  the 108 readings it then had.
+- **And live it was still on the edge:** see the live runs below, and the rule that came of them (sure
+  of an order to move and unsure which: sent, when that has 0.3 or more). The table has it.
+- **The two models are two readings apart on the fourth set and level on the seventh,** so the kind
+  stays Decision 1's by the rule of 2026-10-12. Jev misses fewer orders and takes more talk for one
+  ("I'll wait.", "right", and on the second set 11 readings to none).
+- **A request was first a sixth option of the order question, and took orders with it:** "Stay here
+  and cover the gate." and "Get yourselves to the bank and wait." were requests at 0.7 to 0.9, and
+  Decision 1 fell to 245 and 143 on the first two sets. As a yes/no of its own the order question is
+  the one measured above, unchanged.
+- **Requests on the lines the yes/no was settled on** (the third and fifth sets): 0.93 and more for
+  every request but one, 0.35 and less for talk but for "anyone need to wait for mana?" (0.59 to
+  0.68). Hence a cut of 0.7.
+- **Requests on the seventh set, Decision 1:** "someone pull that ogre off me", "give me a hand with
+  this door", "bandage me, quick" and "Wystan, pick that lock for me." (for Wystan alone) were requests.
+  "can anyone gate us home?" wasn't (0.20 to 0.38: a question, to the yes/no), nor "Thea, lend me fifty
+  gold." (0.68, under the cut), and "hold this for me a sec" was an order to wait for one of three
+  (0.67).
+- **Talk taken for a request:** "all guard me", a command to the leader's own pets, by all three (0.87
+  to 0.89; "all kill" is in the question's wording and "all guard me" isn't). "Tell me again how you
+  lost that horse.", "Go on, laugh." and "Someone ought to fix that bridge." were talk.
+- **An order with a request in it keeps its order:** 9 of 9 on the seventh set ("With me, and somebody
+  watch the rear."). One on the sixth didn't: "Come on, and kill anything that moves." was no order to
+  any of the three (0.99) and a request.
+- **An errand is read as being sent:** "go and get me some bandages from town" is an order to go for
+  all three (0.97 and more), and "someone go and buy me some reagents" for two. The companion then asks
+  where, or walks to the nearest such place and waits there.
+
+*Settings.* Two steps: which settings a line speaks to (one choice, each setting given 0.25 or more),
+then each of those settings' own question (a value at 0.6 or more). A reading is right when exactly the
+settings written down for that companion were changed, to those values:
+
+| | Jev | Decision 1 |
+|---|---|---|
+| first set, 57 lines, 171 readings: written with the questions | 154 (90.1%) | 171 (100%) |
+| **second set, 52 lines, 156 readings: written after that** | 132 (84.6%) | **134 (85.9%)** |
+| second set: a setting the line changes that wasn't changed | 9 | 3 |
+| second set: a change nobody asked for | 15 | 19 |
+| second set: a wrong value | 0 | 3 |
+| the first step with the order question; a setting's question (median) | 0.22 s, $0.000075; 0.21 s, $0.000027 | 0.32 s, $0.000056; 0.29 s, $0.000014 |
+
+- **Looting, the thing asked for, was read right on every unseen line by Decision 1** (21 of 21: "go
+  on, grab the loot", "nobody touches the loot but me", "Thea, you can loot now." for Thea alone, "ok
+  stop looting"), as were target, helping, raising, callouts, distance and reach.
+- **What went wrong on the unseen set was mostly a remark or a request for one thing now taken as a
+  rule** (12 of the 42 readings that should change nothing): "I always go for the biggest one" set
+  strongest first, "nice and safe, that one" cautious, "run for it!" may run and "heal pls" helping
+  on (the last two are what a companion starts with, so nothing changes but the word it says). "We
+  fight to the death here" set relentless as well as never running, "be careful in there, pull back
+  early" may run and not cautious, "only speak when I ask you something" silent and not answers, and
+  "Isolde, just Fireball them once it's started." her opening spell as well as the one after it.
+- **A yes/no and then a question for every setting was the first design, and it over-read:** asked
+  about each setting in turn the models found something for most of them in most lines. "Leave the
+  rest." also switched helping and raising off; "Quiet, all of you." the callouts too. 39 changes
+  nobody asked for in 156 readings on Decision 1 (105 right), 32 on Jev (117 right). The yes/no also
+  missed lines outright on Decision 1 ("You can talk again." 0.09, "the rest of you keep off" 0.03
+  for the two it was for). With one choice among the settings first: 149, then 155 of 156 once the
+  option for none said that a remark on how things go isn't an instruction.
+- **The second set was run twice,** before and after two changes the first live run asked for: a
+  setting's question is told how the companion now plays in that setting only, and "leave the rest"
+  is in looting's option for nothing. 133 before, 134 after on Decision 1 (Jev 137 and 132). The 15
+  readings "after a change" in the first set are from that run too, all right on both models.
+- **Cuts:** on the second set Decision 1 has 134 at 0.25 and 0.6, 136 at 0.3 and 0.6, 133 at 0.15; the
+  cuts were left where the first set put them.
+
+*Who a line is for.* One choice with the party as its options, then the yes/no of each it is for;
+and one of those it is for who reads a request in it answers whatever its yes/no says. Lines read as
+for whom they are for, and lines answered by exactly those (the run of 23:46; the held-back lines were
+first run once earlier in the evening, with the same counts on Decision 1):
+
+| | Jev | Decision 1 |
+|---|---|---|
+| the 39 lines of the morning, as wanted by that count (somebody answers a line to the party; nobody answers "brb") | 37 | **38** (the yes/no alone: 34) |
+| of those, the five meant for the others ("What did the rest of you make of it?") | 4 | 4 (the yes/no alone: 0) |
+| 16 more lines the question was settled on, four requests among them: for whom right | 11 | 13 |
+| the four requests ("cover me", "heal me", "Isolde, kill that one for me.", "someone go and buy me some reagents"): answered | 4 | **4** (the yes/no alone: 1) |
+| **24 lines held back: for whom right, of the 21 with one answer** | 19 | **21** |
+| held back: answered by each it is for and nobody else | 19 | 20 |
+
+- **A request gets its answer from the reading and not from the yes/no:** on Decision 1 the yes/no on
+  answering gave "cover me" 0.11 to 0.18, "heal me" 0.15 and "Isolde, kill that one for me." 0.25, and
+  each of those the line was for read a request in it (0.93 and more) and so answers. "heal me" was
+  read as Isolde's alone, the healer's.
+- **The request's yes/no takes a question for one now and then:** on the held-back lines "Not you,
+  Wystan. The other two: any bandages left?" for both it was for, and "Hey archer, save some for the
+  rest of us." for Wystan. They would have answered anyway (0.62 to 0.99), and the writer of the line
+  is told to answer a question as a question. A word for a vendor ("buy") was a request by the yes/no
+  to all three and is for none of them, so only those a line is for are left owing an answer.
+- **"The rest of you" goes to the others now:** after Isolde's answer, "What did the rest of you make
+  of it?" is Thea's and Wystan's and both say yes (0.97, 0.92); "And your reagents?" stays hers. Four
+  of the five were read for the right two ("Right, come along, you lot." is everyone's, being an
+  order), and two of those were answered by one of the two only: "Anyone else?" and "What about the
+  others, how are your supplies?" (the other's yes/no gave 0.35 and 0.44).
+- **A line to the party is every companion's:** all 12 of the morning's and all 6 held back had all
+  three answering ("everyone alright?", "who's hungry", "morning all").
+- **By what one plays:** "Hey archer, save some for the rest of us." is Wystan's (0.99) once the
+  question says what each plays as; before that, "Scholar, what is that thing?" was for nobody (0.92).
+  "And what does the bear's mother think?" still is: the question knows a tamer, not her bear.
+- **Words for a banker or a vendor are for none of them** on Decision 1 ("bank", "vendor buy", "buy",
+  "withdraw 500", "guards!": 5 of 5; "all kill" was for everyone, and nobody's yes/no answered it).
+  Jev read "brb", "lol" and "ok" as said to everyone.
+- **One held-back line was read right and not answered:** "Tamer, keep that bear off my boots." (Thea's
+  yes/no 0.44).
+
+*Where it is sent, and whether it goes* (one companion, the kinds of place a character south of the
+Britain graveyard is offered: 14, the nearest inn 66 tiles east):
+
+| | Jev | Decision 1 |
+|---|---|---|
+| the kind of place meant, 20 lines the question was reworded on | 18 | 17 (15 with the first wording) |
+| **the kind of place meant, 10 lines written after the first rewording** | 8 | 9 (8 before the second) |
+| whether it goes, 12 moments, written before any run and not touched | 7 | **12** |
+
+- **Whether to go is where the two differ:** Decision 1 said go in the four quiet moments (0.89 to
+  0.96) and when asked again after a refusal (0.91 to 0.94), and no when badly hurt (0.32), with the
+  leader near death (0.32), in a fight (0.03), with three hostile creatures close (0.17) and with the
+  leader fighting alone (0.32). Jev said go to three of those five (four in an earlier run), and no to
+  two of the three askings again.
+- **The options are kinds of place, with how far the nearest is, and not places by name.** That is the
+  second rewording, made for the second live run below and not on these lines: given "The inn: North
+  Britain inn at (1458, 1525), 66 tiles to the east." and the talk of a live run before the line, the
+  model called "off to the inn for you all - see you there" unclear at 0.63 to 0.79 for all three; given
+  "The inn: the nearest is 64 tiles to the east." it is the inn at 0.79 to 0.91. The ten later lines
+  were run before and after it (8, then 9).
+- **Wrong places:** a line with two places in it sends the companion to the first ("I'm going to the
+  bank, you go to the healer.": the bank, 0.94). "go get a drink, I'll find you" names no place it can
+  tell, and it asks; the moongate is 469 tiles off and isn't offered.
+- **The talk before the line gives the place** once the question says so (the first rewording): "Off
+  you go then" after "who wants to go off to the inn?" was unclear (0.78) and is the inn; "That one."
+  after "Where? The bank?" is the bank.
+- **Another town's inn isn't the nearest inn:** "see you at the inn in Skara Brae" is unclear on
+  Decision 1 with the options as kinds (it was the nearest inn at 0.85 before), and still the inn on Jev.
+
+**Live, with a script saying the playtest's lines** (cuo-cym.18 to .22), 2026-10-13 22:49 to 2026-10-14
+00:24. `scripts/party_player.py --playtest` plays Roland, with no brain, and says what Harry said
+in his five minutes (and a few lines more), while the three companions with personas play as they
+would for a person: Isolde the mage, Wystan the archer, Thea the tamer. Each run from a frozen copy of
+the code as it then stood, headless, single runs. The run of 23:43 was windowed to be filmed and the
+recorder got no frames (cuo-cym.9); its seconds are a loaded machine's. Two more, at 00:06 and 01:42,
+are void: the scripted leader died in the first fight (95 to 0 health in four or five seconds under
+the staged bone knight and skeletons, its reflexes bandaging and two companions healing it), and a
+ghost's speech reaches nobody. It carries heal potions since, which its reflexes drink when low. One
+at 01:24, on the same code with the fight orders' code added (their step came after the fight was
+over), went as the 00:24 run on every row: loot on and off, three answers to each question, "cover
+me" answered by all three, all three staying in the fight and all three going to the inn.
+
+```bash
+cd brain
+uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --playtest --own-words
+```
+
+| | 22:49 | 23:04 | 23:17 | 23:43, windowed | 00:24, the code as it is now |
+|---|---|---|---|---|---|
+| "feel free to loot": looting on; loot decisions after | 3 of 3; 4, 4, 3 | 3 of 3; 4, 4, 4 | 3 of 3; 4, 3, 3 | 3 of 3; 5, 4, 4 | 3 of 3; 4, 4, 3 |
+| "Leave the rest.": looting off; loot decisions after | 0 of 3 (read as: what is worth having); 0 | 3 of 3; 0 | 3 of 3; 0 | 3 of 3; 0 | 3 of 3; 0 |
+| "Keep up, you lot.", already following: a word from each | (not built) | 3, at 1 to 3 s | 3, at 1 to 2 s | 3, at 2 s | 3, at 1 to 2 s |
+| "So crew how are you all today?" and "Shall we head to the graveyard?": answered by | (not built) | 3 and 3 | 3 and 3 | 3 and 3 | 3 and 3 |
+| "cover me": answered by | (not built) | Isolde | nobody | all three, each a no ("Cover you? I'm a mage, Roland, not your bloody shield.") | all three, at 3, 6 and 9 s |
+| "Off to the inn with you, I'll deal with these.", with three skeletons on the leader | (not in the script) | | | all three said no (0.03, 0.03, 0.09) and fought on | all three said no (0.02, 0.03, 0.08) and fought on |
+| "Right - off to the inn for you all - see you there": read as | go 0.65; none 0.56, 0.50 | go 0.80, 0.67, 0.61 | go 0.72; follow 0.64, 0.67 | go 0.88, 0.88, 0.89 | go 0.99, 0.81, 0.75 |
+| ...and went | 1 of 3 | none: no place it could tell (an innkeeper seen once, 108 tiles off, outranked the inn 64 tiles away) | 1 of 3 | 3 of 3, there 26, 27 and 53 s later | 3 of 3, there 26, 28 and 28 s later |
+| one sent back to the inn, then called back in party chat | went, came back | (not reached) | went, came back | not heard: said aloud on the way out of the inn, walls between | went (told in party chat), came back |
+| first answers to a line (not a setting's word): wait over a person's reading and typing time for those lines | | | 0.87 (n 5) | 0.92 (n 5) | 1.01 (n 5) |
+
+- **Each fix came of the run before it.** After 22:49: "leave the rest" in looting's option for
+  nothing, and the place given as a kind ("The inn: the nearest is 64 tiles to the east.") with the
+  canonical inn preferred over an innkeeper seen once. After 23:04: an order to move that the model is
+  sure of and unsure which (go and come along) is being sent when go has 0.3 or more (it was 0.4), as
+  two companions there read "off to the inn for you all" as come along at 0.64 and 0.67. After 23:17:
+  a request that is no order gets an answer (asked by a yes/no of its own; "cover me" went unanswered
+  at 23:17), and the scripted leader sends them off with a fight on.
+- **The context helps the inn line:** at 23:43 the companions had just been sent to the inn with a
+  fight on and said no, and the next line was read as go at 0.88 for all three, against 0.61 to 0.80
+  in the runs where it came first.
+- **Answers to a person about a tenth sooner, not the fifth asked for.** In Harry's playtest the
+  first answer to each of his lines waited 1.04 times what a person takes to read the line and type
+  the answer, at the median (n 8; 5.2 to 9.1 s). In the four runs since the change (these three and
+  one at 01:24 with the same code for this), 0.925 (n 20; 0.74 to 1.17; 5.6 to 8.7 s), run by run
+  0.87, 0.92, 1.01 and 1.03. The wait is set at 0.8 of that time with a random share of 0.85 to
+  1.30, so no answer should come later than 1.04 of it: three did (1.08, 1.10, 1.17), so something
+  else holds some answers back by up to a second (cuo-cym.30). Each answer's own record (`delay_s`)
+  against `talk.reply_delay` for its two lines. `pace = 0.7` in the fleet file shortens every wait
+  further. A setting's word is said without the wait: 3.4 to 4.1 s after the line.
+- **Each of three answers in turn,** about 3 s apart: 6, 9 and 12 s after "So crew how are you all
+  today?" at 23:04; the second and third answer what the one before said as well ("Smell of ale, Thea?
+  Then the bear has finally found something it can identify.").
+- **"cover me" gets an answer from each since requests are read** (23:43 and 00:24), in character and
+  mostly a no ("Cover you? I'm a mage, Roland, not your bloody shield. Fireballs only."). One promised
+  more than a companion does at a word: "I'll cover you from the bone knight, not from your bad jokes."
+- **Sent off with a fight on they stay, and say so** (23:43 and 00:24): whether to go was 0.02 to 0.09
+  for each, each said "I'd rather stay with you for now." and fought on, and the next line sending them
+  to the inn, with the fight over, sent all three.
+- **A run costs about $0.025 in AI calls** (23:43 and 00:24, seven minutes, three companions): Decision
+  1 $0.017 and $0.019 for the fights, the readings and the yes/no's, Haiku $0.007 for the lines.
+
+**Orders for the fight itself, without the game** (cuo-cym.24), 2026-10-14 00:54 to 00:58. With
+creatures in view a companion puts each of the leader's lines to a question of its own beside the order's
+(`companion.fight_question`: go for one creature, fall back, heal someone, or none), with which creature in
+the same request (`target_question`, the six nearest as options, from a snapshot of the scene as that
+companion's client sees it) and on a heal whom (`whom_question`). `scripts/fight_orders_check.py` puts a
+set of lines to both models in written scenes (a lich on the leader, a bone knight on the mage, a skeleton
+on the archer, an evil mage further off; one ogre; three idle orcs and a deer; for the second set a crypt
+with a wraith, two zombies, a ghoul, a lich lord and a skeletal mage, and an ettin on the tamer), for each
+of three companions (Isolde the mage, Wystan the archer, Thea the tamer, led by Roland). A reading is right
+when the kind is right at 0.6 and the creature at 0.5, or whom. The first set was written before any model
+saw it and the wording was settled on it in three runs; the second was written after that and run once,
+and its numbers are the ones to go by.
+
+```bash
+cd brain
+uv run python scripts/fight_orders_check.py --out bench/2026-10-14-fight-orders.json
+uv run python scripts/fight_orders_check.py --sets second --out bench/2026-10-14-fight-orders-held-back.json
+```
+
+| | Jev | Decision 1 |
+|---|---|---|
+| first set, 51 lines, 153 readings: the first wording (`-first-wording.json`) | 145 | 138 |
+| first set: the wording settled on it | 150 | 149 |
+| **second set, 42 lines, 126 readings, held back and run once** | **117** | **112** |
+| second set by group: go for one, fall back, heal, stays what it is | 38/39, 19/21, 11/15, 49/51 | 34/39, 18/21, 9/15, **51/51** |
+| second set: an order missed (it fights on as before) | 2 | 8 |
+| second set: talk or another's order taken for an order | 3 | 3 |
+| second set: **the wrong creature gone for** | 1 | **0** |
+| second set: a heal whose whom it couldn't tell (it asks "Heal whom?") | 3 | 3 |
+| second set at a cut of 0.5 for the kind | 116 | 115 |
+| a line, the fight question with which creature (median) | 0.21 s, $0.000068 | 0.32 s, $0.000048 |
+
+- **The reader stays Decision 1.** Jev read five more of the held-back readings right, and was the one to
+  send a companion at the wrong creature: "Wystan, pull the near one" went for the deer (0.80), the
+  creature nearest Wystan, where the line meant the orc nearest the leader (a line that could be read
+  either way). Decision 1's errors were the safe kind: an order missed is no order, and the companion
+  fights on as before. Nothing it should have left alone did it take on the held-back set but heals for
+  others ("patch me up Thea", read by Isolde and Wystan as a heal for Roland, 0.98; in a party that talks
+  who a line is for keeps it Thea's), and "someone heal Wystan", read by Wystan as a heal.
+- **What Decision 1 missed:** "help Thea with that ghoul" (0.12 to 0.32 for all three: the creature was
+  right, 0.99, the order wasn't taken), "leave it, leave it!" (0.38 to 0.56), "Thea, sic Bramble on the
+  lord" for Thea (0.55) and "Wystan, pull the near one" (0.59, with fall back at 0.40). At a cut of 0.5
+  the last two would have been taken; the cut stays where the first set put it.
+- **What the first set's wording missed, and what changed it:** Decision 1 took "Kill the mage first!" for
+  the lich (0.85 and 0.60): the target question now says a name means the creature with that word in its
+  name, "not a lich that casts spells too". Both took "Off to the inn with you, I'll deal with these." for a
+  fall back (0.63 to 0.75) and Decision 1 still does (0.85 to 0.88); live the line is the order to go,
+  which takes it before any fight order (a trip the companion may refuse). Decision 1 took "Heal thyself,
+  as they say.", "Get off me, you brute!" and "Ogre's mine, you lot keep out of it." for orders (0.83 to
+  0.98); a saying, words shouted at a creature and the leader taking one on alone are now in the option
+  for none, and none of the three was taken after. Jev's "Let's take them." (0.67 to 0.73 to attack, no
+  creature told) stayed: a companion would ask "Which one?".
+- **A heal with nobody named:** "heal pls" was a heal for all three on both models, and whom the
+  question couldn't tell (unclear, 0.62 to 0.78), so each would have asked "Heal whom?". A rule came after
+  the held-back run, from it (`companion.heal_whom`): a heal whose whom isn't told is the leader's when the
+  line names nobody of the party, and no order for a companion that is the only one named ("someone heal
+  Wystan", read by Wystan). Applied to the same answers it makes the held-back set 120 for Jev and 116 for
+  Decision 1; that is not a measurement on unseen lines. "heal up when you can" (Jev, Thea, 0.61) becomes a
+  heal for Roland by it, where it would have asked.
+- **The requests that must stay what they are stayed,** with the settled wording: "cover me", "Nice
+  shot!", "kill me now, I forgot the reagents", "all kill", "all guard me", "any bandages left?", "Follow
+  me.", "Hold them off!", "watch my back", "kill anything that moves", "Kill them all!" were no order on
+  both models; on the held-back set "keep them busy", "protect Isolde", "all follow me", "come on then,
+  you bag of bones!", "leave the lord to me" and "Wait here." the same.
+- **Cost:** $0.016, $0.017 and $0.017 for the three runs on the first set, $0.015 for the one on the
+  second, both models together, all of it kind `order`. Live it is one request more for each line said
+  with creatures about.
+
+**Orders for the fight itself, live** (cuo-cym.24), 2026-10-14 02:01, 02:20 and 03:50, three single runs of the
+scripted playtest (`party_player.py --fleet fleets/party-player-talk.toml --playtest --own-words`, headless,
+each from a frozen copy). Its last step: two bone knights spawned 5 tiles north of the leader; 3 s into the
+fight it says "Get the one on me!", at 14 s "Fall back!" and runs 8 tiles south (logs
+`20261014-020102-…` and `20261014-022046-party-player-talk-playtest`; the step was first in the skeleton
+fight, where it came too late: those are dead in about six seconds).
+
+- **"Get the one on me!" was taken by nobody at 02:01.** Who the line is for split (about 0.5 for Wystan
+  alone, 0.35 to 0.47 for each of the others; Wystan's own reading put him at 0.48), and an order for the
+  fight was taken only by those a line is for. All three were on that bone knight already by their own pick.
+  Since then an order for the fight is each one's unless the line is plainly for others (0.3 or more for it
+  will do, `companion.FIGHT_FOR_CUT`). At 02:20 all three took it ("at Roland's word: fight a bone knight",
+  0.0 to 1.5 s after the line), each said so in its own voice ("A bone knight is mine, and I'll have it in
+  two shots!"), and the order ended a second or two later with that bone knight dead.
+- **"Fall back!" was taken by all three in both runs,** and they came with the leader as it ran: 2 tiles
+  off the mage and the tamer, 6 the archer, for the 12 s watched. The mage let go of her fight both times,
+  the archer once, the tamer neither time (her pet fought on; she stayed by the leader). Their word was the
+  voice they run from a fight in, which read as leaving the leader ("Off you go, then. Good riddance to
+  you.", "I am leaving, and I am taking the good loot with me!"); since then it is the voice they come
+  along in, and at 03:50 they said "Yes, yes, I am coming. Do keep up, Roland.", "Aye, I'm coming, and
+  I'll shoot twice as well for it." and "Coming. Bramble's already up and ready.", and kept 2 to 5 tiles
+  from the leader as it ran.
+- **At 03:50 the target order was taken by the mage and the tamer** (the archer, already shooting that
+  bone knight, didn't take it) and held 7 s, until it died.
+- **The leader lived through all three** (lowest 95%, 53% and 47%), carrying heal potions since 01:52.
+- **The rest of the 03:50 run, on the final code,** went as the 00:24 run: loot on and off for all three,
+  a word from each on an order in force, three answers to a line to all of them, all three staying in
+  the fight and then all three going to the inn, one sent back and called in. "cover me" got one answer
+  this time (three in the two runs before). 16 of 19 answers were said within 0.1 s of their moment.
+
+**A rally point that is chosen** (cuo-cym.13), 2026-10-14 00:13 to 01:24: the lich scene formed up,
+memory off, without and with `rally_map`, in turn, three runs each, headless, one frozen copy of the
+code (f5). Measured with `scripts/party_scene.py` and the rally records.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set form_up=true
+uv run uo-brain fleet fleets/party-lich.toml --set memory=false --set form_up=true --set rally_map=true
+```
+
+| three runs each | formed up where the leader stopped | `rally_map` |
+|---|---|---|
+| members who died | 0, 0, 0 | 0, 0, 0 |
+| the lich dead, from first sight | 16.4 s, 17.8 s, 19.9 s | 18.2 s, 11.9 s, 37.0 s |
+| falls back to the rally point (members) | 0, 1, 1 | 2, 1, 3 |
+| runs to the second point | (none) | 0, 0, 0 |
+| seconds with someone apart, of the first 60 | 0, 0, 0 | 0, 0, 0 |
+| the client's map, asked at the edge | (not asked) | 15 to 39 ms |
+
+- **Where it put the point:** at the first hunt of every run 5 tiles back along the leader's way in
+  (1393,1522, the party formed up at 1393,1517), and the second point 12 tiles behind that
+  (1395,1534). For the hunts after it, begun inside the graveyard, 5 tiles out from where the party
+  formed up and away from the centre (1355,1475 and 1366,1461, say), the second points further out
+  again.
+- **No worse, and nothing shown better:** nobody died either way, so these runs can't say whether a
+  member at the chosen point lives where one at the leader's stop would have died. Members fell back
+  more often with it (6 against 2), each to the first point; one of those was the warrior, the point,
+  at 63% of his health, in the run in which the lich took 37 s.
+- **The second point wasn't used:** a member runs on to it only from the first point, under 40% with
+  the others still fighting or with something on it there, and none was.
+
+**Helping a hurt companion, weighed by a question, without the game** (cuo-cym.26), 2026-10-14 02:46 to
+02:49. Whether a member heals or bandages a companion is decided by thresholds (`policy.help_mates`: under
+60%, a bandage within 2 tiles, no walk over while anything hostile is within 8 tiles, nobody helped by a
+member under 50%, one being healed by another left to them above 30%). `helping.help_question` puts the
+moment to system one instead: the helper's health and how fast it fell, its mana or bandages and what it is
+fighting; each companion's health, the points it lost in the last few seconds, what is on it and whether
+another is healing it; the creatures and whom each is on; and as the options the companions it could help,
+each by the one way it has (a Greater Heal from where it stands, a bandage within reach, or a walk over and
+a bandage), or nobody. Code keeps the floors (`helping.ways`): nobody dead, unhurt or out of every way, no
+bandage while one is on, no heal without the mana. `scripts/helping_check.py` puts fight moments to the
+thresholds (`help_mates` itself, on the moment rebuilt as a fight state) and to both models, and counts how
+often each does what is wanted: the action Claude judged right, written before any model saw the moment. A
+model's help is its likeliest option at 0.5 or more. The first set: 22 decisions drawn at random from the
+party runs of 2026-10-13 00:08 to 04:59 among those where the helper had someone it could help, rebuilt
+from the logs (the member's decision, the others' own health, `where.jsonl`), and 20 written, mostly
+cuo-4ti's cases (ranged members walking into the melee to the warrior, a mage at low mana, two healers on
+one companion, a warrior leaving the line). The wording was settled on it in three runs. The second set
+(14 drawn the same way from the runs of 2026-10-13 05:00 to 2026-10-14, and 14 written) was written after
+that and run once: its numbers are the ones to go by.
+
+```bash
+cd brain
+uv run python scripts/helping_check.py --out bench/2026-10-14-helping.json
+uv run python scripts/helping_check.py --sets second --out bench/2026-10-14-helping-held-back.json
+```
+
+| | the thresholds | Jev | Decision 1 |
+|---|---|---|---|
+| first set, 42 moments: the first wording (`-first-wording.json`) | 29 | 28 | 29 |
+| first set: the wording settled on it | 29 | 38 | 37 |
+| first set by part: drawn from the logs, written | 19/22, 10/20 | 21/22, 17/20 | 20/22, 17/20 |
+| **second set, 28 moments, held back and run once** | **24** | **26** | **25** |
+| second set by part: drawn from the logs, written | 14/14, 10/14 | 14/14, 12/14 | 13/14, 12/14 |
+| second set: a help missed | 3 | 2 | 2 |
+| second set: a needless help, or the wrong companion | 1 | 0 | 0 |
+| second set: a walk over that wasn't wanted | 0 | 0 | 1 |
+| a moment (median) | | 0.21 s, $0.000049 | 0.28 s, $0.000032 |
+
+- **Not switched: the thresholds stay.** On the held-back moments Jev did what was wanted in two more than
+  the thresholds and Decision 1 in one more: no clear gain for a request more at every decision with
+  someone hurt. The question is in `helping.py`; the fight loop doesn't ask it.
+- **Where the question did better:** a companion losing health fast above 60% (a tamer at 70%, down 30
+  points in a few seconds with a bone knight on her, beside the archer; an archer at 70% under a bone knight,
+  for a mage at 95% mana), which the thresholds leave until it is under 60%; and a mage with one heal left
+  choosing the bard losing health to two skeletons over the steady archer the thresholds pick for being
+  lower. On the first set the same kinds, and, for Jev, one being healed by another but still falling fast,
+  which the thresholds leave to the healer above 30%. Code could weigh all three (cuo-cym.31); live, each
+  needs a companion's fall in health, which the party's fight rows don't keep yet.
+- **Where it did worse: walks.** Both turned down walks that were wanted: to the mage at 40% once the fight
+  was over (0.40 and 0.38; the thresholds walk), and to a bard near death 4 tiles from the fight with
+  nothing on him or on the way (0.16 and 0.43; the thresholds don't walk while anything hostile is within 8
+  tiles). Decision 1 sent the warrior 6 tiles to the mage at 68% with a bone knight on her (0.73), and on
+  the first set the bard 4 tiles to the warrior with a skeleton on him (0.65).
+- **The moments drawn from the logs mostly want nobody helped:** 14 of the 14 held back and 17 of the first
+  set's 22 (three of those take either answer), and the thresholds did what was wanted in 33 of the 36.
+  Nobody being near death or losing health fast within reach is the usual moment.
+- **The first wording** said a help costs something, and that a companion hurt but not losing health
+  mostly needs nobody: both models chose nobody almost every time (14 and 13 helps missed, none given that
+  wasn't wanted). The settled wording weighs a bandage within reach as nearly free and a heal as cheap with
+  mana to spare, and says when a walk costs little.
+- **Cost:** $0.0030 to $0.0035 a run of the first set (84 requests, both models), $0.0023 for the held-back
+  run, all of kind `fight`.
+
+**The huddle names who goes in** (cuo-cym.14), 2026-10-14 01:30 to 03:50: the lich scene, `plan=huddle`
+(a planner each and a plan the five agree), formed up, memory on, headless; three runs on the code as
+built, then three after a fix, each set from one frozen copy. Measured with `scripts/party_scene.py` and the
+rally records.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich.toml --set plan=huddle --set form_up=true
+```
+
+| three runs each | as built | after the fix |
+|---|---|---|
+| members who died | 1, 2, 0 | 1, 1, 0 |
+| the lich dead, from first sight | never, never, never | 69.3 s, never, never |
+| seconds with someone apart, of the first 60 | 56, 59, 60 | 58, 0, 59 |
+| the plan sent | all five, every run | all five, every run |
+| the members' own goals in the run (the four who aren't the host) | | rest 22, 18, 27; to the healer 4, 5, 5; hunt 0, 2, 0 |
+
+- **The acceptance isn't met.** The plan sent all five every time, and in most runs the warrior stood at the
+  rally point with one or nobody beside him.
+- **As built, one walked through the rally point into the spawn** (014959): the mage's own planner chose a
+  trip to the graveyard itself, not a hunt, and the rule for one who has gone ahead sent the warrior in after
+  her alone; two died. The fix stops a member's own trip into the hunt the plan sends it to at the rally
+  point, and doesn't let one who walked on take a non-fighter in first.
+- **What fails after it is the members' planners:** with their memories on they rest, or walk to the healer
+  138 tiles off, rather than hunt; their lessons about the lich ("only enter when pulls can be taken one or
+  two at a time") make each cautious, and the plan's list of who goes doesn't bind them.
+- **And one more rule was wrong:** who has gone ahead was measured from where the one holding the rally
+  stood, and the warrior holding it ran from a lich during the wait, so an archer standing still 13 tiles
+  behind the point counted as ahead (031534). It is measured from the point now; not yet in a live run.
+
+**A second scene: casters and archers from two sides** (cuo-cym.11), 2026-10-14 02:52 to 06:58. Every
+party measure before was the lich scene. `fleets/party-casters.toml` stages the same five south of the
+Britain graveyard against three skeletal mages and two skeletons where the lich's wave stood, north-west,
+and two ratman archers and a bone magus 18 tiles east of them: six of the eight cast or shoot from range.
+The three conditions in turn, six rounds, memory off, headless, one frozen copy of the code (f5); measured
+with `scripts/party_scene.py --wave "skeletal mage,bone magi,ratman archer,skeleton" --boss ""`. The two
+groups were first placed 26 tiles apart, and in two runs nobody saw the eastern one (the party fights the
+first about 23 tiles from it, beyond the 18 tiles a client sees); those two runs aren't counted.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-casters.toml --set memory=false
+uv run uo-brain fleet fleets/party-casters.toml --set memory=false --set walk=true
+uv run uo-brain fleet fleets/party-casters.toml --set memory=false --set form_up=true
+```
+
+| six runs each | the default | walking together | formed up |
+|---|---|---|---|
+| members who died | 0, 1, 2, 0, 2, 0 (5) | 0, 1, 0, 3, 1, 0 (5) | **0, 0, 0, 0, 0, 0** |
+| who | the mage 4 times, the warrior twice | the mage 4 times, the warrior and the bard once | nobody |
+| seconds with someone apart, of the first 60 | 33, 45, 45, 45, 52, 48 | 2, 0, 37, 36, 12, 0 | 0, 0, 0, 0, 47, 1 |
+| leaves called in the run | 2, 12, 21, 2, 12, 3 | 2, 0, 2, 12, 1, 1 | 0, 1, 1, 1, 7, 2 |
+| falls back to the rally point | (no rally) | (no rally) | 0, 1, 3, 1, 5, 2 |
+| the wave's last creature seen, from first sight (median) | 217 s | 38 s | 44.5 s |
+| runs in which the archers' group was fought | 2 | 4 | 5 |
+
+- **Formed up nobody died in six runs, against five deaths each for the other two.** On the lich scene the
+  three were closer (0 to 2 deaths a run each way); against creatures that stand off and cast, a party
+  that goes in together and falls back to one place keeps its mage alive: she died in four of six runs on
+  the default and in four of six walking together, never formed up.
+- **Walking together didn't help here as it did on the lich scene:** the party arrives together and then
+  spreads in the fight as on the default (someone apart for 36 and 37 s in two runs).
+- **On the default the wave outlasted the party's stay in three runs** (its last creature seen 360 to
+  463 s after first sight): leaves were called 12 to 21 times and the party left with the archers' group
+  untouched. Formed up, the wave was dead within 26 to 47 s every time.
+- **Formed up, a member fell back to the rally point in five runs of six,** and once (061515) the party
+  was apart for 47 of the first 60 s and called 7 leaves; nobody died in it either.
+- **What doesn't hold beyond the lich scene:** walking together is no help against casters; and the
+  rally point was where the leader stopped (`rally_map` was off), so this says nothing of a chosen point.
 
 ## NPCs with lives of their own
 
