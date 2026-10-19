@@ -4349,8 +4349,16 @@ namespace ClassicUO.Network
                 //===========================================================================================
                 //===========================================================================================
                 case 0x14: // display popup/context menu
+                    PopupMenuData popup = PopupMenuData.Parse(ref p);
+
+                    // A vendor's menu the agent asked for, for its Buy or Sell (cuo-cgy): chosen there, not shown.
+                    if (world.Agent.Errands.OnPopup(popup))
+                    {
+                        break;
+                    }
+
                     UIManager.ShowGamePopup(
-                        new PopupMenuGump(world, PopupMenuData.Parse(ref p))
+                        new PopupMenuGump(world, popup)
                         {
                             X = world.DelayedObjectClickManager.LastMouseX,
                             Y = world.DelayedObjectClickManager.LastMouseY

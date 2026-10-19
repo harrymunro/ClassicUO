@@ -426,6 +426,7 @@ def build(m: dict[str, Any]) -> tuple[Situation, dict[str, int]]:
         mate = Mate(name, s, PARTY[name][0], hp, d, True, False,
                     [serial[k] for k, _, _, on, _ in m["creatures"] if on == name])
         mate.being_helped = name in m["helped"]
+        mate.hits_drop = _drop  # its fall, as mates.Mates measures it (cuo-cym.31)
         mates.append(mate)
     mana = m["mana"]
     raw = {"player": {"name": me, "x": 1000, "y": 1000, "hits": m["hp"], "hits_max": 100, "skills": skills,

@@ -19,8 +19,9 @@ uv run uo-brain party-report logs/fleet/<time>-party-lich        # a party's run
   ledger. While they play it samples the CPU and memory of every client, brain and the server.
 - **Stopping it:** Ctrl-C, a closed terminal or a `kill` ends the run in order: the fleet asks its brains
   to stop, each writes its summary (a companion's and a follower's say `finished: "stopped"`, or `"time
-  up"` when the hours ran out), and then it closes the clients it started. A brain that hasn't gone after
-  15 s is ended. The fleet's log gets a `stopped` record.
+  up"` when the hours ran out), and then it closes the clients it started. A brain asked to stop cuts the goal
+  under way short (a long rest, a walk to a bank) rather than finishing it first (cuo-7z4); one that hasn't gone
+  after 15 s is sent SIGTERM, and killed 5 s after that. The fleet's log gets a `stopped` record.
 - **The report:** per character, its profile, minutes, kills, deaths, gold banked, cost an hour
   and the models it used; together, the cost, the cost an hour and a kill, judge errors (where
   rate limits show) and the load per process.
@@ -585,6 +586,25 @@ personas and no talk.
     (the first there not going in before the others have chosen) the plan's list and the wait at
     the edge give without another round of calls before every hunt, and it would not make a
     planner that chose the shop choose the hunt.
+  - **The plan sends its members in** (cuo-cym.14, 2026-10-19, at Harry's word): a member the plan names
+    for its hunt (its `going`, the target naming an area of the world store), in a party that forms up,
+    goes into that hunt as its next goal, once for each plan, as a follower goes on the leader's plan:
+    its planner isn't asked (`Planner.sent_in`; the planner record says `steered`). The first plan of a
+    run is agreed inside the members' first planning step, and the plan is looked at again after the
+    huddle there, so they go at once. Not one who is dead, under half its health, or out of bandages
+    or reagents: its planner sees to that first, and the rally waits for it a while. A hunt it chose
+    itself under the plan counts as the plan's, and it isn't sent in again after it. Live with memory
+    on, the planners asked again had chosen rest 18 to 27 times a run, the healer and the shops.
+    And only a plan that sends the party in now: each member puts the plan to system one once (kind
+    `order`, `huddle.go_now_question`): does it send the party into the fight there now, or hold it
+    back first (scout, regroup, go in only if no lich is in view, only once someone is raised)? Being
+    together at the edge, or a pet ready, is the rally's business and counts as now. Live, the plans
+    said "hold at the western edge, no entry yet" and listed all five as going, and the five sent in by
+    the list walked into the lich: two died. Without system one, nobody is sent in by the plan.
+  - **...and holds them back:** while the plan holds the party back from its hunt, a member's own hunt of
+    that area is refused ("the party's plan holds the party back from the Britain Graveyard for now: nobody
+    goes in on their own"), and its planner chooses something else. Live with memory on, the plan said to
+    enter only after a scout and the bard's planner hunted the graveyard alone, 15 s ahead of the rest.
   - **Measured** ([results](results.md#a-party-that-goes-in-together)): with memory off, when every
     planner chooses the hunt, all five were in the fight within 7.0, 5.2 and 3.6 s of each other in
     three runs. With memory on, in three more, those who came were in within 6.4, 4.5 and 15.4 s of
@@ -592,7 +612,10 @@ personas and no talk.
     in as the point with the mage and the archer 9 and 15 s behind him. The gathering brings together
     those who have set out; it doesn't make five planners set out. The leader's plan, formed up, had
     all five in within 3.4 to 3.6 s in each of its three runs. All of these runs are from before the
-    first there waited for whom the plan sends.
+    first there waited for whom the plan sends. With the plan sending its members in (2026-10-19): memory
+    off, all five were sent at once and in the fight within 5.0, 14.0 and 6.6 s, the lich dead in 19 to
+    35 s (three died in one run); memory on, every plan held the party back until a scout nobody made, and
+    nobody went in.
 
 ## A party for the player
 
@@ -628,6 +651,15 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
   another character attacks, so what stands in war mode beside the leader is taken to be what it is
   fighting, or what is on it. It walks to those and goes after nothing else, and it loots nothing until
   you say it may: the kills are the player's.
+  - **What you fight from range** (cuo-cym.25, `escort.py`): when a creature in war mode is in view that
+    the rule leaves out, the companion puts each creature in view to system one (kind `order`, at most
+    every 3 s): is it part of your fight? With what its client sees: how far it is from you and from the
+    companion, whether it is in war mode, which way it faces and whether that is towards you, whether it
+    has come nearer you in the last few seconds, whether it is wounded with no companion on it, how you
+    stand (war mode, which way you face) and what you said lately ("leave the troll alone"). One judged
+    yours is fought for 12 s after, as if it stood beside you; the rule stays the floor. `judge_reach =
+    false` in the fleet file (or `--no-judge-reach`) is the rule alone, as before
+    ([measured](results.md#a-party-that-goes-in-together)).
 - **Helping it:** the leader is a companion like any other to [the helping](#a-party-in-a-fight-on-the-road-and-at-the-inn):
   a mage heals it under 60%, one with bandages bandages it, by what its health bar shows. Callouts work
   as in any party.
@@ -686,10 +718,29 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
   ahead to the bank, I'll catch you up", "Wystan, wait for me at the stables".
   - **Where:** the nearest of its kind that the world store knows, no further than 400 tiles: the inn,
     the tavern, the bank, the healer's, the stables, the smithy, a shop by its trade, town, the
-    graveyard, the docks, the moongate, a dungeon's entrance, a shrine. System one picks the kind by
-    what you said, or by the talk just before when the line names none ("off you go then"). With no
-    place it can tell, or one in another town ("the inn in Skara Brae"), the companion asks where and
-    stays.
+    graveyard, the docks, the moongate, a dungeon's entrance, a shrine; or a place you name by its own
+    name (cuo-cym.27): "the east bank", "Yew", "the inn in Skara Brae", "Jhelom's docks", found in the
+    world store from the line and the talk just before it (`named_places`: up to four words with a word
+    of a place's own name in them, the store's best match and of several as good the nearest; a town
+    with the kind of place said beside it, "the healer in Yew" or "go to Yew and wait at the inn", that
+    town's nearest of that kind; a quarter with a kind, "the west inn", only a place within 400 tiles),
+    and offered beside the kinds, as far as the land is wide. System one picks by
+    what you said, or by the talk just before when the line names none ("off you go then"). In a line
+    with several places it picks the companion's own ("I'm going to the bank, you go to the healer";
+    "Isolde to the tailor's, the rest of you to the stables"). With no place it can tell, the companion
+    asks where and stays.
+  - **An errand** (cuo-cym.27): "run to the healer and get me 10 bandages, then come back", "go bank this
+    gold", "take the loot to the smith and sell it". In the same request system one is asked what the
+    companion is sent to do there: only to go and wait, or to buy, bank or sell; for a buy, what
+    (bandages, heal, cure or refresh potions, arrows, bolts, or reagents, which is a restock of what it is
+    short of) and how many (5, 10, 20, 30, 50 or 100; 20 when no number is said). It goes on the errand
+    with the session's own buy, bank or sell (the shop the line names, or the nearest that sells it),
+    its fight loop running as always, and comes back to you with a word on how it went ("Got 10 bandages, coming
+    back."). Sent to buy without its being said what, it goes and waits, as before.
+  - **One of you** (cuo-cym.27): "one of you go and find a healer", "someone fetch me bandages". In the
+    same request, whether just one of the companions is asked, whichever; then the first that will go
+    claims the line on the party's floor and goes (as one answers a line meant for nobody in particular),
+    and the others carry on. One that won't go says so and claims nothing.
   - **Whether:** going is the companion's to agree to (`persuade`, on unless the fleet file says
     otherwise). A yes/no for system one on the moment: its own health and yours, whether it is in a
     fight, hostile creatures close, whether it has said no already. On a no it stays with you and
@@ -703,8 +754,9 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
     it goes to where it last saw you.
   - **How well it reads where** ([measured](results.md#a-party-that-goes-in-together), one companion):
     the kind of place meant on 17 of 20 lines, and on 9 of 10 written afterwards; whether to go on 12
-    moments of 12 (Jev 7). A line that names two places sent it to the first of them ("I'm going to the
-    bank, you go to the healer").
+    moments of 12 (Jev 7). A place by its name on 6 of 6 lines written after the wording was settled
+    (the phrases: 2), a line with several places on 3 of 4 (the phrases: 1), errands on 8 of 8 held back
+    with how many right, and "one of you" on 6 of 6 held back (Decision 1, which reads these).
 - **Orders for the fight itself** (cuo-cym.24): "kill the mage first", "get the one on me", "fall back!",
   "heal me". With creatures in view (one at least that could start a fight: a deer alone isn't one), a
   companion also asks of every line you say, in a request of its own beside the order's: is this an order
@@ -868,6 +920,53 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
   fight ("stand behind the bear", "go round the left") aren't: it reads them as requests, and says what it
   will and won't do. "Follow me" in a fight is the order to come along and doesn't pull it out of the
   fight: the client's follow waits while it is engaged. None of the three has been tried live yet.
+
+## A hamlet
+
+NPCs with lives of their own choose their days anywhere on the map, so they scatter and meet by chance.
+A hamlet gives a fleet's characters a place that is theirs: a home each, neighbours they see every day,
+work that keeps them there, and a reason to come back (`hamlet.py`, epic cuo-m3n). Local server only, like
+all talk between agents.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove.toml                       # four residents of Cove for an hour
+uv run uo-brain fleet fleets/hamlet-cove.toml --set hamlet=false    # the control: told nothing, still measured
+uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
+```
+
+- **The fleet file:** a `[hamlet]` table names a region of the world store (`name = "Cove"`) and how many
+  tiles round it still count as in it (`edge = 10`). Each agent has a `home` (a place of the store, or
+  `"x,y"`), `home_words` (how it speaks of it: "the healer's house") and `work` in words, made of the goals
+  that exist today: hunting near the hamlet and selling to its shops, keeping the healer's house stocked,
+  carrying coin to a town's bank. Gathering and crafting stay out (2026-10-06).
+- **What a resident is told:** its planner's system prompt says where it lives, its home (and that
+  `travel_to "home"` goes there), its work, its neighbours by name, trade and home, and that its days begin
+  and end in the hamlet: work out, then home, rest at home, free time where the neighbours are, a long trip
+  only for a reason. Each turn's situation says where it is against home and the hamlet ("at home (the
+  healer's house), in Cove", "away from Cove: 131 tiles from it and 171 from home"). Its talk knows where
+  it lives and who its neighbours are. Nothing is scripted: the planner still chooses every goal.
+- **The control:** `--set hamlet=false` tells the residents nothing (their personas don't name the place,
+  so they are britain-lives NPCs who happen to start in Cove) and the fleet still measures them against it.
+- **Measured:** the fleet samples where every resident is every 30 s (records of type `where` in
+  `fleet.jsonl`). `hamlet-report DIR…` (`--json`) says for each: the share of the run in the hamlet (or
+  within its edge) and at home (within 6 tiles), how often it came home, its longest time away and how far
+  it went, spells of 10 minutes or more standing still away from home with the goal it was on, its work
+  (goals by kind, kills, gold from sales, things bought, gold banked, trips by where to), lines said to and
+  heard from each neighbour, deaths and cost an hour, and what its memory keeps of each neighbour from the
+  run.
+- **`fleets/hamlet-cove.toml`:** four residents of Cove (Felucca), a guarded hamlet with a healer, a
+  provisioner, an armourer and weaponsmith and a fisherman, and no bank or inn: Brannoc the watchman at the
+  east gate (the orcs near the Cove Orc Fort to the south), Wenna the hunter in the small house on the
+  square (the beasts south-west of the Cove Cemetery), Maren the healer's apprentice at the healer's house,
+  and Tamsin the carrier above the provisioner's (coin to a bank in Vesper or Britain). On the npc profile,
+  headless, walking (`rules = "realistic"`), on their own accounts and ports (headless3-6, 5671-5674), so
+  they can run beside a party's fleet. The fisherman's own spot is on the jetty, with no walking route out,
+  so Wenna lives on the square.
+- **Measured** ([results](results.md#a-hamlet-of-ai-residents), one run each way): told where they live,
+  the four came home ten times in the hour to the control's once, spent a third to three fifths of it at home
+  (the control none) and said 46 lines to each other (the control 8); three of four were in Cove more than half
+  the hour, the hunter whose ground is 120 tiles out a sixth of it. $0.06 a resident an hour.
 
 ## Without a window
 

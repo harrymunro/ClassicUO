@@ -384,7 +384,7 @@ def test_a_fleets_party_brains_start_as_each_character_comes_in(tmp_path, monkey
 
     monkeypatch.setattr(fleet, "start_client", lambda a, out: None)
     monkeypatch.setattr(fleet, "log_in", log_in)
-    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out: order.append(("brain", a.name)) or Brain())
+    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out, *_: order.append(("brain", a.name)) or Brain())
     monkeypatch.setattr(fleet, "pid_listening", lambda port: 0)
     monkeypatch.setattr(fleet, "report", lambda out: {})
     asyncio.run(fleet.run(fleet.load(f), tmp_path / "run"))

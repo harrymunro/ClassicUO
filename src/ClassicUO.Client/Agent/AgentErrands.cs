@@ -28,6 +28,12 @@ namespace ClassicUO.Agent
         private const uint MOVE_INTERVAL_MS = 1100; // ModernUO refuses item moves much closer together
         private const int MOVE_TRIES = 4;
         private const uint ERRAND_TIMEOUT_MS = 90_000;
+        // A vendor that can't be stood next to (in a shop one tile wide, a townsperson in the only way to it): after
+        // this many walks up, its context menu's Buy or Sell is used instead, which ModernUO's vendors answer from
+        // MENU_RANGE tiles (VendorBuyEntry, VendorSellEntry). Six walks over 48 s had failed (cuo-cgy).
+        private const int MENU_AFTER = 2;
+        internal const int MENU_RANGE = 8;
+        internal const int CLILOC_BUY = 3006103, CLILOC_SELL = 3006104;
 
         private readonly World _world;
         private readonly AgentController _agent;
@@ -35,6 +41,7 @@ namespace ClassicUO.Agent
         private Move _current;
         private uint _started, _askedAt, _nextStep, _movedAt;
         private int _asks, _approaches;
+        private bool _byMenu; // the last ask was the vendor's context menu: its Buy or Sell is chosen when the menu comes
         private uint _vendor;
         private string _vendorName = string.Empty, _said = string.Empty, _nearer = string.Empty;
         private string _items = string.Empty;
@@ -140,6 +147,7 @@ namespace ClassicUO.Agent
             _current = null;
             _asks = 0;
             _approaches = 0;
+            _byMenu = false;
             _vendor = 0;
             _vendorName = _said = _nearer = string.Empty;
             _started = Time.Ticks;
@@ -464,6 +472,21 @@ namespace ClassicUO.Agent
                     return;
                 }
 
+                if (_approaches >= MENU_AFTER && v.Distance <= MENU_RANGE)
+                {
+                    // Someone stands in the way: ask by the vendor's context menu, which reaches further.
+                    State = "waiting";
+                    _vendorName = Called(v);
+                    _nearer = string.Empty;
+                    _byMenu = true;
+                    _askedAt = now;
+                    _asks++;
+                    _said = $"{(Kind == "buy" ? "Buy" : "Sell")} from {_vendorName}'s context menu";
+                    NetClient.Socket.Send_RequestPopupMenu(v.Serial);
+
+                    return;
+                }
+
                 if (_approaches >= 6)
                 {
                     Finish("failed", "could not get next to the vendor");
@@ -479,10 +502,53 @@ namespace ClassicUO.Agent
             }
 
             State = "waiting";
+            _byMenu = false;
             UIManager.GetGump<ShopGump>()?.Dispose();
             _vendorName = Called(v);
             _nearer = HeardFirst(v);
             Ask(VendorWords(Kind == "buy", v.Name, _agent.LabelOf(v), _asks));
+        }
+
+        // A context menu from the server (packet 0xBF 0x14): the one this errand asked of its vendor has its Buy or Sell
+        // chosen, and isn't shown. True when it was this errand's (PacketHandlers leaves it out of the screen).
+        public bool OnPopup(PopupMenuData menu)
+        {
+            if (!_byMenu || State != "waiting" || menu == null || menu.Serial != _vendor)
+            {
+                return false;
+            }
+
+            _byMenu = false;
+            int index = Choose(menu.Items, Kind == "buy");
+
+            if (index < 0)
+            {
+                Finish("failed", $"{_vendorName}'s context menu has no {(Kind == "buy" ? "Buy" : "Sell")} to choose");
+            }
+            else
+            {
+                _askedAt = Time.Ticks; // the list comes at once, as after words
+                NetClient.Socket.Send_PopupMenuSelection(menu.Serial, (ushort) index);
+            }
+
+            return true;
+        }
+
+        // The index of a context menu's Buy (or Sell) entry that can be chosen, or -1: a greyed one (flag 0x01) is out
+        // of reach or not offered to this character.
+        internal static int Choose(PopupMenuItem[] items, bool buy)
+        {
+            int want = buy ? CLILOC_BUY : CLILOC_SELL;
+
+            foreach (PopupMenuItem it in items ?? Array.Empty<PopupMenuItem>())
+            {
+                if (it.Cliloc == want && (it.Flags & 0x01) == 0)
+                {
+                    return it.Index;
+                }
+            }
+
+            return -1;
         }
 
         // What to say to a vendor for its list: "Minerva buy" the first NAMED_ASKS times, then

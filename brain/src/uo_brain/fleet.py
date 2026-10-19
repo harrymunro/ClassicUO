@@ -34,6 +34,11 @@ it doesn't have them yet. With no `goal`, it chooses its own days from them.
     persona = { background = "...", temperament = "...", trade = "...", wants = "..." }
     long_goals = ["save 5000 gold for a smithy", "reach 90 swordsmanship"]
 
+A fleet can be a hamlet's residents (cuo-m3n, hamlet.py): a `[hamlet]` table names a region of the world
+store, and each agent its `home` (a place or "x,y"), `home_words` and `work`. Each is told it lives there,
+the fleet samples where everyone is every 30 s, and `uo-brain hamlet-report DIR` measures them against it.
+`--set hamlet=false` tells them nothing and still measures (the control).
+
 `uo-brain fleet FILE` starts a client for each agent that hasn't one running (from bin/osx-arm64,
 headless where the file says so; client.py),
 logs it in, runs its prep commands, then runs `uo-brain session` for it as its own process, so
@@ -78,6 +83,9 @@ class Agent:
     env: dict[str, str] = field(default_factory=dict)  # for its brain, e.g. UO_BRAIN_ASK_EVERY_TICK = "1"
     travel: str = ""        # walk or run: the pace of its trips, over the fleet's (cuo-der)
     strategy: str | None = None  # its standing strategy for the run, over the fleet's; None: the fleet's
+    home: str = ""          # a hamlet's resident: its home, a place or "x,y" (cuo-m3n)
+    home_words: str = ""    # ...how it speaks of it ("the healer's house")
+    work: str = ""          # ...and its work, in words
 
 
 @dataclass
@@ -99,6 +107,8 @@ class Fleet:
     # A companion sent somewhere without the leader a person plays goes if it is willing: a yes/no on the
     # moment, and it may say no (Harry: "if I can persuade them to do so"). false: it goes when told (cuo-cym.19).
     persuade: bool = True
+    # ...and which creatures beyond the escort rule's tiles are the leader's fight is put to system one (cuo-cym.25).
+    judge_reach: bool = True
     roleplay: bool = False   # a party's members emote and gesture in character (cuo-cod.8)
     memory: bool = True      # false: every brain runs without its character's memory, so repeat runs are independent
     plan: str = "leader"     # a party's one plan: the leader's (cuo-4ar), or agreed in a huddle, a planner each (cuo-bih)
@@ -117,6 +127,9 @@ class Fleet:
     # a fleet that measures something says what it is: the lich scene's five had carried a video shoot's
     # "never flee: the party stands together" into every later run, some with old planner lines after it.
     strategy: str | None = None
+    # A hamlet its agents live in (cuo-m3n): name (a region of the world store), edge (tiles round it that count),
+    # told (false: the residents aren't told, and are still measured against it: the control).
+    hamlet: dict[str, Any] | None = None
 
 
 def parse_setting(spec: str) -> tuple[str, Any]:
@@ -132,6 +145,7 @@ def parse_setting(spec: str) -> tuple[str, Any]:
 
 def load(path: Path, settings: list[str] | None = None) -> Fleet:
     data = tomllib.loads(Path(path).read_text())
+    hamlet = data.get("hamlet")  # the file's: `--set hamlet=false` keeps it to measure by, and tells nobody
     for spec in settings or []:  # this run's overrides of the file's top-level settings
         key, value = parse_setting(spec)
         data[key] = value
@@ -150,8 +164,16 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                     [str(g) for g in a.get("long_goals") or []], [str(m) for m in a.get("memories") or []],
                     bool(a.get("talk", data.get("talk", True))), bool(a.get("headless", headless)),
                     {str(k): str(v) for k, v in (a.get("env") or {}).items()}, str(a.get("travel") or ""),
-                    str(a["strategy"]) if "strategy" in a else None)
+                    str(a["strategy"]) if "strategy" in a else None, str(a.get("home") or ""),
+                    str(a.get("home_words") or ""), str(a.get("work") or ""))
               for a in data.get("agent") or []]
+    if hamlet is not None:
+        if not isinstance(hamlet, dict) or not hamlet.get("name"):
+            raise ValueError(f"{path}: [hamlet] needs a name (a region of the world store, e.g. \"Cove\")")
+        hamlet = {"name": str(hamlet["name"]), "edge": int(hamlet.get("edge", 10)),
+                  "told": data.get("hamlet") is not False}
+        if homeless := [a.name for a in agents if not a.home]:
+            raise ValueError(f"{path}: in a hamlet every agent needs a home: {', '.join(homeless)}")
     party = bool(data.get("party", False))
     leader = str(data.get("leader") or (agents[0].name if party and agents else ""))
     plan = str(data.get("plan", "leader"))
@@ -187,7 +209,7 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                  callouts=bool(data.get("callouts", True)), help=bool(data.get("help", True)),
                  small_talk=bool(data.get("small_talk", True)), pace=bool(pace),
                  pace_factor=1.0 if isinstance(pace, bool) else float(pace),
-                 persuade=bool(data.get("persuade", True)),
+                 persuade=bool(data.get("persuade", True)), judge_reach=bool(data.get("judge_reach", True)),
                  roleplay=bool(data.get("roleplay", False)), walk=bool(data.get("walk", False)),
                  form_up=bool(data.get("form_up", False)), game_party=bool(data.get("game_party", False)),
                  rally_map=bool(data.get("rally_map", False)),
@@ -195,7 +217,37 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                  memory=bool(data.get("memory", True)), plan=plan,
                  use=[str(u) for u in ([data["use"]] if isinstance(data.get("use"), str) else data.get("use") or [])],
                  travel=travel, rules=str(data.get("rules") or ""),
-                 strategy=str(data["strategy"]) if "strategy" in data else None)
+                 strategy=str(data["strategy"]) if "strategy" in data else None, hamlet=hamlet)
+
+
+def hamlet_of(fleet: Fleet, shard: str = "local", root: Path | None = None) -> dict[str, Any] | None:
+    """The fleet's hamlet with its area and each resident's home resolved from the world store: name, rects, edge,
+    told, homes (name -> x, y, words), and each agent's Hamlet as it knows it (hamlet.Hamlet)."""
+    if not fleet.hamlet:
+        return None
+    from .hamlet import Hamlet
+    from .world import World, WorldError
+    with World.open(shard, root) as w:
+        region = next((r for m in w.regions().by_map.values() for r in m
+                       if r.name.lower() == fleet.hamlet["name"].lower()), None)
+        if region is None:
+            raise ValueError(f"no region called {fleet.hamlet['name']!r} in the world store")
+        homes = {}
+        for a in fleet.agents:
+            try:
+                x, y, label = w.resolve(a.home)
+            except WorldError as e:
+                raise ValueError(f"{a.name}'s home: {e}") from None
+            homes[a.name] = {"x": x, "y": y, "words": a.home_words or label}
+    rects = [tuple(r) for r in region.rects]
+    known = {}
+    for a in fleet.agents:
+        others = [{"name": o.name, "trade": o.persona.get("trade", ""), "home_words": homes[o.name]["words"],
+                   **({"work": o.work} if o.work else {})} for o in fleet.agents if o.name != a.name]
+        known[a.name] = Hamlet(region.name, rects, fleet.hamlet["edge"], a.name, (homes[a.name]["x"], homes[a.name]["y"]),
+                               homes[a.name]["words"], a.work, others)
+    return {"name": region.name, "rects": [list(r) for r in rects], "edge": fleet.hamlet["edge"],
+            "told": fleet.hamlet["told"], "homes": homes, "known": known}
 
 
 # ---------------------------------------------------------------- running it
@@ -300,7 +352,7 @@ def seed_memories(agent: Agent, shard: str = "local", root: Path | None = None) 
         return len(new)
 
 
-def start_brain(fleet: Fleet, agent: Agent, out_dir: Path) -> subprocess.Popen:
+def start_brain(fleet: Fleet, agent: Agent, out_dir: Path, hamlet: dict[str, Any] | None = None) -> subprocess.Popen:
     seed_long_goals(agent)
     seed_memories(agent)
     # --fresh: a fleet run doesn't pick up an earlier run's planner state, so repeats are independent.
@@ -332,10 +384,16 @@ def start_brain(fleet: Fleet, agent: Agent, out_dir: Path) -> subprocess.Popen:
         cmd += ["--callouts-to", fleet.callouts_to] if fleet.callouts_to != "say" else []
         cmd += ["--party-plan", fleet.plan] if fleet.plan != "leader" else []
         cmd += ["--no-persuade"] if fleet.plan == "player" and not fleet.persuade else []
+        cmd += ["--no-judge-reach"] if fleet.plan == "player" and not fleet.judge_reach else []
     if agent.persona:
         persona = out_dir / f"{agent.name}.persona.json"
         persona.write_text(json.dumps({"name": agent.name, **agent.persona}, indent=2))
         cmd += ["--persona", str(persona)]
+    if hamlet and hamlet["told"]:
+        # A resident of the hamlet (cuo-m3n): its home, work and neighbours, for its planner and its talk.
+        where = out_dir / f"{agent.name}.hamlet.json"
+        where.write_text(json.dumps(hamlet["known"][agent.name].to_json(), indent=2))
+        cmd += ["--hamlet", str(where)]
     # NPCs with lives of their own hear the fleet's other characters, and only them (cuo-x2q.2); a party
     # hears itself, persona or not (cuo-cod.1). `talk = false` in the file: nobody hears anybody.
     others = [a.name for a in fleet.agents if a.name != agent.name] + ([fleet.leader] if fleet.plan == "player" else [])
@@ -396,6 +454,25 @@ async def loop_rates(agents: list[Agent]) -> dict[str, dict[str, Any]]:
     return rates
 
 
+async def positions(agents: list[Agent]) -> list[dict[str, Any]]:
+    """Where each agent is now (a hamlet's run, cuo-m3n): a `where` record each, for hamlet.report."""
+    out = []
+    for a in agents:
+        rpc = AgentRpc(port=a.port)
+        try:
+            await rpc.connect(attempts=1)
+            snap = await rpc.call("snapshot", radius=1, timeout=5)
+            if snap.get("in_game"):
+                p = snap["player"]
+                out.append({"type": "where", "agent": a.name, "x": p["x"], "y": p["y"], "map": p.get("map"),
+                            "hits": p.get("hits"), "dead": p.get("dead")})
+        except (OSError, asyncio.TimeoutError, RuntimeError, RpcError):
+            pass  # a client that doesn't answer has no position this time
+        finally:
+            await rpc.close()
+    return out
+
+
 BRAIN_ENDS_S = 15.0  # a brain asked to stop has this long to write its summary before it is ended
 
 
@@ -410,11 +487,21 @@ def stop_brains(brains: dict[str, subprocess.Popen], within_s: float = BRAIN_END
         except OSError:
             pass
     gone_by = time.monotonic() + within_s
+    ended = []
     for b in running:
         try:
             b.wait(max(0.1, gone_by - time.monotonic()))
         except subprocess.TimeoutExpired:
             b.terminate()
+            ended.append(b)
+    # A brain's own handler takes SIGTERM as a stop too (cli.ending): one that still hasn't gone is killed, or it plays
+    # on after the fleet (cuo-7z4).
+    gone_by = time.monotonic() + min(within_s, 5.0)
+    for b in ended:
+        try:
+            b.wait(max(0.1, gone_by - time.monotonic()))
+        except subprocess.TimeoutExpired:
+            b.kill()
 
 
 def pid_listening(port: int) -> int:
@@ -438,14 +525,16 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
         events.write(json.dumps({"t": time.time(), **rec}) + "\n")
         events.flush()
 
+    hamlet = hamlet_of(fleet)
     note({"type": "fleet", "name": fleet.name, "hours": fleet.hours,
+          **({"hamlet": {k: v for k, v in hamlet.items() if k != "known"}} if hamlet else {}),
           **({"party": True, "party_id": fleet.party_id, "leader": fleet.leader, "callouts": fleet.callouts, "help": fleet.help,
               "roleplay": fleet.roleplay, "walk": fleet.walk, "form_up": fleet.form_up, "game_party": fleet.game_party,
               **({"rally_map": True} if fleet.rally_map else {}),
               "raise": fleet.raise_fallen,
               **({"callouts_to": fleet.callouts_to} if fleet.callouts_to != "say" else {}),
               "small_talk": fleet.small_talk, "pace": fleet.pace if fleet.pace_factor == 1.0 or not fleet.pace else fleet.pace_factor,
-              **({"persuade": fleet.persuade} if fleet.plan == "player" else {}),
+              **({"persuade": fleet.persuade, "judge_reach": fleet.judge_reach} if fleet.plan == "player" else {}),
               "travel": fleet.travel, "rules": fleet.rules}
              if fleet.party else {}), **({} if fleet.memory else {"memory": False}),
           **({"plan": fleet.plan} if fleet.plan != "leader" else {}), **({"use": fleet.use} if fleet.use else {}),
@@ -487,10 +576,10 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
                 # back from then on, and its leader's planner waits for the others (planner.wait_for_party).
                 # Started together after the last login, a leader stood with its agent off for half a minute
                 # while a stray bone knight killed it and the archer beside it.
-                brains[a.name] = start_brain(fleet, a, out_dir)
+                brains[a.name] = start_brain(fleet, a, out_dir, hamlet)
         for a in fleet.agents:
             if a.name not in brains and not stopping.is_set():
-                brains[a.name] = start_brain(fleet, a, out_dir)
+                brains[a.name] = start_brain(fleet, a, out_dir, hamlet)
         pids = {"server": pid_listening(fleet.server_port)}
         for a in fleet.agents:
             proc = clients[a.name]
@@ -504,6 +593,9 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
             except asyncio.TimeoutError:
                 pass
             note({"type": "load", "processes": sample(pids), "loops": await loop_rates(fleet.agents)})
+            if hamlet:
+                for rec in await positions(fleet.agents):
+                    note(rec)
             for a in fleet.agents:
                 if brains[a.name].poll() is None and (result := await relog(fleet, a)):
                     note({"type": "relogin", "agent": a.name, "result": result})

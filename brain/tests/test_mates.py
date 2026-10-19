@@ -618,7 +618,7 @@ def test_a_second_run_into_the_same_folder_is_another_party(tmp_path, monkeypatc
 
     monkeypatch.setattr(fleet, "start_client", lambda a, out: None)
     monkeypatch.setattr(fleet, "log_in", no_login)
-    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out: seen.append(fl.party_id) or Brain())
+    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out, *_: seen.append(fl.party_id) or Brain())
     monkeypatch.setattr(fleet, "pid_listening", lambda port: 0)
     monkeypatch.setattr(fleet, "report", lambda out: {})
     f = tmp_path / "party-lich.toml"

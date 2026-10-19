@@ -277,6 +277,21 @@ def test_a_goal_cut_short_by_a_new_plan_doesnt_cut_the_next_one(tmp_path, monkey
 
 # ---------------------------------------------------------------- who goes (cuo-cym.14)
 
+class GoNow:
+    """System one stood in for on whether the plan sends the party in now: yes unless its target says to hold."""
+    name = "decision/test"
+
+    def __init__(self):
+        self.asked = 0
+
+    async def ask(self, state, questions):
+        from uo_brain import judge
+        self.asked += 1
+        out = judge.Answers(model="test", cost=0.00001)
+        out.nouls["go_now"] = 0.1 if "hold" in state["plan"]["target"].lower() else 0.9
+        return out
+
+
 def going_chat(going, target="Hunt the undead at the Britain Graveyard, the lich first, all three, now", seen=None):
     async def chat(messages, tools=None, **_):
         if seen is not None:
@@ -403,6 +418,9 @@ def test_a_members_own_trip_into_the_plans_hunt_is_one_to_the_rally_point(tmp_pa
         plan = planner.Planner(s, GOAL, chat_fn=scripted(reply(call("travel_to", {"place": place, "why": "with them"}))),
                                escalate=False, memory=False, party=party_, huddle=who)
         plan.party_waited = plan.pack_checked = True
+        board = (who or h).board()
+        if board is not None:
+            plan.steered.add(board["rev"])  # already sent on this plan's hunt once: its planner chooses (cuo-cym.14)
         asyncio.run(plan.step())
         return s.to_rally, [g for g in s.goals if g[0] == "travel_to"]
 
@@ -417,4 +435,133 @@ def test_a_members_own_trip_into_the_plans_hunt_is_one_to_the_rally_point(tmp_pa
     asyncio.run(others.call("Isolde is out of reagents"))
     assert others.going("Britain Graveyard") == ["Roland"]
     assert goes("Britain Graveyard", who=others) == ([], [("travel_to", "Britain Graveyard")])
+    w.close()
+
+
+def test_a_member_the_plan_sends_into_its_hunt_goes_without_its_planner_being_asked(tmp_path, monkeypatch):
+    """cuo-cym.14: with memory on, members' planners asked again after a plan that sent all five chose rest, the
+    healer and the shops. A member the plan names goes into the hunt once for each plan, as a follower would."""
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    w.insert("spawns", {"area": "Britain Graveyard", "map": "Felucca", "x": 1369, "y": 1475, "walk_range": 30,
+                        "creature": "Skeleton", "max_count": 3, "spawner": "a", "source": "modernuo:Graveyards.json",
+                        "last_seen": "2026-10-19T00:00:00+00:00"})
+    roland, _, _ = member(w, "Roland", going_chat(NAMES[:2]), mem=False)  # Roland and Isolde go; Wystan doesn't
+    asyncio.run(roland.call("the party has come together and has no plan yet"))
+    go_now = GoNow()
+
+    def step(name, rally=True, hits=None, bandages=None, steered=()):
+        h, p, s = member(w, name, mem=False)
+        s.judge = go_now
+        s.rally = object() if rally else None
+
+        async def hunt(area, minutes, **_):  # a party's hunt is formed up for (rally_key)
+            s.goals.append(("hunt", area, minutes))
+            return Result(True, "hunted", {"kills": 0})
+
+        s.hunt = hunt
+        if hits is not None:
+            s.snapshot["player"]["hits"] = hits
+        if bandages is not None:
+            s.snapshot["player"]["supplies"]["bandages"] = bandages
+        chat = scripted(reply(call("rest", {"seconds": 30, "why": "my own idea"})))
+        plan = planner.Planner(s, GOAL, chat_fn=chat, escalate=False, memory=False, party=p, huddle=h)
+        plan.party_waited = plan.pack_checked = True
+        plan.steered.update(steered)
+        asyncio.run(plan.step())
+        return [st.tool for st in plan.history], len(chat.seen), plan
+
+    goals, asked, plan = step("Isolde")
+    assert (goals, asked) == (["hunt"], 0) and plan.history[-1].args["area"] == "Britain Graveyard"
+    assert plan.history[-1].args["minutes"] == planner.STEER_MINUTES and plan.steered == {roland.board()["rev"]}
+    # The plan it was sent on counts as read: the plan's watcher had cut the hunt short two seconds in, live.
+    assert plan.huddle.seen_rev == roland.board()["rev"]
+    # Once for each plan: after that its planner chooses.
+    assert step("Isolde", steered={roland.board()["rev"]})[:2] == (["rest"], 1)
+    # Not one the plan doesn't send, not without a rally, not when hurt. Out of bandages it still goes: they are its
+    # healing, and a fighter fights without them (only a mage without reagents is kept back).
+    assert step("Wystan")[:2] == (["rest"], 1)
+    assert step("Isolde", rally=False)[:2] == (["rest"], 1)
+    hits_max = SNAPSHOT["player"]["hits_max"]
+    assert step("Isolde", hits=hits_max // 3)[:2] == (["rest"], 1)
+    assert step("Isolde", bandages=0)[:2] == (["hunt"], 0)
+    # Not by a plan that holds the party back, whoever it lists as going (live: "Hold at the western edge... No
+    # entry yet" with all five listed, and those sent in by the list alone walked into the lich).
+    asyncio.run(member(w, "Roland", going_chat(NAMES[:2], target="Hold at the western edge of the Britain Graveyard. "
+                                                             "No entry yet."), mem=False)[0].call("Wystan died"))
+    assert step("Isolde")[:2] == (["rest"], 1)
+    w.close()
+
+
+def test_the_first_plan_agreed_inside_a_step_sends_its_members_in_at_once(tmp_path, monkeypatch):
+    """cuo-cym.14, live run 20261019-150653: the first plan is agreed inside the members' first step (huddle.maybe in
+    the planner's think), and asked then, two of five rested a minute and went in 18 s behind the others. A hunt a
+    member chose itself under the plan counts as the plan's: it isn't sent in again afterwards."""
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    w.insert("spawns", {"area": "Britain Graveyard", "map": "Felucca", "x": 1369, "y": 1475, "walk_range": 30,
+                        "creature": "Skeleton", "max_count": 3, "spawner": "a", "source": "modernuo:Graveyards.json",
+                        "last_seen": "2026-10-19T00:00:00+00:00"})
+    h, p, s = member(w, "Isolde", going_chat(NAMES[:3]), mem=False)
+    report(p, plays="mage")
+    s.rally, s.judge = object(), GoNow()
+
+    async def hunt(area, minutes, **_):
+        s.goals.append(("hunt", area, minutes))
+        return Result(True, "hunted", {"kills": 0})
+
+    s.hunt = hunt
+    chat = scripted(reply(call("rest", {"seconds": 60, "why": "watch first"})),
+                    reply(call("hunt", {"area": "Britain Graveyard", "minutes": 5, "why": "my own"})),
+                    reply(call("rest", {"seconds": 30, "why": "after"})))
+    plan = planner.Planner(s, GOAL, chat_fn=chat, escalate=False, memory=False, party=p, huddle=h)
+    plan.party_waited = plan.pack_checked = True
+    asyncio.run(plan.step())
+    assert h.board()["rev"] == 1 and plan.history[-1].tool == "hunt" and len(chat.seen) == 0  # agreed, then sent in
+    # A second member chose the hunt itself under the plan: not sent in again once it is over.
+    h2, p2, s2 = member(w, "Wystan", mem=False)
+    s2.rally, s2.hunt, s2.judge = object(), hunt, GoNow()
+    plan2 = planner.Planner(s2, GOAL, chat_fn=chat, escalate=False, memory=False, party=p2, huddle=h2)
+    plan2.party_waited = plan2.pack_checked = True
+    plan2.steered.add(99)  # some earlier plan
+    chat_turns = len(chat.seen)
+    asyncio.run(plan2.carry_out("hunt", {"area": "Britain Graveyard", "minutes": 5, "why": "my own"}))
+    assert 1 in plan2.steered
+    asyncio.run(plan2.step())
+    assert len(chat.seen) == chat_turns + 1  # its planner was asked: no second hunt sent by the plan
+    w.close()
+
+
+def test_a_member_doesnt_hunt_the_plans_area_while_the_plan_holds_the_party_back(tmp_path, monkeypatch):
+    """cuo-cym.14, live run 20261019-162307: the plan said to enter only after a scout, and the bard's own planner
+    hunted the graveyard alone, the first in by 15 s."""
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    w.insert("spawns", {"area": "Britain Graveyard", "map": "Felucca", "x": 1369, "y": 1475, "walk_range": 30,
+                        "creature": "Skeleton", "max_count": 3, "spawner": "a", "source": "modernuo:Graveyards.json",
+                        "last_seen": "2026-10-19T00:00:00+00:00"})
+    from uo_brain.session import Session
+    held = "Hold at the western edge of the Britain Graveyard. Enter only after a fresh scout shows no lich."
+    roland, _, _ = member(w, "Roland", going_chat(NAMES[:3], target=held), mem=False)
+    asyncio.run(roland.call("the party has come together and has no plan yet"))
+    h, p, s = member(w, "Corwin", mem=False)
+    s.rally, s.judge = object(), GoNow()
+    s.hunt_spot = lambda area: Session.hunt_spot(s, area)
+    hunted = []
+
+    async def hunt(area, minutes, **_):
+        hunted.append(area)
+        return Result(True, "hunted", {"kills": 0})
+
+    s.hunt = hunt
+    plan = planner.Planner(s, GOAL, chat_fn=scripted(), escalate=False, memory=False, party=p, huddle=h)
+    plan.party_waited = plan.pack_checked = True
+    step = asyncio.run(plan.carry_out("hunt", {"area": "Britain Graveyard", "minutes": 5, "why": "my own idea"}))
+    assert not hunted and not step.result["ok"] and "holds the party back" in step.result["result"]
+    # Somewhere else is its own business; and a plan that sends them in lets it hunt.
+    asyncio.run(plan.carry_out("hunt", {"area": "Covetous", "minutes": 5, "why": "elsewhere"}))
+    assert hunted == ["Covetous"]
+    asyncio.run(member(w, "Roland", going_chat(NAMES[:3]), mem=False)[0].call("Wystan died"))
+    asyncio.run(plan.carry_out("hunt", {"area": "Britain Graveyard", "minutes": 5, "why": "now"}))
+    assert hunted == ["Covetous", "Britain Graveyard"]
     w.close()

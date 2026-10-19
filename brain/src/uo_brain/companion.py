@@ -61,13 +61,15 @@ from __future__ import annotations
 import asyncio
 import re
 import time
+import zlib
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Any
 
-from . import calls, costs, loop, policy, standing, state as states
+from . import calls, costs, escort, loop, policy, standing, state as states
 from .party import Party
+from .session import Result
 from .spells import GREATER_HEAL
 from .world import compass, tiles
 
@@ -132,6 +134,24 @@ FALL_IN_TILES = 8    # the leader this near one that waits where it was sent: it
 GO_MAX_TILES = 400   # a place further off than this isn't offered
 SAME_INN_TILES = 20  # an inn from the shard's data this little further than one only seen is taken for it
 GO_TRIES = 4         # walks begun toward the place before it gives the trip up and comes back
+# A place by its own name (cuo-cym.27): those of the store a line names ("the east bank", "Skara Brae's inn",
+# "Yew"), offered beside the kinds, as far as this. A long trip is still the companion's to agree to.
+NAMED_MAX = 3
+NAMED_MAX_TILES = 5000   # the land's width: a town across it is still its own to agree to go to
+NAMED_MATCH = 0.9    # world.place's match for a stretch of the line to name a place
+# An errand (cuo-cym.27): sent off to buy, bank or sell and come back, when the question on it gives this.
+ERRAND_CUT = 0.5
+ERRANDS = ("buy", "bank", "sell")
+# What it can be sent to buy, as the session's buy names it, and the counts a line may ask for.
+GOODS = {"bandage": "bandages", "heal potion": "heal potions", "cure potion": "cure potions",
+         "refresh potion": "refresh potions", "arrow": "arrows", "bolt": "crossbow bolts",
+         "reagents": "reagents (what it is short of, a restock)"}
+VENDOR_KINDS = ("healer", "provisioner", "mage_shop", "alchemist", "bowyer", "blacksmith", "tailor")
+SAID = {**GOODS, "bolt": "bolts", "reagents": "reagents"}  # ...and what a companion calls each, aloud
+COUNTS = {"5": 5, "10": 10, "20": 20, "30": 30, "50": 50, "100": 100}
+COUNT_UNSAID = 20    # "some bandages": as many as this
+# One of several sent ("one of you go and find a healer"): one goes, the first to claim the line on the floor.
+ONE_OF_CUT = 0.5
 REFUSED_S = 180.0    # a refusal this lately is told to the next asking: asked again, it is more ready to go
 READINGS_KEPT = 60
 # Orders for the fight itself (cuo-cym.24): a creature to go for, falling back to the leader, a heal now. Read
@@ -146,6 +166,10 @@ FALL_BACK_CALM_S = 5.0
 FALL_BACK_CLEAR = 12  # ...near: within this many tiles of the companion
 HEAL_S = 15.0         # an order to heal someone stands this long, if it can't be carried out sooner (out of reach)
 FIGHT_ORDERS = ("attack", "fall_back", "heal")
+# What the leader is fighting, judged per creature (escort.py, cuo-cym.25): asked at most this often, while a creature
+# in war mode is in view that the escort rule leaves out, and a creature judged the party's stays so this long.
+THEIRS_EVERY_S = 3.0
+THEIRS_KEEP_S = 12.0
 # The kinds of place a companion can be sent to, and what it calls each. The nearest of each kind the world
 # store knows is offered to system one; a place by its own name ("Yew") isn't.
 PLACE_KINDS = {"inn": "the inn", "tavern": "the tavern", "bank": "the bank", "healer": "the healer's",
@@ -361,17 +385,30 @@ def place_question(me: str, leader: str, places: list[dict[str, Any]]) -> dict[s
     # "The inn: North Britain inn at (1458, 1525), 66 tiles to the east." the model wasn't sure that "the inn" in
     # "off to the inn for you all - see you there" was that inn: with the talk of a live run before the line it
     # said the place was unclear at 0.63 to 0.79 for all three companions, and each asked "Go where?".
+    named = any(p["kind"].startswith("named") for p in places)
     role = (f"{leader}, who leads a party of adventurers in the game Ultima Online, has just sent {me}, one of the "
-            f"party's companions, off somewhere without them (`line`). Decide what kind of place {me} is sent to: {me} "
-            f"goes to the nearest place of that kind. It is the place {me} is sent to, not one {leader} says they are "
-            f"going to themselves. `said_before` is the talk just before the line, oldest first: when the line names "
-            f"no place itself ('off you go then', 'yes, there'), the place is the one that talk was about.")
+            f"party's companions, off somewhere without them (`line`). Decide where {me} is sent: a kind of place "
+            f"({me} goes to the nearest of that kind)" + (", or a place the line names by its own name" if named else "")
+            + f". A place named by its own name, or with words that single one out ('the east bank', 'the inn in Skara "
+            f"Brae', 'Yew'), is that one, offered by its own name, and not the nearest of its kind. It is the place {me} is "
+            f"sent to, not one {leader} says they are going to themselves ('I'm going to the bank, you go to the healer': "
+            f"the healer). When the line "
+            f"sends different companions to different places, it is {me}'s own: the one given to {me} by name, or to "
+            f"'you' or 'the rest of you' when {me} is one of those (`party` names the companions). `said_before` is the "
+            f"talk just before the line, oldest first: when the line names no place itself ('off you go then', 'yes, "
+            f"there'), the place is the one that talk was about.")
+
+    def option(p: dict[str, Any]) -> str:
+        says = f"{p['says'][:1].upper()}{p['says'][1:]}"
+        if p["kind"].startswith("named"):
+            return f"{says}, named by its own name: {p['tiles']} tiles to the {p['way']}."
+        return f"{says}: the nearest is {p['tiles']} tiles to the {p['way']}."
+
     return {"type": "choice", "instructions": {"role": role, "question": f"Where is {leader} sending {me}?"},
-            "criteria": {**{p["kind"]: f"{p['says'][:1].upper()}{p['says'][1:]}: the nearest is {p['tiles']} tiles to the "
-                                       f"{p['way']}." for p in places},
+            "criteria": {**{p["kind"]: option(p) for p in places},
                          "unclear": "None of these: no place is named in the line or in the talk before it, or the place "
-                                    "named is of no kind listed, or lies in another town ('see you in Yew', 'the inn at "
-                                    "Skara Brae')."}}
+                                    "named is none of these (a place this companion doesn't know, 'see you in "
+                                    "Narnia')."}}
 
 
 def places_near(world: Any, here: tuple[int, int]) -> list[dict[str, Any]]:
@@ -399,6 +436,190 @@ def places_near(world: Any, here: tuple[int, int]) -> list[dict[str, Any]]:
         out.append({"kind": kind, "says": says, "name": p["name"], "x": p["x"], "y": p["y"], "tiles": p.get("distance", 0),
                     "way": compass(p["x"] - here[0], p["y"] - here[1])})
     return out
+
+
+# Words that name no place by themselves, however often they are in places' names.
+PLAIN = {"the", "a", "an", "to", "at", "in", "of", "on", "by", "go", "get", "me", "you", "your", "for", "and", "with",
+         "wait", "meet", "head", "off", "back", "see", "there", "here", "then", "now", "please", "all", "lot", "guys",
+         "old", "new", "great", "little", "big", "near", "nearest", "town",
+         "i", "ill", "we", "us", "it", "is", "be", "will", "up", "down", "out", "over", "from", "some", "my"}
+# ...nor does a quarter by itself, which names one with a kind of place: "the east bank", "the west inn".
+QUARTERS = {"north", "south", "east", "west", "northeast", "northwest", "southeast", "southwest"}
+
+
+def named_places(world: Any, lines: list[str], here: tuple[int, int], kinds: dict[str, str] | None = None) -> list[dict[str, Any]]:
+    """The places of the store a line (or the talk before it) names by name, nearest first, at most NAMED_MAX: a
+    stretch of up to four words with a place's own word in it ("east bank", "Skara Brae", "Yew") that the store's
+    fuzzy lookup matches at NAMED_MATCH or more, the one of several so named nearest `here`; and a town named
+    with a kind of place ("the inn in Skara Brae") gives that town's nearest of the kind. Each as places_near
+    gives a kind's, with `kind` "named1", "named2"... (cuo-cym.27)."""
+    from .world import tokens
+    if world is None:
+        return []
+    kinds = kinds or PLACE_KINDS
+    vocab = _vocabulary(world)
+    # By where it is: one place named two ways ("the inn in Skara Brae", and its own name) is one option, said the
+    # first way.
+    found: dict[tuple[int, int], dict[str, Any]] = {}
+    # A clause at a time: the kind said with a town is looked for in the town's own clause.
+    for line in [c for ln in lines for c in re.split(r"[.;!?,]", ln) if c.strip()]:
+        words = [w for w in re.findall(r"[a-z0-9']+", line.lower().replace("'s ", " ")) if w]
+        used: set[int] = set()
+        # The longest stretches first, and a word in one that names a place isn't read again in a shorter one:
+        # "Britain" in "the East Britain inn" is no second place.
+        for n in range(min(4, len(words)), 0, -1):
+            for i in range(len(words) - n + 1):
+                if used & set(range(i, i + n)):
+                    continue
+                span = " ".join(words[i:i + n])
+                toks = tokens(span)
+                own = [t for t in toks if t not in PLAIN and t not in QUARTERS and t not in PLACE_WORDS and t not in kinds]
+                quarter = any(t in QUARTERS for t in toks) and any(t in PLACE_WORDS or t in kinds for t in toks)
+                if not (own or quarter) or words[i] in PLAIN or words[i + n - 1] in PLAIN:
+                    continue
+                if own and not set(own) <= vocab or quarter and not own and not any(t in vocab for t in toks if t in QUARTERS):
+                    continue  # a word no place of the store has in its name: no lookup (each is a scan of the store)
+                try:
+                    hits = [h for h in world.place(span, limit=8) if h.get("match", 0) >= NAMED_MATCH
+                            and h.get("kind") != "shop_sign" and set(own) <= set(tokens(h["name"]))
+                            # a quarter with a kind and no name of its own ("the west inn") is one near by, not the
+                            # West Moonglow inn across the sea
+                            and (own or tiles(*here, h["x"], h["y"]) <= GO_MAX_TILES)]
+                except Exception:  # noqa: BLE001 - a store that can't say: no place by that name
+                    continue
+                if not hits:
+                    continue
+                used |= set(range(i, i + n))
+                # The best match, and of several as good the nearest: Yew the town, not Yew Cave nearer by.
+                top = max(h["match"] for h in hits)
+                best = min((h for h in hits if h["match"] >= top - 0.005), key=lambda h: tiles(*here, h["x"], h["y"]))
+                if best.get("type") == "region" and best.get("kind") == "town":
+                    # A town with a kind of place said beside it ("the healer in Yew", "Yew's healer", "go to Yew and
+                    # wait at the inn"): that town's nearest of the kind, inside it. The kind just before the town's
+                    # name, or after it in its clause, not the line's first: "I'll go to the bank, you go to the healer
+                    # in Yew" had offered Yew's bank.
+                    kind = next((PLACE_WORDS[w] for w in [*reversed(words[max(0, i - 3):i]), *words[i + n:]]
+                                 if w in PLACE_WORDS), None)
+                    town = _town(world, best)
+                    if kind and kind in kinds and town is not None:
+                        try:
+                            near = [q for q in world.find_place(kind, near=[best["x"], best["y"]], limit=5)
+                                    if q.get("kind") == kind and town.contains(q["x"], q["y"])]
+                        except Exception:  # noqa: BLE001
+                            near = []
+                        if near:
+                            best = {**near[0], "says": f"{kinds[kind]} in {best['name']}"}
+                key = (best["x"], best["y"])
+                if key not in found or best.get("says") and not found[key].get("says"):
+                    found[key] = best
+    # A town is left out when a place in it is named too.
+    keep = [q for q in found.values()
+            if not (q.get("type") == "region" and q.get("kind") == "town" and (t := _town(world, q)) is not None
+                    and any(o is not q and t.contains(o["x"], o["y"]) for o in found.values()))]
+    near = [q for q in sorted(keep, key=lambda q: tiles(*here, q["x"], q["y"])) if tiles(*here, q["x"], q["y"]) <= NAMED_MAX_TILES]
+    out = []
+    for i, p in enumerate(near[:NAMED_MAX]):
+        far = tiles(*here, p["x"], p["y"])
+        out.append({"kind": f"named{i + 1}", "says": p.get("says") or p["name"], "name": p["name"], "x": p["x"],
+                    "y": p["y"], "tiles": far, "way": compass(p["x"] - here[0], p["y"] - here[1]), "of": p.get("kind")})
+    return out
+
+
+_VOCAB: dict[int, tuple[float, set[str]]] = {}
+
+
+def _vocabulary(world: Any) -> set[str]:
+    """Every word in the names of the store's places and regions, kept a minute: a stretch of a line with a word that
+    is in none of them names none, and isn't looked up (a lookup scans the store; a line of twenty words had taken a
+    second, on the companion's own loop)."""
+    from .world import tokens
+    now = time.monotonic()
+    got = _VOCAB.get(id(world))
+    if got is None or now - got[0] > 60:
+        names = [r[0] for r in world.db.execute("SELECT name FROM places WHERE stale = 0 UNION SELECT name FROM regions "
+                                                "WHERE stale = 0")]
+        got = (now, {t for n in names for t in tokens(n)})
+        _VOCAB[id(world)] = got
+    return got[1]
+
+
+def _town(world: Any, region: dict[str, Any]) -> Any:
+    """The store's region of a town found by name (world.Region, with contains), or None."""
+    try:
+        return world.regions().named(region.get("map") or "Felucca", region["name"])
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def errand_question(me: str, leader: str) -> dict[str, Any]:
+    """Whether the leader sends this companion on an errand (cuo-cym.27): to buy something, to bank, or to sell, and
+    come back, or only to go somewhere and wait."""
+    return {"type": "choice",
+            "instructions": {"role": f"{leader}, who leads a party of adventurers in the game Ultima Online, has just sent "
+                                     f"{me}, one of the party's companions, off somewhere without them (`line`). Decide "
+                                     f"what {me} is sent to do there.",
+                             "question": f"What is {me} sent to do?"},
+            "criteria": {"go": f"Only to go there and wait, or to meet {leader} there: no errand.",
+                         "buy": f"To buy something and bring it back ('get me some bandages', 'pick up arrows from the "
+                                f"bowyer', 'fetch potions').",
+                         "bank": f"To put gold or loot in the bank, or take something out of it, and come back.",
+                         "sell": f"To sell loot or things they carry at a shop, and come back."}}
+
+
+def goods_question(me: str, leader: str) -> dict[str, Any]:
+    """What this companion is sent to buy, and how many (cuo-cym.27)."""
+    return {"type": "choice",
+            "instructions": {"role": f"{leader} has just sent {me}, one of the party's companions in the game Ultima "
+                                     f"Online, off to buy something (`line`).",
+                             "question": f"What is {me} sent to buy?"},
+            "criteria": {**{k: f"{v.capitalize()}." for k, v in GOODS.items()},
+                         "unclear": "Something else, or it isn't said what."}}
+
+
+def count_question(me: str, leader: str) -> dict[str, Any]:
+    return {"type": "choice",
+            "instructions": {"role": f"{leader} has just sent {me}, one of the party's companions in the game Ultima "
+                                     f"Online, off to buy something (`line`).",
+                             "question": f"How many does {leader} want {me} to buy?"},
+            "criteria": {**{k: f"{k}, or about that many." for k in COUNTS},
+                         "unsaid": "No number is said ('some', 'a few', 'more', 'stock up')."}}
+
+
+def one_of_question(me: str, leader: str) -> dict[str, Any]:
+    """Whether the leader wants just one of its companions to go, without saying which (cuo-cym.27)."""
+    return {"type": "noul",
+            "instructions": {"role": f"{leader} leads a party of adventurers in the game Ultima Online and has just sent "
+                                     f"someone off somewhere (`line`). `party` names the companions.",
+                             "question": f"Does {leader} want just one of the companions to go, without saying which one?"},
+            "criteria": {"true": "One of them, whichever: 'one of you go and find a healer', 'someone fetch bandages', "
+                                 "'can somebody run to the bank'.",
+                         "false": "A companion by name, or 'you' to the one spoken with, or several or all of them "
+                                  "('you lot', 'all of you', 'the rest of you')."}}
+
+
+def errand_of(choices: dict[str, Any], place: dict[str, Any] | None) -> dict[str, Any] | None:
+    """The errand read from the answers (errand, goods, count), or None: only to go somewhere, or not sure, or sent
+    to buy without its being said what (cuo-cym.27). The vendor is the place's kind when the line names one."""
+    e = choices.get("errand")
+    if e is None:
+        return None
+    pe = (e.probabilities or {}).get(e.choice, e.confidence)
+    if e.choice not in ERRANDS or pe < ERRAND_CUT:
+        return None
+    of = (place or {}).get("of") or (place or {}).get("kind")
+    vendor = of if of in VENDOR_KINDS else None
+    says = (place or {}).get("says") or ("the bank" if e.choice == "bank" else "the shops")
+    job: dict[str, Any] = {"kind": e.choice, "p": round(pe, 3), "says": says, **({"vendor_kind": vendor} if vendor else {})}
+    if e.choice == "buy":
+        g, c = choices.get("goods"), choices.get("count")
+        if g is None or g.choice not in GOODS:
+            return None
+        job |= {"item": g.choice, "count": COUNTS.get(getattr(c, "choice", ""), COUNT_UNSAID)}
+        job["words"] = (f"to buy {SAID[g.choice]}" if g.choice == "reagents" else f"to buy {job['count']} {SAID[g.choice]}") \
+            + f" at {says}"
+    else:
+        job["words"] = f"to {e.choice} at {says}"
+    return job
 
 
 def willing_question(me: str, leader: str) -> dict[str, Any]:
@@ -580,7 +801,7 @@ class Companion:
 
     def __init__(self, session: Any, party: Party, log: Callable[[dict[str, Any]], None] | None = None,
                  game: Any = None, acknowledge: bool = True, table: Any = None, voice: Any = None, floor: Any = None,
-                 link: Any = None, persuade: bool = True):
+                 link: Any = None, persuade: bool = True, judge_reach: bool = True):
         self.session, self.party = session, party
         self.leader = party.leader
         self.log = log or (lambda _: None)
@@ -594,6 +815,13 @@ class Companion:
         self.link = link                # mates.Mates: its callouts are a setting the leader can switch
         self.ears: Any = None           # talk.Ears, in a party that talks (hears)
         self.persuade = persuade        # going off without the leader is this companion's to agree to
+        # What the leader is fighting, judged per creature by system one beyond the escort rule (cuo-cym.25): serial ->
+        # until when it is the party's fight. False: the rule alone, as before.
+        self.judge_reach = judge_reach
+        self.theirs: dict[int, float] = {}
+        self._theirs_at = -1e9
+        self._trail = escort.Trail()
+        self.reach_asked = 0
         self.mode = "follow"
         self.serial = 0                 # the leader's, from the first character seen under its name
         self.seen_at: tuple[int, int] | None = None
@@ -621,6 +849,8 @@ class Companion:
         self.dest: dict[str, Any] | None = None
         self.arrived = False
         self.sent = self.refused = 0
+        self.job: dict[str, Any] | None = None  # an errand it was sent on (cuo-cym.27): to buy, bank or sell, then back
+        self.errands = 0
         self._tries = 0
         self._refused_at = -1e9
         self._plays: str | None = None  # what it plays as, from its first look
@@ -719,6 +949,8 @@ class Companion:
         if self.mode == "go" and self.dest is not None:
             return (f"waiting at {self.dest['says']} for {self.leader}" if self.arrived else
                     f"on the way to {self.dest['says']}, sent there by {self.leader}")
+        if self.mode == "errand" and self.job is not None:
+            return f"on an errand for {self.leader}: to go {self.job['words']}, then back"
         return f"following {self.leader}"
 
     async def interpret(self, text: str, seq: int = 0, at_table: bool = False,
@@ -1060,12 +1292,53 @@ class Companion:
 
     def live(self, cfg: policy.PolicyConfig) -> policy.PolicyConfig:
         """The fight loop's configuration as the leader's word has made it: its settings (standing.py), and the
-        orders for the fight going on, laid over at every decision (loop.run)."""
+        orders for the fight going on, laid over at every decision (loop.run); and the creatures judged part of the
+        leader's fight (cuo-cym.25)."""
         cfg = self.settings.apply(cfg)
+        now = time.monotonic()
+        if theirs := frozenset(s for s, until in self.theirs.items() if until > now):
+            cfg = replace(cfg, escort_also=theirs)
         if self.focus is None and self.falling_back is None and self.heal is None:
             return cfg
         return replace(cfg, focus=self.focus["serial"] if self.focus else 0, fall_back=self.falling_back is not None,
                        heal_now=(self.heal["name"], self.heal["id"]) if self.heal else ("", 0))
+
+    async def judge_reach_now(self, snap: dict[str, Any]) -> None:
+        """Which creatures in view are part of the leader's fight, judged by system one (escort.py, cuo-cym.25): asked
+        when a creature in war mode is in view that the escort rule leaves out (beyond its tiles of the leader and of
+        this companion), at most every THEIRS_EVERY_S; each judged the party's is fought for THEIRS_KEEP_S after. The
+        trail of each creature's distance to the leader is kept at every look."""
+        companions = [m for m in self.party.members if m != self.leader]
+        said = [t for _, t in list(self.spoken)[-3:]]
+        who, creatures = escort.scene(snap, self.party.me, self.leader, companions, self._trail, said=said)
+        if not self.judge_reach or not who.get("seen") or not self.reads():
+            return
+        now = time.monotonic()
+        cfg = self.live(getattr(self.session, "pcfg", None) or policy.PolicyConfig())
+        left_out = [c for c in creatures if c["war_mode"] and not escort.rule(c, cfg.escort_tiles, cfg.escort_own)
+                    and self.theirs.get(c["serial"], 0) <= now]
+        if not left_out or now - self._theirs_at < THEIRS_EVERY_S:
+            return
+        self._theirs_at = now
+        qs = escort.theirs_questions(self.party.me, self.leader, creatures)
+        try:
+            with costs.kind("order"):
+                ans = await self.session.judge.ask(escort.state(who, creatures, self.party.me, self.leader), qs)
+        except Exception as e:  # noqa: BLE001 - no answer: the rule alone
+            self.log({"type": "reach", "t": time.time(), "error": f"{type(e).__name__}: {e}"[:200]})
+            return
+        self.reach_asked += 1
+        self.read_cost += ans.cost
+        p = {c["id"]: float(ans.nouls.get(c["id"], 0.0)) for c in creatures}
+        theirs = [c for c in creatures if p[c["id"]] >= escort.THEIRS_CUT]
+        for c in theirs:
+            self.theirs[c["serial"]] = now + THEIRS_KEEP_S
+        self.log({"type": "reach", "t": time.time(), "theirs": [c["name"] for c in theirs],
+                  "creatures": {f"{c['name']} ({c['id']})": round(p[c["id"]], 3) for c in creatures},
+                  "beyond_the_rule": [c["name"] for c in left_out]})
+        calls.emit({"kind": "order", "title": f"{self.leader}'s fight: which creatures?", "model": ans.model,
+                    "latency_ms": round(ans.latency_ms, 1), "cost": round(ans.cost, 7),
+                    "questions": calls.view(qs, ans), "note": f"the party's: {', '.join(c['name'] for c in theirs) or 'none'}"})
 
     # ---- the table --------------------------------------------------------------------
 
@@ -1182,11 +1455,21 @@ class Companion:
         to: then it is an order to come along."""
         s, me = self.session, self.party.me
         here = s.where(snap)
-        places = self.places(here)
         earlier = [ln for ln in self.earlier() if ln != f"{self.leader}: {' '.join(by.text.split())[:200]}"]
+        # The nearest of each kind, and the places the line (or the talk just before it) names by name (cuo-cym.27).
+        places = self.places(here) + named_places(getattr(s, "world", None),
+                                                  [by.text, *(ln.split(": ", 1)[-1] for ln in earlier[-2:])], here)
         place, willing, told = None, 1.0, False
-        if places and self.reads():
-            qs = {"place": place_question(me, self.leader, places)}
+        job: dict[str, Any] | None = None
+        one_of = 0.0
+        mates = [m for m in self.party.members if m != self.leader]
+        if self.reads():
+            qs: dict[str, Any] = {"place": place_question(me, self.leader, places)} if places else {}
+            # An errand (to buy, bank or sell and come back) and, with others in the party, whether just one is asked.
+            qs |= {"errand": errand_question(me, self.leader), "goods": goods_question(me, self.leader),
+                   "count": count_question(me, self.leader)}
+            if len(mates) > 1:
+                qs["one_of"] = one_of_question(me, self.leader)
             if self.persuade:
                 qs["willing"] = willing_question(me, self.leader)
             persona = getattr(self.ears, "persona", None) or {}
@@ -1204,23 +1487,34 @@ class Companion:
             else:
                 told = True  # asked and answered: where it couldn't tell, the phrases aren't asked after it
                 self.read_cost += ans.cost
-                pick = ans.choices["place"]
-                p = pick.probabilities.get(pick.choice, pick.confidence)
-                place = next((x for x in places if x["kind"] == pick.choice and p >= PLACE_CUT), None)
+                p = 0.0
+                if "place" in ans.choices:
+                    pick = ans.choices["place"]
+                    p = pick.probabilities.get(pick.choice, pick.confidence)
+                    place = next((x for x in places if x["kind"] == pick.choice and p >= PLACE_CUT), None)
                 willing = float(ans.nouls.get("willing", 1.0))
+                one_of = float(ans.nouls.get("one_of", 0.0))
+                job = errand_of(ans.choices, place)
                 self.log({"type": "place_read", "t": time.time(), "from": self.leader, "text": by.text[:200],
                           "place": place["name"] if place else None, "p": round(p, 3),
-                          **({"willing": round(willing, 3)} if self.persuade else {}), "answers": ans.to_log()})
+                          **({"willing": round(willing, 3)} if self.persuade else {}),
+                          **({"errand": job} if job else {}), **({"one_of": round(one_of, 3)} if "one_of" in qs else {}),
+                          "answers": ans.to_log()})
                 calls.emit({"kind": "order", "title": f"{self.leader}: {by.text}"[:80], "model": ans.model,
                             "latency_ms": round(ans.latency_ms, 1), "cost": round(ans.cost, 7),
                             "questions": calls.view(qs, ans, used={"place": place["kind"] if place else "unclear"}),
                             "note": (f"to {place['says']} ({p:.2f})" if place else "where to isn't clear")
+                                    + (f", to {job['words']}" if job else "")
                                     + (f", willing {willing:.2f}" if self.persuade else "")})
         if not told:  # no model, or no answer: the kind of place the line (or the talk before it) names
             kind = place_of(by.text) or next((k for ln in reversed(earlier) if (k := place_of(ln.split(": ", 1)[-1]))), None)
             place = next((x for x in places if x["kind"] == kind), None)
         going = self.mode == "go" and self.dest is not None
-        if going and (place is None or self.dest["kind"] == place["kind"]):
+        # The same place, by where it is for a place named by its name (whose option is "named1" whatever it is).
+        same = going and (place is None or (self.dest["x"], self.dest["y"]) == (place["x"], place["y"]) or (
+            not place["kind"].startswith("named") and not self.dest["kind"].startswith("named")
+            and self.dest["kind"] == place["kind"]))
+        if going and job is None and same:
             # Told again to go, to the same place or with none named ("off you go then"): it is going, and says so.
             by.said = await self.again("go")
             by.note = (f"told again to go, and {me} " + (f"already waits at {self.dest['says']}" if self.arrived else
@@ -1228,6 +1522,17 @@ class Companion:
             self.log({"type": "order", "t": time.time(), "from": self.leader, "order": "go", "already": True,
                       **({"said": by.said} if by.said else {})})
             return None
+        willing_ok = not self.persuade or willing >= WILLING_CUT
+        # Claimed only by one that will go: a first claimer that then said no left nobody going.
+        if one_of >= ONE_OF_CUT and self.floor is not None and (job or place) and willing_ok \
+                and not self.floor.claim(f"go:{self.leader}:{zlib.crc32(by.text.encode()):08x}"):
+            # One of them was asked, whichever: another took it first (the floor, as a line for nobody in particular is
+            # answered by one), and this one carries on as it was.
+            by.note = f"one of the companions was asked to go, and another took it: {me} carries on as before"
+            self.log({"type": "order", "t": time.time(), "from": self.leader, "order": "go", "one_of": "left to another"})
+            return None
+        if job is not None:
+            return await self.send_on_errand(by, snap, job, willing)
         if place is None and by.doubt:
             return "follow"  # an order to move with no place to be sent to in it: to come along, then
         if place is None:
@@ -1254,6 +1559,65 @@ class Companion:
         by.note = f"taken as the word to go to {place['says']} without {self.leader} and wait there"
         self.log({"type": "order", "t": time.time(), "from": self.leader, "order": "go", "place": place["name"],
                   "at": [place["x"], place["y"]], "tiles": place["tiles"], **({"said": by.said} if by.said else {})})
+
+    async def send_on_errand(self, by: Reading, snap: dict[str, Any], job: dict[str, Any], willing: float) -> None:
+        """Sent to buy, bank or sell and come back (cuo-cym.27): whether it will, as a trip of its own is, and off it goes."""
+        me = self.party.me
+        if self.persuade and willing < WILLING_CUT:
+            self.refused += 1
+            self._refused_at = time.monotonic()
+            by.owed = (f"{self.leader} asked {me} to go off {job['words']} without them, and {me} won't, for now, for a "
+                       f"reason of their own in how things stand ({self.words_of(self.moment(snap, None))}). {me} says no "
+                       f"in their own way and says why. Asked again, {me} may go.")
+            by.plain = "I'd rather stay with you for now."
+            self.log({"type": "order", "t": time.time(), "from": self.leader, "order": "go", "refused": True,
+                      "errand": job, "willing": round(willing, 3)})
+            return None
+        if self.mode == "stay":
+            await self.session.act("stop")
+        self.mode, self.dest, self.job, self.arrived = "errand", None, job, False
+        self.orders += 1
+        self._following, self._going = 0, None
+        by.said = await self.ack("go", place=job["says"])
+        by.note = f"taken as the word to go {job['words']} and come back"
+        self.log({"type": "order", "t": time.time(), "from": self.leader, "order": "go", "errand": job,
+                  **({"said": by.said} if by.said else {})})
+        return None
+
+    async def run_errand(self) -> None:
+        """The errand it was sent on, as its own business (the fight loop beside it), then back to the leader with a
+        word on how it went (cuo-cym.27). The leader's lines meanwhile are read when it is back."""
+        s, job = self.session, self.job
+        self.own = True
+        self.doing = f"on an errand for {self.leader}: to go {job['words']}"
+        # Not defended(): a companion's whole-run fight loop already runs beside everything it does (Companion.run),
+        # and a second would fight on the same client.
+        try:
+            if job["kind"] == "buy" and job.get("item") == "reagents":
+                r = await s.restock()
+            elif job["kind"] == "buy":
+                r = await s.buy(job["item"], job["count"], job.get("vendor_kind"))
+            elif job["kind"] == "bank":
+                r = await s.bank("gold,loot", "")
+            else:
+                r = await s.sell("loot", job.get("vendor_kind") or "weapon_vendor")
+        except Exception as e:  # noqa: BLE001 - an errand that breaks is one that failed: it comes back
+            r = Result(False, f"{type(e).__name__}: {e}"[:200])
+        finally:
+            self.own = False
+        self.errands += 1
+        self.mode, self.job = "follow", None
+        self._following, self._going = 0, None
+        got = (r.data or {}).get("bought") if hasattr(r, "data") else None
+        if isinstance(got, dict):  # a restock: what of each it bought
+            got = ", ".join(f"{n} {k}" for k, n in got.items() if n) or None
+            plain = f"Got {got}, coming back." if got else "Done, coming back." if r.ok else "Couldn't do it, coming back."
+        else:
+            plain = (f"Got {got} {SAID.get(job.get('item', ''), 'of them')}, coming back." if job["kind"] == "buy" and got
+                     else "Done, coming back." if r.ok else "Couldn't do it, coming back.")
+        said = await self.utter("", plain)
+        self.log({"type": "errand", "t": time.time(), "job": job, "ok": r.ok, "result": r.summary[:300],
+                  **({"said": said} if said else {})})
 
     @staticmethod
     def words_of(moment: dict[str, Any]) -> str:
@@ -1340,6 +1704,7 @@ class Companion:
             self.settings.caster = "mage" in self._plays  # a spell to open with is asked only of one who casts
         self.hold_fight_orders(snap)
         readings = await self.hear(snap)
+        await self.judge_reach_now(snap)  # after the orders are read: "back to me!" doesn't wait on the question
         by = next((r for r in reversed(readings) if r.order is not None), None)
         # An order for the fight itself (cuo-cym.24), the last of them, unless its line sends this one away or sits
         # it down: those orders are the line's, and the fight isn't its business there.
@@ -1405,6 +1770,8 @@ class Companion:
             self.doing = f"staying where {self.leader} said to"
         elif self.mode == "go" and self.dest is not None:
             await self.on_the_way(snap, here, lead)
+        elif self.mode == "errand" and self.job is not None:
+            await self.run_errand()
         elif agent.get("engaged") or agent.get("fleeing"):
             self.doing = f"fighting beside {self.leader}"
             self._following = 0  # a fight's own walking ends the follow: taken up again after it

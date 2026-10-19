@@ -1,6 +1,7 @@
 """A party for the player (cuo-cym.6): companions that follow and fight beside a character a person plays."""
 
 import asyncio
+from dataclasses import replace
 import copy
 
 from uo_brain import companion, fleet, gameparty, party, policy, state
@@ -168,6 +169,10 @@ def test_a_companion_fights_what_is_on_the_leader_and_nothing_else():
     assert policy.decide(beside_harry(on_me), answers("fight", target="t1"), policy.Memory(), cfg).intent == "fight"
     # Without the escort, the first would be anyone's to seek and the second too.
     assert policy.decide(beside_harry(far), answers("seek", target="t1"), policy.Memory(), policy.PolicyConfig()).intent == "seek"
+    # One system one judged the leader's fight (cuo-cym.25), 12 tiles off: the party's too.
+    judged = replace(cfg, escort_also=frozenset({0x311}))
+    dec = policy.decide(beside_harry(far), answers("seek", target="t1"), policy.Memory(), judged)
+    assert dec.intent == "seek" and dec.target.serial == 0x311
 
 
 def test_a_fleet_file_for_the_players_party(tmp_path, monkeypatch):
@@ -515,17 +520,25 @@ class Mind:
     name = "decision/test"
 
     def __init__(self, order=None, setting=None, values=None, to=None, place=None, willing=None, asked=None,
-                 fight=None, target=None, whom=None):
+                 fight=None, target=None, whom=None, errand=None, goods=None, count=None, one_of=None):
         self.order, self.setting, self.values = order or {}, setting or {}, values or {}
         self.to, self.place, self.willing, self.asked_ = to or {}, place or {}, willing or {}, asked or {}
         self.fight, self.target, self.whom = fight or {}, target or {}, whom or {}
+        # An errand (cuo-cym.27): errand, goods and count {line: (pick, how sure)}; one_of {line: how sure}.
+        self.errand, self.goods, self.count, self.one_of = errand or {}, goods or {}, count or {}, one_of or {}
+        self.theirs = {}  # which creatures are the leader's fight (cuo-cym.25): {creature's name: how sure}
         self.asked = []
 
     async def ask(self, state, questions):
         from uo_brain import judge, standing
         self.asked.append((state, questions))
-        line, me = state["line"], state.get("companion")
         out = judge.Answers(model="test", cost=0.00002)
+        if "creatures" in state:  # which creatures are the leader's fight (escort.py): a yes/no each
+            for key, q in questions.items():
+                name = q["instructions"]["question"].split("(", 1)[1].split(")", 1)[0]
+                out.nouls[key] = self.theirs.get(name, 0.1)
+            return out
+        line, me = state["line"], state.get("companion")
         for key, q in questions.items():
             if key == "willing":
                 out.nouls[key] = self.willing.get(line, 0.9)
@@ -533,10 +546,15 @@ class Mind:
             if key == "asked":  # does the line ask this companion to do something?
                 out.nouls[key] = self.asked_.get(line, 0.05)
                 continue
-            if key in ("order", "setting", "for", "place", "fight", "whom"):
+            if key == "one_of":
+                out.nouls[key] = self.one_of.get(line, 0.05)
+                continue
+            if key in ("order", "setting", "for", "place", "fight", "whom", "errand", "goods", "count"):
                 by_line = {"order": self.order, "setting": self.setting, "for": self.to, "place": self.place,
-                           "fight": self.fight, "whom": self.whom}[key]
-                pick, p = by_line.get(line, ({"for": "everyone", "place": "unclear", "whom": "unclear"}.get(key, "none"), 0.95))
+                           "fight": self.fight, "whom": self.whom, "errand": self.errand, "goods": self.goods,
+                           "count": self.count}[key]
+                pick, p = by_line.get(line, ({"for": "everyone", "place": "unclear", "whom": "unclear", "errand": "go",
+                                              "goods": "unclear", "count": "unsaid"}.get(key, "none"), 0.95))
             elif key == "target":  # the creature by the start of its name, as the option's words begin
                 start, p = self.target.get(line, ("", 0.95))
                 pick = next((o for o, words in q["criteria"].items() if start and words.lower().startswith(start.lower())),
@@ -962,4 +980,185 @@ def test_asked_for_what_it_doesnt_do_at_a_word_it_says_so(tmp_path):
     assert c.reading(18).to == ["Wystan"] and not c.reading(18).owed
     assert companion.left_over({"none": 0.95}, 0.9) == "asked" and companion.left_over({"none": 0.95}, 0.5) == ""
     assert companion.left_over({"stay": 0.4, "none": 0.6}, 0.9) == "unsure"
+    w.close()
+
+
+def test_places_named_by_their_own_names_are_offered(tmp_path):
+    """cuo-cym.27: a place by its name ('the east bank', 'Yew', 'the inn in Skara Brae') was no option; only kinds were."""
+    w = World.open("local", root=tmp_path)
+    w.add_place("bank", "West Britain bank", 1425, 1690, source="import")
+    w.add_place("bank", "East Britain bank", 1650, 1608, source="import")
+    w.add_place("bank", "West Trinsic bank", 1830, 2820, source="import")
+    w.add_place("inn", "West Skara Brae inn", 590, 2160, source="import")
+    w.add_place("inn", "Britain innkeeper", 1494, 1619, source="seen")
+    w.replace_source("regions", "fixture", [
+        {"name": "Skara Brae", "map": "Felucca", "kind": "town", "guarded": 1, "rects": "[[538, 2107, 688, 2297]]",
+         "go_x": 632, "go_y": 2233, "go_z": 0},
+        {"name": "Yew", "map": "Felucca", "kind": "town", "guarded": 1, "rects": "[[258, 881, 657, 1261]]",
+         "go_x": 546, "go_y": 992, "go_z": 0}])
+    here = (1392, 1528)
+
+    def named(line):
+        return [p["says"] for p in companion.named_places(w, [line], here)]
+
+    assert named("Meet me at the east bank.") == ["East Britain bank"]
+    assert named("go wait at the west bank") == ["West Britain bank"]  # the nearer of the two so named
+    assert named("Off to the inn in Skara Brae with you") == ["West Skara Brae inn"]  # by its own name, the longest stretch
+    assert named("Go to Skara Brae and wait for me at the inn.") == ["the inn in Skara Brae"]  # a town and a kind
+    assert named("See you in Yew.") == ["Yew"]
+    assert named("Off to the inn with you.") == [] and named("Go on ahead.") == []
+    yew = companion.named_places(w, ["See you in Yew."], here)[0]
+    assert yew["kind"] == "named1" and yew["tiles"] > 400  # further than a kind's nearest is offered: by name only
+    q = companion.place_question("Isolde", "Harry", [*companion.places_near(w, here), yew])
+    assert q["criteria"]["named1"].startswith("Yew, named by its own name: ") and "its own name" in q["instructions"]["role"]
+    w.close()
+
+
+def test_sent_on_an_errand_it_buys_and_comes_back(tmp_path):
+    """cuo-cym.27: 'go and get me some bandages from the healer' was read as being sent there, to wait; it bought nothing."""
+    w = inn_world(tmp_path)
+    w.add_place("healer", "Britain healer", 1010, 1000, source="import")
+    mine = party.Party(w, "p1", "Isolde", "Harry", MEMBERS)
+    harry = person("Harry", 2, 2, 0)
+    line = "Isolde, run to the healer and get me 10 bandages, then come back."
+    s = Walker([view([harry]), view([harry], lines(line), seq=11), view([harry], seq=11)])
+    s.world = w
+    s.judge = Mind(order={line: ("go", 0.95)}, place={line: ("healer", 0.9)}, errand={line: ("buy", 0.9)},
+                   goods={line: ("bandage", 0.9)}, count={line: ("10", 0.8)})
+    bought = []
+
+    async def buy(item, count, vendor_kind=None):
+        bought.append((item, count, vendor_kind))
+        return Result(True, f"bought {count} {item}", {"bought": count, "gold_spent": 50})
+
+    async def defended(work):
+        return await work
+
+    s.buy, s.defended = buy, defended
+    seen = []
+    c = companion.Companion(s, mine, log=seen.append)
+    asyncio.run(c.step())
+    asyncio.run(c.step())  # the order read, and the errand run in the same look
+    job = next(x for x in seen if x["type"] == "order")["errand"]
+    assert job["item"] == "bandage" and job["count"] == 10 and job["vendor_kind"] == "healer"
+    assert "to buy 10 bandages at the healer's" in job["words"] and ("say", {"text": "On my way."}) in s.acts
+    assert bought == [("bandage", 10, "healer")] and c.mode == "follow" and c.job is None and c.errands == 1
+    assert ("say", {"text": "Got 10 bandages, coming back."}) in s.acts
+    assert [x for x in seen if x["type"] == "errand"][0]["ok"] is True
+    # Sent only to go there and wait: no errand, as before.
+    from uo_brain.judge import ChoiceResult
+    assert companion.errand_of({"errand": ChoiceResult("go", {"go": 0.9}, 0.9)}, None) is None
+    # Sent to buy, but not what: no errand (it would buy nothing).
+    assert companion.errand_of({"errand": ChoiceResult("buy", {"buy": 0.9}, 0.9),
+                                "goods": ChoiceResult("unclear", {"unclear": 0.8}, 0.8)}, None) is None
+    w.close()
+
+
+def test_one_of_several_sent_goes_and_the_others_stay(tmp_path):
+    """cuo-cym.27: 'one of you go to the bank' sent all of them."""
+    from uo_brain.talk import Floor
+    w = inn_world(tmp_path)
+    harry = person("Harry", 2, 2, 0)
+    line = "One of you nip to the bank for me."
+    went = []
+    for me in ("Isolde", "Wystan"):
+        mine = party.Party(w, "p1", me, "Harry", MEMBERS)
+        s = Walker([view([harry]), view([harry], lines(line), seq=11)])
+        s.world = w
+        s.judge = Mind(order={line: ("go", 0.95)}, place={line: ("bank", 0.9)}, one_of={line: 0.9})
+        c = companion.Companion(s, mine, floor=Floor(w, me, set(MEMBERS)))
+        asyncio.run(c.step())
+        asyncio.run(c.step())
+        went.append(c.mode)
+    assert went == ["go", "follow"]
+    w.close()
+
+
+def test_what_the_leader_fights_from_range_is_judged_per_creature(tmp_path):
+    """cuo-cym.25: what stood in war mode within 4 tiles of the leader was its fight; one it shot at from 10 tiles off
+    wasn't the companions' until it closed. System one is asked about the creatures the rule leaves out."""
+    from uo_brain import escort, policy
+    w = inn_world(tmp_path)
+    mine = party.Party(w, "p1", "Isolde", "Harry", MEMBERS)
+    harry = {**person("Harry", 2, 1, 2), "war_mode": True, "facing": "north"}
+    skel = {"serial": 0x4001, "name": "a skeleton", "monster": True, "pet": False, "dead": False, "dx": 1, "dy": -8,
+            "distance": 8, "war_mode": True, "facing": "south", "hits_pct": 70}
+    hind = {"serial": 0x4002, "name": "a hind", "monster": True, "pet": False, "dead": False, "dx": 6, "dy": 0,
+            "distance": 6, "war_mode": False, "facing": "north", "hits_pct": 100}
+    s = Walker([view([harry, skel, hind])])
+    s.world = w
+    s.judge = Mind()
+    s.judge.theirs = {"a skeleton": 0.9}
+    seen = []
+    c = companion.Companion(s, mine, log=seen.append)
+    asyncio.run(c.step())
+    reach = [x for x in seen if x["type"] == "reach"]
+    assert reach and reach[0]["theirs"] == ["a skeleton"] and reach[0]["beyond_the_rule"] == ["a skeleton"]
+    cfg = c.live(policy.PolicyConfig(escort="Harry"))
+    assert cfg.escort_also == frozenset({0x4001})
+    # What the question was told of the skeleton: 10 tiles from the leader, facing it, the leader facing it, wounded.
+    st = s.judge.asked[-1][0]
+    words = next(v for v in st["creatures"].values() if v.startswith("A skeleton"))
+    assert "10 from Harry" in words and "facing Harry" in words and "Harry faces it" in words and "wounded (70%)" in words
+    # Asked at most every THEIRS_EVERY_S, and not at all with the rule alone.
+    asyncio.run(c.step())
+    assert len([x for x in seen if x["type"] == "reach"]) == 1
+    c2 = companion.Companion(Walker([view([harry, skel])]), mine, judge_reach=False)
+    c2.session.world, c2.session.judge = w, Mind()
+    asyncio.run(c2.step())
+    assert not c2.theirs and not c2.session.judge.questions("c1")
+    # The rule: in war mode within 4 tiles of the leader or 6 of itself, or on it.
+    assert escort.rule({"war_mode": True, "to_leader": 4, "to_me": 9}) and not escort.rule({"war_mode": True, "to_leader": 5, "to_me": 7})
+    assert escort.rule({"war_mode": False, "attacking_me": True, "to_leader": 9, "to_me": 9})
+    assert escort.faces("south", 0, 5) and escort.faces("southeast", 4, 5) and not escort.faces("north", 0, 5)
+    trail = escort.Trail()
+    assert trail.note(1, 10, now=0.0) == 0 and trail.note(1, 7, now=2.0) == 3 and trail.note(1, 7, now=10.0) == 0
+    w.close()
+
+
+def test_errands_and_one_of_after_the_review(tmp_path):
+    """cuo-cym.27, from a review of the change: one who won't go doesn't take a line meant for one of them; an errand
+    isn't dropped as 'told again' at the place it was sent; a restock's purchases are said in words."""
+    from uo_brain.talk import Floor
+    w = inn_world(tmp_path)
+    w.add_place("healer", "Britain healer", 1010, 1000, source="import")
+    harry = person("Harry", 2, 2, 0)
+    # One of several, the first unwilling: it says no and claims nothing, and the next goes.
+    line = "One of you nip to the bank for me."
+    modes = []
+    for me, willing in (("Isolde", 0.2), ("Wystan", 0.9)):
+        mine = party.Party(w, "p2", me, "Harry", MEMBERS)
+        s = Walker([view([harry]), view([harry], lines(line), seq=11)])
+        s.world = w
+        s.judge = Mind(order={line: ("go", 0.95)}, place={line: ("bank", 0.9)}, one_of={line: 0.9}, willing={line: willing})
+        c = companion.Companion(s, mine, floor=Floor(w, me, set(MEMBERS)))
+        asyncio.run(c.step())
+        asyncio.run(c.step())
+        modes.append((c.mode, c.refused))
+    assert modes == [("follow", 1), ("go", 0)]
+    # Waiting at the healer's it was sent to, then sent to buy there: the errand is run.
+    mine = party.Party(w, "p3", "Isolde", "Harry", MEMBERS)
+    go, buy = "Off to the healer with you.", "While you're there, buy 20 bandages."
+    s = Walker([view([harry]), view([harry], lines(go), seq=11), view([harry], lines(go, buy), seq=12)])
+    s.world = w
+    s.judge = Mind(order={go: ("go", 0.95), buy: ("go", 0.9)}, place={go: ("healer", 0.9), buy: ("healer", 0.9)},
+                   errand={buy: ("buy", 0.9)}, goods={buy: ("bandage", 0.9)}, count={buy: ("20", 0.9)})
+    bought = []
+
+    async def buy_it(item, count, vendor_kind=None):
+        bought.append((item, count))
+        return Result(True, "bought", {"bought": count})
+
+    async def restock():
+        return Result(True, "restocked", {"bought": {"black pearl": 22, "blood moss": 30, "garlic": 0}})
+
+    s.buy, s.restock = buy_it, restock
+    c = companion.Companion(s, mine)
+    for _ in range(3):
+        asyncio.run(c.step())
+    assert bought == [("bandage", 20)] and c.errands == 1
+    # A restock's purchases, worded.
+    c.job = {"kind": "buy", "item": "reagents", "says": "the shops", "words": "to buy reagents at the shops"}
+    asyncio.run(c.run_errand())
+    assert ("say", {"text": "Got 22 black pearl, 30 blood moss, coming back."}) in s.acts
     w.close()

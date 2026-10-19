@@ -216,7 +216,7 @@ def test_a_client_that_doesnt_answer_sits_the_run_out_and_the_others_play(tmp_pa
     started = []
     monkeypatch.setattr(fleet, "start_client", lambda a, out: None)
     monkeypatch.setattr(fleet, "log_in", log_in)
-    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out: started.append(a.name) or Brain())
+    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out, *_: started.append(a.name) or Brain())
     monkeypatch.setattr(fleet, "pid_listening", lambda port: 0)
     monkeypatch.setattr(fleet, "report", lambda out: {})
     f = fleet.load(fleet.BRAIN_DIR / "fleets" / "britain-lives.toml")
@@ -344,11 +344,17 @@ def test_brains_asked_to_stop_write_their_summaries_and_one_that_wont_go_is_ende
 
         def terminate(self):
             self.asked.append("terminate")
+            self.ended = self.ended or self.goes is not None
+
+        def kill(self):
+            self.asked.append("kill")
             self.ended = True
 
     goes, hangs, gone = Brain(True), Brain(False), Brain(True, ended=True)
-    fleet.stop_brains({"a": goes, "b": hangs, "c": gone}, within_s=0.2)
+    deaf = Brain(None)  # takes SIGTERM as one more stop and plays on (cuo-7z4)
+    fleet.stop_brains({"a": goes, "b": hangs, "c": gone, "d": deaf}, within_s=0.2)
     assert goes.asked == [signal.SIGINT] and hangs.asked == [signal.SIGINT, "terminate"] and gone.asked == []
+    assert deaf.asked == [signal.SIGINT, "terminate", "kill"]
 
 
 def test_a_run_ended_by_a_closed_terminal_or_a_kill_stops_its_brains_first(tmp_path, monkeypatch):
@@ -369,7 +375,7 @@ def test_a_run_ended_by_a_closed_terminal_or_a_kill_stops_its_brains_first(tmp_p
     stopped = []
     monkeypatch.setattr(fleet, "start_client", lambda a, out: None)
     monkeypatch.setattr(fleet, "log_in", log_in)
-    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out: Brain())
+    monkeypatch.setattr(fleet, "start_brain", lambda fl, a, out, *_: Brain())
     monkeypatch.setattr(fleet, "pid_listening", lambda port: 0)
     monkeypatch.setattr(fleet, "report", lambda out: {})
     monkeypatch.setattr(fleet, "stop_brains", lambda brains, within_s=0: stopped.append(sorted(brains)))

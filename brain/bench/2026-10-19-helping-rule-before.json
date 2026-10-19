@@ -1,0 +1,235 @@
+{
+ "started": "2026-10-19T14:49:58",
+ "cut": 0.5,
+ "moments": {
+  "first": 42,
+  "second": 28
+ },
+ "rule": {
+  "first": {
+   "right": 29,
+   "missed": 8,
+   "needless": 2,
+   "walk_not_wanted": 0,
+   "wrong_one": 3,
+   "of": 42,
+   "by_part": {
+    "r": "19/22",
+    "w": "10/20"
+   },
+   "wrong": [
+    {
+     "id": "r07",
+     "src": "20261013-012010 Thea 1791865288",
+     "want": [
+      "Wystan"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the archer losing health fast to a bone knight, within reach; the bard is being healed"
+    },
+    {
+     "id": "r11",
+     "src": "20261013-023159 Roland 1791869596",
+     "want": [
+      "Thea"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the tamer falling fast with two on her, within reach, though another heals her"
+    },
+    {
+     "id": "r13",
+     "src": "20261013-024221 Isolde 1791870220",
+     "want": [
+      "Roland"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the warrior still falling fast though another heals him; mana enough"
+    },
+    {
+     "id": "w06",
+     "src": "a mage at low mana, a companion hurt but steady",
+     "want": [
+      null
+     ],
+     "got": [
+      "Thea",
+      "heal"
+     ],
+     "how": "needless",
+     "why": "the tamer steady with nothing on her: the last mana is for the lich or a real need"
+    },
+    {
+     "id": "w07",
+     "src": "a mage at low mana, one heal for two",
+     "want": [
+      "Roland"
+     ],
+     "got": [
+      "Corwin",
+      "heal"
+     ],
+     "how": "wrong_one",
+     "why": "one heal left: the warrior losing health to the lich, not the steady bard"
+    },
+    {
+     "id": "w08",
+     "src": "two healers, the companion still falling fast",
+     "want": [
+      "Roland"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "one heal isn't keeping up with a lich and a bone knight"
+    },
+    {
+     "id": "w11",
+     "src": "near death, a few steps away from the fight",
+     "want": [
+      "Wystan"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the archer near death, nothing on him, the walk away from the fight"
+    },
+    {
+     "id": "w12",
+     "src": "near death, with things between, for a warrior",
+     "want": [
+      "Isolde"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the warrior can take the hits: to the mage's side, near death with a bone knight on her"
+    },
+    {
+     "id": "w13",
+     "src": "two near death, one falling",
+     "want": [
+      "Roland"
+     ],
+     "got": [
+      "Wystan",
+      "heal"
+     ],
+     "how": "wrong_one",
+     "why": "the warrior dies first: falling fast under the lich; the archer has nothing on him"
+    },
+    {
+     "id": "w14",
+     "src": "the helper hurt and falling",
+     "want": [
+      null
+     ],
+     "got": [
+      "Corwin",
+      "bandage"
+     ],
+     "how": "needless",
+     "why": "two on the archer and he is falling; the bard is steady"
+    },
+    {
+     "id": "w15",
+     "src": "the helper hurt, a companion near death beside it",
+     "want": [
+      "Isolde"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the mage dies in seconds; the warrior's own health can wait one bandage"
+    },
+    {
+     "id": "w17",
+     "src": "falling against steady",
+     "want": [
+      "Corwin"
+     ],
+     "got": [
+      "Roland",
+      "bandage"
+     ],
+     "how": "wrong_one",
+     "why": "the bard is losing health to two skeletons; the warrior is steady"
+    },
+    {
+     "id": "w20",
+     "src": "full mana, falling above 60%",
+     "want": [
+      "Roland"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the warrior losing health fast to two, and mana to spare"
+    }
+   ]
+  },
+  "second": {
+   "right": 24,
+   "missed": 3,
+   "needless": 0,
+   "walk_not_wanted": 0,
+   "wrong_one": 1,
+   "of": 28,
+   "by_part": {
+    "s": "14/14",
+    "x": "10/14"
+   },
+   "wrong": [
+    {
+     "id": "x02",
+     "src": "written",
+     "want": [
+      "Thea"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the tamer losing health fast to a bone knight, beside the archer"
+    },
+    {
+     "id": "x03",
+     "src": "written",
+     "want": [
+      "Corwin"
+     ],
+     "got": [
+      "Wystan",
+      "heal"
+     ],
+     "how": "wrong_one",
+     "why": "one heal left: the bard losing health to two skeletons, not the steady archer"
+    },
+    {
+     "id": "x08",
+     "src": "written",
+     "want": [
+      "Corwin"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the bard near death, nothing on him, the walk away from the fight"
+    },
+    {
+     "id": "x10",
+     "src": "written",
+     "want": [
+      "Wystan"
+     ],
+     "got": null,
+     "how": "missed",
+     "why": "the archer losing health fast, mana to spare"
+    }
+   ]
+  }
+ },
+ "models": {},
+ "costs": {
+  "cost_usd": 0,
+  "cost_per_hour_usd": 0.0,
+  "calls": 0,
+  "by_role": {},
+  "by_kind": {},
+  "by_model": {}
+ }
+}

@@ -1,0 +1,2119 @@
+{
+ "started": "2026-10-19T15:28:13",
+ "here": [
+  1392,
+  1528
+ ],
+ "named_offered": {
+  "Meet me at the east bank.": [
+   "East Britain bank"
+  ],
+  "Go wait at the west bank, I'll be along.": [
+   "West Britain bank"
+  ],
+  "Off to the inn in Skara Brae with you.": [
+   "West Skara Brae inn"
+  ],
+  "See you in Yew.": [
+   "Yew"
+  ],
+  "Head to Vesper and wait for me there.": [
+   "Vesper"
+  ],
+  "Wait for me at the East Britain inn.": [
+   "East Britain inn"
+  ],
+  "Off to Cove with you.": [
+   "Cove"
+  ],
+  "Get yourself to the west bank.": [
+   "West Britain bank"
+  ],
+  "I'll see you in Trinsic.": [
+   "Trinsic"
+  ],
+  "wait at the east inn": [
+   "East Britain inn"
+  ],
+  "Go to the healer in Vesper.": [
+   "the healer's in Vesper"
+  ]
+ },
+ "phrases": {
+  "named": {
+   "first": "1/8",
+   "second": "2/7"
+  },
+  "several": {
+   "first": "2/6",
+   "second": "1/5"
+  },
+  "errands (none ever)": {
+   "first": "2/10",
+   "second": "2/8"
+  },
+  "one of (all go)": {
+   "first": "3/6",
+   "second": "3/6"
+  }
+ },
+ "models": {
+  "jev": {
+   "named": {
+    "first": "6/8",
+    "second": "5/7"
+   },
+   "several": {
+    "first": "4/6",
+    "second": "4/5"
+   },
+   "errands (what, and what to buy)": {
+    "first": "10/10",
+    "second": "8/8"
+   },
+   "errands, how many right": {
+    "first": "10/10",
+    "second": "8/8"
+   },
+   "one of": {
+    "first": "6/6",
+    "second": "6/6"
+   },
+   "latency_ms": 199,
+   "cost_usd_a_request": 8.9e-05,
+   "rows": [
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Meet me at the east bank.",
+     "latency_ms": 280.05050000501797,
+     "cost": 9.03e-05,
+     "want": "name:east britain bank",
+     "got": "unclear",
+     "p": 0.48,
+     "ok": false,
+     "top": {
+      "named1": 0.48,
+      "unclear": 0.43,
+      "bank": 0.05
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Go wait at the west bank, I'll be along.",
+     "latency_ms": 291.3032910437323,
+     "cost": 9.051e-05,
+     "want": "name:west britain bank",
+     "got": "West Britain bank",
+     "p": 0.6,
+     "ok": true,
+     "top": {
+      "named1": 0.6,
+      "unclear": 0.33,
+      "bank": 0.06
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Off to the inn in Skara Brae with you.",
+     "latency_ms": 334.0901670162566,
+     "cost": 9.0678e-05,
+     "want": "name:skara brae",
+     "got": "the inn",
+     "p": 0.66,
+     "ok": false,
+     "top": {
+      "inn": 0.66,
+      "named1": 0.32,
+      "tavern": 0.01
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "See you in Yew.",
+     "latency_ms": 368.122374988161,
+     "cost": 9.0258e-05,
+     "want": "name:yew",
+     "got": "Yew",
+     "p": 0.99,
+     "ok": true,
+     "top": {
+      "named1": 0.99,
+      "town": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Head to Vesper and wait for me there.",
+     "latency_ms": 304.25595794804394,
+     "cost": 9.051e-05,
+     "want": "name:vesper",
+     "got": "Vesper",
+     "p": 0.99,
+     "ok": true,
+     "top": {
+      "named1": 0.99,
+      "town": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Wait for me at the East Britain inn.",
+     "latency_ms": 364.3670830060728,
+     "cost": 9.0384e-05,
+     "want": "name:east britain inn",
+     "got": "East Britain inn",
+     "p": 0.97,
+     "ok": true,
+     "top": {
+      "named1": 0.97,
+      "inn": 0.03,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Off to Cove with you.",
+     "latency_ms": 203.8939169724472,
+     "cost": 9.0216e-05,
+     "want": "name:cove",
+     "got": "Cove",
+     "p": 0.98,
+     "ok": true,
+     "top": {
+      "named1": 0.98,
+      "town": 0.01,
+      "unclear": 0.01
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Go to the inn.",
+     "latency_ms": 202.50895799836144,
+     "cost": 8.8452e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 0.99,
+     "ok": true,
+     "top": {
+      "inn": 0.99,
+      "tavern": 0.01,
+      "bank": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "Get yourself to the west bank.",
+     "latency_ms": 222.90716599673033,
+     "cost": 9.03e-05,
+     "want": "name:west britain bank",
+     "got": "West Britain bank",
+     "p": 0.57,
+     "ok": true,
+     "top": {
+      "named1": 0.57,
+      "unclear": 0.36,
+      "bank": 0.04
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "I'll see you in Trinsic.",
+     "latency_ms": 228.18408301100135,
+     "cost": 9.0426e-05,
+     "want": "name:trinsic",
+     "got": "Trinsic",
+     "p": 0.99,
+     "ok": true,
+     "top": {
+      "named1": 0.99,
+      "town": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "wait at the east inn",
+     "latency_ms": 156.65408299537376,
+     "cost": 9.0216e-05,
+     "want": "name:east britain inn",
+     "got": "the inn",
+     "p": 0.92,
+     "ok": false,
+     "top": {
+      "inn": 0.92,
+      "named1": 0.07,
+      "unclear": 0.01
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "Go to the healer in Vesper.",
+     "latency_ms": 210.41341696400195,
+     "cost": 9.051e-05,
+     "want": "name:vesper",
+     "got": "the healer's in Vesper",
+     "p": 0.92,
+     "ok": true,
+     "top": {
+      "named1": 0.92,
+      "healer": 0.07,
+      "town": 0.01
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "Meet me in Moonglow.",
+     "latency_ms": 175.75258301803842,
+     "cost": 8.8536e-05,
+     "want": "name:moonglow",
+     "got": "town",
+     "p": 0.72,
+     "ok": false,
+     "top": {
+      "town": 0.72,
+      "unclear": 0.23,
+      "mage_shop": 0.02
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "go to the bank",
+     "latency_ms": 348.6556669813581,
+     "cost": 8.841e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 1.0,
+     "ok": true,
+     "top": {
+      "bank": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "See you in Narnia.",
+     "latency_ms": 201.73762500053272,
+     "cost": 8.8536e-05,
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.99,
+     "ok": true,
+     "top": {
+      "unclear": 0.99,
+      "dungeon_entrance": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "I'm going to the bank, you go to the healer.",
+     "latency_ms": 199.19862499227747,
+     "cost": 8.8788e-05,
+     "want": "healer",
+     "got": "the bank",
+     "p": 1.0,
+     "ok": false,
+     "top": {
+      "bank": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "Isolde, go to the inn; Wystan, the bank.",
+     "latency_ms": 177.2906249971129,
+     "cost": 8.8872e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 1.0,
+     "ok": true,
+     "top": {
+      "inn": 1.0,
+      "tavern": 0.0,
+      "bank": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "Wystan, go to the inn; Isolde, the bank.",
+     "latency_ms": 156.70699998736382,
+     "cost": 8.8872e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 1.0,
+     "ok": true,
+     "top": {
+      "bank": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "I'll check the bank, you head to the inn.",
+     "latency_ms": 163.97070902166888,
+     "cost": 8.8746e-05,
+     "want": "inn",
+     "got": "the bank",
+     "p": 1.0,
+     "ok": false,
+     "top": {
+      "bank": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "You go to the healer while I sell this at the smith's.",
+     "latency_ms": 196.90616603475064,
+     "cost": 8.883e-05,
+     "want": "healer",
+     "got": "the healer's",
+     "p": 0.65,
+     "ok": true,
+     "top": {
+      "healer": 0.65,
+      "blacksmith": 0.35,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "Thea and Wystan to the inn, Isolde to the bank.",
+     "latency_ms": 996.8312919954769,
+     "cost": 8.8914e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 1.0,
+     "ok": true,
+     "top": {
+      "bank": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "I'm off to the healer. You lot wait at the inn.",
+     "latency_ms": 163.0207920097746,
+     "cost": 8.883e-05,
+     "want": "inn",
+     "got": "the healer's",
+     "p": 0.99,
+     "ok": false,
+     "top": {
+      "healer": 0.99,
+      "inn": 0.01,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "Isolde to the tailor's, the rest of you to the stables.",
+     "latency_ms": 271.15104102995247,
+     "cost": 8.8914e-05,
+     "want": "tailor",
+     "got": "the tailor's",
+     "p": 1.0,
+     "ok": true,
+     "top": {
+      "tailor": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "Wystan, bank. Isolde, healer.",
+     "latency_ms": 189.78433299344033,
+     "cost": 8.8704e-05,
+     "want": "healer",
+     "got": "the healer's",
+     "p": 0.98,
+     "ok": true,
+     "top": {
+      "healer": 0.98,
+      "bank": 0.01,
+      "unclear": 0.01
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "The rest of you go to the inn; Wystan, come with me.",
+     "latency_ms": 164.9250829941593,
+     "cost": 8.8956e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 0.88,
+     "ok": true,
+     "top": {
+      "inn": 0.88,
+      "unclear": 0.09,
+      "tavern": 0.02
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "I'm going to the inn. Isolde, wait for me at the bank.",
+     "latency_ms": 229.55687501234934,
+     "cost": 8.8956e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 0.99,
+     "ok": true,
+     "top": {
+      "bank": 0.99,
+      "inn": 0.01,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Go and get me some bandages from the healer.",
+     "latency_ms": 887.7694169641472,
+     "cost": 8.8704e-05,
+     "want": [
+      "buy",
+      "bandage",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "bandage",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Run to the healer and buy 10 bandages, then come back.",
+     "latency_ms": 200.0907079782337,
+     "cost": 8.8914e-05,
+     "want": [
+      "buy",
+      "bandage",
+      "10"
+     ],
+     "got": [
+      "buy",
+      "bandage",
+      "10"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Can you fetch 50 arrows from the bowyer?",
+     "latency_ms": 167.54600004060194,
+     "cost": 8.8746e-05,
+     "want": [
+      "buy",
+      "arrow",
+      "50"
+     ],
+     "got": [
+      "buy",
+      "arrow",
+      "50"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Go bank this gold for me and come back.",
+     "latency_ms": 195.2532499562949,
+     "cost": 8.8662e-05,
+     "want": [
+      "bank",
+      null,
+      null
+     ],
+     "got": [
+      "bank",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "bank": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Take the loot to the smith and sell it.",
+     "latency_ms": 1064.4662919803523,
+     "cost": 8.8662e-05,
+     "want": [
+      "sell",
+      null,
+      null
+     ],
+     "got": [
+      "sell",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "sell": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Pick up a few heal potions while you're in town.",
+     "latency_ms": 200.66129200858995,
+     "cost": 8.8788e-05,
+     "want": [
+      "buy",
+      "heal potion",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "heal potion",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Off to the inn with you, I'll meet you there.",
+     "latency_ms": 189.74270799662918,
+     "cost": 8.8788e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 1.0,
+      "buy": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Go and stock up on reagents.",
+     "latency_ms": 235.7268749619834,
+     "cost": 8.8578e-05,
+     "want": [
+      "buy",
+      "reagents",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "reagents",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 0.98,
+      "go": 0.01
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Wait for me at the bank.",
+     "latency_ms": 216.11287497216836,
+     "cost": 8.8536e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 0.96,
+      "bank": 0.04
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Get me 20 cure potions from the alchemist.",
+     "latency_ms": 242.72016697796062,
+     "cost": 8.883e-05,
+     "want": [
+      "buy",
+      "cure potion",
+      "20"
+     ],
+     "got": [
+      "buy",
+      "cure potion",
+      "20"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "nip to the healer and grab us 30 bandages",
+     "latency_ms": 158.1106249941513,
+     "cost": 8.8746e-05,
+     "want": [
+      "buy",
+      "bandage",
+      "30"
+     ],
+     "got": [
+      "buy",
+      "bandage",
+      "30"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "go sell your loot then come find me",
+     "latency_ms": 174.33100001653656,
+     "cost": 8.8578e-05,
+     "want": [
+      "sell",
+      null,
+      null
+     ],
+     "got": [
+      "sell",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "sell": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Deposit your gold at the bank, then meet me at the graveyard.",
+     "latency_ms": 1141.591374995187,
+     "cost": 8.8872e-05,
+     "want": [
+      "bank",
+      null,
+      null
+     ],
+     "got": [
+      "bank",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "bank": 0.94,
+      "go": 0.06
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "head to town and wait",
+     "latency_ms": 178.21637500310317,
+     "cost": 8.8452e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 1.0,
+      "buy": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Fetch me five heal potions.",
+     "latency_ms": 191.5571250137873,
+     "cost": 8.8536e-05,
+     "want": [
+      "buy",
+      "heal potion",
+      "5"
+     ],
+     "got": [
+      "buy",
+      "heal potion",
+      "5"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Go get some bolts for your crossbow.",
+     "latency_ms": 197.73579202592373,
+     "cost": 8.8662e-05,
+     "want": [
+      "buy",
+      "bolt",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "bolt",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 0.99,
+      "go": 0.01
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Meet me at the inn.",
+     "latency_ms": 150.09295899653807,
+     "cost": 8.8494e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 1.0,
+      "buy": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Could you go and buy 100 arrows?",
+     "latency_ms": 185.09729101788253,
+     "cost": 8.8704e-05,
+     "want": [
+      "buy",
+      "arrow",
+      "100"
+     ],
+     "got": [
+      "buy",
+      "arrow",
+      "100"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "One of you go and find a healer.",
+     "latency_ms": 196.06808299431577,
+     "cost": 8.862e-05,
+     "want": true,
+     "p": 0.95,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "Someone fetch me bandages.",
+     "latency_ms": 183.44470800366253,
+     "cost": 8.8494e-05,
+     "want": true,
+     "p": 0.94,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "Can somebody run to the bank for me?",
+     "latency_ms": 154.80591700179502,
+     "cost": 8.862e-05,
+     "want": true,
+     "p": 0.93,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "You lot head to the inn.",
+     "latency_ms": 180.07366702659056,
+     "cost": 8.8536e-05,
+     "want": false,
+     "p": 0.02,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "Isolde, go to the bank.",
+     "latency_ms": 206.58691599965096,
+     "cost": 8.8578e-05,
+     "want": false,
+     "p": 0.01,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "All of you, off to the inn.",
+     "latency_ms": 199.60999995237216,
+     "cost": 8.862e-05,
+     "want": false,
+     "p": 0.02,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Anyone fancy running to the bank for me?",
+     "latency_ms": 166.22733301483095,
+     "cost": 8.862e-05,
+     "want": true,
+     "p": 0.92,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "one of you nip to the healer for bandages",
+     "latency_ms": 196.13850000314415,
+     "cost": 8.8662e-05,
+     "want": true,
+     "p": 0.93,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "The rest of you go to the inn.",
+     "latency_ms": 257.3710409924388,
+     "cost": 8.862e-05,
+     "want": false,
+     "p": 0.02,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Wystan and Isolde, wait at the bank.",
+     "latency_ms": 205.33804199658334,
+     "cost": 8.8746e-05,
+     "want": false,
+     "p": 0.01,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Whoever's quickest, go get arrows.",
+     "latency_ms": 154.3487499584444,
+     "cost": 8.862e-05,
+     "want": true,
+     "p": 0.84,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Go to the inn, all of you.",
+     "latency_ms": 149.59550002822652,
+     "cost": 8.862e-05,
+     "want": false,
+     "p": 0.02,
+     "ok": true
+    }
+   ]
+  },
+  "decision1": {
+   "named": {
+    "first": "5/8",
+    "second": "5/7"
+   },
+   "several": {
+    "first": "6/6",
+    "second": "4/5"
+   },
+   "errands (what, and what to buy)": {
+    "first": "10/10",
+    "second": "8/8"
+   },
+   "errands, how many right": {
+    "first": "10/10",
+    "second": "8/8"
+   },
+   "one of": {
+    "first": "6/6",
+    "second": "6/6"
+   },
+   "latency_ms": 368,
+   "cost_usd_a_request": 5.95e-05,
+   "rows": [
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Meet me at the east bank.",
+     "latency_ms": 505.04091603215784,
+     "cost": 6.0438e-05,
+     "want": "name:east britain bank",
+     "got": "the bank",
+     "p": 0.53,
+     "ok": false,
+     "top": {
+      "bank": 0.53,
+      "named1": 0.36,
+      "unclear": 0.07
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Go wait at the west bank, I'll be along.",
+     "latency_ms": 401.2519170064479,
+     "cost": 6.0648e-05,
+     "want": "name:west britain bank",
+     "got": "unclear",
+     "p": 0.453,
+     "ok": false,
+     "top": {
+      "bank": 0.45,
+      "named1": 0.4,
+      "unclear": 0.13
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Off to the inn in Skara Brae with you.",
+     "latency_ms": 431.22495902935043,
+     "cost": 6.0816e-05,
+     "want": "name:skara brae",
+     "got": "the inn",
+     "p": 0.792,
+     "ok": false,
+     "top": {
+      "inn": 0.79,
+      "named1": 0.18,
+      "tavern": 0.02
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "See you in Yew.",
+     "latency_ms": 549.7495419695042,
+     "cost": 6.0396e-05,
+     "want": "name:yew",
+     "got": "Yew",
+     "p": 0.997,
+     "ok": true,
+     "top": {
+      "named1": 1.0,
+      "graveyard": 0.0,
+      "unclear": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Head to Vesper and wait for me there.",
+     "latency_ms": 480.80954200122505,
+     "cost": 6.0606e-05,
+     "want": "name:vesper",
+     "got": "Vesper",
+     "p": 0.999,
+     "ok": true,
+     "top": {
+      "named1": 1.0,
+      "graveyard": 0.0,
+      "town": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Wait for me at the East Britain inn.",
+     "latency_ms": 528.7713749567047,
+     "cost": 6.0522e-05,
+     "want": "name:east britain inn",
+     "got": "East Britain inn",
+     "p": 0.997,
+     "ok": true,
+     "top": {
+      "named1": 1.0,
+      "inn": 0.0,
+      "town": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Off to Cove with you.",
+     "latency_ms": 344.63474998483434,
+     "cost": 6.0354e-05,
+     "want": "name:cove",
+     "got": "Cove",
+     "p": 0.998,
+     "ok": true,
+     "top": {
+      "named1": 1.0,
+      "graveyard": 0.0,
+      "town": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "first",
+     "line": "Go to the inn.",
+     "latency_ms": 309.1688330168836,
+     "cost": 5.8968e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 0.982,
+     "ok": true,
+     "top": {
+      "inn": 0.98,
+      "tavern": 0.01,
+      "unclear": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "Get yourself to the west bank.",
+     "latency_ms": 367.0350410393439,
+     "cost": 6.0438e-05,
+     "want": "name:west britain bank",
+     "got": "West Britain bank",
+     "p": 0.589,
+     "ok": true,
+     "top": {
+      "named1": 0.59,
+      "bank": 0.32,
+      "unclear": 0.08
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "I'll see you in Trinsic.",
+     "latency_ms": 339.36474996153265,
+     "cost": 6.048e-05,
+     "want": "name:trinsic",
+     "got": "Trinsic",
+     "p": 0.997,
+     "ok": true,
+     "top": {
+      "named1": 1.0,
+      "town": 0.0,
+      "unclear": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "wait at the east inn",
+     "latency_ms": 488.27145900577307,
+     "cost": 6.0354e-05,
+     "want": "name:east britain inn",
+     "got": "the inn",
+     "p": 0.942,
+     "ok": false,
+     "top": {
+      "inn": 0.94,
+      "tavern": 0.02,
+      "unclear": 0.02
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "Go to the healer in Vesper.",
+     "latency_ms": 329.0755840134807,
+     "cost": 6.0648e-05,
+     "want": "name:vesper",
+     "got": "the healer's in Vesper",
+     "p": 0.997,
+     "ok": true,
+     "top": {
+      "named1": 1.0,
+      "healer": 0.0,
+      "graveyard": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "Meet me in Moonglow.",
+     "latency_ms": 285.25833401363343,
+     "cost": 5.9052e-05,
+     "want": "name:moonglow",
+     "got": "unclear",
+     "p": 0.48,
+     "ok": false,
+     "top": {
+      "unclear": 0.48,
+      "town": 0.42,
+      "mage_shop": 0.05
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "go to the bank",
+     "latency_ms": 376.5853340155445,
+     "cost": 5.8926e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 0.994,
+     "ok": true,
+     "top": {
+      "bank": 0.99,
+      "unclear": 0.0,
+      "town": 0.0
+     }
+    },
+    {
+     "case": "named",
+     "set": "second",
+     "line": "See you in Narnia.",
+     "latency_ms": 293.1531670037657,
+     "cost": 5.9052e-05,
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.997,
+     "ok": true,
+     "top": {
+      "unclear": 1.0,
+      "graveyard": 0.0,
+      "dungeon_entrance": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "I'm going to the bank, you go to the healer.",
+     "latency_ms": 370.37716701161116,
+     "cost": 5.9304e-05,
+     "want": "healer",
+     "got": "the healer's",
+     "p": 0.977,
+     "ok": true,
+     "top": {
+      "healer": 0.98,
+      "bank": 0.02,
+      "blacksmith": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "Isolde, go to the inn; Wystan, the bank.",
+     "latency_ms": 379.02412499533966,
+     "cost": 5.9388e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 0.994,
+     "ok": true,
+     "top": {
+      "inn": 0.99,
+      "tavern": 0.0,
+      "unclear": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "Wystan, go to the inn; Isolde, the bank.",
+     "latency_ms": 275.474917027168,
+     "cost": 5.9388e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 0.995,
+     "ok": true,
+     "top": {
+      "bank": 0.99,
+      "unclear": 0.0,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "I'll check the bank, you head to the inn.",
+     "latency_ms": 295.0035000103526,
+     "cost": 5.9262e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 0.835,
+     "ok": true,
+     "top": {
+      "inn": 0.83,
+      "bank": 0.15,
+      "tavern": 0.01
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "You go to the healer while I sell this at the smith's.",
+     "latency_ms": 259.8130829865113,
+     "cost": 5.9346e-05,
+     "want": "healer",
+     "got": "the healer's",
+     "p": 0.995,
+     "ok": true,
+     "top": {
+      "healer": 0.99,
+      "unclear": 0.0,
+      "blacksmith": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "first",
+     "line": "Thea and Wystan to the inn, Isolde to the bank.",
+     "latency_ms": 347.7355409995653,
+     "cost": 5.9388e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 0.996,
+     "ok": true,
+     "top": {
+      "bank": 1.0,
+      "unclear": 0.0,
+      "inn": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "I'm off to the healer. You lot wait at the inn.",
+     "latency_ms": 427.08912497619167,
+     "cost": 5.9346e-05,
+     "want": "inn",
+     "got": "the healer's",
+     "p": 0.991,
+     "ok": false,
+     "top": {
+      "healer": 0.99,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "Isolde to the tailor's, the rest of you to the stables.",
+     "latency_ms": 408.0357499769889,
+     "cost": 5.9472e-05,
+     "want": "tailor",
+     "got": "the tailor's",
+     "p": 0.996,
+     "ok": true,
+     "top": {
+      "tailor": 1.0,
+      "stable": 0.0,
+      "unclear": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "Wystan, bank. Isolde, healer.",
+     "latency_ms": 334.99875001143664,
+     "cost": 5.922e-05,
+     "want": "healer",
+     "got": "the healer's",
+     "p": 0.992,
+     "ok": true,
+     "top": {
+      "healer": 0.99,
+      "unclear": 0.0,
+      "bank": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "The rest of you go to the inn; Wystan, come with me.",
+     "latency_ms": 330.38370800204575,
+     "cost": 5.943e-05,
+     "want": "inn",
+     "got": "the inn",
+     "p": 0.979,
+     "ok": true,
+     "top": {
+      "inn": 0.98,
+      "unclear": 0.01,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "several",
+     "set": "second",
+     "line": "I'm going to the inn. Isolde, wait for me at the bank.",
+     "latency_ms": 317.2513750032522,
+     "cost": 5.9472e-05,
+     "want": "bank",
+     "got": "the bank",
+     "p": 0.98,
+     "ok": true,
+     "top": {
+      "bank": 0.98,
+      "inn": 0.01,
+      "tavern": 0.0
+     }
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Go and get me some bandages from the healer.",
+     "latency_ms": 336.624541960191,
+     "cost": 5.922e-05,
+     "want": [
+      "buy",
+      "bandage",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "bandage",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Run to the healer and buy 10 bandages, then come back.",
+     "latency_ms": 320.2581669902429,
+     "cost": 5.943e-05,
+     "want": [
+      "buy",
+      "bandage",
+      "10"
+     ],
+     "got": [
+      "buy",
+      "bandage",
+      "10"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Can you fetch 50 arrows from the bowyer?",
+     "latency_ms": 326.9575000158511,
+     "cost": 5.9262e-05,
+     "want": [
+      "buy",
+      "arrow",
+      "50"
+     ],
+     "got": [
+      "buy",
+      "arrow",
+      "50"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Go bank this gold for me and come back.",
+     "latency_ms": 333.7278750259429,
+     "cost": 5.9178e-05,
+     "want": [
+      "bank",
+      null,
+      null
+     ],
+     "got": [
+      "bank",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "bank": 1.0,
+      "buy": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Take the loot to the smith and sell it.",
+     "latency_ms": 381.3444580300711,
+     "cost": 5.9178e-05,
+     "want": [
+      "sell",
+      null,
+      null
+     ],
+     "got": [
+      "sell",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "sell": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Pick up a few heal potions while you're in town.",
+     "latency_ms": 331.5312499762513,
+     "cost": 5.9262e-05,
+     "want": [
+      "buy",
+      "heal potion",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "heal potion",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Off to the inn with you, I'll meet you there.",
+     "latency_ms": 297.2092920099385,
+     "cost": 5.9304e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 0.99,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Go and stock up on reagents.",
+     "latency_ms": 321.8320830492303,
+     "cost": 5.9094e-05,
+     "want": [
+      "buy",
+      "reagents",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "reagents",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Wait for me at the bank.",
+     "latency_ms": 367.99941601930186,
+     "cost": 5.9052e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 0.9,
+      "bank": 0.09
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "first",
+     "line": "Get me 20 cure potions from the alchemist.",
+     "latency_ms": 345.21275002043694,
+     "cost": 5.9262e-05,
+     "want": [
+      "buy",
+      "cure potion",
+      "20"
+     ],
+     "got": [
+      "buy",
+      "cure potion",
+      "20"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "nip to the healer and grab us 30 bandages",
+     "latency_ms": 278.91316602472216,
+     "cost": 5.9262e-05,
+     "want": [
+      "buy",
+      "bandage",
+      "30"
+     ],
+     "got": [
+      "buy",
+      "bandage",
+      "30"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "go sell your loot then come find me",
+     "latency_ms": 379.8983339802362,
+     "cost": 5.9094e-05,
+     "want": [
+      "sell",
+      null,
+      null
+     ],
+     "got": [
+      "sell",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "sell": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Deposit your gold at the bank, then meet me at the graveyard.",
+     "latency_ms": 357.07475000526756,
+     "cost": 5.9346e-05,
+     "want": [
+      "bank",
+      null,
+      null
+     ],
+     "got": [
+      "bank",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "bank": 0.99,
+      "go": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "head to town and wait",
+     "latency_ms": 343.0479579837993,
+     "cost": 5.8968e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Fetch me five heal potions.",
+     "latency_ms": 640.7014169963077,
+     "cost": 5.901e-05,
+     "want": [
+      "buy",
+      "heal potion",
+      "5"
+     ],
+     "got": [
+      "buy",
+      "heal potion",
+      "5"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Go get some bolts for your crossbow.",
+     "latency_ms": 354.09095796057954,
+     "cost": 5.9136e-05,
+     "want": [
+      "buy",
+      "bolt",
+      "unsaid"
+     ],
+     "got": [
+      "buy",
+      "bolt",
+      "unsaid"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Meet me at the inn.",
+     "latency_ms": 351.6975420061499,
+     "cost": 5.901e-05,
+     "want": [
+      "go",
+      null,
+      null
+     ],
+     "got": [
+      "go",
+      null,
+      null
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "go": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "errands",
+     "set": "second",
+     "line": "Could you go and buy 100 arrows?",
+     "latency_ms": 409.37670797575265,
+     "cost": 5.922e-05,
+     "want": [
+      "buy",
+      "arrow",
+      "100"
+     ],
+     "got": [
+      "buy",
+      "arrow",
+      "100"
+     ],
+     "errand_ok": true,
+     "goods_ok": true,
+     "count_ok": true,
+     "errand_p": {
+      "buy": 1.0,
+      "bank": 0.0
+     },
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "One of you go and find a healer.",
+     "latency_ms": 1676.071125024464,
+     "cost": 5.9136e-05,
+     "want": true,
+     "p": 1.0,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "Someone fetch me bandages.",
+     "latency_ms": 430.0466669956222,
+     "cost": 5.901e-05,
+     "want": true,
+     "p": 1.0,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "Can somebody run to the bank for me?",
+     "latency_ms": 628.1684170244262,
+     "cost": 5.9136e-05,
+     "want": true,
+     "p": 1.0,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "You lot head to the inn.",
+     "latency_ms": 381.853915983811,
+     "cost": 5.9052e-05,
+     "want": false,
+     "p": 0.003,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "Isolde, go to the bank.",
+     "latency_ms": 1711.0790840233676,
+     "cost": 5.9136e-05,
+     "want": false,
+     "p": 0.014,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "first",
+     "line": "All of you, off to the inn.",
+     "latency_ms": 323.4648340148851,
+     "cost": 5.9136e-05,
+     "want": false,
+     "p": 0.001,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Anyone fancy running to the bank for me?",
+     "latency_ms": 2297.5108749815263,
+     "cost": 5.9136e-05,
+     "want": true,
+     "p": 0.999,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "one of you nip to the healer for bandages",
+     "latency_ms": 493.78091597463936,
+     "cost": 5.9178e-05,
+     "want": true,
+     "p": 1.0,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "The rest of you go to the inn.",
+     "latency_ms": 3581.3231249921955,
+     "cost": 5.9136e-05,
+     "want": false,
+     "p": 0.012,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Wystan and Isolde, wait at the bank.",
+     "latency_ms": 461.30170801188797,
+     "cost": 5.9262e-05,
+     "want": false,
+     "p": 0.008,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Whoever's quickest, go get arrows.",
+     "latency_ms": 450.1062500057742,
+     "cost": 5.9136e-05,
+     "want": true,
+     "p": 0.998,
+     "ok": true
+    },
+    {
+     "case": "one_of",
+     "set": "second",
+     "line": "Go to the inn, all of you.",
+     "latency_ms": 487.5846670474857,
+     "cost": 5.9136e-05,
+     "want": false,
+     "p": 0.0,
+     "ok": true
+    }
+   ]
+  }
+ },
+ "costs": {
+  "cost_usd": 0.008315,
+  "cost_per_hour_usd": 1.0313,
+  "calls": 112,
+  "by_role": {
+   "system1": 0.008315
+  },
+  "by_kind": {
+   "order": {
+    "calls": 112,
+    "input_tokens": 197972,
+    "output_tokens": 20166,
+    "cost_usd": 0.008315,
+    "latency_ms_avg": 394.7
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.14-20261014": {
+    "calls": 56,
+    "input_tokens": 118696,
+    "output_tokens": 19886,
+    "cost_usd": 0.004985,
+    "latency_ms_avg": 268.4
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 56,
+    "input_tokens": 79276,
+    "output_tokens": 280,
+    "cost_usd": 0.00333,
+    "latency_ms_avg": 521.0
+   }
+  }
+ }
+}

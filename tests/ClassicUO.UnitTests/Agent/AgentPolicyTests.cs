@@ -22,6 +22,18 @@ namespace ClassicUO.UnitTests.Agent
             Potion = AgentAuthority.Auto
         };
 
+        [Theory]
+        [InlineData((ushort) 0x00B7, null, true)]           // a savage: named from a list, no title
+        [InlineData((ushort) 0x00BA, "Gruk", true)]         // a savage rider
+        [InlineData((ushort) 0x0190, "Garth the brigand", true)]
+        [InlineData((ushort) 0x0190, "Harry", false)]       // a person
+        [InlineData((ushort) 0x0191, null, false)]          // not known yet: a person until its name says otherwise
+        public void A_human_bodied_monster_is_told_from_a_person(ushort body, string label, bool monster)
+        {
+            // cuo-ea4: savages at the Cove Orc Fort were never fought and were reported as red players.
+            AgentController.IsHumanMonster(body, label).Should().Be(monster);
+        }
+
         [Fact]
         public void Does_nothing_when_healthy()
         {

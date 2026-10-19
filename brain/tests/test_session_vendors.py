@@ -278,3 +278,26 @@ def test_the_pack_is_read_before_the_first_plan():
     assert asyncio.run(Session(Reading(mage_snapshot(), [2, 1, 0]), w, None).pack_read(timeout_s=5)) is True
     assert asyncio.run(Session(Reading(mage_snapshot(), [1]), w, None).pack_read(timeout_s=0.6)) is False
     assert asyncio.run(Session(FakeRpc(copy.deepcopy(SNAPSHOT)), w, None).pack_read()) is True  # an older client
+
+
+def test_a_hunt_named_by_a_place_goes_to_the_spawn_at_it_not_the_biggest_that_names_it(tmp_path):
+    """cuo-821: 'Cove Orc Fort' went 813 tiles west to 'west of Cove Orc Fort', the area with the most creatures,
+    instead of to the orcs 'near Cove Orc Fort'. An exact area name is taken as it was."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("landmark", "Cove Orc Fort", 2171, 1332, source="test")
+
+    def spawner(area, x, y, creature, n):
+        w.insert("spawns", {"area": area, "map": "Felucca", "x": x, "y": y, "walk_range": 30, "creature": creature,
+                            "max_count": n, "spawner": f"{area}:{creature}", "source": "test",
+                            "last_seen": "2026-10-19T00:00:00+00:00"})
+
+    spawner("west of Cove Orc Fort", 1958, 1305, "Boar", 7)
+    spawner("west of Cove Orc Fort", 1958, 1305, "BlackBear", 5)
+    spawner("near Cove Orc Fort", 2171, 1356, "Orc", 5)
+    spawner("Britain Graveyard", 1369, 1475, "Skeleton", 7)
+    spawner("Britain Graveyard", 1395, 1500, "Zombie", 2)
+    w.add_place("graveyard", "Britain Graveyard", 1384, 1492, source="test")
+    s = Session(None, w)
+    assert s.hunt_spot("Cove Orc Fort")[:3] == (2171, 1356, "near Cove Orc Fort")
+    assert s.hunt_spot("west of Cove Orc Fort")[:3] == (1958, 1305, "west of Cove Orc Fort")
+    assert s.hunt_spot("Britain Graveyard")[:3] == (1369, 1475, "Britain Graveyard")  # the biggest, as before

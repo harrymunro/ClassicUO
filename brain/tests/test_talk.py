@@ -751,3 +751,12 @@ def test_a_ready_line_is_said_at_its_moment_not_at_the_next_look():
     assert 0.2 < e.pause_s(1.0) <= 0.3
     e.ready.say_at = _time.time() - 2  # written after its moment: said at once
     assert e.pause_s(1.0) == 0.05
+
+
+def test_a_story_name_that_is_junk_is_no_story():
+    """cuo-dmt: Haiku's story field came back as '>' and '> </invoke>', kept as memories of stories told."""
+    from uo_brain.talk import story_name
+    assert story_name("The beard I set alight") == "The beard I set alight"
+    assert story_name("'the graveyard night'") == "the graveyard night"
+    for junk in (">", "> </invoke>", '""', "none", "N/A", "", None, "--", "<parameter>"):
+        assert story_name(junk) == "", junk

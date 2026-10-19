@@ -123,6 +123,7 @@ These are in code, whatever the model says:
 - Actions are a fixed list.
 - Gold, bandages and potions are always taken; anything else needs a "worth taking" judgment.
 - Other players are never attacked, never named to the model (they appear as "a red player", "a criminal player" or "another player") and never named in the world store.
+- A creature with a person's shape is a monster, and no player, when it has a savage's body (savages, savage riders and shamans) or a title in its name ("Garth the brigand"), as townsfolk are told from players (cuo-ea4). Before 2026-10-19 every one with a person's shape was taken for a player: the savages at the Cove Orc Fort were never fought and were reported as red players.
 - The brain only loots corpses of creatures the client saw die as monsters. Taking from anything else (an animal, a townsperson, another player) can be a crime: in a test, looting a rabbit's corpse in Britain made the character a criminal and the guards killed him.
 
 ## Leaving and packs

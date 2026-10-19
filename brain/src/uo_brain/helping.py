@@ -24,13 +24,12 @@ from __future__ import annotations
 from typing import Any
 
 from .judge import ChoiceResult
-from .policy import BANDAGE_REACH, HEALERS, HELP_WALK, attacking_me, coming
+from .policy import BANDAGE_REACH, GREATER_HEAL_MANA, HEALERS, HELP_WALK, attacking_me, coming
 from .spells import GREATER_HEAL
 from .state import SPELL_RANGE, Mate, Situation
 
 HELP_CUT = 0.5          # a companion is helped when system one gives it this or more
 OFFER_BELOW = 95        # health %: a companion below this is offered ("unhurt" above)
-GREATER_HEAL_MANA = 11  # a 4th-circle spell
 FALLING = 10            # points of health lost in the last few seconds that are worth saying
 
 

@@ -1,0 +1,92 @@
+{
+ "started": "2026-10-19T15:57:43",
+ "cut": 0.5,
+ "the_list": {
+  "first": {
+   "right": "6/28",
+   "sent_in_when_it_holds": 0,
+   "held_when_it_sends": 22
+  },
+  "second": {
+   "right": "0/0",
+   "sent_in_when_it_holds": 0,
+   "held_when_it_sends": 0
+  }
+ },
+ "models": {
+  "jev": {
+   "first": {
+    "right": "26/28",
+    "sent_in_when_it_holds": 0,
+    "held_when_it_sends": 2
+   },
+   "second": {
+    "right": "0/0",
+    "sent_in_when_it_holds": 0,
+    "held_when_it_sends": 0
+   },
+   "wrong": [
+    {
+     "set": "first",
+     "i": 22,
+     "want": true,
+     "p": 0.29,
+     "target": "Hunt the undead at the Britain Graveyard, single and paired skeletons only, pulled from the western road. Enter only when all five are together, healthy, and Th"
+    },
+    {
+     "set": "first",
+     "i": 26,
+     "want": true,
+     "p": 0.47,
+     "target": "Hunt the undead at the Britain Graveyard, all five together, now. Roland is down to 34/95 and has no bandages, so he does not take the front alone this time."
+    }
+   ],
+   "latency_ms": 224,
+   "cost_usd_a_plan": 2.89e-05
+  },
+  "decision1": {
+   "first": {
+    "right": "24/28",
+    "sent_in_when_it_holds": 0,
+    "held_when_it_sends": 4
+   },
+   "second": {
+    "right": "0/0",
+    "sent_in_when_it_holds": 0,
+    "held_when_it_sends": 0
+   },
+   "wrong": [
+    {
+     "set": "first",
+     "i": 1,
+     "want": true,
+     "p": 0.407,
+     "target": "Hunt the undead at the Britain Graveyard, all five, now. Roland and Corwin are ghosts: they go back to their bodies first, then rejoin."
+    },
+    {
+     "set": "first",
+     "i": 12,
+     "want": true,
+     "p": 0.085,
+     "target": "Hunt the undead at the Britain Graveyard, western road only, single or paired skeletons only, all five together. Leave the lich and bone knights alone. Nobody w"
+    },
+    {
+     "set": "first",
+     "i": 18,
+     "want": true,
+     "p": 0.407,
+     "target": "Hunt the undead at the Britain Graveyard, but first deal with the new lich and skeleton sighting: the lich first, then the skeletons, all five together, now. Ho"
+    },
+    {
+     "set": "first",
+     "i": 22,
+     "want": true,
+     "p": 0.165,
+     "target": "Hunt the undead at the Britain Graveyard, single and paired skeletons only, pulled from the western road. Enter only when all five are together, healthy, and Th"
+    }
+   ],
+   "latency_ms": 329,
+   "cost_usd_a_plan": 1.64e-05
+  }
+ }
+}

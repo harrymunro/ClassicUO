@@ -1,0 +1,1099 @@
+{
+ "started": "2026-10-19T15:47:10",
+ "here": [
+  1392,
+  1528
+ ],
+ "places_offered": {
+  "inn": "North Britain inn at (1458, 1525), 66 tiles east",
+  "tavern": "Britain bard, 61 tiles east",
+  "bank": "Britain minter, 160 tiles south",
+  "healer": "Britain healer, 85 tiles south-east",
+  "stable": "Britain animal trainer, 118 tiles east",
+  "blacksmith": "Britain blacksmith, 25 tiles south-east",
+  "provisioner": "Britain provisioner, 139 tiles south-east",
+  "mage_shop": "Britain mage, 93 tiles east",
+  "alchemist": "Britain alchemist, 96 tiles east",
+  "tailor": "West Britain tailor, 60 tiles south",
+  "bowyer": "Britain bowyer, 80 tiles south-east",
+  "town": "Britain, 103 tiles south-east",
+  "graveyard": "Britain Cemetery, 31 tiles north",
+  "dungeon_entrance": "Orc Cave Entrance, 373 tiles west"
+ },
+ "models": {
+  "jev": {
+   "places_right": {
+    "first": "16/20",
+    "second": "8/10"
+   },
+   "sent_to_a_wrong_place": 4,
+   "couldnt_tell_where_it_was_said": 2,
+   "willing_right": "10/12",
+   "latency_ms": 194,
+   "cost_usd_a_request": 6.68e-05,
+   "places": [
+    {
+     "line": "Right - off to the inn for you all - see you there",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.98,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 400.25016700383276,
+     "cost": 6.678e-05,
+     "top": {
+      "inn": 0.98,
+      "tavern": 0.01,
+      "unclear": 0.01
+     }
+    },
+    {
+     "line": "Go on ahead to the bank, I'll catch you up.",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.93,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 206.99658297235146,
+     "cost": 6.678e-05,
+     "top": {
+      "bank": 0.93,
+      "unclear": 0.04,
+      "blacksmith": 0.01
+     }
+    },
+    {
+     "line": "Wait for me at the stables.",
+     "want": "stable",
+     "got": "stable",
+     "p": 1.0,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 220.65066697541624,
+     "cost": 6.657e-05,
+     "top": {
+      "stable": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "You lot head to the tavern, I'll be along.",
+     "want": "tavern",
+     "got": "tavern",
+     "p": 0.79,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 415.28383299009874,
+     "cost": 6.678e-05,
+     "top": {
+      "tavern": 0.79,
+      "unclear": 0.15,
+      "inn": 0.02
+     }
+    },
+    {
+     "line": "Off to the healer with you.",
+     "want": "healer",
+     "got": "healer",
+     "p": 1.0,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 160.83779197651893,
+     "cost": 6.6528e-05,
+     "top": {
+      "healer": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "Meet me at the smith's.",
+     "want": "blacksmith",
+     "got": "blacksmith",
+     "p": 0.99,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 199.7265000245534,
+     "cost": 6.6528e-05,
+     "top": {
+      "blacksmith": 0.99,
+      "unclear": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "go get a drink, I'll find you",
+     "want": "tavern",
+     "got": "unclear",
+     "p": 0.46,
+     "ok": false,
+     "set": "first",
+     "latency_ms": 171.95070796879008,
+     "cost": 6.6612e-05,
+     "top": {
+      "unclear": 0.46,
+      "tavern": 0.4,
+      "inn": 0.14
+     }
+    },
+    {
+     "line": "Get some rest, I'll see you at the inn.",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.97,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 181.44212500192225,
+     "cost": 6.6738e-05,
+     "top": {
+      "inn": 0.97,
+      "tavern": 0.02,
+      "unclear": 0.01
+     }
+    },
+    {
+     "line": "Head back to town and wait for me.",
+     "want": "town",
+     "got": "town",
+     "p": 0.96,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 230.13166699092835,
+     "cost": 6.6612e-05,
+     "top": {
+      "town": 0.96,
+      "unclear": 0.04,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "Go and wait by the moongate.",
+     "want": "moongate",
+     "got": "unclear",
+     "p": 0.84,
+     "ok": false,
+     "set": "first",
+     "latency_ms": 166.14350001327693,
+     "cost": 6.6612e-05,
+     "top": {
+      "unclear": 0.84,
+      "dungeon_entrance": 0.09,
+      "town": 0.03
+     }
+    },
+    {
+     "line": "Off you go then",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.97,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 176.75708298338577,
+     "cost": 6.7452e-05,
+     "top": {
+      "inn": 0.97,
+      "tavern": 0.03,
+      "bank": 0.0
+     }
+    },
+    {
+     "line": "I'll follow you",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.95,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 167.86245797993615,
+     "cost": 6.7326e-05,
+     "top": {
+      "inn": 0.95,
+      "unclear": 0.04,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "yes, there",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.99,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 288.99462503613904,
+     "cost": 6.7368e-05,
+     "top": {
+      "bank": 0.99,
+      "unclear": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "Go on ahead, I'll catch up.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 1.0,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 208.5702499607578,
+     "cost": 6.6612e-05,
+     "top": {
+      "unclear": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "Off you go.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.99,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 186.0430419910699,
+     "cost": 6.6402e-05,
+     "top": {
+      "unclear": 0.99,
+      "blacksmith": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "Wait for me at the castle.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.89,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 185.64279103884473,
+     "cost": 6.6528e-05,
+     "top": {
+      "unclear": 0.89,
+      "town": 0.1,
+      "blacksmith": 0.01
+     }
+    },
+    {
+     "line": "See you in Yew.",
+     "want": "unclear",
+     "got": "town",
+     "p": 0.55,
+     "ok": false,
+     "set": "first",
+     "latency_ms": 256.564499984961,
+     "cost": 6.6486e-05,
+     "top": {
+      "town": 0.55,
+      "unclear": 0.44,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "you guys go to the inn, brb",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.58,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 210.1562910247594,
+     "cost": 6.6612e-05,
+     "top": {
+      "inn": 0.58,
+      "unclear": 0.33,
+      "tavern": 0.03
+     }
+    },
+    {
+     "line": "I need the bank. You lot go to the inn.",
+     "want": "inn",
+     "got": "bank",
+     "p": 0.83,
+     "ok": false,
+     "set": "first",
+     "latency_ms": 160.35116702551022,
+     "cost": 6.6738e-05,
+     "top": {
+      "bank": 0.83,
+      "inn": 0.16,
+      "unclear": 0.01
+     }
+    },
+    {
+     "line": "Go see the healer about that arm, I'll wait at the bank.",
+     "want": "healer",
+     "got": "healer",
+     "p": 0.73,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 410.51233297912404,
+     "cost": 6.6864e-05,
+     "top": {
+      "healer": 0.73,
+      "bank": 0.26,
+      "unclear": 0.01
+     }
+    },
+    {
+     "line": "ok off to the bank with you, I'll be there in a bit",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.74,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 186.75699998857453,
+     "cost": 6.6864e-05,
+     "top": {
+      "bank": 0.74,
+      "unclear": 0.22,
+      "healer": 0.02
+     }
+    },
+    {
+     "line": "take yourselves to the inn",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.98,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 201.6408749623224,
+     "cost": 6.6444e-05,
+     "top": {
+      "inn": 0.98,
+      "tavern": 0.02,
+      "bank": 0.0
+     }
+    },
+    {
+     "line": "Meet me at the tailor's.",
+     "want": "tailor",
+     "got": "tailor",
+     "p": 1.0,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 207.5407499796711,
+     "cost": 6.6528e-05,
+     "top": {
+      "tailor": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "Go on, I'll be right behind you.",
+     "want": "healer",
+     "got": "healer",
+     "p": 0.98,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 170.5082090338692,
+     "cost": 6.7746e-05,
+     "top": {
+      "healer": 0.98,
+      "unclear": 0.02,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "Wait at the alchemist's while I sort this out.",
+     "want": "alchemist",
+     "got": "alchemist",
+     "p": 1.0,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 175.3753749653697,
+     "cost": 6.678e-05,
+     "top": {
+      "alchemist": 1.0,
+      "inn": 0.0,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "off you trot",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.99,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 176.16262496449053,
+     "cost": 6.636e-05,
+     "top": {
+      "unclear": 0.99,
+      "stable": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "I'm going to the bank, you go to the healer.",
+     "want": "healer",
+     "got": "bank",
+     "p": 0.79,
+     "ok": false,
+     "set": "second",
+     "latency_ms": 187.44070903630927,
+     "cost": 6.678e-05,
+     "top": {
+      "bank": 0.79,
+      "healer": 0.21,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "see you at the inn in Skara Brae",
+     "want": "unclear",
+     "got": "inn",
+     "p": 0.99,
+     "ok": false,
+     "set": "second",
+     "latency_ms": 212.8051249892451,
+     "cost": 6.6654e-05,
+     "top": {
+      "inn": 0.99,
+      "unclear": 0.01,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "That one.",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.93,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 208.41870800359175,
+     "cost": 6.7326e-05,
+     "top": {
+      "bank": 0.93,
+      "unclear": 0.03,
+      "tavern": 0.02
+     }
+    },
+    {
+     "line": "Bowyer's. Go. I'll catch up.",
+     "want": "bowyer",
+     "got": "bowyer",
+     "p": 0.99,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 153.07816595304757,
+     "cost": 6.6696e-05,
+     "top": {
+      "bowyer": 0.99,
+      "unclear": 0.01,
+      "inn": 0.0
+     }
+    }
+   ],
+   "willing": [
+    {
+     "moment": "all quiet",
+     "want": true,
+     "p": 0.91,
+     "ok": true
+    },
+    {
+     "moment": "all quiet, the leader a little hurt",
+     "want": true,
+     "p": 0.86,
+     "ok": true
+    },
+    {
+     "moment": "all quiet, itself a little hurt",
+     "want": true,
+     "p": 0.89,
+     "ok": true
+    },
+    {
+     "moment": "after a fight, nothing about",
+     "want": true,
+     "p": 0.86,
+     "ok": true
+    },
+    {
+     "moment": "badly hurt itself",
+     "want": false,
+     "p": 0.59,
+     "ok": false
+    },
+    {
+     "moment": "the leader near death",
+     "want": false,
+     "p": 0.39,
+     "ok": true
+    },
+    {
+     "moment": "in a fight",
+     "want": false,
+     "p": 0.09,
+     "ok": true
+    },
+    {
+     "moment": "three hostile creatures close",
+     "want": false,
+     "p": 0.24,
+     "ok": true
+    },
+    {
+     "moment": "the leader in a fight alone",
+     "want": false,
+     "p": 0.2,
+     "ok": true
+    },
+    {
+     "moment": "asked again after a refusal, all quiet now",
+     "want": true,
+     "p": 0.79,
+     "ok": true
+    },
+    {
+     "moment": "asked again with a reason, one creature far off",
+     "want": true,
+     "p": 0.37,
+     "ok": false
+    },
+    {
+     "moment": "asked a third time, the leader hurt",
+     "want": true,
+     "p": 0.64,
+     "ok": true
+    }
+   ]
+  },
+  "decision1": {
+   "places_right": {
+    "first": "18/20",
+    "second": "9/10"
+   },
+   "sent_to_a_wrong_place": 2,
+   "couldnt_tell_where_it_was_said": 1,
+   "willing_right": "12/12",
+   "latency_ms": 358,
+   "cost_usd_a_request": 4.63e-05,
+   "places": [
+    {
+     "line": "Right - off to the inn for you all - see you there",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.98,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 512.4354170402512,
+     "cost": 4.6326e-05,
+     "top": {
+      "inn": 0.98,
+      "unclear": 0.01,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "Go on ahead to the bank, I'll catch you up.",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.95,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 413.41483301948756,
+     "cost": 4.6326e-05,
+     "top": {
+      "bank": 0.95,
+      "unclear": 0.04,
+      "town": 0.0
+     }
+    },
+    {
+     "line": "Wait for me at the stables.",
+     "want": "stable",
+     "got": "stable",
+     "p": 0.973,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 358.1647080136463,
+     "cost": 4.6116e-05,
+     "top": {
+      "stable": 0.97,
+      "unclear": 0.02,
+      "mage_shop": 0.0
+     }
+    },
+    {
+     "line": "You lot head to the tavern, I'll be along.",
+     "want": "tavern",
+     "got": "tavern",
+     "p": 0.985,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 2002.7892499929294,
+     "cost": 4.6284e-05,
+     "top": {
+      "tavern": 0.98,
+      "unclear": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "Off to the healer with you.",
+     "want": "healer",
+     "got": "healer",
+     "p": 0.991,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 345.3551669954322,
+     "cost": 4.6074e-05,
+     "top": {
+      "healer": 0.99,
+      "unclear": 0.01,
+      "town": 0.0
+     }
+    },
+    {
+     "line": "Meet me at the smith's.",
+     "want": "blacksmith",
+     "got": "blacksmith",
+     "p": 0.993,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 400.06779198301956,
+     "cost": 4.6074e-05,
+     "top": {
+      "blacksmith": 0.99,
+      "unclear": 0.0,
+      "healer": 0.0
+     }
+    },
+    {
+     "line": "go get a drink, I'll find you",
+     "want": "tavern",
+     "got": "tavern",
+     "p": 0.735,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 365.71470799390227,
+     "cost": 4.6158e-05,
+     "top": {
+      "tavern": 0.73,
+      "unclear": 0.24,
+      "inn": 0.02
+     }
+    },
+    {
+     "line": "Get some rest, I'll see you at the inn.",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.939,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 604.7156669665128,
+     "cost": 4.6284e-05,
+     "top": {
+      "inn": 0.94,
+      "unclear": 0.04,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "Head back to town and wait for me.",
+     "want": "town",
+     "got": "town",
+     "p": 0.949,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 319.9905419605784,
+     "cost": 4.6158e-05,
+     "top": {
+      "town": 0.95,
+      "unclear": 0.04,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "Go and wait by the moongate.",
+     "want": "moongate",
+     "got": "unclear",
+     "p": 0.877,
+     "ok": false,
+     "set": "first",
+     "latency_ms": 358.001833956223,
+     "cost": 4.6158e-05,
+     "top": {
+      "unclear": 0.88,
+      "dungeon_entrance": 0.05,
+      "graveyard": 0.03
+     }
+    },
+    {
+     "line": "Off you go then",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.959,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 266.5154159767553,
+     "cost": 4.683e-05,
+     "top": {
+      "inn": 0.96,
+      "unclear": 0.03,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "I'll follow you",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.942,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 337.5599170103669,
+     "cost": 4.6788e-05,
+     "top": {
+      "inn": 0.94,
+      "unclear": 0.05,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "yes, there",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.978,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 418.17645903211087,
+     "cost": 4.6746e-05,
+     "top": {
+      "bank": 0.98,
+      "unclear": 0.01,
+      "mage_shop": 0.0
+     }
+    },
+    {
+     "line": "Go on ahead, I'll catch up.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.995,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 644.832874997519,
+     "cost": 4.6158e-05,
+     "top": {
+      "unclear": 1.0,
+      "graveyard": 0.0,
+      "town": 0.0
+     }
+    },
+    {
+     "line": "Off you go.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.996,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 368.96037496626377,
+     "cost": 4.5948e-05,
+     "top": {
+      "unclear": 1.0,
+      "graveyard": 0.0,
+      "mage_shop": 0.0
+     }
+    },
+    {
+     "line": "Wait for me at the castle.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.899,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 317.3033749917522,
+     "cost": 4.6074e-05,
+     "top": {
+      "unclear": 0.9,
+      "dungeon_entrance": 0.04,
+      "town": 0.03
+     }
+    },
+    {
+     "line": "See you in Yew.",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.902,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 355.3330409922637,
+     "cost": 4.6032e-05,
+     "top": {
+      "unclear": 0.9,
+      "graveyard": 0.04,
+      "dungeon_entrance": 0.02
+     }
+    },
+    {
+     "line": "you guys go to the inn, brb",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.811,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 277.27095800219104,
+     "cost": 4.6158e-05,
+     "top": {
+      "inn": 0.81,
+      "unclear": 0.18,
+      "tavern": 0.0
+     }
+    },
+    {
+     "line": "I need the bank. You lot go to the inn.",
+     "want": "inn",
+     "got": "bank",
+     "p": 0.52,
+     "ok": false,
+     "set": "first",
+     "latency_ms": 379.1905829566531,
+     "cost": 4.6284e-05,
+     "top": {
+      "bank": 0.52,
+      "inn": 0.46,
+      "tavern": 0.01
+     }
+    },
+    {
+     "line": "Go see the healer about that arm, I'll wait at the bank.",
+     "want": "healer",
+     "got": "healer",
+     "p": 0.989,
+     "ok": true,
+     "set": "first",
+     "latency_ms": 375.57062500854954,
+     "cost": 4.641e-05,
+     "top": {
+      "healer": 0.99,
+      "unclear": 0.01,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "ok off to the bank with you, I'll be there in a bit",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.983,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 296.9346250174567,
+     "cost": 4.641e-05,
+     "top": {
+      "bank": 0.98,
+      "unclear": 0.01,
+      "town": 0.0
+     }
+    },
+    {
+     "line": "take yourselves to the inn",
+     "want": "inn",
+     "got": "inn",
+     "p": 0.966,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 328.0484590213746,
+     "cost": 4.599e-05,
+     "top": {
+      "inn": 0.97,
+      "tavern": 0.02,
+      "unclear": 0.01
+     }
+    },
+    {
+     "line": "Meet me at the tailor's.",
+     "want": "tailor",
+     "got": "tailor",
+     "p": 0.99,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 363.0734169855714,
+     "cost": 4.6074e-05,
+     "top": {
+      "tailor": 0.99,
+      "unclear": 0.01,
+      "town": 0.0
+     }
+    },
+    {
+     "line": "Go on, I'll be right behind you.",
+     "want": "healer",
+     "got": "healer",
+     "p": 0.981,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 357.4537499807775,
+     "cost": 4.7082e-05,
+     "top": {
+      "healer": 0.98,
+      "unclear": 0.02,
+      "dungeon_entrance": 0.0
+     }
+    },
+    {
+     "line": "Wait at the alchemist's while I sort this out.",
+     "want": "alchemist",
+     "got": "alchemist",
+     "p": 0.994,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 326.6069579985924,
+     "cost": 4.6284e-05,
+     "top": {
+      "alchemist": 0.99,
+      "unclear": 0.0,
+      "mage_shop": 0.0
+     }
+    },
+    {
+     "line": "off you trot",
+     "want": "unclear",
+     "got": "unclear",
+     "p": 0.992,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 406.65445901686326,
+     "cost": 4.5906e-05,
+     "top": {
+      "unclear": 0.99,
+      "graveyard": 0.0,
+      "dungeon_entrance": 0.0
+     }
+    },
+    {
+     "line": "I'm going to the bank, you go to the healer.",
+     "want": "healer",
+     "got": "healer",
+     "p": 0.984,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 338.9842910110019,
+     "cost": 4.6326e-05,
+     "top": {
+      "healer": 0.98,
+      "bank": 0.01,
+      "unclear": 0.0
+     }
+    },
+    {
+     "line": "see you at the inn in Skara Brae",
+     "want": "unclear",
+     "got": "inn",
+     "p": 0.777,
+     "ok": false,
+     "set": "second",
+     "latency_ms": 319.82149998657405,
+     "cost": 4.62e-05,
+     "top": {
+      "inn": 0.78,
+      "unclear": 0.2,
+      "town": 0.01
+     }
+    },
+    {
+     "line": "That one.",
+     "want": "bank",
+     "got": "bank",
+     "p": 0.956,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 330.9253750485368,
+     "cost": 4.6662e-05,
+     "top": {
+      "bank": 0.96,
+      "unclear": 0.03,
+      "inn": 0.0
+     }
+    },
+    {
+     "line": "Bowyer's. Go. I'll catch up.",
+     "want": "bowyer",
+     "got": "bowyer",
+     "p": 0.98,
+     "ok": true,
+     "set": "second",
+     "latency_ms": 345.18183302134275,
+     "cost": 4.6242e-05,
+     "top": {
+      "bowyer": 0.98,
+      "unclear": 0.02,
+      "dungeon_entrance": 0.0
+     }
+    }
+   ],
+   "willing": [
+    {
+     "moment": "all quiet",
+     "want": true,
+     "p": 0.924,
+     "ok": true
+    },
+    {
+     "moment": "all quiet, the leader a little hurt",
+     "want": true,
+     "p": 0.94,
+     "ok": true
+    },
+    {
+     "moment": "all quiet, itself a little hurt",
+     "want": true,
+     "p": 0.963,
+     "ok": true
+    },
+    {
+     "moment": "after a fight, nothing about",
+     "want": true,
+     "p": 0.947,
+     "ok": true
+    },
+    {
+     "moment": "badly hurt itself",
+     "want": false,
+     "p": 0.378,
+     "ok": true
+    },
+    {
+     "moment": "the leader near death",
+     "want": false,
+     "p": 0.407,
+     "ok": true
+    },
+    {
+     "moment": "in a fight",
+     "want": false,
+     "p": 0.047,
+     "ok": true
+    },
+    {
+     "moment": "three hostile creatures close",
+     "want": false,
+     "p": 0.182,
+     "ok": true
+    },
+    {
+     "moment": "the leader in a fight alone",
+     "want": false,
+     "p": 0.294,
+     "ok": true
+    },
+    {
+     "moment": "asked again after a refusal, all quiet now",
+     "want": true,
+     "p": 0.915,
+     "ok": true
+    },
+    {
+     "moment": "asked again with a reason, one creature far off",
+     "want": true,
+     "p": 0.915,
+     "ok": true
+    },
+    {
+     "moment": "asked a third time, the leader hurt",
+     "want": true,
+     "p": 0.924,
+     "ok": true
+    }
+   ]
+  }
+ }
+}

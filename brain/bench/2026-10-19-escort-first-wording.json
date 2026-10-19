@@ -1,0 +1,162 @@
+{
+ "started": "2026-10-19T15:33:43",
+ "cut": 0.5,
+ "rule": {
+  "first": {
+   "creatures_right": "14/21",
+   "missed": 7,
+   "not_wanted": 0,
+   "moments_right": "9/16",
+   "wrong": [
+    {
+     "id": "f01",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader shoots at a skeleton 10 tiles north that is wounded and coming at it"
+    },
+    {
+     "id": "f05",
+     "want": [
+      "c2"
+     ],
+     "got": [],
+     "why": "a mongbat charging the leader from 11 tiles; a hind grazing"
+    },
+    {
+     "id": "f06",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader faces an orc 7 west, wounded with nobody on it, that faces the leader; another orc east, at peace"
+    },
+    {
+     "id": "f07",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader called for the lich; Wystan is on it"
+    },
+    {
+     "id": "f08",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a skeletal mage casting at the leader from 10 tiles: in war mode, facing it, the leader facing it"
+    },
+    {
+     "id": "f09",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a ratman coming at the party from behind"
+    },
+    {
+     "id": "f15",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader pulls an ettin"
+    }
+   ]
+  }
+ },
+ "models": {
+  "jev": {
+   "first": {
+    "creatures_right": "19/21",
+    "missed": 0,
+    "not_wanted": 2,
+    "moments_right": "14/16",
+    "wrong": [
+     {
+      "id": "f03",
+      "want": [],
+      "got": [
+       "c1"
+      ],
+      "why": "an orc in war mode far off facing away, the leader not fighting",
+      "p": {
+       "c1": 0.63
+      }
+     },
+     {
+      "id": "f14",
+      "want": [],
+      "got": [
+       "c1"
+      ],
+      "why": "the leader says to leave the troll",
+      "p": {
+       "c1": 0.81
+      }
+     }
+    ],
+    "latency_ms": 311,
+    "cost_usd_a_moment": 3.18e-05
+   }
+  },
+  "decision1": {
+   "first": {
+    "creatures_right": "20/21",
+    "missed": 0,
+    "not_wanted": 1,
+    "moments_right": "15/16",
+    "wrong": [
+     {
+      "id": "f14",
+      "want": [],
+      "got": [
+       "c1"
+      ],
+      "why": "the leader says to leave the troll",
+      "p": {
+       "c1": 0.98
+      }
+     }
+    ],
+    "latency_ms": 423,
+    "cost_usd_a_moment": 1.96e-05
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.000821,
+  "cost_per_hour_usd": 2.6484,
+  "calls": 32,
+  "by_role": {
+   "system1": 0.000821
+  },
+  "by_kind": {
+   "order": {
+    "calls": 32,
+    "input_tokens": 19556,
+    "output_tokens": 442,
+    "cost_usd": 0.000821,
+    "latency_ms_avg": 365.8
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.14-20261014": {
+    "calls": 16,
+    "input_tokens": 12108,
+    "output_tokens": 421,
+    "cost_usd": 0.000509,
+    "latency_ms_avg": 309.7
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 16,
+    "input_tokens": 7448,
+    "output_tokens": 21,
+    "cost_usd": 0.000313,
+    "latency_ms_avg": 422.0
+   }
+  }
+ }
+}

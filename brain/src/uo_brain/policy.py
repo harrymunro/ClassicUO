@@ -79,6 +79,9 @@ class PolicyConfig:
     focus: int = 0
     fall_back: bool = False
     heal_now: tuple[str, int] = ("", 0)
+    # The creatures system one judged part of the leader's fight, beyond the escort rule's tiles (escort.py, cuo-cym.25):
+    # their serials. A leader who shoots or casts from range is fought beside before the creature closes.
+    escort_also: frozenset[int] = frozenset()
     # Set from the player's strategy (strategy.py).
     allow_flee: bool = True
     target_priority: str = "current_first"
@@ -338,7 +341,8 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
 
         for h in sit.hostiles:
             h.allowed = h.allowed and (attacking_me(sit, h) or bool(h.info.get("aggressive"))
-                                       and (h.distance <= cfg.escort_own or from_leader(h) <= cfg.escort_tiles))
+                                       and (h.distance <= cfg.escort_own or from_leader(h) <= cfg.escort_tiles)
+                                       or h.serial in cfg.escort_also)
         if cfg.fall_back:
             # Told to fall back (companion.py, cuo-cym.24): it goes after nothing, and only once beside the leader
             # fights what is on it or right on the leader. The client's follow takes it there (decide, below).
@@ -1614,6 +1618,13 @@ BANDAGE_REACH = 2    # tiles: ModernUO's bandage range (AOS)
 HELP_WALK = 8        # a hurt companion this close is walked to, once the fight is over
 HELP_CLEAR = 8       # ...which is when no hostile creature is within this many tiles
 HEALERS = ("mage", "mage-tamer", "warrior-mage")  # heal a companion with a spell, from a distance
+# A companion losing health fast is helped above help_below too (cuo-cym.31): one that lost this many points over the
+# last HP_WINDOW_S, from under FALLING_BELOW; and one another is healing is still helped while it falls so.
+FALLING = 15
+FALLING_BELOW = 75
+NEAR_DEATH = 30      # one being healed by another is left to them above this, unless it is falling
+SHORT_HEALS = 2      # a mage with mana for fewer Greater Heals than this keeps them for one falling or near death
+GREATER_HEAL_MANA = 11  # a 4th-circle spell
 
 
 def help_mates(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, now: float) -> None:
@@ -1634,10 +1645,26 @@ def help_mates(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, no
     # The one its leader said to heal now (companion.py, cuo-cym.24) comes first, whatever its health, once.
     whom, order = cfg.heal_now
     ordered = whom if order and order not in mem.heals_done else ""
-    # One being healed by another already is left to them, unless it is near death.
-    hurt = sorted((m for m in sit.mates if not m.dead and (m.name == ordered or m.hits_pct is not None
-                   and m.hits_pct < cfg.help_below and (not m.being_helped or m.hits_pct < 30))),
-                  key=lambda m: (100 if m.hits_pct is None else m.hits_pct, m.distance))
+    # Under help_below, or losing health fast from under FALLING_BELOW (cuo-cym.31). One being healed by another
+    # already is left to them, unless it is near death or still falling fast.
+    def falling(m: Mate) -> bool:
+        return m.hits_drop >= FALLING
+
+    def wanted(m: Mate) -> bool:
+        if m.dead or m.hits_pct is None:
+            return m.name == ordered and not m.dead
+        if m.name == ordered:
+            return True
+        if m.being_helped and m.hits_pct >= NEAR_DEATH and not falling(m):
+            return False
+        return m.hits_pct < cfg.help_below or m.hits_pct < FALLING_BELOW and falling(m)
+
+    # A mage short of mana heals the one falling before the lowest, and keeps its last heals for one falling or near
+    # death: in the written moments its one heal went to the steady bard while the lich took the warrior.
+    mana = sit.player.get("mana")
+    short = sit.archetype in HEALERS and mana is not None and mana < SHORT_HEALS * GREATER_HEAL_MANA
+    hurt = sorted((m for m in sit.mates if wanted(m)),
+                  key=lambda m: (not (short and falling(m)), 100 if m.hits_pct is None else m.hits_pct, m.distance))
     if any(m.name == ordered for m in hurt):
         hurt = [m for m in hurt if m.name == ordered]
     skills = sit.player.get("skills") or {}
@@ -1660,7 +1687,8 @@ def help_mates(sit: Situation, dec: Decision, mem: Memory, cfg: PolicyConfig, no
 
     if sit.archetype in HEALERS and sit.can_cast(GREATER_HEAL):
         # Queued after any attack spell of this decision, so it goes first (as a mage-tamer's heal on its pet).
-        near = next((m for m in hurt if m.distance <= SPELL_RANGE and m.in_sight), None)
+        near = next((m for m in hurt if m.distance <= SPELL_RANGE and m.in_sight and (
+            not short or falling(m) or m.name == ordered or (m.hits_pct or 0) < NEAR_DEATH)), None)
         if near is not None:
             dec.actions.append({"verb": "cast", "spell": GREATER_HEAL, "target": near.serial, "queue": True,
                                 "confidence": 1.0, "reason": "companion"})

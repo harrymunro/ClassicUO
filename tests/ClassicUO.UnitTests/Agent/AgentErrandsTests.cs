@@ -1,4 +1,5 @@
 using ClassicUO.Agent;
+using ClassicUO.Game.Data;
 using FluentAssertions;
 using Xunit;
 
@@ -8,6 +9,23 @@ namespace ClassicUO.UnitTests.Agent
     // and a soak run's first three buys at the Britain healer went to the healer guildmistress.
     public class AgentErrandsTests
     {
+        [Fact]
+        public void A_vendors_context_menu_has_its_buy_or_sell_chosen_unless_greyed()
+        {
+            // cuo-cgy: a vendor nobody can stand next to is asked by its context menu (Buy 3006103, Sell 3006104).
+            var menu = new[]
+            {
+                new PopupMenuItem(3006103, 1, 0xFFFF, 0, 0), new PopupMenuItem(3006104, 2, 0xFFFF, 0, 0),
+                new PopupMenuItem(3006150, 3, 0xFFFF, 0, 0)
+            };
+            AgentErrands.Choose(menu, buy: true).Should().Be(1);
+            AgentErrands.Choose(menu, buy: false).Should().Be(2);
+            var greyed = new[] { new PopupMenuItem(3006103, 1, 0x0386, 0, 0x01) };
+            AgentErrands.Choose(greyed, buy: true).Should().Be(-1);
+            AgentErrands.Choose(new[] { new PopupMenuItem(3006150, 3, 0xFFFF, 0, 0) }, buy: true).Should().Be(-1);
+            AgentErrands.Choose(null, buy: false).Should().Be(-1);
+        }
+
         [Theory]
         [InlineData(true, 0, "Minerva buy")]
         [InlineData(true, 1, "Minerva buy")]

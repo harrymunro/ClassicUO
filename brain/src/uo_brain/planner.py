@@ -184,6 +184,11 @@ def restock_tool(own: bool = False) -> dict[str, Any]:
             "why": {"type": "string", "description": "One short sentence for the player: why this goal now."}},
             "required": ["why"]}}}
 
+# A huddle member the plan sends into its hunt goes for this long (the hunt tool's own range is 3 to 20 minutes),
+# from this much health up (cuo-cym.14).
+STEER_MINUTES = 15
+STEER_HP = 50
+
 # The planner's own lines go in a block of their own at the end of the strategy, under this line,
 # so a change of plan replaces only them and never the player's lines (cuo-dax).
 PLANNER_HEAD = "From the planner (it may change these):"
@@ -240,6 +245,9 @@ class Planner:
         self.usage = llm.LlmUsage(calls=0)
         # An NPC's persona (cuo-x2q.1) joins the system prompt: fixed for the character, so it caches too.
         self.system = SYSTEM + persona_words(persona) if persona else SYSTEM
+        # A resident of a hamlet (cuo-m3n): where it lives, its home, work and neighbours, fixed for the run too.
+        if (hamlet := getattr(session, "hamlet", None)) is not None:
+            self.system += hamlet.words()
         self.ears = None  # talk.Ears: what an NPC hears from and says to the fleet's other characters
         self.deaths = 0                # deaths seen by the planner, resurrections and corpses taken back (cuo-4b3)
         self.resurrections = 0
@@ -262,6 +270,7 @@ class Planner:
         self.finished: str | None = None
         self.ends_at: float | None = None  # when the session's hours are up (run): no hunt is begun to outlast it
         self.on_errand = False  # carrying out a goal of its own (OWN_BUSINESS): a huddle's rally doesn't wait for it
+        self.steered: set[int] = set()  # the huddle's plans (revisions) whose hunt this member was sent on (cuo-cym.14)
         self.party_waited = party is None  # a party's planner waits once, at the start, for the others to join
         self.started = time.monotonic()
         # The character's own memory (memory.py), in the shard's store: by default whenever the session has
@@ -369,6 +378,8 @@ class Planner:
                 self.log({"type": "planner", "t": time.time(), "note": "some bags in the pack not looked into after 10 s"})
             snap = await self.session.snap()
         situation = describe(snap, self.session.world, self.party.companions if self.party else None)
+        if (hamlet := getattr(self.session, "hamlet", None)) is not None:
+            situation["home"] = hamlet.where(snap["player"]["x"], snap["player"]["y"])
         if self.corpse_at and snap.get("in_game") and not snap["player"]["dead"]:
             x, y, t = self.corpse_at
             situation["your_corpse"] = (f"at {x},{y}, from a death {(time.monotonic() - t) / 60:.0f} min ago, with your "
@@ -398,6 +409,11 @@ class Planner:
                                               f"{(time.monotonic() - t) / 60:.0f} min ago, and nothing hostile has "
                                               f"been seen since")
 
+        if (sent := await self.sent_in(snap, situation)) is not None:
+            # The huddle's plan names this member for its hunt: it goes, as a follower goes on the leader's plan,
+            # instead of its planner being asked again (cuo-cym.14).
+            return await self.carry_out(*self.steer(*sent))
+
         hard = self.hard_moment()
         model = self.escalation_model() if hard else None
         if model:
@@ -416,6 +432,10 @@ class Planner:
                     await self.huddle.maybe(snap, situation, self.history[-1] if self.history else None)
                 except Exception as e:  # noqa: BLE001 - no huddle rather than no plan
                     self.log({"type": "huddle", "t": time.time(), "error": f"{type(e).__name__}: {e}"[:300]})
+                if (sent := await self.sent_in(snap, situation)) is not None:
+                    # The plan agreed in this huddle sends it in: the first plan of a run is agreed here, inside the
+                    # members' first step, and asked again two of five rested a minute and went in 18 s behind.
+                    return self.steer(*sent)
             # Housekeeping never costs the session: a fold or a reflection that breaks is logged and skipped.
             try:
                 await self.folder.maybe_fold(self.history, self.goal)
@@ -430,6 +450,62 @@ class Planner:
         defended = getattr(self.session, "defended", None)
         tool, args = await (defended(think()) if defended else think())
         return await self.carry_out(tool, args)
+
+    def steer(self, area: str, rev: int) -> tuple[str, dict[str, Any]]:
+        """The hunt goal a huddle's plan sends this member on (sent_in), noted as the plan's, not its planner's."""
+        self.steered.add(rev)
+        # Read as the member's own: the plan's watcher (Huddle.watch) cuts a goal short when a plan it hasn't read is on
+        # the board, and cut the hunt it was sent on two seconds in, 51 tiles short (run 20261019-154246).
+        self.huddle.read()
+        self.log({"type": "planner", "t": time.time(), "steered": {"rev": rev, "area": area}})
+        return "hunt", {"area": area, "minutes": STEER_MINUTES, "why": f"the party's plan sends me into {area} with the others"}
+
+    async def held_back(self, area: str) -> str:
+        """Why a hunt of its own choosing is refused, or "": a huddle member whose party forms up doesn't hunt the area
+        the plan names while the plan holds the party back from it (go_now_question). Live with memory on, the plans
+        said to enter only after a scout, and the bard's planner hunted the graveyard alone, the first in by 15 s
+        (cuo-cym.14, run 20261019-162307)."""
+        if self.huddle is None or getattr(self.session, "rally", None) is None:
+            return ""
+        plan = self.huddle.hunt_area()
+        spot = getattr(self.session, "hunt_spot", None)
+        try:
+            here = spot(area) if spot else None
+        except Exception:  # noqa: BLE001 - an area it can't place: left to the hunt itself
+            here = None
+        if plan is None or here is None or here[2].lower() != plan.lower():
+            return ""
+        if await self.huddle.sends_in_now(getattr(self.session, "judge", None), plan):
+            return ""
+        board = self.huddle.board() or {}
+        return (f"the party's plan holds the party back from {plan} for now ({str(board.get('target', ''))[:240]}): "
+                f"nobody goes in on their own; choose something else, or rest until the plan changes")
+
+    async def sent_in(self, snap: dict[str, Any], situation: dict[str, Any]) -> tuple[str, int] | None:
+        """The hunt the huddle's plan sends this member into, once for each plan, when the party forms up: (area,
+        revision), or None for its planner to choose. Live with memory on, the planners asked again after a plan
+        that named all five chose rest 18 to 27 times a run, the healer and the shops: their own lessons about the
+        lich made each cautious, and the plan's list of who goes bound nobody (cuo-cym.14). Not for one who is
+        dead, under STEER_HP, or a mage without reagents: its planner sees to that first, and the rally waits
+        a while for it. Not when the plan itself holds the party back (system one reads it, once a plan)."""
+        if self.huddle is None or self.party is None or getattr(self.session, "rally", None) is None:
+            return None
+        board = self.huddle.board()
+        if board is None or board["rev"] in self.steered:
+            return None
+        area = self.huddle.hunt_area()
+        if area is None or self.party.me not in (self.huddle.going(area) or []):
+            return None
+        p = snap.get("player") or {}
+        if p.get("dead") or (p.get("hits_max") and 100 * p.get("hits", 0) / p["hits_max"] < STEER_HP):
+            return None
+        if situation.get("reagents") == "none":
+            return None  # a mage with nothing to cast with; bandages are healing, and a fighter fights without them
+        # ...and only a plan that sends the party in now: one that says hold, scout first or go in only on a sighting
+        # named all five as going all the same (huddle.go_now_question).
+        if not await self.huddle.sends_in_now(getattr(self.session, "judge", None), area):
+            return None
+        return area, board["rev"]
 
     JOIN_WAIT_S = 90.0
 
@@ -602,6 +678,9 @@ class Planner:
                 minutes = min(minutes, max(0.5, (self.ends_at - time.monotonic()) / 60))
             args = {**args, "minutes": int(minutes) if float(minutes).is_integer() else round(minutes, 1)}
         self.log({"type": "goal", "t": time.time(), "tool": tool, "args": args})
+        if tool == "hunt" and self.huddle is not None and (board := self.huddle.board()) is not None:
+            # A hunt under a plan, of its own choosing or the plan's: it isn't sent on the plan's hunt again after it.
+            self.steered.add(board["rev"])
         rev = 0
         if self.party is not None and self.huddle is None and tool in GOALS:
             # The party follows: travel, hunt and rest with the leader; restock (or the leader's own errands)
@@ -625,6 +704,8 @@ class Planner:
                         r = await s.defended(s.travel_to(x=int(xy[0]), y=int(xy[1]), **together))
                     else:
                         r = await s.defended(s.travel_to(place, **together))
+                case "hunt" if (held := await self.held_back(str(args.get("area", "")))):
+                    r = Result(False, held)
                 case "hunt":
                     link = getattr(getattr(s, "pcfg", None), "link", None) if self.party is not None else None
                     seen = len(link.story.dead_seen) if link is not None else 0

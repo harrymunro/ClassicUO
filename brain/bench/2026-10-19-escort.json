@@ -1,0 +1,248 @@
+{
+ "started": "2026-10-19T15:33:50",
+ "cut": 0.5,
+ "rule": {
+  "first": {
+   "creatures_right": "14/21",
+   "missed": 7,
+   "not_wanted": 0,
+   "moments_right": "9/16",
+   "wrong": [
+    {
+     "id": "f01",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader shoots at a skeleton 10 tiles north that is wounded and coming at it"
+    },
+    {
+     "id": "f05",
+     "want": [
+      "c2"
+     ],
+     "got": [],
+     "why": "a mongbat charging the leader from 11 tiles; a hind grazing"
+    },
+    {
+     "id": "f06",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader faces an orc 7 west, wounded with nobody on it, that faces the leader; another orc east, at peace"
+    },
+    {
+     "id": "f07",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader called for the lich; Wystan is on it"
+    },
+    {
+     "id": "f08",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a skeletal mage casting at the leader from 10 tiles: in war mode, facing it, the leader facing it"
+    },
+    {
+     "id": "f09",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a ratman coming at the party from behind"
+    },
+    {
+     "id": "f15",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader pulls an ettin"
+    }
+   ]
+  },
+  "held": {
+   "creatures_right": "8/15",
+   "missed": 7,
+   "not_wanted": 0,
+   "moments_right": "5/12",
+   "wrong": [
+    {
+     "id": "h01",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader's arrows on a gazer 9 west, wounded, nobody on it"
+    },
+    {
+     "id": "h03",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a bone knight charging the leader from 7 tiles"
+    },
+    {
+     "id": "h04",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "an orc lord facing the leader 8 east in war mode; an orc at peace"
+    },
+    {
+     "id": "h06",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a spectre gliding at the leader from 11 tiles"
+    },
+    {
+     "id": "h08",
+     "want": [
+      "c1",
+      "c2"
+     ],
+     "got": [
+      "c1"
+     ],
+     "why": "a skeleton 6 from the leader and a lich 13 off, both facing the leader in war mode"
+    },
+    {
+     "id": "h09",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "the leader said to get the ogre"
+    },
+    {
+     "id": "h10",
+     "want": [
+      "c1"
+     ],
+     "got": [],
+     "why": "a ratman archer shooting at the leader from 10 tiles"
+    }
+   ]
+  }
+ },
+ "models": {
+  "jev": {
+   "first": {
+    "creatures_right": "20/21",
+    "missed": 0,
+    "not_wanted": 1,
+    "moments_right": "15/16",
+    "wrong": [
+     {
+      "id": "f03",
+      "want": [],
+      "got": [
+       "c1"
+      ],
+      "why": "an orc in war mode far off facing away, the leader not fighting",
+      "p": {
+       "c1": 0.59
+      }
+     }
+    ],
+    "latency_ms": 319,
+    "cost_usd_a_moment": 3.22e-05
+   },
+   "held": {
+    "creatures_right": "14/15",
+    "missed": 0,
+    "not_wanted": 1,
+    "moments_right": "11/12",
+    "wrong": [
+     {
+      "id": "h07",
+      "want": [],
+      "got": [
+       "c1"
+      ],
+      "why": "a lizardman in war mode going north, away",
+      "p": {
+       "c1": 0.61
+      }
+     }
+    ],
+    "latency_ms": 182,
+    "cost_usd_a_moment": 3.11e-05
+   }
+  },
+  "decision1": {
+   "first": {
+    "creatures_right": "21/21",
+    "missed": 0,
+    "not_wanted": 0,
+    "moments_right": "16/16",
+    "wrong": [],
+    "latency_ms": 429,
+    "cost_usd_a_moment": 2e-05
+   },
+   "held": {
+    "creatures_right": "14/15",
+    "missed": 0,
+    "not_wanted": 1,
+    "moments_right": "11/12",
+    "wrong": [
+     {
+      "id": "h07",
+      "want": [],
+      "got": [
+       "c1"
+      ],
+      "why": "a lizardman in war mode going north, away",
+      "p": {
+       "c1": 0.852
+      }
+     }
+    ],
+    "latency_ms": 315,
+    "cost_usd_a_moment": 1.9e-05
+   }
+  }
+ },
+ "costs": {
+  "cost_usd": 0.001437,
+  "cost_per_hour_usd": 1.4977,
+  "calls": 56,
+  "by_role": {
+   "system1": 0.001437
+  },
+  "by_kind": {
+   "order": {
+    "calls": 56,
+    "input_tokens": 34217,
+    "output_tokens": 760,
+    "cost_usd": 0.001437,
+    "latency_ms_avg": 373.8
+   }
+  },
+  "by_model": {
+   "typesafe/jev-1.14-20261014": {
+    "calls": 28,
+    "input_tokens": 21174,
+    "output_tokens": 724,
+    "cost_usd": 0.000889,
+    "latency_ms_avg": 304.4
+   },
+   "microsoft/microsoft-decision-1-20261009": {
+    "calls": 28,
+    "input_tokens": 13043,
+    "output_tokens": 36,
+    "cost_usd": 0.000548,
+    "latency_ms_avg": 443.3
+   }
+  }
+ }
+}

@@ -80,6 +80,30 @@ were given.
 """
 
 
+GO_NOW_CUT = 0.5   # the plan sends the party in now when the yes/no on that gives this (cuo-cym.14)
+
+
+def go_now_question(area: str) -> dict[str, Any]:
+    """Whether the agreed plan sends the party into the fight at `area` now, or holds it back for something first. A
+    plan's list of who goes was filled in with all five while its target said "hold at the edge, no entry yet", and
+    the members sent in by the list alone walked into the lich; two died (cuo-cym.14, 2026-10-19)."""
+    return {"type": "noul",
+            "instructions": {"role": "A party of adventurers in the game Ultima Online agreed a plan in a huddle (`plan`: what "
+                                     "they do next, who does what there, where they regroup if it goes wrong). Each member "
+                                     "is about to choose its next goal with the plan in front of it.",
+                             "question": f"Does the plan send the party into the fight at {area} now?"},
+            "criteria": {"true": "Yes: hunt or fight there now. Gathering at the edge first, going in all together, or "
+                                 "waiting for a pet to be ready is part of going in now.",
+                         "false": "Not yet: hold, scout or watch first; regroup, rest or heal first; go in only if a "
+                                  "sighting shows the way clear (no lich in view, say), or only once someone is raised or "
+                                  "back; or stop the hunt."}}
+
+
+def plan_state(board: dict[str, Any]) -> dict[str, Any]:
+    return {"plan": {"target": board.get("target"), "roles": board.get("roles"), "rally": board.get("rally"),
+                     **({"going": board["going"]} if board.get("going") else {})}}
+
+
 def board_tool(members: list[str] | None = None) -> dict[str, Any]:
     s = {"type": "string"}
     names = {"type": "array", "items": {"type": "string", **({"enum": list(members)} if members else {})}}
@@ -122,6 +146,7 @@ class Huddle:
         self.cost = 0.0
         self.dangers_seen: set[str] = set()
         self._area: tuple[int, str | None] = (0, None)  # the hunting area the plan of that revision names
+        self._go_now: dict[int, bool] = {}  # revision -> whether that plan sends the party in now (go_now_question)
 
     # ---- the store ------------------------------------------------------------------
 
@@ -160,6 +185,27 @@ class Huddle:
                     best, area = own, name
             self._area = (board["rev"], area)
         return self._area[1]
+
+    async def sends_in_now(self, judge: Any, area: str) -> bool:
+        """Whether the plan now on the board sends the party into its hunt now (go_now_question), asked once a revision.
+        Without system one, or when it doesn't answer, no: the member's planner chooses, as before (cuo-cym.14)."""
+        board = self.board()
+        if board is None:
+            return False
+        if board["rev"] not in self._go_now:
+            if judge is None or getattr(judge, "name", "") == "heuristic":
+                return False
+            try:
+                with costs.kind("order"):
+                    ans = await judge.ask(plan_state(board), {"go_now": go_now_question(area)})
+            except Exception as e:  # noqa: BLE001 - no answer: not sent in by the plan
+                self.log({"type": "huddle", "t": time.time(), "error": f"go now: {type(e).__name__}: {e}"[:200]})
+                return False
+            p = float(ans.nouls.get("go_now", 0.0))
+            self.cost += ans.cost
+            self._go_now[board["rev"]] = p >= GO_NOW_CUT
+            self.log({"type": "huddle", "t": time.time(), "rev": board["rev"], "go_now": round(p, 3)})
+        return self._go_now[board["rev"]]
 
     def rows(self, hid: int) -> list[dict[str, Any]]:
         return [dict(r) for r in self.world.db.execute(

@@ -1,0 +1,574 @@
+{
+ "note": "cuo-cym.14, written 2026-10-19 15:58 before any model saw the plans. True: the plan sends the party into the fight now (conditions on being together, bunched, alive or a pet alive are the rally's and the steering floors'). False: hold, scout first, regroup first, or go in only on a sighting condition or once someone is raised.",
+ "plans": [
+  {
+   "party": "party-lich-20261011-051858-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, together, all five. Stay within sight of each other the whole fight.",
+   "roles": "Roland holds the front and takes the blows; Isolde casts from behind him; Wystan shoots from the back with his 200 arrows; Thea's pet holds the nearest undead while she stays beside Roland; Corwin plays to steady the group and bandages whoever drops, starting with Isolde and Corwin himself.",
+   "rally": "If two of us go down, or Roland falls below a third health, everyone pulls back together to the Britain healer. Nobody runs off alone.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-051858-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, all five, now. Roland and Corwin are ghosts: they go back to their bodies first, then rejoin.",
+   "roles": "Roland is dead and sits at 1427,1541: he walks to his corpse, resurrects, and takes the front again only once back on his feet. Corwin is also a ghost at 1379,1487: he resurrects at the same time, then plays and bandages. Until Roland is up, Thea's pet holds the nearest undead and Thea stays with Isolde and Wystan, not in front. Isolde casts from behind; Wystan shoots from the back with his 194 ar",
+   "rally": "If two of us go down, or Roland falls below a third health again, everyone pulls back together to the Britain healer. Nobody goes to a body alone; if Roland or Corwin falls again, the others hold position and wait for them to come back to the group.",
+   "going": null,
+   "reason": "Roland died since the plan was made",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-051858-party-lich",
+   "rev": 3,
+   "target": "Hunt the undead at the Britain Graveyard, the lich first, then the skeletons. All five, together, now. Roland and Corwin are alive at 1469,1611 and 1472,1611 per latest positions, so they are not ghosts anymore; no one walks to a body.",
+   "roles": "Roland (53/95, 0 bandages) takes the front and holds the lich's melee; Isolde (85/85) and Wystan (87/87, 194 arrows) kill the lich from range, Wystan on the lich, Isolde on the skeletons; Thea's pet holds the nearest skeleton beside Roland; Thea stays with Isolde and Wystan and bandages from her 98 bandages; Corwin (48/80, 0 bandages) plays from the back and draws on nobody in front; Thea bandages",
+   "rally": "If two of us go down, or Roland falls below a third health, everyone pulls back together to the Britain healer. Nobody goes to a body alone; if anyone falls, the others hold position and wait for them to come back to the group.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain Graveyard, skeleton at Britain Graveyard",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-051858-party-lich",
+   "rev": 4,
+   "target": "Hunt the undead at the Britain Graveyard, the lich first, then the skeletons. Four alive, now. Corwin is a ghost at 1432,1553: he is not to be fought over or walked to alone; he rejoins after the lich is down or at the healer.",
+   "roles": "Roland (76/95, 0 bandages) holds the front and takes the lich's melee at 1469,1611. Wystan (87/87, 193 arrows) shoots the lich from range, Thea stays beside him. Isolde (85/85, 98 reagents) hits the skeletons from range, beside Wystan. Thea's pet holds the nearest skeleton next to Roland; Thea bandages from her 98, first Roland, then whoever drops. Corwin is dead: he does not fight, he waits as a ",
+   "rally": "",
+   "going": null,
+   "reason": "Corwin died since the plan was made",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-051858-party-lich",
+   "rev": 5,
+   "target": "Hunt the undead at the Britain Graveyard: the lich first, then the skeletons. Four alive: Isolde, Wystan, Thea, Corwin. Roland is dead and a ghost. Stay together.",
+   "roles": "Roland is dead; he does not fight and is not walked to alone. Isolde (85/85, 98 reagents) hits the lich and skeletons from range, beside Wystan. Wystan (87/87, 193 arrows) shoots the lich from range, Thea stays beside him. Thea (85/85, 98 bandages) keeps her pet on the nearest skeleton at the front and bandages Wystan first, then Isolde, then Corwin once he rejoins. Corwin (ghost, 0 bandages) is n",
+   "rally": "",
+   "going": null,
+   "reason": "Roland died since the plan was made",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-062911-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, together, all five. Stay within sight of each other the whole way.",
+   "roles": "Roland holds the front and takes the blows. Isolde and Wystan kill from range, Wystan with arrows only (no bolts). Thea's tamed creature stays on Roland's side and holds whatever reaches us. Corwin plays to keep the party's spirits up and bandages whoever is hurt; he stays in the middle of the group, not at the front. Everyone keeps to the group, no one wanders off to loot or chase.",
+   "rally": "If two of us go down, or Roland drops under a third health, everyone falls back to the Britain healer together, moving as one group. Nobody runs alone.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-062911-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, together, all five. Isolde is dead, so the hunt goes on with four living and Isolde's body is recovered once the graveyard is clear. Stay within sight of each other the whole way.",
+   "roles": "Roland holds the front and takes the blows. Wystan kills from range with arrows only (no bolts), 185 arrows to spend. Thea's tamed creature stays on Roland's side and holds whatever reaches us. Corwin plays to keep spirits up, bandages whoever is hurt, and stays in the middle of the group, not at the front. Corwin also bandages Isolde's body as soon as it is safe to reach, and Thea or Corwin resur",
+   "rally": "Isolde is already down, so any one more death, or Roland under a third health, means everyone falls back to the Britain healer together, moving as one group, with Isolde's body carried or resurrected on the way. Nobody runs alone.",
+   "going": null,
+   "reason": "Isolde died since the plan was made",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-062911-party-lich",
+   "rev": 3,
+   "target": "Hunt the undead at the Britain Graveyard, the lich first, then the skeletons. Stop and regroup first: a lich and a skeleton were just seen there, which the plan did not weigh. Isolde is dead per the old plan but her status now reads 66/85 at 1472,1612, so confirm she is alive and where she is before",
+   "roles": "Roland holds the front at the graveyard edge and takes the blows. Wystan kills the lich from range with arrows only, 184 arrows, no bolts. Thea's tamed creature stays on Roland's side and holds whatever reaches us. Corwin stays in the middle of the group, plays to keep spirits up, and bandages whoever is hurt. Isolde, if alive, stays out of melee and casts from behind Corwin. Nobody goes to Isolde",
+   "rally": "Everyone holds together at 1369,1478 (Wystan's spot) until the group is set. Any one more death, or Roland under a third health, means the whole party falls back to the Britain healer together, moving as one group, with any downed member carried or resurrected on the way. Nobody runs alone.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain Graveyard, skeleton at Britain Graveyard",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261011-070928-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, single or paired undead only, all five together, starting with the walk in from the west road, not the eastern route past 1250-1350,1400.",
+   "roles": "Roland leads the walk and tanks, shouts skeletons early before they reach anyone; Corwin stays at Roland's shoulder where he can see him, plays to hold the group and calls the pull; Isolde casts from behind Roland, hits single undead only; Wystan shoots from range with 200 arrows and pulls single or paired undead; Thea keeps her pet alive and at her side, pet takes any bone knight that comes at he",
+   "rally": "If three or more undead gather, or anyone drops under half health, or Thea's pet dies: everyone retreats together to open ground at the west road outside the graveyard and regroups at Roland's position before any new pull. If Roland goes under a third, all five fall back to the Britain healer together. No one walks alone on the eastern route.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-070928-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, single or paired undead only, all five together. Walk in by the west road, never the eastern route past 1250-1350,1400. Thea, Isolde and Wystan are back from near death: take it slow, pull only what you can see.",
+   "roles": "Roland leads the walk and tanks; shout skeletons early, before they reach anyone. Corwin stays at Roland's shoulder where he can see him, plays to hold the group, calls the pull. Isolde casts from behind Roland, single undead only. Wystan shoots from range (188 arrows) and pulls single or paired undead only. Thea keeps her pet alive at her side; the pet takes any bone knight that comes at her. Nob",
+   "rally": "If three or more undead gather, anyone drops under half health, or Thea's pet dies: everyone retreats together to open ground on the west road outside the graveyard and regroups at Roland's position before any new pull. If Roland goes under a third, all five fall back together to the Britain healer.",
+   "going": null,
+   "reason": "Thea, Isolde, Wystan came near death in the last fight",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-070928-party-lich",
+   "rev": 3,
+   "target": "Stop the Britain Graveyard hunt now. A lich is in the graveyard and another is at Britain, with skeletons in the graveyard. Hold at open ground on the west road outside the graveyard. Do not walk in until the lich is dealt with or we have a clear count of what is there.",
+   "roles": "Roland leads and holds the front at the west road, near 1475,1613. Isolde and Wystan stay at Roland's shoulder, no further east than him. Corwin stays within sight of Roland, never alone, never behind the group. Thea keeps her pet at her side and does not send it ahead. Nobody takes the eastern route past 1250-1350,1400. Wystan shoots only what comes to the front alone. Corwin is the one who calls",
+   "rally": "If a lich comes into view, or three or more undead gather, or anyone drops under half health, or Thea's pet dies: all five walk back west together to the open road at 1475,1613 and regroup on Roland. If Roland goes under a third, all five fall back together to the Britain healer.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain, lich at Britain Graveyard, skeleton at Britain Graveyard",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261011-081840-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, together, via the western road only. Pull single or paired skeletons away from the entrance; no groups of three or more. Leave the lich and bone knights for later. Confirm Thea's pet is alive and all five are in sight before walking in.",
+   "roles": "Roland leads on the western road and takes the pulls, one or two skeletons at a time, and tanks anything that reaches the party. Thea's pet holds the pulled skeleton while Thea keeps it alive. Isolde and Wystan kill from range, Isolde first on anything that gets close, Wystan with the arrows. Corwin stays inside the group behind Roland and bandages, and keeps his distance from the entrance. Everyo",
+   "rally": "If three or more undead gather, or Roland drops under half health, or the pet dies: the whole party falls back west together to the Britain healer, nobody goes alone. No eastern route, no walk near 1384,1503 or 1400,1500.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261011-081840-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, western road only, single or paired skeletons only, all five together. Leave the lich and bone knights alone. Nobody walks in until all five are in sight and Thea's pet is alive.",
+   "roles": "Roland leads on the western road and takes the pulls, one or two skeletons at a time, and tanks anything that reaches the party. Thea's pet holds the pulled skeleton while Thea keeps it alive. Isolde and Wystan kill from range: Isolde first on anything that gets close, Wystan with arrows (186 in hand). Corwin stays inside the group behind Roland, bandages, and keeps well away from the entrance. No",
+   "rally": "If three or more undead gather, Roland drops under half health, or Thea's pet dies: the whole party falls back west together to the Britain healer. Nobody goes alone. Wystan and Isolde did not come close to death on the western road before, so keep pulls short and retreat early.",
+   "going": null,
+   "reason": "Wystan, Roland, Isolde came near death in the last fight",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-010918-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, together, all five. Stay in one group and move as one.",
+   "roles": "Roland holds the front and takes the blows from the bone knights and skeletons. Thea's tamed bear fights beside Roland and holds the melee line. Isolde casts from behind Roland at range, damage spells on the tougher undead. Wystan shoots arrows from the second rank; he has no bolts, so arrows only. Corwin stays with the group, plays to keep the party's spirits up, and bandages anyone hurt, startin",
+   "rally": "If two of the party go down, or Roland falls below a third of his health: all retreat together to the Britain healer. If the party gets split, everyone stops and waits at the nearest gravestone until all five are back in sight.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-010918-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, all five together. Wystan came near death last fight, so this time we keep him out of the front and we pull back early.",
+   "roles": "Roland holds the front alone and takes the blows from bone knights and skeletons. Thea's bear fights beside Roland on the melee line. Isolde casts from behind Roland, damage spells on the tougher undead, the lich first. Wystan shoots arrows from the back rank, never the front, and steps back if anything reaches him; arrows only, no bolts. Corwin stays inside the group, keeps spirits up, and bandag",
+   "rally": "If Wystan drops below half health, or two of the party go down, or Roland falls below a third: all five retreat together to the Britain healer, Wystan first. If the party gets split, everyone stops at the nearest gravestone and waits until all five are back in sight.",
+   "going": null,
+   "reason": "Wystan came near death in the last fight",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-010918-party-lich",
+   "rev": 3,
+   "target": "Hunt the undead at the Britain Graveyard, all five together. The lich first, then the skeletons and bone knights. Stay within sight of each other. A lich and skeletons were just seen there, which the plan did not weigh, so move in as one group and keep the lich in Isolde's and Wystan's range.",
+   "roles": "Roland holds the front alone and takes the blows from bone knights and skeletons. Thea's bear fights beside Roland on the melee line. Isolde casts from behind Roland, damage spells on the lich first, then the tougher undead. Wystan shoots arrows from the back rank, never the front, and steps back if anything reaches him; arrows only, no bolts (he has 0). Corwin stays inside the group, keeps spirit",
+   "rally": "If Wystan drops below half health, or two of the party go down, or Roland falls below a third: all five retreat together to the Britain healer, Wystan first. If the party gets split, everyone stops at the nearest gravestone and waits until all five are back in sight.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain Graveyard, skeleton at Britain Graveyard",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-012010-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard together, all five, starting now. Stay in one group and move as a single party.",
+   "roles": "Roland takes the front and holds the undead. Isolde and Wystan kill from range behind him; Wystan has 200 arrows, no bolts. Thea's tamed creature holds close beside Roland. Corwin stays with the group, plays to steady them, and bandages whoever is hurt. Everyone keeps close to Roland.",
+   "rally": "If two of us go down, or Roland drops below a third health, the whole party pulls back together to the Britain healer. Nobody runs off alone.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-012010-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, together, all five, starting now. Roland came near death last fight, so we go slower and stay tight: no one wanders off, and we pull back the moment the plan breaks.",
+   "roles": "Roland holds the front and takes the blows, but he does not chase; he stays where the others can reach him with bandages. Thea's tamed creature stays beside Roland and takes the bone knights' attention. Isolde and Wystan fire from behind Roland, Wystan on arrows only (192, no bolts). Corwin stays in the middle of the group, plays to steady them, and bandages whoever is hurt first, Roland first. Th",
+   "rally": "Pull back together to the Britain healer if two of us go down, or if Roland drops below a third of his health (about 32). Anyone under half health tells the group at once and steps back behind Roland. Nobody runs off alone.",
+   "going": null,
+   "reason": "Wystan, Roland came near death in the last fight",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-012010-party-lich",
+   "rev": 3,
+   "target": "Hunt the undead at the Britain Graveyard, but first deal with the new lich and skeleton sighting: the lich first, then the skeletons, all five together, now. Hold near 1369,1478 until the lich is in sight.",
+   "roles": "Roland holds the front and takes the blows, does not chase the lich. Thea's tamed creature stays beside Roland and takes the skeleton and bone knight attention. Isolde and Wystan fire on the lich from behind Roland; Wystan on arrows only (192 arrows, no bolts). Corwin stays in the middle, plays to steady the group, and bandages whoever is hurt first, Roland first. Thea stays with Roland and the cr",
+   "rally": "Pull back together to the Britain healer if two of us go down, or if Roland drops below a third of his health (about 32). Anyone under half health calls it out at once and steps back behind Roland. Nobody runs off alone. The lich is the priority; if it is not dead within a short fight and the skeletons multiply, retreat.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain Graveyard, skeleton at Britain Graveyard",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-070833-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard: pull only single or paired skeletons from the western road, the entrance lich last and only with all five ready. Enter together, now, once all five and Thea's pet are in sight.",
+   "roles": "Roland holds the front on the western road and takes the pulls, one or two skeletons at a time. Isolde blasts from behind Roland. Wystan shoots from far off, keeping distance from the lich. Thea's pet holds the bone knights and Thea stays with the group. Corwin stays beside Roland, not at zero health beside him: he bandages Roland first when Roland drops, and steps clear if he cannot.",
+   "rally": "If three skeletons or the lich group up, or Roland falls under a third, or any member is down or Thea's pet dies: fall back west together to the Britain healer, nobody goes alone. Two down: retreat at once.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-070833-party-lich",
+   "rev": 2,
+   "target": "Pull back from the Britain Graveyard for now. Isolde and Wystan are dead ghosts, so the party is three living members. Do not enter the graveyard until Thea has a living tamed pet. Regroup at the Britain healer first.",
+   "roles": "Roland (28/95) walks to the Britain healer first, slowly, and stays in sight of Corwin. Corwin (44/80) bandages Roland on the way if he drops and keeps within a few steps of him. Thea stays with the group and tames or claims a new pet before anything else. Isolde and Wystan, as ghosts, go to the Britain healer or the nearest shrine and wait to be resurrected. Nobody enters the graveyard or pulls s",
+   "rally": "Britain healer, all together. If anyone is down on the road, Corwin bandages them or the group waits for them; nobody goes alone. Once Isolde and Wystan are back and Thea has a pet, the party regroups again and plans a fresh hunt from the western road.",
+   "going": null,
+   "reason": "Wystan, Isolde died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261013-070833-party-lich",
+   "rev": 3,
+   "target": "Pull back from Britain Graveyard for now. Do not enter or pull anything there until Isolde and Wystan are back on their feet, Roland is healed, and Thea has a living pet. The skeleton seen near 1400,1500 is a new threat: stay off that road until we know where it is going.",
+   "roles": "Roland (28/95) walks to the Britain healer now, slowly, staying in sight of Corwin. Corwin (44/80) stays at Roland's shoulder, bandages him the moment he drops, and does not leave him. Thea (85/85, 100 bandages) gets a pet alive first, with Bramble if he can be found, and keeps it between her and any undead. Isolde (ghost) and Wystan (ghost) go to the Britain healer or nearest shrine and wait to b",
+   "rally": "Britain healer, all together. Wrong means anyone is down on the road or a skeleton comes within sight: Corwin bandages them, the group waits for them, and nobody runs ahead. Once Isolde and Wystan are back, Roland is above 80, and Thea has a pet, the party regroups and plans a fresh hunt from the western road, one or two skeletons at a time.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain Graveyard, skeleton at Britain Graveyard, skeleton at near 1400,1500",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261013-080209-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, single and paired skeletons only, pulled from the western road. Enter only when all five are together, healthy, and Thea has a living tamed pet. Leave the lich alone this time.",
+   "roles": "Roland leads on the western road and holds the front, checking the count before every pull. Isolde and Wystan take the pulled skeleton from range (Isolde's bolts first, Wystan's arrows). Thea's pet holds the paired skeletons and must be alive before we step in. Corwin stays at Roland's shoulder, bandaging Roland the moment he drops below full, and sings to keep the party healthy. Nobody walks the ",
+   "rally": "",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-083251-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, single and paired skeletons only, pulled in from the western road. Enter together, all five, only once Thea has a living tamed pet and Isolde and Wystan are alive. Never walk the eastern road or the 1378,1480 to 1450,1530 walk.",
+   "roles": "Roland pulls one or two skeletons at a time from the western road and holds the front; count each pull before engaging. Isolde and Wystan kill from range, Isolde on the pulled skeleton, Wystan on the second. Thea's pet holds the pulled skeleton and Thea keeps it alive. Corwin stays at Roland's shoulder, bandages Roland first, and plays to keep the party's health up. Nobody goes ahead of Roland and",
+   "rally": "Back off to the western road and regroup at Roland's position if three or more undead gather, if the lich appears, or if Roland drops below half health. Two down, or Roland under a third: all retreat together to the Britain healer. Do not split up to chase a kill.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261013-083251-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard from the western road only, single and paired skeletons, the lich last and only if it is alone. Isolde is dead, so do not enter until she is res'd and back at full party. Thea must have a living tamed pet before entering. Never walk the eastern road or the 13",
+   "roles": "Isolde first: she gets resurrected and healed by Corwin and Wystan's bandages before anything else; she stays at the back, full mana, and does not enter until Roland says go. Roland takes the front on the western road, pulls one or two skeletons at a time and counts each pull before engaging. Isolde and Wystan kill from range, Isolde on the pulled skeleton, Wystan on the second; Wystan has 195 arr",
+   "rally": "Back off to the western road and regroup at Roland's position if three or more undead gather, if the lich appears in the open, or if Roland drops below half health. Two down, or Roland under a third: all retreat together to the Britain healer. Nobody runs alone to chase a kill or to save a body.",
+   "going": null,
+   "reason": "Isolde died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261013-092205-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, together, all five. Stay within sight of each other the whole way; no one runs ahead.",
+   "roles": "Roland holds the front and takes the blows from the undead; Thea's tamed bear stands beside Roland and holds the bone knights. Isolde and Wystan stay two steps behind Roland and kill from range: Isolde with spells, Wystan with arrows (200 arrows, no bolts needed). Corwin stays between Roland and Isolde, plays to steady the group, and bandages whoever drops first. Thea keeps her bear fighting and b",
+   "rally": "Regroup on Roland at the graveyard gate. Wrong means: anyone under a third health, or two of us down, or Roland pinned by more than two undead at once. Then everyone falls back to the gate together and bandages up before going back in.",
+   "going": null,
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-092205-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, all five together, now. Roland is down to 34/95 and has no bandages, so he does not take the front alone this time.",
+   "roles": "Roland stays back at the gate with Corwin until bandaged and above two-thirds health, then rejoins as second in line. Thea's bear takes the front beside Wystan's cover and holds the bone knights; Thea keeps the bear fighting and stays within sight. Isolde and Wystan kill from range two steps behind the bear: Isolde with spells, Wystan with arrows (189 arrows). Corwin bandages Roland first, then pl",
+   "rally": "Regroup at the graveyard gate. Wrong means: anyone under a third health, two of us down, or the bear or anyone pinned by more than two undead at once. Then everyone falls back to the gate together, bandages up, and only then goes back in.",
+   "going": null,
+   "reason": "Roland died since the plan was made",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261013-092205-party-lich",
+   "rev": 3,
+   "target": "Hunt the undead at the Britain Graveyard, all five together. The lich first, then the skeletons. Something new was seen there (a lich and a skeleton), so no one goes in alone.",
+   "roles": "Roland holds the front now at full health (95/95, 145 bandages); the plan's note that he is hurt is out of date. Thea's bear takes the front beside Roland and holds the bone knights; Thea keeps the bear fighting and stays within sight. Roland takes the lich in melee. Isolde and Wystan kill from range two steps behind the bear and Roland: Isolde with spells on the lich, Wystan with arrows (189 arro",
+   "rally": "Regroup at the graveyard gate. Wrong means: anyone under a third health, two of us down, the bear down, or anyone pinned by more than two undead at once. Then everyone falls back to the gate together, bandages up, and only then goes back in.",
+   "going": null,
+   "reason": "something the plan hadn't weighed was seen: lich at Britain Graveyard, skeleton at Britain Graveyard",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261014-013019-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, single or paired only, and only if no lich is seen near the western entry or the eastern road. If a lich shows, we do not go in.",
+   "roles": "Roland holds the front line and takes the first single or paired skeleton or zombie, staying in sight of the others, not alone. Isolde opens with Fireball as soon as the target stirs, and casts again only after it stops twitching. Wystan shoots only after Isolde's fire has landed, at the knight's reach or the nearest undead, one at a time. Thea's pet watches the skeletons, not Roland; she bandages",
+   "rally": "If three or more undead gather, or any lich appears, or anyone drops below half health: everyone falls back together to the Britain healer. Two down, or Roland under a third: same, back to the Britain healer, together.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-013019-party-lich",
+   "rev": 2,
+   "target": "Hunt the undead at the Britain Graveyard, single or paired only, all of us together. Do not go in if a lich is seen near the western entry or the eastern road. Wystan is dead: he stays out of the fight, so we go in as four and Wystan's ghost is not sent into the graveyard.",
+   "roles": "Roland holds the front, takes the first single or paired skeleton or zombie, and stays in sight of the others, never alone. Isolde opens with Fireball the moment the target stirs, and casts again only after it stops twitching. Thea's pet watches the skeletons, not Roland; Thea bandages only when Roland is out of the fight's reach, and watches the skeletons first. Corwin stays in the fight with the",
+   "rally": "If three or more undead gather, any lich appears, or anyone drops below half health: everyone falls back together to the Britain healer. Two down, or Roland under a third: same, back to the Britain healer, together. Wystan's ghost is not part of the fight and goes to the healer's side to be raised.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "Wystan died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-013019-party-lich",
+   "rev": 3,
+   "target": "Hunt the undead at the Britain Graveyard, single or paired only, all four of us together, now. Wystan stays out (no bandages, dead-to-the-fight). Do not go in if a lich is seen near the western entry or the eastern road.",
+   "roles": "Roland holds the front and takes the first single or paired skeleton or zombie from the western road, staying in sight of the others, never alone. Isolde opens with Fireball the moment the target stirs, and casts again only after it stops twitching. Thea's pet watches the skeletons, not Roland; Thea bandages Roland only when he is out of reach of the fight, after checking the skeletons. Corwin sta",
+   "rally": "If three or more undead gather, a lich appears, or anyone drops below half health: everyone falls back together to the Britain healer. Two down, or Roland under a third: same, back to the Britain healer, together. Do not rest or loot near the western entry while undead were recently seen there.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "Wystan is out of bandages",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-014959-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, from the western road: pull one or two at a time, never three. Only enter with all five alive and bunched. If a lich is seen at the western entry or the eastern road, we do not enter.",
+   "roles": "Roland holds the front and takes the pulls, standing within reach of the others. Isolde opens with Fireball the moment the skeletons stir. Wystan shoots from behind Roland, single or paired targets only. Thea's bear holds whatever Roland does not, and she watches the skeletons, not Roland. Corwin stays back near the group, bandages the wounded, and calls out any lich sighted.",
+   "rally": "If three or more undead gather at once, or anyone is low, all five fall back together to the western road and then to the Britain healer. If two are down, or Roland is under a third health, retreat at once. Nobody goes back in until all five are alive again.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-014959-party-lich",
+   "rev": 2,
+   "target": "Stop the graveyard hunt for now. Do not enter the Britain Graveyard. Lichs are reported at 1400,1500 and 1350,1500 and at the Britain Graveyard itself. Isolde and Wystan are ghosts and must be resurrected first. Regroup at the Britain healer, then decide again.",
+   "roles": "Roland and Thea stay with Corwin and guard the group while they move to the Britain healer, keeping out of the lich area. Corwin calls out any lich sighted on the way. Roland, lead the group away from the graveyard road. Thea watches the skeletons and the road, not Roland. Corwin bandages anyone hurt. Isolde and Wystan, as ghosts, go to the healer or to a nearby shrine to be resurrected, and Rolan",
+   "rally": "Everyone gathers at the Britain healer. If a lich closes in or any undead gather in numbers while moving, all five move together away from it toward town. Nobody goes back to the graveyard until all five are alive and bunched.",
+   "going": [],
+   "reason": "Isolde died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-020912-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, one or two at a time, pulled from the western road. Enter only when all five are bunched and alive. Abandon at the first lich sighting.",
+   "roles": "Roland stands at the front on the western road, takes the first pull and holds the line within sight of the others. Wystan and Isolde stay behind Roland and kill from range, single or paired undead only. Thea's pet holds whatever Roland pulls and she stays bunched with the group. Corwin stays with Thea and Wystan, bandages whoever is hurt, and keeps the party together. Nobody goes past Roland on t",
+   "rally": "If a lich is seen near the western entry or the eastern road, or three or more undead gather at once, or anyone is down: everyone pulls back together to the west road out of the graveyard, then to the Britain healer. Two dead, or Roland under a third health: full retreat, no re-entry until all five are alive.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": true
+  },
+  {
+   "party": "party-lich-20261014-031534-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, but only once all five are bunched and alive and no lich is seen near the western entry or eastern road. Pull one or two undead at a time from the western road.",
+   "roles": "Roland holds the front on the western road and takes the pulls. Isolde and Wystan (200 arrows) hit from behind Roland, one or two targets at a time. Thea's pet holds whatever Roland pulls back. Corwin stays with the group, bandages the front, and watches for lich sightings. Nobody moves ahead of the group; if anyone is out of reach, the whole party waits.",
+   "rally": "Abort at the first lich sighting, or if any member drops or falls out of sight. Everyone walks back to the Britain healer together. Two down, or Roland under a third health: retreat at once, together, no stragglers.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-031534-party-lich",
+   "rev": 2,
+   "target": "Hold off on the Britain Graveyard. Roland is down at 10/95 and the party cannot enter with a member dead or out of reach. Regroup first, then re-enter only when all four are alive and bunched and no lich is reported at the western entry or eastern road.",
+   "roles": "Roland: no fighting now. Heal up at the Britain healer, with Corwin's bandages if the healer is slow. Wystan and Thea stay with him and cover the walk. Isolde goes with the group and keeps the route clear. Corwin keeps watch for lich sightings on the road. Nobody scouts ahead alone. Only Roland's health and the lich watch decide the next hunt, not the old plan.",
+   "rally": "Everyone walks to the Britain healer together from 1471,1611. Any lich sighting or any member dropping means the hunt is off for now and the group stays together. Roland at 10 health: the party does not pull until he is above a third and the lich watch is clear.",
+   "going": [],
+   "reason": "Roland died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-032657-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, but only once no lich is in view near the western entry or eastern road (1400,1500; 1350,1500). Pull one or two undead at a time from the western road. Abort on the first lich sighting.",
+   "roles": "Roland holds the front and takes the first pull. Isolde and Wystan hit from range, one or two targets at a time. Thea's bear holds the pulled undead. Corwin plays for the group and bandages whoever drops. Nobody steps past the western entry until all five are at the entry and alive.",
+   "rally": "Back to the Britain healer, together, on the first lich sighting, any death, or three or more undead gathered at once. Do not split up on the retreat.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-032657-party-lich",
+   "rev": 2,
+   "target": "Hold off the Britain Graveyard for now. Isolde is dead (a ghost at 1428,1542), so nobody enters until she is raised or brought back to the group. Once all five are alive and together at the western entry, and no lich is in view near the western entry or on the eastern road (1400,1500; 1350,1500), pu",
+   "roles": "Roland holds the front at the western entry and takes the first pull. Wystan and Isolde (once alive) hit from range, one or two targets at a time. Thea's bear holds the pulled undead. Corwin plays for the group and bandages whoever drops. Thea and Corwin stay within reach of Roland, nobody steps past the western entry until all five are there and alive. Until Isolde is back, Roland, Wystan, Thea a",
+   "rally": "Back to the Britain healer, together, on the first lich sighting, any death, or three or more undead gathered at once. Do not split up on the retreat.",
+   "going": [],
+   "reason": "Isolde died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-033955-party-lich",
+   "rev": 1,
+   "target": "Hunt the undead at the Britain Graveyard, but only if no lich is in view at the western entrance or eastern road. If a lich is seen, do not enter; hold at the Britain healer together.",
+   "roles": "Roland goes in first at the western road and pulls one or two undead at a time, never more. Wystan shoots from behind Roland, using the 200 arrows. Isolde casts from range beside Wystan, not in front. Thea's tamed creature holds the pull. Corwin stays in the middle of the group, plays for the group, and bandages Roland first. Nobody enters alone and nobody walks off to scout.",
+   "rally": "Back to the Britain healer, together, if a lich is sighted, if any one of the five is down, or if three or more undead gather at once. Do not wait to see how it goes. Retreat early and keep the hunt short.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-033955-party-lich",
+   "rev": 2,
+   "target": "Hold. Do not enter the Britain Graveyard now. A lich was seen with four skeletons and the party is too weak for that pack. Regroup at the Britain healer. Re-enter only after a clear window is confirmed from a safe distance: no lich in view at the western entrance, the eastern road, 1400,1500 or 1350",
+   "roles": "Roland leads back to the Britain healer and holds there. Wystan stays with Roland and watches the approach from the healer. Isolde and Corwin stay in the middle of the group at the healer. Thea's creature stays by Thea. Nobody scouts alone; if a window needs checking, Wystan looks from the healer's edge while the others stay grouped. If the hunt resumes, Roland goes in first at the western road an",
+   "rally": "Back to the Britain healer, together, at the first lich sighting, if any one of the five is down or out of reach, or if three or more undead gather at once. Retreat early; do not wait to see how it goes.",
+   "going": [],
+   "reason": "Roland's goal for the plan went wrong: hunted Britain Graveyard for 0.9 min: 0 kills, stopped because left the area: 5 coming at once: 4 skeletons (weak each) and a lich (stronger than you and a spellcaster); together far stronger than you",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261014-033955-party-lich",
+   "rev": 3,
+   "target": "Hold at the Britain healer. Do not enter the Britain Graveyard now: a lich and four skeletons were seen, and the party is too weak for that pack. Thea's road-travel errand to 'Britain dogs' failed (no such place on Felucca), so nobody travels alone. Re-enter only after a clear window is confirmed fr",
+   "roles": "Roland leads everyone back to the Britain healer and holds there in front. Wystan stays with Roland and watches the approach from the healer's edge, calling out what he sees. Isolde and Corwin stay in the middle of the group at the healer. Thea's creature stays by Thea. Nobody scouts alone. If the hunt resumes later, Roland goes in first at the western road, Wystan pulls only single or paired unde",
+   "rally": "Back to the Britain healer, together, at the first lich sighting, if any one of the five is down or out of reach, or if three or more undead gather at once. Retreat early; do not wait to see how it goes.",
+   "going": [],
+   "reason": "Thea's goal for the plan went wrong: error: WorldError: no place called 'Britain dogs 1478,1590' is known on Felucca",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-150653-party-lich-huddle-steer",
+   "rev": 1,
+   "target": "Scout the Britain Graveyard from the western entrance first. Enter only if no lich is in view at the western entrance, the eastern road (1400,1500 / 1350,1500), or the graveyard. If clear, hunt single or paired undead only, short bursts, all five together.",
+   "roles": "Wystan scouts from the western edge at 1390,1528 and calls out lich, Jev, or skeleton groups before anyone steps in. Roland leads the entry and takes the front against any single or paired undead. Isolde stays behind Roland and blasts from range. Wystan shoots from behind Roland. Thea's pet holds the front line beside Roland. Corwin stays in the middle of the group, bandages and plays to keep the ",
+   "rally": "If a lich shows up, three or more undead gather at once, a Jev leave signal appears, or anyone is down: everyone pulls back together to the Britain healer. Abort the hunt at once if any member is dead or out of reach. Only the next attempt starts after the scout is clear again and all five are alive and bunched.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-150653-party-lich-huddle-steer",
+   "rev": 2,
+   "target": "Hold off the Britain Graveyard for now. Rest at the Britain healer; Wystan scouts the western edge (1390,1528) for a fresh all-clear. Enter only when no lich is in view at the western entrance, the eastern road (1400,1500 / 1350,1500), or the graveyard, and all five are alive and bunched.",
+   "roles": "Wystan scouts from the western edge at 1390,1528 and calls out lich, Jev, or skeleton groups; he does not step in. Roland and Isolde heal up at the Britain healer first and confirm full health before any entry. Once the all-clear is called, Roland leads the entry and takes the front against single or paired undead only. Isolde stays behind Roland and blasts from range. Wystan shoots from behind Ro",
+   "rally": "If a lich shows up, three or more undead gather at once, a Jev leave signal appears, or anyone is down: everyone pulls back together to the Britain healer. Abort at once if any member is dead or out of reach. No new attempt until Wystan calls a fresh clear and all five are alive and bunched.",
+   "going": [],
+   "reason": "Roland, Wystan came near death in the last fight",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-152424-party-lich-huddle-steer",
+   "rev": 1,
+   "target": "Hold at the Britain graveyard edge and scout a clear window before any hunt. No entry until no lich is in view near the western entrance (1400,1500) or the eastern road (1350,1500), and Wystan is found. Then hunt the undead inside, in short bursts, all five together.",
+   "roles": "Corwin scouts the western entrance first and calls lich or Jev sightings. Thea's tamer stays on Roland's side, holding her animal near the group. Roland leads the entry at the front as the only one in melee and takes the first blows. Isolde stays inside the group and casts on the skeletons, not ahead. Wystan, once found, takes the back at range and covers the road behind. Nobody goes ahead of the ",
+   "rally": "Any lich in view, a Jev leave signal, one member dead, or anyone out of reach: all five fall back at once to the Britain healer, together. Wystan is not waited on past a short look; if he is not with them at the start, they do not enter.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-152424-party-lich-huddle-steer",
+   "rev": 2,
+   "target": "Hold at the Britain graveyard edge (about 1390,1528) and scout a clear window before any hunt. Isolde is dead (a ghost at 1480,1611), so no entry until she is raised or the party decides to go on without her. Enter the graveyard only when no lich is in view near the western entrance (1400,1500) or t",
+   "roles": "Corwin scouts the western entrance first and calls lich or Jev sightings. Thea holds her animal beside Roland, near the group. Roland leads the entry as the only one in melee and takes the first blows. Isolde, if raised, stays inside the group and casts on skeletons, never ahead. Wystan, once found, takes the back at range and covers the road behind. Nobody goes ahead of the group.",
+   "rally": "Any lich in view, a Jev leave signal, one member dead, or anyone out of reach: all of them fall back at once to the Britain healer, together. Wystan is not waited on past a short look; if he is not with them at the start, they do not enter. Isolde's ghost is not to be pulled into a fight; she is brought to the healer or a shrine by the group.",
+   "going": [
+    "Roland",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "Isolde died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-154246-party-lich-huddle-steer",
+   "rev": 1,
+   "target": "Scout the Britain Graveyard from the western edge near 1390,1528. No hunt yet. Enter only when a fresh sighting shows no lich in view near the western entrance or the eastern road (1400,1500; 1350,1500), and all five are alive and bunched.",
+   "roles": "Wystan stays at 1390,1528 on watch with bow ready, reporting lich sightings only; he does not step past the edge. Isolde watches the western road and calls any skeleton group coming fast. Thea and Corwin hold beside Wystan at 1392,1530 and 1394,1530 and confirm each sighting. Roland stands in front of the party at 1392,1528 and calls the entry only when the watch is clear. Once the all-clear is ca",
+   "rally": "If a lich comes into view or a skeleton group reaches the western road, nobody enters; everyone falls back together to the Britain healer. If anyone drops or falls out of reach, the rest pull back to the healer together and regroup before any new attempt. Do not rest at the healer as a clear sign; only a fresh sighting clears the graveyard.",
+   "going": [],
+   "reason": "the party has come together and has no plan yet",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-154246-party-lich-huddle-steer",
+   "rev": 2,
+   "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry. A skeleton was just seen, and the plan did not weigh it. Wait for a fresh sighting that shows no lich and no skeleton group on the western road or the eastern road (1400,1500; 1350,1500). Then, and only then, enter togeth",
+   "roles": "Roland stands in front at 1392,1528 and makes the call to enter, only after the watch is clear. Wystan stays at 1390,1528 with bow ready, reports sightings, and does not step past the edge. Isolde watches the western road and calls any skeleton group coming fast. Thea and Corwin hold beside Wystan at 1392,1530 and 1394,1530 and confirm each sighting. Isolde moves in from 1428,1550 to the group at ",
+   "rally": "If a lich shows up, or a skeleton group reaches the western road, nobody enters. Everyone falls back together to the Britain healer (1473,1612). If anyone drops or falls out of reach, the rest pull back to the healer together and regroup there before any new attempt. Resting at the healer does not clear the graveyard; only a fresh sighting does.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "something the plan hadn't weighed was seen: skeleton at Britain Graveyard",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-154246-party-lich-huddle-steer",
+   "rev": 3,
+   "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry yet. Enter only after a fresh sighting shows no lich and no skeleton group on the western road (1350,1500) or the eastern road (1400,1500). Then all five go in together.",
+   "roles": "Roland stands in front at 1392,1528 and calls the entry, only after the watch is clear. Wystan is a ghost: he stays at 1390,1528 as the spotter, reports sightings, and does not step past the edge. Isolde (80/85, at 1402,1525) watches the western road and calls any skeleton group coming fast. Thea and Corwin hold beside Wystan at 1392,1530 and 1394,1530 and confirm each sighting. Isolde moves in fr",
+   "rally": "If a lich shows up, or a skeleton group reaches the western road, nobody enters. Everyone falls back together to the Britain healer (1473,1612). If anyone drops or falls out of reach, the rest pull back to the healer together and regroup there before any new attempt. Resting at the healer does not clear the graveyard; only a fresh sighting does.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "Wystan died since the plan was made",
+   "want": false
+  },
+  {
+   "party": "party-lich-20261019-154246-party-lich-huddle-steer",
+   "rev": 4,
+   "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry yet. Enter only after a fresh sighting shows no lich and no skeleton group on the western road (1350,1500) or the eastern road (1400,1500). Then all five go in together, Isolde included, only once she is back in the fight.",
+   "roles": "Roland stands in front at 1392,1528 and calls the entry, only after the watch is clear. Wystan (ghost, 27/81) stays at 1390,1528 as spotter, reports sightings, and does not step past the edge. Isolde (ghost, died since the plan was made) does not enter alone and does not fight from the edge; she stays near Wystan and reports what she sees of the western road. Thea (9/85) and Corwin (80/80) hold be",
+   "rally": "If a lich shows up, or a skeleton group reaches the western road, nobody enters. Everyone falls back together to the Britain healer (1473,1612) and regroups there. If anyone drops or falls out of reach, the rest pull back to the healer together before any new attempt. Resting at the healer does not clear the graveyard; only a fresh sighting does.",
+   "going": [
+    "Roland",
+    "Isolde",
+    "Wystan",
+    "Thea",
+    "Corwin"
+   ],
+   "reason": "Isolde died since the plan was made",
+   "want": false
+  }
+ ]
+}

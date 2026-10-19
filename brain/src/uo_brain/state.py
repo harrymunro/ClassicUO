@@ -218,6 +218,7 @@ class Mate:
     attackers: list[int] = field(default_factory=list)  # creatures attacking it, by its own report
     pets: list[dict[str, Any]] = field(default_factory=list)  # its pets: serial, name, hits_pct, distance from me
     being_helped: bool = False  # another companion called that it is healing this one, a moment ago
+    hits_drop: int = 0  # health (percent) it lost over the last few seconds, as this one saw it (cuo-cym.31)
 
     @property
     def weak_in_melee(self) -> bool:

@@ -203,6 +203,12 @@ def main() -> None:
     pr.add_argument("dirs", type=Path, nargs="+", metavar="DIR", help="a fleet run's folder, e.g. logs/fleet/RUN")
     pr.add_argument("--json", action="store_true", help="one JSON object a run, a line each")
 
+    hr = sub.add_parser("hamlet-report", help="a hamlet's run (cuo-m3n): each resident's time in the hamlet and at "
+                                               "home, homecomings, still spells away, work, talk by neighbour, cost")
+    hr.add_argument("dirs", type=Path, nargs="+", metavar="DIR", help="a fleet run's folder, e.g. logs/fleet/RUN")
+    hr.add_argument("--json", action="store_true", help="one JSON object a run, a line each")
+    hr.add_argument("--shard", default="local", help="the store whose memories are read (default local)")
+
     add_world_args(sub)
     add_memory_args(sub)
     add_goals_args(sub)
@@ -242,6 +248,10 @@ def main() -> None:
     ss.add_argument("--no-persuade", action="store_true",
                     help="with --party-plan player: a companion sent somewhere without the leader goes when told. "
                          "Without this, going is its own to agree to: a yes/no on the moment (cuo-cym.19)")
+    ss.add_argument("--no-judge-reach", action="store_true",
+                    help="a companion of a person's character fights only what the escort rule allows (in war mode within 4 "
+                         "tiles of the leader or 6 of itself), and doesn't ask system one which creatures beyond it are the "
+                         "leader's fight (cuo-cym.25)")
     ss.add_argument("--roleplay", action="store_true",
                     help="a party member that emotes and gestures in character: at the inn's table, on setting out, "
                          "resting, after a kill, over a fallen companion (cuo-cod.8)")
@@ -334,6 +344,14 @@ def main() -> None:
         for d in args.dirs:
             r = partyreport.report(d)
             print(json.dumps(r) if args.json else partyreport.render(r))
+        return
+    if args.cmd == "hamlet-report":
+        from . import hamlet
+        from .world import World
+        with World.open(args.shard) as world:
+            for d in args.dirs:
+                r = hamlet.report(d, world)
+                print(json.dumps(r) if args.json else hamlet.markdown(r))
         return
     if args.cmd in ("fleet", "fleet-report"):
         from . import fleet
@@ -483,6 +501,8 @@ def add_run_args(p: argparse.ArgumentParser, shard: bool = True) -> None:
                    help="start afresh: don't carry on from the planner's saved state for this goal")
     p.add_argument("--persona", type=Path, metavar="FILE",
                    help="a JSON persona (name, background, temperament, trade, wants) for an NPC's planner (cuo-x2q.1)")
+    p.add_argument("--hamlet", type=Path, metavar="FILE",
+                   help="a JSON hamlet (hamlet.Hamlet) this NPC lives in: its home, work and neighbours (cuo-m3n)")
     p.add_argument("--hear", metavar="NAMES",
                    help="comma-separated: the fleet's other characters, whose speech this NPC hears and answers "
                         "(local server only; everyone else's speech stays out) (cuo-x2q.2)")
@@ -1018,6 +1038,12 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     party = follower = link = None
     me = ""
     persona = json.loads(args.persona.read_text()) if args.persona else None
+    if args.hamlet:
+        # A resident of a hamlet (cuo-m3n): its planner knows the place, travel_to 'home' goes home, and its talk
+        # knows where it lives and who its neighbours are.
+        from . import hamlet as hamlets
+        session.hamlet = hamlets.load(args.hamlet)
+        write({"type": "hamlet", "t": time.time(), **session.hamlet.to_json()})
     if args.party or args.hear:
         me = (await rpc.call("status")).get("player") or ""
     if args.party:
@@ -1106,7 +1132,7 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         # the others hear it without answering it.
         companion = Companion(session, party, log=write, game=link.game, table=table, floor=link.floor,
                               voice=link.voice if not link.voice.plain else None, link=link,
-                              persuade=not args.no_persuade)
+                              persuade=not args.no_persuade, judge_reach=not args.no_judge_reach)
     if party is not None and not party.leading and not huddling:
         follower = Follower(session, party, log=write, table=table) if not escorting else None
         if not args.no_memory:
@@ -1121,10 +1147,17 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         table.memory = own_memory
         link.tactics = tactics(own_memory)  # its own lines on how to fight, from earlier tables (cuo-cod.5)
     stop = asyncio.Event()
+
+    def ending() -> None:
+        # ...and the goal under way is cut short: the planner reads `stop` only between goals, and asked to stop at
+        # a fleet's end, two brains finished a 300 s rest and a walk to a bank first, after the fleet had gone (cuo-7z4).
+        stop.set()
+        session.interrupt.set()
+
     # A closed terminal (SIGHUP) or a `kill` (SIGTERM) ends the run as Ctrl-C does, with its summary: a
     # playtest's three brains went with their terminal and left none (cuo-cym.23).
     for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
-        asyncio.get_running_loop().add_signal_handler(sig, stop.set)
+        asyncio.get_running_loop().add_signal_handler(sig, ending)
     await rpc.call("mode", mode="auto")
     mark = costs.ledger.mark()
     key_check(write)
@@ -1140,7 +1173,8 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     if args.hear:
         from .talk import Ears
         ears = Ears(rpc, me, {n.strip() for n in args.hear.split(",")}, judge=judge,
-                    persona=persona, memory=own_memory, log=write, doing=doing, world=world,
+                    persona={**(persona or {}), "lives": session.hamlet.lives()} if session.hamlet else persona,
+                    memory=own_memory, log=write, doing=doing, world=world,
                     pace=not args.no_pace, small_talk=not args.no_small_talk, banter=party is not None,
                     person=party.leader if escorting else None, pace_factor=args.pace_factor)
         if companion is not None:

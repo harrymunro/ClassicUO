@@ -97,6 +97,17 @@ async def main() -> None:
                          "one back and calls it in party chat (a fleet that talks)")
     ap.add_argument("--own-words", action="store_true",
                     help="say the orders as a person might, in words the old phrases don't know (cuo-cym.15)")
+    ap.add_argument("--range", action="store_true",
+                    help="only this, after the invitations: the leader, as an archer, shoots one skeleton from 12 tiles "
+                         "off; when each companion goes for it, and how far it was from the leader then (cuo-cym.25)")
+    ap.add_argument("--foe", default="RatmanArcher",
+                    help="with --range: the creature shot at (a type the server knows); one that stays at range, as a "
+                         "ratman archer does, keeps it beyond the 4-tile rule (a skeleton charged and was within 4 in 2 s)")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", dest="settings",
+                    help="passed to the companions' fleet (e.g. --set judge_reach=false)")
+    ap.add_argument("--errand", action="store_true",
+                    help="only this, after the invitations: one companion sent by name to buy 10 bandages at the healer "
+                         "and come back (cuo-cym.27); what it bought, what it said, how soon it was back")
     args = ap.parse_args()
     fl = fleet.load(args.fleet)
     names = [a.name for a in fl.agents]
@@ -130,7 +141,8 @@ async def main() -> None:
     await r.call("mode", mode="auto")  # its own reflexes (bandages) and walking, as a person would see to
 
     companions = subprocess.Popen([sys.executable, "-m", "uo_brain.cli", "fleet", str(args.fleet), "--out", str(out),
-                                   *(["--windowed"] if args.windowed else [])], cwd=BRAIN,
+                                   *(["--windowed"] if args.windowed else []),
+                                   *[x for kv in args.settings for x in ("--set", kv)]], cwd=BRAIN,
                                   stdout=(out / "fleet.out").open("w"), stderr=subprocess.STDOUT)
     samples: list[dict] = []
     phase = "gathering"
@@ -224,35 +236,6 @@ async def main() -> None:
     snap = await wait(8)
     note("the game's party", members=[m.get("name") for m in (snap.get("party") or {}).get("members") or []])
 
-    phase = "walking"
-    await say(r, words["follow"])
-    await walk(START[0], START[1] - 18)
-    snap = await look()
-    note("walked north", beside=beside(snap))
-    if "talk" in words:
-        await say(r, words["talk"], 3)  # talk with an order's word in it: nobody should stop for it
-
-    phase = "fighting"
-    for cmd in (f"[AgentDisrupt strong {WAVE[0]} {WAVE[1]} BoneKnight 1 quiet", f"[AgentDisrupt strong {WAVE[0]} {WAVE[1]} Skeleton 3 quiet"):
-        await say(r, cmd)
-    fight = time.monotonic()
-    low = 100
-    while time.monotonic() - fight < 90:
-        snap = await look()
-        p = snap["player"]
-        low = min(low, round(100 * p["hits"] / max(1, p["hits_max"])))
-        if p.get("dead"):
-            note("the leader died")
-            break
-        hostile = sorted((m for m in snap.get("mobiles") or [] if m.get("monster") and not m.get("dead")
-                          and not m.get("pet") and m["distance"] <= 14), key=lambda m: m["distance"])
-        if not hostile and time.monotonic() - fight > 6:
-            break
-        if hostile and snap["agent"].get("engaged") != hostile[0]["serial"]:
-            await r.call("act", verb="attack", target=hostile[0]["serial"], source="manual")  # the person's click
-        await asyncio.sleep(1.0)
-    note("the fight is over", seconds=round(time.monotonic() - fight), leader_lowest_health_pct=low)
-
     def logged(kind: str, since: float = 0.0, **match) -> dict[str, list[dict]]:
         """Each companion's own log records of a kind since a time, as they stand now (the brains write as they go)."""
         found: dict[str, list[dict]] = {}
@@ -282,6 +265,128 @@ async def main() -> None:
                 if d.get("type") == "decision" and d.get("t", 0) >= since:
                     found.setdefault(n, []).append(d)
         return found
+
+    if args.range:
+        # cuo-cym.25: the leader shoots from range. The escort rule took a creature for the leader's fight only within 4
+        # tiles of it; system one is asked about one further off.
+        phase = "range"
+        for cmd in ("[AgentKit archer", "[AgentSupplies arrows 300"):
+            await say(r, cmd)
+        await wait(3)
+        foe = (START[0], START[1] - 12)
+        before = {m["serial"] for m in (await look()).get("mobiles") or []}
+        await say(r, f"[AgentDisrupt strong {foe[0]} {foe[1]} {args.foe} 1 quiet")
+
+        def new_foes(s: dict) -> list:
+            return [m for m in s.get("mobiles") or [] if m.get("monster") and not m.get("dead") and m["serial"] not in before]
+
+        snap = await wait(10, lambda s: bool(new_foes(s)))
+        skel = min(new_foes(snap), key=lambda m: m["distance"], default=None)
+        ranged: dict = {"foe": args.foe, "seen": (skel or {}).get("name")}
+        if skel is not None:
+            # The leader stands and shoots: its client walked up to what it attacked (10 tiles in 3 s), and the companions
+            # following it were then beside the creature whatever the rule said.
+            await r.call("mode", authority={"move": "off"})
+            t0 = time.time()
+            ranged["from_the_leader_at_the_first_shot"] = skel["distance"]
+            await r.call("act", verb="attack", target=skel["serial"], source="manual")
+            gaps: list[tuple[float, int]] = []
+            while time.time() - t0 < 60:
+                snap = await look()
+                m = next((m for m in snap.get("mobiles") or [] if m["serial"] == skel["serial"] and not m.get("dead")), None)
+                if m is None:
+                    break
+                gaps.append((time.time() - t0, m["distance"]))
+                if snap["agent"].get("engaged") != skel["serial"]:
+                    await r.call("act", verb="attack", target=skel["serial"], source="manual")
+                await asyncio.sleep(1.0)
+            ranged["dead_or_gone_after_s"] = round(time.time() - t0, 1)
+            await r.call("mode", authority={"move": "auto"})
+
+            def gap_at(t: float) -> int | None:
+                return next((g for s_, g in gaps if s_ >= t), gaps[-1][1] if gaps else None)
+
+            went = {}
+            for n, ds in decisions(t0).items():
+                first = next((d for d in ds if any(a.get("target") == skel["serial"] for a in d.get("actions") or [])), None)
+                if first is not None:
+                    went[n] = {"after_s": round(first["t"] - t0, 1), "foe_from_the_leader": gap_at(first["t"] - t0),
+                               "intent": first.get("intent")}
+            ranged["companions_went_for_it"] = went
+            ranged["judged"] = {n: [{k: d.get(k) for k in ("theirs", "beyond_the_rule")} for d in ds][:3]
+                                for n, ds in logged("reach", t0).items()}
+            ranged["the_rule_would_have_it_at_s"] = next((round(s_, 1) for s_, g in gaps if g <= 4), None)
+        note("the leader shot from range", **ranged)
+        companions.send_signal(signal.SIGINT)
+        try:
+            companions.wait(45)
+        except subprocess.TimeoutExpired:
+            companions.kill()
+        await r.call("mode", mode="off")
+        await say(r, "[AgentDisrupt restore quiet")
+        await r.close()
+        client.stop(proc)
+        print(json.dumps({"run": out.name, "settings": args.settings, "range": ranged}, indent=1))
+        return
+
+    if args.errand:
+        # cuo-cym.27: an errand at the leader's word, said as a person might. The others stay with the leader.
+        phase = "errand"
+        who = names[0]
+        line = f"{who}, run to the healer and get me 10 bandages, then come back."
+        t0 = time.time()
+        await say(r, line, 2)
+        snap = await wait(20, lambda s: who not in beside(s))
+        left = time.time() - t0
+        snap = await wait(360, lambda s: bool(logged("errand", t0).get(who)) and who in beside(s))
+        back = [d for d in logged("errand", t0).get(who, [])]
+        order = next((d for d in logged("order", t0).get(who, []) if d.get("errand")), None)
+        errand = {"line": line, "who": who, "read_as": (order or {}).get("errand"), "said": (order or {}).get("said"),
+                  "went_off_after_s": round(left, 1) if who not in beside(snap) or back else None,
+                  "errand": [{k: d.get(k) for k in ("ok", "result", "said")} for d in back],
+                  "back_beside_the_leader_after_s": round(time.time() - t0, 1) if back and who in beside(snap) else None,
+                  "others_beside_the_leader": [n for n in beside(snap) if n != who]}
+        note("the errand", **errand)
+        companions.send_signal(signal.SIGINT)
+        try:
+            companions.wait(45)
+        except subprocess.TimeoutExpired:
+            companions.kill()
+        await r.call("mode", mode="off")
+        await say(r, "[AgentDisrupt restore quiet")
+        await r.close()
+        client.stop(proc)
+        print(json.dumps({"run": out.name, "errand": errand, "party_report": f"uv run uo-brain party-report {out}"}, indent=1))
+        return
+
+    phase = "walking"
+    await say(r, words["follow"])
+    await walk(START[0], START[1] - 18)
+    snap = await look()
+    note("walked north", beside=beside(snap))
+    if "talk" in words:
+        await say(r, words["talk"], 3)  # talk with an order's word in it: nobody should stop for it
+
+    phase = "fighting"
+    for cmd in (f"[AgentDisrupt strong {WAVE[0]} {WAVE[1]} BoneKnight 1 quiet", f"[AgentDisrupt strong {WAVE[0]} {WAVE[1]} Skeleton 3 quiet"):
+        await say(r, cmd)
+    fight = time.monotonic()
+    low = 100
+    while time.monotonic() - fight < 90:
+        snap = await look()
+        p = snap["player"]
+        low = min(low, round(100 * p["hits"] / max(1, p["hits_max"])))
+        if p.get("dead"):
+            note("the leader died")
+            break
+        hostile = sorted((m for m in snap.get("mobiles") or [] if m.get("monster") and not m.get("dead")
+                          and not m.get("pet") and m["distance"] <= 14), key=lambda m: m["distance"])
+        if not hostile and time.monotonic() - fight > 6:
+            break
+        if hostile and snap["agent"].get("engaged") != hostile[0]["serial"]:
+            await r.call("act", verb="attack", target=hostile[0]["serial"], source="manual")  # the person's click
+        await asyncio.sleep(1.0)
+    note("the fight is over", seconds=round(time.monotonic() - fight), leader_lowest_health_pct=low)
 
     def fight_orders_done(meant: dict, fell_back: dict) -> dict:
         """What each companion made of the leader's orders for the fight (cuo-cym.24): how it took each (its

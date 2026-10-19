@@ -379,6 +379,16 @@ class Turn:
     reading: Any = None
 
 
+def story_name(value: Any) -> str:
+    """The name of the story a line tells, or "": a model's "no story" can come as two quote marks or the word none, and
+    Haiku's now and then as a stray ">" or a piece of tool-call markup ("> </invoke>"), which was kept as a memory of
+    a story told (cuo-dmt). A name has a word in it."""
+    story = " ".join(str(value or "").split()).strip("\"' ")[:80]
+    if story.lower() in ("none", "n/a", "no") or "<" in story or not re.search(r"[A-Za-z]{3}", story):
+        return ""
+    return story
+
+
 class Ears:
     """Hearing and talking for one character, beside its planner (or, for a party's follower, on its own)."""
 
@@ -850,9 +860,7 @@ class Ears:
         if gives != "none":
             self.gave.append({"t": now, "with": friend, "gives": gives, "about": str(args.get("about") or ""),
                               "line": self.conversation(friend)[-2:]})
-        # A model's "no story" can come as two quote marks, or the word none.
-        story = " ".join(str(args.get("story") or "").split()).strip("\"' ")[:80]
-        story = "" if story.lower() in ("none", "n/a", "no") else story
+        story = story_name(args.get("story"))
         if story:
             self.tell(story, friend, str(args.get("to") or ""))
         usage = r.usage

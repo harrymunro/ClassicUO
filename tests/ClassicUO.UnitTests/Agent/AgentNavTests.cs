@@ -79,6 +79,51 @@ namespace ClassicUO.UnitTests.Agent
         }
 
         [Fact]
+        public void A_surface_floating_above_the_ground_is_not_stepped_onto_but_stairs_are()
+        {
+            // cuo-5y8: a static's surface is stepped onto from within STEP_ONTO of its base, as on the server. A tuft of
+            // grass 8 above the ground in the middle of a lane is walked round, not over.
+            var tuft = new NavGrid(100, 200, 4, 3);
+
+            for (int y = 0; y < 3; y++)
+            {
+                for (int x = 0; x < 4; x++)
+                {
+                    if (x == 2 && y == 1)
+                    {
+                        tuft.AddSurface(102, 201, 8, 8 - NavGrid.STEP_ONTO); // only the tuft's top: nothing under it to stand on
+                    }
+                    else
+                    {
+                        tuft.AddSurface(100 + x, 200 + y, 0);
+                    }
+                }
+            }
+
+            var round = AgentNav.Plan(tuft, 100, 201, 0, 103, 201, 0);
+            round.Should().NotBeNull();
+            round.Should().NotContain(q => q.X == 102 && q.Y == 201);
+            tuft.StepTo(102, 201, 0).Should().Be(-1);
+            tuft.StepTo(102, 201, 6).Should().Be(0); // from a step 6 up it is in reach
+
+            // Stairs: each step's base is the top of the one before, so each is in reach of the last.
+            var stairs = new NavGrid(100, 200, 5, 1);
+            stairs.AddSurface(100, 200, 0);
+            stairs.AddSurface(101, 200, 5, 0 - NavGrid.STEP_ONTO);
+            stairs.AddSurface(102, 200, 10, 5 - NavGrid.STEP_ONTO);
+            stairs.AddSurface(103, 200, 15, 10 - NavGrid.STEP_ONTO);
+            stairs.AddSurface(104, 200, 20, 15 - NavGrid.STEP_ONTO);
+            AgentNav.Plan(stairs, 100, 200, 0, 104, 200, 0).Should().NotBeNull().And.Subject.Last().Should().Be((104, 200, (sbyte) 20));
+            // ...and a stair whose base is 5 above the last top is a ledge.
+            var ledge = new NavGrid(100, 200, 3, 1);
+            ledge.AddSurface(100, 200, 0);
+            ledge.AddSurface(101, 200, 5, 0 - NavGrid.STEP_ONTO);
+            ledge.AddSurface(102, 200, 15, 10 - NavGrid.STEP_ONTO);
+            (AgentNav.Plan(ledge, 100, 200, 0, 102, 200, 0) ?? new List<(int X, int Y, sbyte Z)>())
+                .Should().NotContain(q => q.X == 102); // at most as far as the ledge's foot
+        }
+
+        [Fact]
         public void Stops_within_the_distance_asked()
         {
             NavGrid g = Field("..........");

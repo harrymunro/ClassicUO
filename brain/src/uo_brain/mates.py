@@ -101,6 +101,7 @@ class Mates:
         self._calls_now = False  # the decision being made has companions' callouts in its state
         self.away = False        # dead, or back from the dead and not yet in a fight again: it calls nothing
         self._seen: dict[str, tuple[float, int, int]] = {}  # companion -> when last in view, how far, its serial
+        self._health: dict[str, list[tuple[float, int]]] = {}  # companion -> its health (percent) over the last seconds
         self._stats: tuple[float, dict[str, dict[str, Any]]] = (0.0, {})
         self.rally = None        # rally.Rally: where the party formed up, for a run back to it (cuo-cym.1)
         self.aim = 0             # the creature its last decision went for (seeking or fighting), for the others
@@ -126,6 +127,18 @@ class Mates:
         # "Out of bandages!" from the healer, half a minute late and a hundred tiles from the others.
         self.away = True
         self._seen.clear()
+
+    def fall(self, name: str, pct: int | None, now: float | None = None) -> int:
+        """Health (percent) a companion lost over the last HP_WINDOW_S seconds: the highest it was since, less
+        now, as policy.Memory.health_drop measures this character's own (cuo-cym.31). Healing in between doesn't
+        hide a fall that came after it."""
+        from .policy import HP_WINDOW_S
+        if pct is None:
+            return 0
+        now = time.time() if now is None else now
+        trail = [(t, h) for t, h in self._health.get(name, []) if now - t <= HP_WINDOW_S] + [(now, pct)]
+        self._health[name] = trail
+        return max(0, max(h for _, h in trail) - pct)
 
     def statuses(self) -> dict[str, dict[str, Any]]:
         """The members' own reports, read at most once a second."""
@@ -166,6 +179,7 @@ class Mates:
             mate = Mate(name, m["serial"], party.companions[name], pct, m["distance"], m.get("in_sight") is not False,
                         bool(m.get("dead") or row.get("dead")), list(row.get("attackers") or []), mate_pets)
             mate.being_helped = name in helped
+            mate.hits_drop = self.fall(name, pct)
             sit.mates.append(mate)
             self._seen[name] = (time.time(), m["distance"], m["serial"])
         # A dead companion's ghost isn't sent to the living: it just leaves the view. One seen a moment ago

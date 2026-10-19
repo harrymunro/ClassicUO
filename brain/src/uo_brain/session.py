@@ -28,7 +28,7 @@ from .judge import Judge
 from .logs import session_name
 from .routine import HuntWatch, RoutineConfig
 from .rpc import AgentRpc
-from .world import World, name_score, near_xy, tiles, tokens
+from .world import World, WorldError, name_score, near_xy, tiles, tokens
 
 # A vendor place's kind -> words its title carries in game ("Lucy the healer").
 VENDOR_TITLES: dict[str, tuple[str, ...]] = {
@@ -99,6 +99,7 @@ class Session:
         self.rally = None     # rally.Rally: a party forms up at the edge of a hunt and goes in as one (cuo-cym.1)
         self.hunting_area = ""  # the hunt it is on or on its way to: whom a huddle's rally waits for (cuo-cym.5)
         self.raise_fallen = False  # a party raises its fallen where they fell: a ghost waits for it (cuo-cym.4)
+        self.hamlet = None  # hamlet.Hamlet: where a resident lives, its home a place for travel_to (cuo-m3n)
 
     def paced(self) -> dict[str, str]:
         """The pace for a short walk of the session's own, when every trip has one (travel_pace)."""
@@ -223,6 +224,8 @@ class Session:
             return x, y, place or f"{x},{y}"
         if not place:
             return None
+        if (hamlet := getattr(self, "hamlet", None)) is not None and hamlet.is_home(place):
+            return *hamlet.home, "home"
         found = self.world.place(place, limit=1)
         if found:
             return found[0]["x"], found[0]["y"], found[0]["name"]
@@ -763,7 +766,18 @@ class Session:
     def hunt_spot(self, area: str) -> tuple[int, int, str, int] | None:
         """Where a hunt of an area goes: the centre of its spawn (or the place of that name), its name, and
         how far round it the creatures spawn."""
-        spawns = self.world.what_spawns(area=area, limit=1) or self.world.what_spawns(near=area, limit=1)
+        spawns = self.world.what_spawns(area=area, limit=1)
+        if spawns and area.strip().lower() not in (str(spawns[0].get("area") or "").lower(),
+                                                   str(spawns[0].get("region") or "").lower()) \
+                and self.world.place(area, limit=1):
+            # The name of a place inside several areas' names ("near", "west of", "south of Cove Orc Fort"): the one
+            # nearest the place, not the one with the most creatures. A hunt of the Cove Orc Fort went 813 tiles west
+            # to boars and bears instead of to the orcs by the fort (cuo-821).
+            try:
+                spawns = self.world.what_spawns(area=area, near=area, limit=1) or spawns
+            except WorldError:
+                pass
+        spawns = spawns or self.world.what_spawns(near=area, limit=1)
         if spawns:
             return spawns[0]["x"], spawns[0]["y"], spawns[0]["area"], min(int(spawns[0].get("range") or 10), 15)
         target = self.resolve(area, None, None)

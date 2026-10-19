@@ -90,13 +90,53 @@ def test_the_check_scripts_moments_and_rule():
     ids = [m["id"] for m in check.FIRST + check.SECOND]
     assert len(ids) == len(set(ids)) and len(check.FIRST) == 42 and len(check.SECOND) == 28
     by = {m["id"]: m for m in check.FIRST + check.SECOND}
-    # The rule as policy.help_mates does it: a bandage within reach under 60%, nothing for one falling fast at
-    # 69%, the lowest of two for a mage's one heal, no walk while the fight is on, and a walk once it is over.
+    # The rule as policy.help_mates does it: a bandage within reach under 60%, and for one falling fast at 69%
+    # (cuo-cym.31; nothing before), the falling one for a mage's one heal (the lowest before), no walk while the
+    # fight is on, and a walk once it is over.
     assert check.rule(by["w05"]) == ("Corwin", "bandage")
-    assert check.rule(by["r07"]) is None
-    assert check.rule(by["w07"]) == ("Corwin", "heal")
+    assert check.rule(by["r07"]) == ("Wystan", "bandage")
+    assert check.rule(by["w07"]) == ("Roland", "heal")
     assert check.rule(by["w11"]) is None
     assert check.rule(by["w18"]) == ("Wystan", "walk")
     assert check.judged(by["w07"], ("Corwin", "heal")) == "wrong_one"
     assert check.judged(by["r08"], ("Roland", "walk")) == "walk_not_wanted"
     assert check.judged(by["r10"], None) == "right" and check.judged(by["r10"], ("Roland", "heal")) == "right"
+
+
+def test_a_companion_losing_health_fast_is_helped_above_the_threshold():
+    """cuo-cym.31: help_mates weighs a companion's fall over the last few seconds, as mates.Mates measures it."""
+    from uo_brain import policy
+    from uo_brain.mates import Mates
+
+    def helped(m, **mates_drop):
+        sit, _ = check.build(m)
+        for mate in sit.mates:
+            mate.hits_drop = mates_drop.get(mate.name, mate.hits_drop)
+        mem = policy.Memory()
+        policy.help_mates(sit, policy.Decision("fight", 1.0, [], ""), mem, policy.PolicyConfig(), now=100.0)
+        return mem.helped
+
+    archer = M("t", "", "Wystan", mates={"Roland": (70, 0, (1, 1)), "Thea": (55, 0, (2, 0))},
+               creatures=[("k", "a bone knight", (2, 2), "Roland", 100)], want=(None,), why="")
+    assert helped(archer) == ("Thea", "bandage")                    # the lowest under 60%, as before
+    assert helped(archer, Roland=20) == ("Thea", "bandage")         # a bandager still takes the lowest within reach
+    alone = {**archer, "mates": {"Roland": (70, 0, (1, 1))}}
+    assert helped(alone) is None                                     # steady at 70%: seeing to itself
+    assert helped(alone, Roland=20) == ("Roland", "bandage")         # 70% and down 20 points: falling fast
+    assert helped({**archer, "mates": {"Roland": (80, 0, (1, 1))}}, Roland=25) is None  # 80% is above FALLING_BELOW
+    # One another heals is left to them, unless near death or still falling fast.
+    healed = {**archer, "mates": {"Roland": (50, 0, (1, 1))}, "helped": ("Roland",)}
+    assert helped(healed) is None and helped(healed, Roland=20) == ("Roland", "bandage")
+    # A mage short of mana (one heal left) keeps it for the one falling, not the lowest who is steady.
+    mage = M("t", "", "Isolde", mana=15, mates={"Roland": (55, 0, (3, 0)), "Corwin": (45, 0, (4, 0))},
+             creatures=[], want=(None,), why="")
+    assert helped(mage) is None                                      # nobody falling or near death: kept
+    assert helped(mage, Roland=20) == ("Roland", "heal")
+    assert helped({**mage, "mana": 60}) == ("Corwin", "heal")       # mana to spare: the lowest, as before
+    # Mates keeps each companion's trail: the highest over the last HP_WINDOW_S, less now.
+    link = Mates.__new__(Mates)
+    link._health = {}
+    assert link.fall("Roland", 90, now=0.0) == 0
+    assert link.fall("Roland", 70, now=2.0) == 20 and link.fall("Roland", 75, now=3.0) == 15
+    assert link.fall("Roland", 75, now=2.0 + policy.HP_WINDOW_S + 0.1) == 0
+    assert link.fall("Roland", None) == 0

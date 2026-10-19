@@ -1325,7 +1325,8 @@ namespace ClassicUO.Agent
 
         public static bool IsMonsterTarget(Mobile m)
         {
-            if (m.IsHuman || m.IsRenamable || m.IsDead || (m.Serial & 0x80000000) != 0 || OwnSummons.Contains(m.Serial))
+            if (m.IsRenamable || m.IsDead || (m.Serial & 0x80000000) != 0 || OwnSummons.Contains(m.Serial)
+                || m.IsHuman && !IsHumanMonster(m.Graphic, m.World?.Agent?.LabelOf(m)))
             {
                 return false;
             }
@@ -1341,6 +1342,17 @@ namespace ClassicUO.Agent
                 default:
                     return false;
             }
+        }
+
+        // A human-bodied creature that is a monster and no person (cuo-ea4): a savage's body (0xB7 to 0xBA: savages,
+        // savage riders and shamans, named from a list with no title), or a title in its name ("Garth the brigand"),
+        // as townsfolk are told from players. Without this the savages at the Cove Orc Fort were never fought and
+        // were reported as red players, and a hamlet's watchman died there three times in half an hour. A player
+        // with savage kin paint, or with a title in its name, would be taken for one.
+        internal static bool IsHumanMonster(ushort body, string label)
+        {
+            return body >= 0x00B7 && body <= 0x00BA
+                   || !string.IsNullOrEmpty(label) && label.Contains(" the ", StringComparison.OrdinalIgnoreCase);
         }
 
         // Starts a magery spell. Its target cursor is answered from UpdateCast once the
@@ -2278,9 +2290,10 @@ namespace ClassicUO.Agent
 
         public static string ThreatKind(Mobile m, World world)
         {
-            if (!m.IsHuman || m.IsDead || m == world.Player || world.Party.Contains(m.Serial))
+            if (!m.IsHuman || m.IsDead || m == world.Player || world.Party.Contains(m.Serial)
+                || m.NotorietyFlag is NotorietyFlag.Murderer or NotorietyFlag.Criminal && IsMonsterTarget(m))
             {
-                return null;
+                return null; // a savage or a brigand is a monster, and no player (cuo-ea4)
             }
 
             switch (m.NotorietyFlag)

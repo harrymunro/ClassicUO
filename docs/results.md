@@ -12,7 +12,7 @@
 - **Models:** [Models for each role](#models-for-each-role), [Haiku or Sonnet for plans, reviews and guides](#haiku-or-sonnet-for-plans-reviews-and-guides), [Opus for the planner's one-off calls](#opus-for-the-planners-one-off-calls), [Sonnet for the planner's hard moments](#sonnet-for-the-planners-hard-moments), [Jev and Microsoft's Decision 1](#jev-and-microsofts-decision-1)
 - **Sessions towards a goal:** [Unattended runs](#unattended-runs), [Travel and errands](#travel-and-errands), [Routine hunt calls](#routine-hunt-calls), [After a death](#after-a-death), [After-action review run](#after-action-review-run)
 - **World knowledge and memory:** [World store and fact picking](#world-store-and-fact-picking), [UO Renaissance's map page](#uo-renaissances-map-page), [Map markers](#map-markers), [The planner with memories](#the-planner-with-memories), [Long-range memory over a long soak](#long-range-memory-over-a-long-soak)
-- **Several agents:** [Several agents on one server](#several-agents-on-one-server), [Headless clients](#headless-clients), [A party on one plan](#a-party-on-one-plan), [A party that helps, calls out and talks](#a-party-that-helps-calls-out-and-talks), [A party that goes in together](#a-party-that-goes-in-together), [NPCs with lives of their own](#npcs-with-lives-of-their-own)
+- **Several agents:** [Several agents on one server](#several-agents-on-one-server), [Headless clients](#headless-clients), [A party on one plan](#a-party-on-one-plan), [A party that helps, calls out and talks](#a-party-that-helps-calls-out-and-talks), [A party that goes in together](#a-party-that-goes-in-together), [NPCs with lives of their own](#npcs-with-lives-of-their-own), [A hamlet of AI residents](#a-hamlet-of-ai-residents)
 - **Public shards:** [Renaissance rules rehearsal](#renaissance-rules-rehearsal)
 
 ## Arena
@@ -1592,6 +1592,21 @@ healer, the guildmistress standing in the one-tile way to her ([known limits](kn
 cuo-cgy); that wasn't seen after. The session's `buy` log line now names
 each vendor it asked, how, and who else was as near (`vendors`).
 
+**A vendor nobody can stand next to is asked by its context menu** (cuo-cgy), 2026-10-19 15:20. After two
+walks up that don't end beside the vendor, an errand within 8 tiles of it asks for the vendor's context
+menu and chooses Buy or Sell there (ModernUO's vendors answer those from 8 tiles); the menu isn't shown.
+Staged at the Vesper healer: the character teleported 3 tiles from Derrick the healer and walled in with
+`[AgentWall` (blockers on the eight tiles round it), so no walk could take it next to him. One run each,
+`uv run uo-brain --port P do buy bandage 5 --vendor healer` (and `do sell bandage --vendor healer`):
+
+| client | buy 5 bandages | sell bandages |
+|---|---|---|
+| before | failed after six walks up: "could not get next to the vendor" | |
+| after | bought 5, one ask ("Buy from Derrick The Healer's context menu") | sold 205, one ask (by the menu) |
+
+A shard with no context menus (a client older than they are, a server that turns them off) never sends
+the menu, and the errand fails as before once its asks run out.
+
 ### A tile the server lets nobody onto
 
 2026-10-13, the same server (cuo-4v1). In a soak on 2026-10-11 two trips west from Britain ended
@@ -1643,6 +1658,29 @@ After, the `nav` view at 1347,1512 has the steps west, north-west and south-west
 the grass under `things`; within 40 tiles the planner and the client's pathfinder differ on 3
 tiles, 12 before. The client's own `walk_to` from 1348,1512 to 1340,1512, which had stopped on
 1347,1512, goes along the row above.
+
+**The planner's map steps onto a static as the server does** (cuo-5y8), 2026-10-19 15:20. The planner's
+grid let a walker step up 8 onto any surface, so the tuft (its base 8 above the ground) was somewhere to
+stand in its plans. A static's surface is now stepped onto only from within 2 of its base, as ModernUO's
+`Movement.Check` (`StepHeight` 2) and the client's pathfinder have it; the ground keeps its 8, for slopes.
+The `nav` view's check (the grid's reach against the client's own walker's, 30 tiles round) at ten places,
+the client from before and after, one headless client each, teleported there with `[AgentGo`. A `-` is a
+tile the grid reaches and the walker can't; a `+` one the walker reaches and the grid can't.
+
+| place (where the teleport put it) | `-` before | `-` after | `+` before and after |
+|---|---|---|---|
+| the tuft west of Britain (1347,1512, z 10) | 1 | 0 | 0 |
+| the Britain inn (upstairs, z 17) | 79 | 0 | 0 |
+| the Britain healer (z 20) | 3,018 | 2,812 | 0 |
+| West Britain bank (inside, z 0) | 2,076 | 2,076 | 0 |
+| Cove | 123 | 123 | 0 |
+| the Britain graveyard | 3 | 3 | 0 |
+| Minoc | 0 | 0 | 2 |
+| Castle British (z 50), Britain Mine 1 (a mountainside), a spot by a Vesper bridge | 0 | 0 | 0 |
+
+No tile the walker reaches was lost anywhere (`+` the same everywhere), stairs and the mountainside
+included. The large `-` counts inside the bank and upstairs at the healer's are the walker's own reach
+stopping at closed doors, which the grid passes at a cost; the change doesn't touch them.
 
 ## Routine hunt calls
 
@@ -3023,6 +3061,60 @@ Britain graveyard is offered: 14, the nearest inn 66 tiles east):
 - **Another town's inn isn't the nearest inn:** "see you at the inn in Skara Brae" is unclear on
   Decision 1 with the options as kinds (it was the nearest inn at 0.85 before), and still the inn on Jev.
 
+*Sent by a place's name, among several places, on an errand, or one of several* (cuo-cym.27), 2026-10-19
+15:20 to 15:30, one companion as above. The place question now also offers the places a line names by
+their own names (`named_places`), and the same request asks what the companion is sent to do (only to go,
+or to buy, bank or sell; for a buy, what and how many) and whether just one of the companions is asked.
+Each case has lines written before any model saw them: a first set, and a second run once with the first
+wording. The place question was then reworded once on the first sets (a place named or singled out is
+that one, not the nearest of its kind; whose place it is in a line with several), and a third set of
+places, written after that, was run once. The phrases are what a companion did before: the nearest of the
+kind its word names, no errand ever (it walked to the place and waited), everyone going.
+
+```bash
+cd brain
+uv run python scripts/errand_check.py --out bench/2026-10-19-errands.json   # the first wording: -errands-first-wording.json
+```
+
+| | the phrases | Jev | Decision 1 |
+|---|---|---|---|
+| a place by its name: first set (8), first wording | 1 | 6 | 5 |
+| a place by its name: first set, reworded | 1 | 8 | 8 |
+| a place by its name: second set (7), first wording, then reworded | 2 | 5, 6 | 5, 6 |
+| **a place by its name: third set (6), run once** | 2 | **6** | **6** |
+| several places, whose is it: first set (6), first wording, then reworded | 2 | 4, 4 | 6, 6 |
+| several places: second set (5), first wording, then reworded | 1 | 4, 4 | 4, 5 |
+| **several places: third set (4), run once** | 1 | **2** | **3** |
+| an errand, and what to buy: first set (10), second (8) | 2, 2 | 10, 8 | 10, 8 |
+| ...and how many | | 10, 8 | 10, 8 |
+| one of several: first set (6), second (6) | 3, 3 | 6, 6 | 6, 6 |
+| a request (median) | | 0.19 s, $0.00009 | 0.34 s, $0.00006 |
+
+- **Decision 1 reads these** (kind `order`). It is as good as Jev on names, errands and one of several, and
+  better on whose place it is: Jev sent the companion to the place the leader said it was going to itself
+  ("I'm going to the bank, you go to the healer": the bank; "I'll get the drinks at the inn, you go to the
+  bank": the inn). Both missed "I'm off to the smith's, you lot head to the healer's" (the smithy, 0.98).
+- **A name and a kind:** before the rewording, "the east bank" was the nearest bank, or unclear; after, the
+  East Britain bank. "wait at the east inn" is still the nearest inn on both (0.76, 0.77), the one miss of
+  the second set after the rewording.
+- **What is offered:** the store's fuzzy match on stretches of up to four words, best match first and of
+  several as good the nearest, gave the place wanted for every line meant to name one: "See you in Yew"
+  had been Yew Cave and "Vesper" the Vesper weaver before that rule, and the town of Britain had been
+  found in "the East Britain inn" before the longest stretch took its words. A quarter with a kind and no
+  name of its own ("the west inn") is offered only within 400 tiles: it had found the West Moonglow inn.
+- **The errands and one of several were right on every line on both models,** counts included ("five heal
+  potions" 5, "30 bandages" 30, "some bolts" no number, so 20).
+- **The lines of 2026-10-13 on the reworded question** (`scripts/go_check.py --out
+  bench/2026-10-19-go-reworded.json`, kinds only, as that script offers): Decision 1 18 of 20 and 9 of 10
+  (17 and 9 before), whether to go 12 of 12; Jev 16 and 8 (18 and 8 before).
+- **Live, one errand at a scripted leader's word** (2026-10-19 16:58, one run, headless, a frozen copy of the
+  code): `uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --errand`. Roland says
+  "Isolde, run to the healer and get me 10 bandages, then come back." south of the Britain graveyard. Isolde
+  read it as a buy of 10 bandages at the healer's (0.999), said "I am off to the healer's. Try not to get
+  lost.", was on her way 3 s after the line, bought 10 of 10 at the Britain healer (85 tiles off) for 50 gold,
+  said "Got 10 bandages, coming back." and was beside Roland again 70 s after the line. Wystan and Thea stayed
+  with him (`logs/fleet/20261019-165802-party-player-errand`).
+
 **Live, with a script saying the playtest's lines** (cuo-cym.18 to .22), 2026-10-13 22:49 to 2026-10-14
 00:24. `scripts/party_player.py --playtest` plays Roland, with no brain, and says what Harry said
 in his five minutes (and a few lines more), while the three companions with personas play as they
@@ -3277,6 +3369,86 @@ uv run python scripts/helping_check.py --sets second --out bench/2026-10-14-help
 - **Cost:** $0.0030 to $0.0035 a run of the first set (84 requests, both models), $0.0023 for the held-back
   run, all of kind `fight`.
 
+**Helping weighs how fast a companion is losing health, in code** (cuo-cym.31), 2026-10-19 14:57: the three
+kinds of moment the question did better on, as rules in `policy.help_mates`. Each member now keeps a
+six-second trail of each companion's health as it sees it (`mates.Mates.fall`, the same measure as its own
+`health_drop`). A companion that lost 15 points or more in that time is helped from under 75%, not only
+under 60%; one another is healing is left to them only above 30% and while it isn't falling so; and a mage
+with mana for fewer than two Greater Heals heals the falling one first and keeps its last heal for one
+falling or near death. The same moments as above, the rule alone (no model calls), before and after:
+
+```bash
+cd brain
+uv run python scripts/helping_check.py --models "" --sets first,second --out bench/2026-10-19-helping-rule-falling.json
+```
+
+| the rule | first set, 42 moments | second set, 28 held back |
+|---|---|---|
+| the thresholds (before) | 29 (19/22 drawn, 10/20 written) | 24 (14/14, 10/14) |
+| **with the fall weighed** | **36** (22/22, 14/20) | **27** (14/14, 13/14) |
+| Jev with the question, for comparison | 38 | 26 |
+| Decision 1 with the question | 37 | 25 |
+
+- **The held-back set had been seen once before,** by the question's run of 2026-10-14; the rule was written
+  from the bead's description of what the question did better, not tuned on it, and run on both sets once.
+- **Still missed:** a walk to a companion near death with nothing on him while the fight goes on (the
+  first set's w11, the second's x08: the walk rule stands, as both models turned wanted walks down), and two
+  written moments where the one falling should come before a lower one who is steady for a bandager or a
+  mage with mana to spare (w13, w17): with mana or bandages to spare the lowest still goes first.
+- **Live:** in the six lich-scene runs of 2026-10-19 16:06 to 18:20 (a huddle, formed up, three with memory
+  on and three with it off; below), 16 of the 31 heals and bandages went to a companion at 60% or more and
+  falling (61% to 74%), which the thresholds wouldn't have helped; nobody died in the five measured by then.
+
+**What the leader a person plays is fighting, judged per creature** (cuo-cym.25), 2026-10-19 15:30, without
+the game. A companion of a person's character fights what attacks it and what stands in war mode within 4
+tiles of the leader or 6 of itself. `escort.theirs_questions` puts every creature in view to system one
+instead, a yes/no each: is it part of the party's fight? With what the companion's client sees of it and of
+the leader (distances, war mode, which way each faces and whether at the other, whether it came nearer the
+leader in the last 4 s, whether it is wounded with no companion on it, what the leader said lately).
+`scripts/escort_check.py` puts written fight moments to the rule and to both models and counts, per
+creature, how often each gives the answer wanted, written before any model saw the moment. The first set
+(16 moments, 21 creatures) had the question reworded on it once (a leader's "leave the troll alone"); the
+held-back set (12 moments, 15 creatures) was written before any model ran and run once, after that.
+
+```bash
+cd brain
+uv run python scripts/escort_check.py --out bench/2026-10-19-escort.json   # the first wording: -escort-first-wording.json
+```
+
+| creatures right | the rule | Jev | Decision 1 |
+|---|---|---|---|
+| first set, first wording | 14 of 21 | 19 | 20 |
+| first set, reworded | 14 | 20 | 21 |
+| **held back, run once** | **8 of 15** | **14** | **14** |
+| held back: a creature of the fight missed | 7 | 0 | 0 |
+| held back: one taken for the fight that wasn't | 0 | 1 | 1 |
+| a moment (median) | | 0.18 s, $0.00003 | 0.32 s, $0.00002 |
+
+- **What the rule misses is the leader fighting at range:** an archer's skeleton 10 tiles off, wounded and
+  coming at it; a skeletal mage or a ratman archer shooting at the leader from 10 tiles; a bone knight
+  charging from 7; "kill the ogre" with the ogre 9 off. It never took a creature for the fight that wasn't.
+- **What the models got wrong:** a lizardman in war mode walking away north, 9 tiles off with the leader in
+  war mode facing west (0.61 Jev, 0.85 Decision 1), held back; on the first set, before the rewording, the
+  troll the leader said to leave alone (both), and on Jev an orc far off facing away (0.63, 0.59 after).
+- **Switched on, with the rule as the floor:** a companion asks when a creature in war mode is in view that
+  the rule leaves out, at most every 3 s, and fights one judged the party's for 12 s; `judge_reach = false`
+  is the rule alone. The moments are written ones, biased to fights at range by design.
+- **Live, the leader shooting from range** (2026-10-19 17:20 and 17:28, one run each, headless, a frozen copy
+  of the code): `uv run python scripts/party_player.py --fleet fleets/party-player.toml --range` (and `--set
+  judge_reach=false`). Roland, kitted as an archer and held where he stands, shoots a ratman archer spawned 12
+  tiles north; the three companions follow him.
+
+  | | judged per creature | the rule alone |
+  |---|---|---|
+  | each companion went for it, seconds after the first shot | 1.5, 2.0, 2.5 | never, in the 60 s it stood there |
+  | how far it was from Roland then | 10 tiles | |
+  | the creature | dead at 10 s | alive at 60 s |
+
+  The ratman archer kept its distance (it was never within 4 tiles of Roland, so the rule never took it); each
+  companion's first question on it said it was his fight. Two runs before these, with Roland free to walk,
+  showed nothing either way: his client walked up to what he shot (10 tiles in 3 s), so a skeleton and a
+  ratman archer were beside him within 2 s and the rule took them too.
+
 **The huddle names who goes in** (cuo-cym.14), 2026-10-14 01:30 to 03:50: the lich scene, `plan=huddle`
 (a planner each and a plan the five agree), formed up, memory on, headless; three runs on the code as
 built, then three after a fix, each set from one frozen copy. Measured with `scripts/party_scene.py` and the
@@ -3307,6 +3479,50 @@ uv run uo-brain fleet fleets/party-lich.toml --set plan=huddle --set form_up=tru
 - **And one more rule was wrong:** who has gone ahead was measured from where the one holding the rally
   stood, and the warrior holding it ran from a lich during the wait, so an archer standing still 13 tiles
   behind the point counted as ahead (031534). It is measured from the point now; not yet in a live run.
+
+**The plan sends its members in, and holds them back** (cuo-cym.14, 2026-10-19 15:06 to 18:20): a member the
+huddle's plan names for its hunt goes into it without its planner being asked, once a plan, when system one
+reads the plan as sending the party in now (`huddle.go_now_question`, Decision 1); while the plan holds the
+party back, a member's own hunt of that area is refused. The lich scene, `plan=huddle`, formed up, headless,
+from frozen copies of the code. Two runs before the plan was read (the list of who goes alone) are counted
+apart; a third was void (a login stuck at the server list).
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/party-lich.toml --set plan=huddle --set form_up=true                      # memory on
+uv run uo-brain fleet fleets/party-lich.toml --set plan=huddle --set form_up=true --set memory=false
+uv run python scripts/plan_check.py --out bench/2026-10-19-plans-asked.json                             # the plans, offline
+```
+
+| | sent by the list alone (2 runs) | memory on, the plan read (3 runs) | memory off, the plan read (3 runs) |
+|---|---|---|---|
+| the plans | all 6 said hold or scout first; 4 listed all five as going | all 5 held the party back (go now 0.002 to 0.007) | all 3 sent it in (0.993 to 0.995) |
+| members sent in by the plan | all it listed, held or not | none | all five, within 1 s of each other |
+| formed up at the edge, the warrior the point | 1 and 2 times, with members missing | not at all | every time |
+| in the fight within, of each other | 37, 93 s | 19, 16, 18 s (with what came at them) | **5.0, 14.0, 6.6 s** |
+| members who died | 0, 2 | 0, 0, 0 | 0, 0, 3 |
+| the lich dead, from first sight | 53, 106 s | never, 145 s, never | 25, 35, 19 s |
+
+- **Sent by the list alone, it went wrong:** the plans said "hold at the western edge, no entry yet" and
+  listed all five as going, and the five sent in walked into the lich (two died, 154246). And a member sent
+  in had its hunt cut short two seconds later by the plan's own watcher (51 tiles short), because the plan it
+  was sent on counted as unread: it now counts as read.
+- **The recorded plans, offline:** of the 21 the huddles agreed with a list of who goes (2026-10-14 and 19),
+  the list alone sent the party in against the plan 13 times; Decision 1, which reads it now, once (19 of
+  21 right; Jev 18).
+- **With memory on, the plans hold the party back:** each said to enter only after a fresh scout shows no
+  lich, so nobody was sent in. In the first of the three the bard's own planner hunted the graveyard anyway,
+  15 s ahead of the rest; after that run a member's own hunt of the plan's area is refused while the plan
+  holds back, and in the third the bard's was. The lich was killed once, by the bard and those who came to
+  him.
+- **With memory off, the plan sends all five at once and they go in together:** in each run all five were
+  sent within a second, formed up on the warrior, and the lich died 19 to 35 s after first sight. The
+  archer, the bard and the mage open fire from the edge as soon as they can: the warrior's own first blow came
+  5.0, 8.9 and 6.6 s after the first of theirs, and in the second run the last in was 14 s after the first.
+  In the third, three died (the warrior fled at 3% with skeletons on him, then the mage and the archer).
+- **The acceptance isn't met as written:** with memory on the plans send nobody in, so "those the plan sends
+  are in within a few seconds" can't be shown there; with it off the five were in within 5 and 7 s in two
+  runs and 14 s in one.
 
 **A second scene: casters and archers from two sides** (cuo-cym.11), 2026-10-14 02:52 to 06:58. Every
 party measure before was the lich scene. `fleets/party-casters.toml` stages the same five south of the
@@ -3398,6 +3614,53 @@ the control (`uv run uo-brain fleet fleets/britain-talk.toml` and `fleets/britai
   about danger. No deaths in either.
 - **Cost:** 3 lines in 16 minutes, talk $0.001 an hour an NPC; the NPCs $0.18-0.22 an hour in all,
   inside the $0.50 cap.
+
+## A hamlet of AI residents
+
+**Four residents of Cove for an hour, told they live there, and the same four told nothing** (cuo-m3n),
+2026-10-19 15:02 to 16:03 and 16:12 to 17:16, one run each, headless, on the npc profile, walking
+(`rules = "realistic"`), memory on and cleared before each run, the same client build for both (from before
+the savage fix: savages were not fought in either). Brannoc the watchman (home the east gate; work the orcs
+near the Cove Orc Fort, 130 tiles south), Wenna the hunter (the small house on the square; the beasts
+south-west of the Cove Cemetery, 120 tiles east), Maren the healer's apprentice (the healer's house) and
+Tamsin the carrier (above the provisioner's; coin to a town's bank, the nearest 550 tiles off). In the
+hamlet `edge = 10`; at home is within 6 tiles of it; measured from where each was every 30 s.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove.toml                       # logs/fleet/20261019-150247-hamlet-cove
+uv run uo-brain fleet fleets/hamlet-cove.toml --set hamlet=false    # logs/fleet/20261019-161211-hamlet-cove-control
+uv run uo-brain hamlet-report logs/fleet/RUN
+```
+
+| one run each | told of the hamlet | told nothing (the control) |
+|---|---|---|
+| share of the hour in Cove: Brannoc, Wenna, Maren, Tamsin | 79%, 17%, 55%, 74% | 61%, 38%, 1%, 49% |
+| ...at home | 59%, 11%, 52%, 3% | 1%, 0%, 0%, 0% |
+| homecomings (all four) | 10 (2, 2, 5, 1) | 1 |
+| furthest from Cove, tiles | 222, 136, 128, 556 | 196, 727, 546, 643 |
+| lines said to a neighbour (all four) | 46 (6, 21, 14, 5) | 8 (3, 2, 0, 3) |
+| neighbours each talked with, of 3 | 3, 3, 2, 2 | 2, 1, 0, 2 |
+| kills, deaths | 21, 4 | 28, 6 |
+| cost together | $0.252, $0.246 an hour ($0.06 a resident) | $0.281, $0.268 an hour |
+
+- **Told where they live, they live there:** they came home ten times to the control's once, spent a third to
+  three fifths of the hour at home where the control spent none, and talked: 46 lines among themselves
+  against 8. Maren and Wenna had 25 between them (Maren asking after everyone's health, Wenna's twenty
+  arrows that "will not feed the hamlet through winter"). Brannoc, back from the dead at the healer's,
+  told Maren to stay off the Fort road, and later Wenna; each kept it as a memory of the other.
+- **Told nothing, they went where their long goals took them:** the control's Maren went to Britain to hunt and
+  bank (1% of the hour in Cove, 546 tiles off), and Tamsin died three times by the orc fort.
+- **The bar of half the hour in the hamlet, met by three of four:** Wenna, whose hunting ground is 120 tiles
+  out, was in Cove 17% of the hour, less than the control's Wenna, who hunted Cove's own streets for a while.
+  At that distance a hunt of 10 minutes and the walk back can't come to half an hour in, however often she
+  comes home; the bar fits Cove's geography badly for a hunter (cuo-m3n.3).
+- **The deaths are mostly savages:** the orc fort's spawns include savages, which the client took for red
+  players and never fought (fixed after these runs, cuo-ea4). Brannoc died there three times in the first
+  half hour, Tamsin three times in the control.
+- **Work, as it is:** Wenna hunted and bought arrows, Maren practised her healing on hunts and stocked
+  bandages, Tamsin hunted Cove's own vermin and took 347 gold to a bank, Brannoc spent the second half hour
+  at the gatehouse with no gold or supplies after his deaths. No resident sold anything in either run.
 
 ## After a death
 
