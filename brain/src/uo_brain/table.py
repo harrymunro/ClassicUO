@@ -101,6 +101,48 @@ ASK = {
                "sentence.",
 }
 
+# A hamlet's evening (cuo-m3n.5): neighbours who live in one small place, gathered of an evening at one of their
+# houses to talk the day over. The same table, turns and pace; what is said and kept is a day's, not a hunt's.
+HAMLET_SYSTEM = """You write what one character says of an evening in the game Ultima Online, sitting with their
+neighbours at {place} in the small hamlet where they all live, talking the day over. You get who they are,
+their own day (what they really did: use it), what they remember, who is there and everything said so far.
+Call table_say exactly once with:
+
+- line: what they say now: ONE sentence of at most 16 words, never more than 90 characters, in their own
+  voice. It is shown over their head for a few seconds: a long line is not read, and is cut short.
+- emote: optional, one line in three at most: something small they do as they speak, in the third person
+  and present tense, without asterisks or their own name ("pours herself some tea", "stretches by the fire"),
+  and never one they have done already tonight.
+- to: who it is aimed at most: a name there, or "all".
+- lesson: only when asked for (the evening winding down): what they mean to do tomorrow, as one plain
+  sentence for their own memory. Else "".
+
+How they talk: as neighbours who see each other every day, each in their own temper: news of the day, a
+worry, a bit of gossip, a tease, an offer of help, a complaint about the orcs or the prices. They answer what
+is said to them. No speeches, no summing up. It stays in character and in the game world.
+
+Keep to what happened: don't invent kills, deaths, sales or meetings that aren't in their own day or in what
+the others have said. Don't repeat a point already made. Never mention being an AI or a program.
+"""
+
+HAMLET_ASK = {
+    "toast": "Open the evening: a greeting to the neighbours, in their own way.",
+    "stories": "Tell one thing from their own day, or answer what was just said about someone's day.",
+    "banter": "Talk with a neighbour: news, a worry, gossip, a tease, an offer of help, or throw back what was said.",
+    "lessons": "The evening is winding down. Say what they mean to do tomorrow, in their own words. Put the same thing "
+               "in `lesson` as a plain sentence.",
+}
+
+HAMLET_REFLECT = """You are a character's own thoughts after an evening with their neighbours in the hamlet where
+they live, in the game Ultima Online. You get who they are, their own day, and everything said that evening.
+Call keep exactly once with what they take away, for their own memory only:
+
+- lessons: one or two plans for tomorrow or things they mean to remember from the evening, each a plain sentence.
+- companions: up to three things they learned about a neighbour tonight, each a plain sentence naming them
+  ("Wenna hunts the woods east of Cove alone; she says the bears are thicker there this week").
+- tactic: "".
+"""
+
 REFLECT = """You are a character's own thoughts after an evening at the inn with their party, in the game
 Ultima Online, the night after a hunt. You get who they are, their own part of the hunt, and everything
 that was said at the table. Call keep exactly once with what they take away, for their own memory only:
@@ -221,8 +263,12 @@ class Table:
     def __init__(self, party: Any, rpc: Any, persona: dict[str, str] | None = None, voice: Any = None,
                  memory: "memories.Memory | None" = None, story: Story | None = None,
                  chat_fn: llm.ChatFn = llm.chat, log: Callable[[dict[str, Any]], None] | None = None,
-                 floor: Floor | None = None, lines: int | None = None, pace: bool = True, emotes: bool = True):
+                 floor: Floor | None = None, lines: int | None = None, pace: bool = True, emotes: bool = True,
+                 scene: str = "inn", place: str = ""):
         self.party, self.rpc = party, rpc
+        # "inn": a party's evening after a hunt; "hamlet": neighbours' evening at one of their houses (cuo-m3n.5),
+        # at `place` ("the healer's house").
+        self.scene, self.place = scene, place
         self.world: World = party.world
         self.me = party.me
         self.persona = persona or {}
@@ -255,6 +301,25 @@ class Table:
         if line := self.voice.pick("e_arrive"):
             await self.rpc.call("act", verb="say", text=f"*{line}*", kind="emote")
             self.floor.say(f"*{line}*", kind="emote")
+
+    def system(self) -> str:
+        return HAMLET_SYSTEM.format(place=self.place or "one of their houses") if self.scene == "hamlet" else SYSTEM
+
+    def own_part(self) -> str:
+        return "own day" if self.scene == "hamlet" else "own part of the hunt"
+
+    def claim(self, key: str, window_s: float) -> bool:
+        """Whether this member keeps the turns of a hamlet's evening (cuo-m3n.5): the first to claim `key` in the
+        last window_s, the claims in the shared store deciding a race between brains."""
+        now = time.time()
+        rows = self.world.db.execute("SELECT who, t FROM party_table WHERE party = ? AND tid = 0 AND kind = 'claim' "
+                                     "AND text = ? ORDER BY id", (self.party.party, key)).fetchall()
+        if not any(now - r["t"] < window_s for r in rows):
+            self.add(0, "claim", key)
+            rows = self.world.db.execute("SELECT who, t FROM party_table WHERE party = ? AND tid = 0 AND kind = 'claim' "
+                                         "AND text = ? ORDER BY id", (self.party.party, key)).fetchall()
+        live = [r for r in rows if now - r["t"] < window_s]
+        return bool(live) and live[0]["who"] == self.me
 
     # ---- the store ------------------------------------------------------------------
 
@@ -396,14 +461,18 @@ class Table:
         lines = "\n".join(f"{r['who']}: {r['text']}" if r["kind"] == "line" else f"({r['who']} {r['text']})" for r in said)
         return (f"Who you speak for: {self.me}. " + " ".join(f"{k.replace('_', ' ').capitalize()}: {v}."
                                                               for k, v in self.persona.items() if k != "name")
-                + f"\n\n{self.me}'s own part of the hunt: {self.story.words()}\n\n"
+                + f"\n\n{self.me}'s {self.own_part()}: {self.story.words()}\n\n"
                 + "What they remember:\n" + ("\n".join(f"- {m}" for m in remembered) or "(nothing much)")
                 + f"\n\nAt the table: {', '.join(present)}."
                 + (f" {self.guest}, who leads the party, sits with them and speaks when they like: what {self.guest} "
                    f"says is answered like anyone's." if self.guest else "")
                 + (f"\n\nThe small things {self.me} has done tonight already: {'; '.join(self.emoted)}." if self.emoted else "")
                 + "\n\nSaid at the table so far:\n" + (lines or "(nothing yet: they have just sat down)")
-                + f"\n\nNow: {ASK.get(phase, ASK['banter'])} Call table_say.")
+                + f"\n\nNow: {self.ask(phase)} Call table_say.")
+
+    def ask(self, phase: str) -> str:
+        asks = HAMLET_ASK if self.scene == "hamlet" else ASK
+        return asks.get(phase, asks["banter"])
 
     async def speak(self, tid: int, asked: dict[str, Any]) -> str | None:
         phase = asked.get("phase") or "banter"
@@ -413,7 +482,7 @@ class Table:
             # table at 500 tokens), and the turn then stood empty for the 40 s a speaker is given.
             try:
                 with costs.kind("table"):
-                    res = await self.chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": self.prompt(tid, phase)}],
+                    res = await self.chat([{"role": "system", "content": self.system()}, {"role": "user", "content": self.prompt(tid, phase)}],
                                           tools=[say_tool()], tool_choice="table_say", model=llm.planner_model(None),
                                           max_tokens=1000)
             except llm.LlmError as e:
@@ -477,10 +546,12 @@ class Table:
         lines = "\n".join(f"{r['who']}: {r['text']}" for r in said if r["kind"] == "line")
         user = (f"Who you are: {self.me}. " + " ".join(f"{k.replace('_', ' ').capitalize()}: {v}."
                                                        for k, v in self.persona.items() if k != "name")
-                + f"\n\nYour own part of the hunt: {self.story.words()}\n\nSaid at the table:\n{lines}\n\nCall keep.")
+                + f"\n\nYour {self.own_part()}: {self.story.words()}\n\nSaid at the table:\n{lines}\n\nCall keep.")
+        hamlet = self.scene == "hamlet"
         try:
             with costs.kind("table"):
-                res = await self.chat([{"role": "system", "content": REFLECT}, {"role": "user", "content": user}],
+                res = await self.chat([{"role": "system", "content": HAMLET_REFLECT if hamlet else REFLECT},
+                                       {"role": "user", "content": user}],
                                       tools=[keep_tool()], tool_choice="keep", model=llm.planner_model(None), max_tokens=700)
         except llm.LlmError as e:
             self.log({"type": "table", "t": time.time(), "error": f"reflect: {e}"[:200]})
@@ -490,16 +561,21 @@ class Table:
         self.cost += res.usage.cost or 0.0
         when = time.strftime("%Y-%m-%d")
         ids = []
+        where = f"at {self.place or 'the evening gathering'}" if hamlet else "at the inn"
         for text in [str(x) for x in args.get("lessons") or []][:2]:
             if text.strip():
-                ids.append(self.memory.add(f"From the inn after the hunt ({when}): {text.strip()}", kind="lesson",
-                                           area=area, tags=("inn", "table talk"), source="talk", importance=4))
+                ids.append(self.memory.add(f"From the evening {where} ({when}): {text.strip()}" if hamlet else
+                                           f"From the inn after the hunt ({when}): {text.strip()}",
+                                           kind="event" if hamlet else "lesson", area=area,
+                                           tags=("evening", "plan") if hamlet else ("inn", "table talk"), source="talk",
+                                           importance=3 if hamlet else 4))
         for text in [str(x) for x in args.get("companions") or []][:3]:
             names = [n for n in self.party.members if n != self.me and re.search(rf"\b{re.escape(n)}\b", text)]
             if text.strip() and names:
-                ids.append(self.memory.add(f"At the inn ({when}): {text.strip()}", kind="relationship",
-                                           tags=("inn", *(n.lower() for n in names)), source="talk", importance=3))
-        tactic = clean_line(args.get("tactic"))[:200]
+                ids.append(self.memory.add(f"{where[0].upper()}{where[1:]} ({when}): {text.strip()}", kind="relationship",
+                                           tags=("evening" if hamlet else "inn", *(n.lower() for n in names)),
+                                           source="talk", importance=3))
+        tactic = "" if hamlet else clean_line(args.get("tactic"))[:200]
         if tactic and not NOT_A_TACTIC.search(tactic):
             ids.append(self.memory.add(tactic, kind="lesson", area=area, tags=(TACTIC_TAG, "inn"), source="talk",
                                        importance=4))

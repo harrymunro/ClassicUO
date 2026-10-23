@@ -8,6 +8,9 @@ each chooses its day anywhere on the map, so they scatter and meet by chance. A 
     name = "Cove"     # a region of the world store: its area is the hamlet
     edge = 10         # tiles round it that still count as in it (its gate, the path by its walls)
     lands = ["south-west of Cove Cemetery"]   # the grounds its residents work: hunting areas of the world store
+    gather = "Cove healer"   # where the neighbours meet of an evening (a place, or "x,y"); gather_words names it
+    day_minutes = 60         # a day of the run, and its last evening_minutes the evening
+    evening_minutes = 15
 
     [[agent]]
     name = "Maren"
@@ -26,6 +29,12 @@ hunter whose ground is 120 tiles out is at work there, not away. The planner is 
 situation says when the resident is on them and how long it has been away from home, and the report counts
 the run in the hamlet or its lands, and whether a resident came home between one piece of work and the next.
 
+Its evenings (cuo-m3n.5): with `gather`, a run is days of `day_minutes`, and each day's last `evening_minutes`
+are its evening. Each turn tells a resident the time of day, and of an evening its planner may choose the
+`evening` goal: walk to the gathering place, where the first there keeps the turns of the party's table
+(table.Table, its hamlet scene) and the others sit as they come; the neighbours talk the day over, each from
+its own day, and each keeps its own memories of it. Nobody is sent: a resident out hunting can miss it.
+
 With `--set hamlet=false` the residents are told nothing (persona and long goals only, as the
 britain-lives NPCs are) and the fleet still measures them against the hamlet: the control.
 
@@ -35,6 +44,7 @@ it came home, its longest time away, spells of standing still away from home, it
 sales, purchases, banking), its talk by neighbour, deaths and cost, and what it remembers of the others.
 """
 
+import asyncio
 import json
 import re
 import time
@@ -52,6 +62,9 @@ SAMPLE_S = 30.0    # the fleet looks where each resident is this often
 LAND_EDGE = 10     # tiles round a land's spawns that are still that land
 AWAY_SAID_MIN = 5  # away from home this many minutes or more, each turn says how long
 WORK_GOALS = ("hunt", "sell", "buy", "bank", "restock", "travel_to")
+GATHER_S = 150.0   # the first at an evening's gathering waits this long for the others
+GATHER_SOME_S = 60.0  # ...or this long once one other has come
+GATHER_TILES = 8   # close enough to the gathering place to be at it
 HOME_WORDS = re.compile(r"^\s*(?:back\s+)?(?:to\s+)?(?:my\s+|our\s+|the\s+)?(?:home|house)\b(?:\s*\(.*\))?\s*$", re.I)
 
 
@@ -71,6 +84,11 @@ class Hamlet:
     work: str = ""
     neighbours: list[dict[str, str]] = field(default_factory=list)  # name, trade, home_words, work
     lands: list[dict[str, Any]] = field(default_factory=list)       # name, x, y, r: the grounds its residents work
+    gather: dict[str, Any] | None = None  # name, x, y, words: where the neighbours meet of an evening (cuo-m3n.5)
+    day_s: float = 3600.0
+    evening_s: float = 900.0
+    began: float | None = None    # when the run's first day began (epoch), the same for every resident
+    run: str = ""                 # the run's name, for the evening table's place in the shared store
     # When this resident was last seen at home (time.monotonic), for each turn's words: not part of what it knows.
     home_at: float | None = field(default=None, compare=False)
 
@@ -128,6 +146,29 @@ class Hamlet:
         return (f"away from {self.name}: {self.beyond(x, y)} tiles from it"
                 + (f" and {far} from {home}" if far is not None else "") + since)
 
+    # ------------------------------------------------------------ the day (cuo-m3n.5)
+
+    def day_of(self, now: float) -> tuple[int, float]:
+        """The day of the run (1 the first) and how far into it, in seconds."""
+        into = max(0.0, now - (self.began if self.began is not None else now))
+        return int(into // self.day_s) + 1, into % self.day_s
+
+    def is_evening(self, now: float) -> bool:
+        return self.gather is not None and self.day_of(now)[1] >= self.day_s - self.evening_s
+
+    def evening_key(self, now: float) -> str:
+        return f"evening {self.day_of(now)[0]}"
+
+    def when(self, now: float) -> str:
+        """The time of day for each turn's situation, and where the neighbours meet of an evening."""
+        day, into = self.day_of(now)
+        left = self.day_s - into
+        if self.is_evening(now):
+            return (f"day {day}, evening: the neighbours gather at {self.gather['words']} to talk the day over "
+                    f"(the `evening` goal), for about {int(left // 60)} more minutes")
+        part = "morning" if into < (self.day_s - self.evening_s) / 2 else "afternoon"
+        return f"day {day}, {part}; evening (the gathering at {self.gather['words']}) in about {int((left - self.evening_s) // 60)} minutes"
+
     # ------------------------------------------------------------ words
 
     def lives(self) -> str:
@@ -155,6 +196,10 @@ class Hamlet:
                          + "; ".join(f"{land['name']} (round {land['x']},{land['y']})" for land in self.lands)
                          + f". Working there is part of life in {self.name}; between one piece of work and the next, "
                          "come home.")
+        if self.gather:
+            lines.append(f"Of an evening the neighbours gather at {self.gather['words']} to talk the day over: the "
+                         f"`evening` goal, offered then. A day here is {self.day_s / 60:.0f} minutes, and its last "
+                         f"{self.evening_s / 60:.0f} are the evening.")
         lines.append(f"{self.name} is {me}'s life: the days begin and end there. Go out for work (a hunt nearby, "
                      "a trip to sell, buy or bank) and come back: when a piece of work is done, go home, and rest at "
                      f"home rather than out in the country. Free time is spent in {self.name}, where the neighbours "
@@ -167,7 +212,9 @@ class Hamlet:
     def to_json(self) -> dict[str, Any]:
         return {"name": self.name, "rects": [list(r) for r in self.rects], "edge": self.edge, "me": self.me,
                 "home": list(self.home) if self.home else None, "home_words": self.home_words, "work": self.work,
-                "neighbours": self.neighbours, **({"lands": self.lands} if self.lands else {})}
+                "neighbours": self.neighbours, **({"lands": self.lands} if self.lands else {}),
+                **({"gather": self.gather, "day_s": self.day_s, "evening_s": self.evening_s, "began": self.began}
+                   if self.gather else {}), **({"run": self.run} if self.run else {})}
 
     @classmethod
     def from_json(cls, d: dict[str, Any]) -> "Hamlet":
@@ -176,11 +223,102 @@ class Hamlet:
                    str(d.get("me") or ""), (int(home[0]), int(home[1])) if home else None,
                    str(d.get("home_words") or ""), str(d.get("work") or ""),
                    [{str(k): str(v) for k, v in n.items()} for n in d.get("neighbours") or []],
-                   [{"name": str(x["name"]), "x": int(x["x"]), "y": int(x["y"]), "r": int(x["r"])} for x in d.get("lands") or []])
+                   [{"name": str(x["name"]), "x": int(x["x"]), "y": int(x["y"]), "r": int(x["r"])} for x in d.get("lands") or []],
+                   dict(d["gather"]) if d.get("gather") else None, float(d.get("day_s") or 3600.0),
+                   float(d.get("evening_s") or 900.0), float(d["began"]) if d.get("began") is not None else None,
+                   str(d.get("run") or ""))
 
 
 def load(path: Path) -> Hamlet:
     return Hamlet.from_json(json.loads(Path(path).read_text()))
+
+
+# ---------------------------------------------------------------- the evening (cuo-m3n.5)
+
+class DayStory:
+    """A resident's own day for the evening's table, from its planner's goals since the last evening."""
+
+    def __init__(self, planner: Any = None):
+        self.planner = planner
+        self.since = time.time()
+
+    def reset(self) -> None:
+        self.since = time.time()
+
+    def words(self) -> str:
+        steps = [h for h in getattr(self.planner, "history", []) if h.t >= self.since and h.tool != "evening"]
+        if not steps:
+            return "a quiet day: nothing much done"
+        done = []
+        for h in steps[-8:]:
+            args = {k: v for k, v in h.args.items() if k not in ("why", "x", "y")}
+            res = h.result if isinstance(h.result, dict) else {}
+            done.append(f"{h.tool}({', '.join(f'{k}={v}' for k, v in args.items())}): "
+                        f"{'done' if res.get('ok') else 'not done'}, {str(res.get('summary') or '')[:120]}")
+        return "; ".join(done)
+
+
+async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) -> Any:
+    """A resident's `evening` goal: walk to the gathering place; the first there keeps the turns of the evening's
+    table once a neighbour has come, the others sit at it as they arrive; then each keeps its own memories."""
+    from .session import Result
+    now = time.time()
+    if hamlet.gather is None:
+        return Result(False, f"{hamlet.name} has no evening gathering")
+    if not hamlet.is_evening(now):
+        return Result(False, f"it isn't evening yet: {hamlet.when(now)}")
+    place, key = hamlet.gather, hamlet.evening_key(now)
+    r = None
+    for distance in (0, 1, 2):
+        r = await session.travel_to(place["words"], place["x"], place["y"], distance=distance, refuse=False)
+        if r.ok:
+            break
+    if r is None or not r.ok:
+        return Result(False, f"did not reach {place['words']}: {r.summary if r else ''}", r.data if r else {})
+    await table.arrive()
+    data: dict[str, Any] = {"evening": key, "place": place["words"]}
+    tid = table.current()
+    if tid is None and table.claim(key, GATHER_S + 30):
+        present, waited = await seen_here(session, table, place, stop)
+        data |= {"hosted": True, "present": present, "gather_s": round(waited)}
+        if len(present) < 2:
+            return Result(False, f"at {place['words']}, but no neighbour came within {GATHER_S:.0f} s", data)
+        seat = asyncio.get_running_loop().create_task(table.sit(stop, wait_s=20))
+        try:
+            held = await table.host(present, stop)
+        finally:
+            tid = await seat
+        data |= held
+    else:
+        tid = await table.sit(stop, wait_s=GATHER_S + 60)
+        if tid is None:
+            return Result(False, f"at {place['words']}, and nobody held the evening's talk", data)
+        data |= {"sat_at": tid}
+    kept = await table.reflect(tid) if tid is not None else []
+    table.story.reset()
+    data["memories_kept"] = len(kept)
+    return Result(True, f"the evening at {place['words']} with the neighbours: talked the day over"
+                        + (f" ({data.get('lines')} lines)" if data.get("lines") is not None else "")
+                        + "; each keeps its own memories of it", data)
+
+
+async def seen_here(session: Any, table: Any, place: dict[str, Any], stop: Any = None) -> tuple[list[str], float]:
+    """Who of the neighbours is at the gathering place, by this resident's own client: everyone, or one other after
+    GATHER_SOME_S, or whoever has come by GATHER_S."""
+    began = time.time()
+    others = [n for n in table.party.members if n != table.party.me]
+    present: list[str] = []
+    while not (stop is not None and stop.is_set()):
+        snap = await session.snap()
+        p = snap.get("player") or {}
+        present = [m["name"] for m in snap.get("mobiles") or [] if m.get("name") in others and not m.get("dead")
+                   and chebyshev(p.get("x", 0) + m.get("dx", 0), p.get("y", 0) + m.get("dy", 0), place["x"], place["y"])
+                   <= GATHER_TILES]
+        waited = time.time() - began
+        if len(present) == len(others) or (present and waited >= GATHER_SOME_S) or waited >= GATHER_S:
+            break
+        await asyncio.sleep(3.0)
+    return [table.party.me, *present], time.time() - began
 
 
 # ---------------------------------------------------------------- the report
@@ -265,6 +403,15 @@ def home_between_work(session: list[dict[str, Any]], homes: list[tuple[float, bo
     return {"pairs": len(pairs), "home_between": sum(1 for a, b in pairs if any(on and a < t < b for t, on in homes))}
 
 
+def evenings(session: list[dict[str, Any]]) -> dict[str, int]:
+    """The evening gatherings (cuo-m3n.5): tables kept, lines said at them, memories kept of them."""
+    held = [x for x in session if x.get("type") == "table" and x.get("closed")]
+    said = [x for x in session if x.get("type") == "table" and x.get("said")]
+    kept = [x for x in session if x.get("type") == "table" and x.get("kept") is not None]
+    goals = [x for x in session if x.get("type") == "goal" and x.get("tool") == "evening"]
+    return {"went": len(goals), "hosted": len(held), "lines": len(said), "memories": sum(len(x["kept"]) for x in kept)}
+
+
 def talk_by_neighbour(session: list[dict[str, Any]], neighbours: list[str]) -> dict[str, dict[str, int]]:
     """Lines said to and heard from each neighbour."""
     out = {n: {"said": 0, "heard": 0} for n in neighbours}
@@ -332,6 +479,7 @@ def report(out_dir: Path, world: Any = None) -> dict[str, Any]:
             "still_away": [{**s, "goal": goal_at(session, s["t"])} for s in still_spells(wheres, h)],
             "work": work(session),
             "talk": talk_by_neighbour(session, [x for x in names if x != name]),
+            "evenings": evenings(session),
         })
         if world is not None:
             entry["remembers"] = remembered(world, name, [x for x in names if x != name], began)
@@ -370,6 +518,12 @@ def markdown(r: dict[str, Any]) -> str:
         w = a["work"]
         lines.append(f"| {name} | {', '.join(f'{k} {v}' for k, v in w['goals'].items())} | {w['kills']} | "
                      f"{w['gold_from_sales']} | {w['items_bought']} | {w['gold_banked']} | {a.get('deaths') or 0} |")
+    if any((a.get("evenings") or {}).get("went") for a in r["residents"].values()):
+        lines += ["", "| resident | evening goals | tables kept | lines at them | memories kept of them |", "|---|---|---|---|---|"]
+        for name, a in r["residents"].items():
+            e = a.get("evenings") or {}
+            if a.get("samples"):
+                lines.append(f"| {name} | {e.get('went', 0)} | {e.get('hosted', 0)} | {e.get('lines', 0)} | {e.get('memories', 0)} |")
     lines += ["", "Talk, lines said / heard by neighbour:"]
     for name, a in r["residents"].items():
         if a.get("talk"):

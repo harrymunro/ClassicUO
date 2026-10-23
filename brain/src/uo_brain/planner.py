@@ -147,7 +147,7 @@ def machine_tool() -> dict[str, Any]:
 
 
 GOALS = {"travel_to", "hunt", "bank", "buy", "sell", "rest", "set_strategy", "set_machine", "resurrect",
-         "recover_corpse", "finish", "restock", "inn"}
+         "recover_corpse", "finish", "restock", "inn", "evening"}
 # Goals that are a member's own business: a party forming up for a hunt doesn't wait for one who is on these
 # (rally.expected; a follower says the same of its resurrection, its corpse and its restock, party.Follower.own).
 OWN_BUSINESS = ("bank", "buy", "sell", "restock", "resurrect", "recover_corpse")
@@ -163,6 +163,19 @@ def inn_tool() -> dict[str, Any]:
                        "enough), after a death once everyone is back on their feet, and before ending a session: an "
                        "inn is a safe place to finish. It takes a few minutes. Not with creatures still about, not "
                        "twice running, and not before the party has done anything worth talking over.",
+        "parameters": {"type": "object", "properties": {
+            "why": {"type": "string", "description": "One short sentence for the player: why this goal now."}},
+            "required": ["why"]}}}
+
+
+def evening_tool(place: str) -> dict[str, Any]:
+    """A hamlet resident's evening (cuo-m3n.5): the neighbours' gathering, the talk over the day, and memories of it."""
+    return {"type": "function", "function": {
+        "name": "evening",
+        "description": f"Of an evening, go to {place} where the neighbours gather, sit with whoever comes and talk the "
+                       "day over: what each did, news, worries, tomorrow. Each remembers what was said. Only in the "
+                       "evening (each turn says the time of day); it takes a few minutes, and it is the hamlet's way "
+                       "of ending a day.",
         "parameters": {"type": "object", "properties": {
             "why": {"type": "string", "description": "One short sentence for the player: why this goal now."}},
             "required": ["why"]}}}
@@ -296,7 +309,9 @@ class Planner:
         self.tools = goal_tools() + ([machine_tool()] if machines_allowed else []) + worlds.tool_schemas() \
             + ([memories.remember_tool(), memories.recall_tool(), longgoals.tool()] if self.memory else []) \
             + ([restock_tool(own=huddle is not None)] if party is not None else []) \
-            + ([inn_tool()] if party is not None and table is not None else [])
+            + ([inn_tool()] if party is not None and table is not None else []) \
+            + ([evening_tool(hamlet.gather["words"])] if party is None and table is not None
+               and (hamlet := getattr(session, "hamlet", None)) is not None and hamlet.gather else [])
         # Jev picks the few memories each call sees (memory.Picker), and answers the recall tool.
         self.picker = memories.Picker(self.memory, getattr(session, "judge", None), log=self.log) \
             if self.memory else None
@@ -380,6 +395,8 @@ class Planner:
         situation = describe(snap, self.session.world, self.party.companions if self.party else None)
         if (hamlet := getattr(self.session, "hamlet", None)) is not None:
             situation["home"] = hamlet.where(snap["player"]["x"], snap["player"]["y"])
+            if hamlet.gather:
+                situation["time_of_day"] = hamlet.when(time.time())
         if self.corpse_at and snap.get("in_game") and not snap["player"]["dead"]:
             x, y, t = self.corpse_at
             situation["your_corpse"] = (f"at {x},{y}, from a death {(time.monotonic() - t) / 60:.0f} min ago, with your "
@@ -750,6 +767,15 @@ class Planner:
                             self.won = None
                         if r.ok and self.heart:
                             self.heart.note("an evening at the inn with the party, talking the hunt over")
+                case "evening":
+                    hamlet = getattr(s, "hamlet", None)
+                    if self.table is None or hamlet is None or not hamlet.gather:
+                        r = Result(False, "no evening gathering here")
+                    else:
+                        from . import hamlet as hamlets
+                        r = await s.defended(hamlets.gathering(s, self.table, hamlet))
+                        if r.ok and self.heart:
+                            self.heart.note("an evening with the neighbours, talking the day over")
                 case "set_strategy":
                     r = await self.set_strategy(str(args.get("text") or ""))
                 case "resurrect":
@@ -1193,6 +1219,8 @@ def describe_goal(tool: str, args: dict[str, Any]) -> str:
             return "the party restocks: each buys what it is short of"
         case "inn":
             return f"R&R: the party goes to {args.get('place') or 'the inn'} to talk the hunt over"
+        case "evening":
+            return "the evening: to the neighbours' gathering, to talk the day over"
         case "set_strategy":
             return "changing the strategy"
         case "resurrect":

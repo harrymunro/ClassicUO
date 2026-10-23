@@ -1111,6 +1111,18 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
                       pace=not args.no_pace, emotes=args.roleplay)
         party.inn = party.leading and args.party_plan != "player"
         table.guest = party.leader if args.party_plan == "player" else None
+    elif party is None and args.hear and session.hamlet is not None and session.hamlet.gather:
+        # A hamlet's evenings (cuo-m3n.5): the neighbours' table at the gathering place, in its hamlet scene, shared
+        # in the store by the run's residents; what each says there is from its own day (hamlet.DayStory).
+        from types import SimpleNamespace
+        from .hamlet import DayStory
+        from .table import Table
+        hamlet = session.hamlet
+        run = hamlet.run or (Path(args.log).parent.name if args.log else "")  # the run's folder: the same for each
+        neighbourhood = SimpleNamespace(world=world, me=me, members=[me, *(n["name"] for n in hamlet.neighbours)],
+                                        party=f"hamlet:{hamlet.name}:{run}")
+        table = Table(neighbourhood, rpc, persona, None, None, DayStory(), log=write, pace=not args.no_pace,
+                      scene="hamlet", place=hamlet.gather["words"])
     huddle = None
     if huddling:
         # Every member plans for itself, with the plan they agree in front of it (huddle.py, cuo-bih).
@@ -1156,7 +1168,10 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     if table is not None:
         from .table import tactics
         table.memory = own_memory
-        link.tactics = tactics(own_memory)  # its own lines on how to fight, from earlier tables (cuo-cod.5)
+        if link is not None:
+            link.tactics = tactics(own_memory)  # its own lines on how to fight, from earlier tables (cuo-cod.5)
+        if table.scene == "hamlet":
+            table.story.planner = plan  # a resident's day, from its planner's goals since the last evening
     stop = asyncio.Event()
 
     def ending() -> None:
