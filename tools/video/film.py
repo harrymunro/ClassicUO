@@ -178,13 +178,13 @@ def make_clips(raw_dir: Path, stem: str, out_dir: Path, default_scale: float = 2
     seen = recorded(raw_dir / "wincaps.log")
     names = filmed_by_clients(raw_dir / "recorder.log")
     for raw in sorted(raw_dir.glob("*.mov")) + sorted(raw_dir.glob("*.mp4")):
-        if raw.suffix == ".mp4":  # a client's own frames: no title bar
-            who, crop = names.get(raw.name, raw.stem), 0
+        if raw.suffix == ".mp4":  # a client's own frames: no title bar, and a steady rate of its own
+            who, crop, fps = names.get(raw.name, raw.stem), 0, 0
         else:
             title, scale = seen.get(raw.name, (raw.stem, default_scale))
-            who, crop = title.split(" - ClassicUO")[0] or raw.stem, round(TITLE_BAR * scale)
+            who, crop, fps = title.split(" - ClassicUO")[0] or raw.stem, round(TITLE_BAR * scale), 30
         out = out_dir / f"{stem} - {who}.mp4"
-        if to_mp4(raw, out, crop):
+        if to_mp4(raw, out, crop, fps):
             made.append(out)
     if len(made) > 1:
         grid = out_dir / f"{stem} - all.mp4"
@@ -203,9 +203,10 @@ def filmed_by_clients(log: Path) -> dict[str, str]:
     return out
 
 
-def to_mp4(raw: Path, out: Path, crop_top: int) -> bool:
-    crop = f"crop=iw:ih-{crop_top}:0:{crop_top}," if crop_top else ""
-    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(raw), "-vf", f"{crop}fps=30", "-an",
+def to_mp4(raw: Path, out: Path, crop_top: int, fps: int = 30) -> bool:
+    """fps: the rate to make a recording of varying rate (ScreenCaptureKit's) steady at; 0 keeps the source's."""
+    vf = ",".join(([f"crop=iw:ih-{crop_top}:0:{crop_top}"] if crop_top else []) + ([f"fps={fps}"] if fps else [])) or "null"
+    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(raw), "-vf", vf, "-an",
                         "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p",
                         "-movflags", "+faststart", str(out)])
     return r.returncode == 0

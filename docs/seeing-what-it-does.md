@@ -36,9 +36,11 @@
   --displays` says 0): `film.py` makes a FIFO per client and asks it to `record` into it, and ffmpeg
   makes `raw/PORT.mp4` of the frames, with `PORT.mp4.start` as before. A client reads its back buffer
   after a frame is drawn, `--client-fps` times a second (15 by default), and repeats the last frame for
-  any slot it missed, so the clip runs as long as the run did (100.1 s for 100.1 s in the first check).
-  A frame read takes the game thread about 2 ms (1419 by 906, 15 a second: 3% of a second). `--source
-  screen` or `client` chooses either.
+  any slot it missed, so the clip runs as long as the run did (100.1 s for 100.1 s in the first check;
+  1573.9 s for 1574.1 s over the 26 minutes of the hamlet's four windows on 2026-10-23, with no frame
+  dropped while five more clients played and filmed beside them). A frame read takes the game thread 2
+  to 3 ms (1696 by 928, 15 a second: 2.3 to 2.7 ms in that run, about 4% of a second). `--source screen`
+  or `client` chooses either.
 
   `layout.py film FLEET` gives each of the fleet's characters a large game view (1004 by 920 at scale
   0.7 in a 1696 by 954 window), the agent panel beside it, no paperdoll or other saved gump, a fixed
