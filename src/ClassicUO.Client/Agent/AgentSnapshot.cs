@@ -705,7 +705,7 @@ namespace ClassicUO.Agent
             w.WriteEndArray();
         }
 
-        private static void WriteJournal(Utf8JsonWriter w, AgentJournal journal, long since)
+        internal static void WriteJournal(Utf8JsonWriter w, AgentJournal journal, long since)
         {
             int n = journal.CopySince(since, _journalBuf);
             w.WriteNumber("journal_seq", journal.LastSeq);
@@ -722,6 +722,12 @@ namespace ClassicUO.Agent
                 w.WriteString("text", e.Text ?? string.Empty);
                 w.WriteString("type", e.Type.ToString().ToLowerInvariant());
                 w.WriteString("source", e.Agent ? "agent" : e.FromSelf ? "self" : e.TextType == TextType.SYSTEM ? "system" : e.TextType == TextType.CLIENT ? "client" : "speech");
+
+                if (e.Relayed)
+                {
+                    w.WriteBoolean("relayed", true);
+                }
+
                 w.WriteEndObject();
             }
 

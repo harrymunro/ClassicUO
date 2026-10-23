@@ -63,6 +63,12 @@ from uo_brain import client, fleet  # noqa: E402
 from uo_brain.rpc import AgentRpc  # noqa: E402
 
 START = (1392, 1528)
+# --walls (cuo-cym.28): the street outside the Sweet Dreams inn's west wall in Britain, where the party starts
+# (fleets/party-player-inn.toml), and the inn's ground floor 8 tiles east of it, out of its sight by the client's rule
+# (further south a window in that wall lets the street see in). [AgentGo can't put anyone inside: it puts them at the
+# land's height, under the inn's floor, where no step is possible.
+OUTSIDE_THE_INN = (1488, 1616)
+INN = (1496, 1618)
 WAVE = (1392, 1500)
 # What the leader says: the phrases a companion always knew, or (--own-words) the same orders as system one reads
 # them. {name} is the second companion in the file.
@@ -105,6 +111,11 @@ async def main() -> None:
                          "ratman archer does, keeps it beyond the 4-tile rule (a skeleton charged and was within 4 in 2 s)")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE", dest="settings",
                     help="passed to the companions' fleet (e.g. --set judge_reach=false)")
+    ap.add_argument("--walls", action="store_true",
+                    help="only this, after the invitations (with fleets/party-player-inn.toml): the leader walks them into the "
+                         "Sweet Dreams inn, says 'wait here', walks out into the street beyond the inn's wall and calls "
+                         "them out aloud; who heard it, directly or passed on from the leader's client, and who came "
+                         "(cuo-cym.28)")
     ap.add_argument("--errand", action="store_true",
                     help="only this, after the invitations: one companion sent by name to buy 10 bandages at the healer "
                          "and come back (cuo-cym.27); what it bought, what it said, how soon it was back")
@@ -112,6 +123,7 @@ async def main() -> None:
     fl = fleet.load(args.fleet)
     names = [a.name for a in fl.agents]
     words = {k: v.format(name=names[1]) for k, v in WORDS["own" if args.own_words else "plain"].items()}
+    start = OUTSIDE_THE_INN if args.walls else START
     out = args.out or BRAIN / "logs" / "fleet" / f"{time.strftime('%Y%m%d-%H%M%S')}-{fl.name}"
     out.mkdir(parents=True, exist_ok=True)
     log = (out / "walk.jsonl").open("a")
@@ -132,7 +144,7 @@ async def main() -> None:
     await r.call("mode", mode="off")
     await r.call("goal", clear=True)
     await r.call("strategy", clear=True)
-    for cmd in ("[AgentDisrupt restore quiet", "[AgentReset", f"[AgentGo {START[0]} {START[1]}",
+    for cmd in ("[AgentDisrupt restore quiet", "[AgentReset", f"[AgentGo {start[0]} {start[1]}",
                 "[AgentDisrupt despawn 1384 1492 36 15 quiet", "[AgentKit warrior", "[AgentSupplies bandages 150 heal 10"):
         # Heal potions too, which its reflexes drink when low, as a person would: with bandages alone the leader
         # died in its first fight in two playtests of eight (2026-10-14, 95 to 0 in four or five seconds), and a
@@ -266,6 +278,25 @@ async def main() -> None:
                     found.setdefault(n, []).append(d)
         return found
 
+    async def tell(text: str, wait_s: float, until=None, party_chat: bool = False) -> list[dict]:
+        """Say a line as the leader and listen: what each companion said after it, and how long after."""
+        t0, seq = time.monotonic(), (await look()).get("journal_seq", 0)
+        if party_chat:
+            await r.call("act", verb="party", kind="say", text=text, source="manual")
+        else:
+            await say(r, text, 0)
+        answers: list[dict] = []
+        while time.monotonic() - t0 < wait_s and not (until and until(answers)):
+            await asyncio.sleep(1.0)
+            snap = await look()
+            for e in snap.get("journal") or []:
+                if e.get("seq", 0) > seq and e.get("source") == "speech" and e.get("name") in names \
+                        and e.get("type", "regular") in ("regular", "yell", "whisper", "party"):
+                    answers.append({"who": e["name"], "text": e.get("text"), "after_s": round(time.monotonic() - t0, 1)})
+            seq = max(seq, snap.get("journal_seq", seq))
+        note("said", said=text, answers=answers)
+        return answers
+
     if args.range:
         # cuo-cym.25: the leader shoots from range. The escort rule took a creature for the leader's fight only within 4
         # tiles of it; system one is asked about one further off.
@@ -327,6 +358,47 @@ async def main() -> None:
         await r.close()
         client.stop(proc)
         print(json.dumps({"run": out.name, "settings": args.settings, "range": ranged}, indent=1))
+        return
+
+    if args.walls:
+        # cuo-cym.28: ModernUO sends speech only to those in line of sight of the speaker, so a line said aloud in the
+        # street doesn't reach companions inside the inn 6 tiles off. Their brains pass it on from the leader's client.
+        phase = "walls"
+        await wait(4)
+        await tell("Follow me, in we go.", 3)
+        await walk(*INN, timeout=60)
+        snap = await wait(20, lambda s: len(beside(s, 3)) == len(names))
+        went_in = beside(snap, 3)
+        stay = await tell("Wait here a moment, I'll be right back.", 8)
+        t_out = time.time()
+        await walk(*OUTSIDE_THE_INN, timeout=60)
+        snap = await wait(3)
+        sight = {}
+        for m in snap.get("mobiles") or []:
+            if m.get("name") in names:
+                seen = await r.call("sight", serial=m["serial"])
+                sight[m["name"]] = {"tiles": m["distance"], "in_sight": seen.get("mobile")}
+        stayed = [n for n in names if n in sight and sight[n]["tiles"] >= 4]
+        line = "Come on out here, all of you."
+        t_call = time.time()
+        answers = await tell(line, 30, lambda a: False)
+        snap = await wait(1)
+        read = {n: [d.get("order") for d in ds if d.get("text") == line] for n, ds in logged("order_read", t_call - 1).items()}
+        relayed = {n: [d.get("after_s") for d in ds if d.get("line") == line]
+                   for n, ds in logged("relay", t_call - 1, event="relayed").items()}
+        walls = {"went_in_with_the_leader": went_in, "said_inside": stay, "stayed_inside": stayed, "where_they_were": sight, "line": line,
+                 "read_by": {n: v for n, v in read.items() if v}, "passed_on_to": {n: v for n, v in relayed.items() if v},
+                 "answers": answers, "came_out_within_3": beside(snap, 3), "walked_out_s": round(t_call - t_out, 1)}
+        note("called from beyond the wall", **walls)
+        companions.send_signal(signal.SIGINT)
+        try:
+            companions.wait(45)
+        except subprocess.TimeoutExpired:
+            companions.kill()
+        await r.call("mode", mode="off")
+        await r.close()
+        client.stop(proc)
+        print(json.dumps({"run": out.name, "settings": args.settings, "walls": walls}, indent=1))
         return
 
     if args.errand:
@@ -417,25 +489,6 @@ async def main() -> None:
                 "let_go": {n: any(a.get("verb") == "disengage" for d in v for a in d.get("actions") or []) for n, v in ds.items()},
                 "notes": {n: [d.get("note") for d in v[:6]] for n, v in ds.items()}}
         return done
-
-    async def tell(text: str, wait_s: float, until=None, party_chat: bool = False) -> list[dict]:
-        """Say a line as the leader and listen: what each companion said after it, and how long after."""
-        t0, seq = time.monotonic(), (await look()).get("journal_seq", 0)
-        if party_chat:
-            await r.call("act", verb="party", kind="say", text=text, source="manual")
-        else:
-            await say(r, text, 0)
-        answers: list[dict] = []
-        while time.monotonic() - t0 < wait_s and not (until and until(answers)):
-            await asyncio.sleep(1.0)
-            snap = await look()
-            for e in snap.get("journal") or []:
-                if e.get("seq", 0) > seq and e.get("source") == "speech" and e.get("name") in names \
-                        and e.get("type", "regular") in ("regular", "yell", "whisper", "party"):
-                    answers.append({"who": e["name"], "text": e.get("text"), "after_s": round(time.monotonic() - t0, 1)})
-            seq = max(seq, snap.get("journal_seq", seq))
-        note("said", said=text, answers=answers)
-        return answers
 
     played: dict = {}
     stayed: list[str] = []

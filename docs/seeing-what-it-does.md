@@ -30,6 +30,16 @@
   macOS 15, ffmpeg, and the Screen Recording permission for the terminal. Recording loads the machine,
   so a filmed run's numbers aren't compared with unfilmed ones.
 
+  **With the screen locked** ScreenCaptureKit records nothing: it sees no display, and every window
+  fails with "Failed due to failure to process first sample buffer" (error -5822), which is how
+  unattended runs go. Then each client films itself (cuo-cym.32, `--source auto`, the default: `wincaps
+  --displays` says 0): `film.py` makes a FIFO per client and asks it to `record` into it, and ffmpeg
+  makes `raw/PORT.mp4` of the frames, with `PORT.mp4.start` as before. A client reads its back buffer
+  after a frame is drawn, `--client-fps` times a second (15 by default), and repeats the last frame for
+  any slot it missed, so the clip runs as long as the run did (100.1 s for 100.1 s in the first check).
+  A frame read takes the game thread about 2 ms (1419 by 906, 15 a second: 3% of a second). `--source
+  screen` or `client` chooses either.
+
   `layout.py film FLEET` gives each of the fleet's characters a large game view (1004 by 920 at scale
   0.7 in a 1696 by 954 window), the agent panel beside it, no paperdoll or other saved gump, a fixed
   light and no sound, and keeps the files it changed for `restore`. As a client comes, its game view

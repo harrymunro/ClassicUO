@@ -37,11 +37,22 @@ namespace ClassicUO.Agent
             public TextType TextType;
             public bool FromSelf;
             public bool Agent;
+            public bool Relayed;
         }
 
         public void AddAgentEvent(string text)
         {
             Add(new Entry { Name = "agent", Text = text, Type = MessageType.System, TextType = TextType.CLIENT, Agent = true });
+        }
+
+        // A line of speech the server didn't send this character, passed on by its brain (cuo-cym.28): the party's
+        // leader said it within earshot, and a wall between them kept it from this client (ModernUO sends speech
+        // only to those in line of sight). It is read as the speech it is; the game's own journal doesn't show it.
+        public long AddHeard(string name, uint serial, string text, MessageType type)
+        {
+            Add(new Entry { Name = name, Serial = serial, Text = text, Type = type, TextType = TextType.OBJECT, Relayed = true });
+
+            return LastSeq;
         }
 
         // Entries newer than since, oldest first, at most max of the newest.

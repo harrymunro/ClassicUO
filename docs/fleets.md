@@ -893,9 +893,20 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
     them. On the 39 lines the yes/no alone was measured with, 38 as wanted against 34, and "the rest of
     you" 4 of 5 against 0 of 5.
 
-  Nobody answers in a fight, where the callouts speak, and each says at most 40 lines an hour. Speech
-  needs line of sight on ModernUO: a companion on the other side of a wall doesn't hear you, and
-  party chat reaches it wherever it is.
+  Nobody answers in a fight, where the callouts speak, and each says at most 40 lines an hour.
+- **Through walls** (cuo-cym.28, `relay.py`): ModernUO sends speech only to those in line of sight of
+  the speaker, so a companion on the other side of a wall (inside an inn, on the way out of one) never
+  got a line you said a few tiles off, and nobody read or answered it. Each companion's brain now also
+  reads what you say in your own client (our client has an agent port: the one on this machine whose
+  character is the leader, found by its name, or `leader_port = N` in the fleet file), and a line its
+  own client hasn't heard 1.5 s after you said it, though it stood within the line's earshot (15 tiles,
+  a yell 18, a whisper 1, the server's own), is put into its client's journal (the `hear` RPC) and read
+  like any other. A wall is all it gets past: a companion 20 tiles off still doesn't hear. `hear_leader
+  = false` in the fleet file (or `--no-hear-leader`) turns it off. Each brain logs `relay` records
+  (`found`, `relayed` with the line, the tiles and how late, `lost`) and its summary has `relay`:
+  `relayed`, `heard_directly`, `out_of_earshot`. Party chat reaches them wherever they are, as before.
+  It works one way: their answers go out as the server sends speech, so from behind a wall you don't
+  see what they said until they come into sight ([measured](results.md#a-party-that-goes-in-together)).
 - **Resting:** when you stand still they stand with you, and each heals itself as it always does (the
   client's reflexes bandage). There is no rest of their own to call.
 - **The table** (`talk = true`, a persona each): walk them to an inn and tell them to sit down ("who

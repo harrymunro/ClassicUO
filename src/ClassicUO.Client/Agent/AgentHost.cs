@@ -7,6 +7,7 @@ using System.IO;
 using System.Text.Json;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -24,6 +25,7 @@ namespace ClassicUO.Agent
         private static AgentLogin _login;
         private static AgentConnection _captureConn;
         private static string _captureId, _capturePath;
+        private static AgentRecorder _recorder;
 
         // The eight steps in the order of the game's directions (0 is north, clockwise), for the nav view.
         private static readonly string[] Compass8 = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
@@ -65,6 +67,12 @@ namespace ClassicUO.Agent
 
         public static void OnDraw(GraphicsDevice device)
         {
+            if (_recorder != null)
+            {
+                _recorder.OnDraw(device.PresentationParameters.BackBufferWidth, device.PresentationParameters.BackBufferHeight,
+                    device.GetBackBufferData);
+            }
+
             if (_capturePath == null)
             {
                 return;
@@ -857,6 +865,117 @@ namespace ClassicUO.Agent
                     _captureConn = conn;
                     _captureId = id;
                     _capturePath = path.GetString();
+
+                    break;
+
+                case "journal":
+                    // The journal since a number, and where this character is: what a companion's brain reads of its
+                    // leader's own client, to pass on what a wall kept from its own (cuo-cym.28). Lighter than a snapshot.
+                    long journalSince = Get(p, "since", out JsonElement js) ? js.GetInt64() : 0;
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+
+                        if (world.InGame && world.Player != null)
+                        {
+                            w.WriteString("player", world.Player.Name ?? string.Empty);
+                            w.WriteNumber("serial", world.Player.Serial);
+                            w.WriteNumber("x", world.Player.X);
+                            w.WriteNumber("y", world.Player.Y);
+                            w.WriteNumber("map", world.MapIndex);
+                        }
+
+                        if (world.Agent != null)
+                        {
+                            AgentSnapshot.WriteJournal(w, world.Agent.Journal, journalSince);
+                        }
+
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
+                case "hear":
+                    // A line the server didn't send this character, passed on by its brain (cuo-cym.28).
+                    if (!Get(p, "name", out JsonElement hn) || !Get(p, "text", out JsonElement ht) || string.IsNullOrEmpty(ht.GetString()))
+                    {
+                        throw new AgentRpcException(-32602, "name and text are required");
+                    }
+
+                    if (world.Agent == null)
+                    {
+                        throw new AgentRpcException(-32002, "not in game");
+                    }
+
+                    MessageType heardAs = (Get(p, "type", out JsonElement hty) ? hty.GetString() : "regular") switch
+                    {
+                        "yell" => MessageType.Yell,
+                        "whisper" => MessageType.Whisper,
+                        "emote" => MessageType.Emote,
+                        _ => MessageType.Regular
+                    };
+
+                    long heardSeq = world.Agent.Journal.AddHeard(hn.GetString(), Get(p, "serial", out JsonElement hs) ? hs.GetUInt32() : 0,
+                        ht.GetString(), heardAs);
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteNumber("seq", heardSeq);
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
+                case "record":
+                    // Films the client from its own frames (cuo-cym.32): path (a FIFO ffmpeg reads) and fps start it,
+                    // stop ends it, neither reports on it.
+                    if (Get(p, "stop", out JsonElement recordStop) && recordStop.GetBoolean())
+                    {
+                        _recorder?.Stop();
+                    }
+                    else if (Get(p, "path", out JsonElement recordPath) && !string.IsNullOrEmpty(recordPath.GetString()))
+                    {
+                        if (game.Headless)
+                        {
+                            throw new AgentRpcException(-32003, "nothing is drawn while the window is hidden; show it first (window visible=true)");
+                        }
+
+                        _recorder?.Stop();
+                        int fps = Get(p, "fps", out JsonElement recordFps) ? Math.Clamp(recordFps.GetInt32(), 1, 60) : 15;
+                        PresentationParameters pp = game.GraphicsDevice.PresentationParameters;
+                        _recorder = new AgentRecorder(recordPath.GetString(), fps, pp.BackBufferWidth, pp.BackBufferHeight);
+                    }
+
+                    AgentRecorder rec = _recorder;
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteBoolean("recording", rec != null && !rec.Stopped);
+
+                        if (rec != null)
+                        {
+                            w.WriteString("path", rec.Path);
+                            w.WriteNumber("fps", rec.Fps);
+                            w.WriteNumber("width", rec.Width);
+                            w.WriteNumber("height", rec.Height);
+                            w.WriteNumber("start", rec.StartedAt);
+                            w.WriteNumber("captured", rec.Captured);
+                            w.WriteNumber("written", rec.Written);
+                            w.WriteNumber("dropped", rec.Dropped);
+                            w.WriteNumber("skipped", rec.Skipped);
+                            w.WriteNumber("capture_ms", Math.Round(rec.CaptureMs, 2));
+
+                            if (rec.Error != null)
+                            {
+                                w.WriteString("error", rec.Error);
+                            }
+                        }
+
+                        w.WriteEndObject();
+                    });
 
                     break;
 

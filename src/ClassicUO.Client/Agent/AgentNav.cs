@@ -21,9 +21,12 @@ namespace ClassicUO.Agent
         public const int MAX_SURFACES = 3;
         public const int PERSON_HEIGHT = 16;
         public const int STEP_UP = 8;     // generous on the ground (slopes); the local pathfinder is exact
-        // Onto a static's surface (a floor, a stair, a bridge, a tuft of grass) only from within this of its base, as
+        // Onto a static's surface (a floor, a stair, a bridge, a tuft of grass) only from within this below it, as
         // ModernUO's Movement.Check has it (StepHeight 2) and the client's pathfinder: a tuft floating 8 above the
-        // ground at 1346,1512 was somewhere to stand in the plans and nobody could get onto it (cuo-5y8).
+        // ground at 1346,1512 was somewhere to stand in the plans and nobody could get onto it (cuo-5y8). Below what:
+        // a stair's (a bridge's) base, anything else's top; measured from the top of what one stands on, its full
+        // height, though one stands half way up a stair (cuo-u4j: from the step at the Britain inn's door, stood on at
+        // z 17 and 20 at its top, the floor at 20 was out of reach, and nobody could plan into the inn).
         public const int STEP_ONTO = 2;
         public const int STEP_DOWN = 20;
         public const int DOOR_COST = 4;   // extra steps for a door: stopping to open it
@@ -31,9 +34,11 @@ namespace ClassicUO.Agent
         public readonly int X0, Y0, Width, Height;
 
         // Up to three places to stand per tile (the z of the surface top), lowest first, and for each the lowest z
-        // it can be stepped onto from.
+        // it can be stepped onto from, and the z a step from it is measured from (its full top: above where one
+        // stands on a stair).
         private readonly sbyte[] _z;
         private readonly sbyte[] _from;
+        private readonly sbyte[] _reach;
         private readonly byte[] _count;
         private readonly bool[] _door;
 
@@ -45,6 +50,7 @@ namespace ClassicUO.Agent
             Height = height;
             _z = new sbyte[width * height * MAX_SURFACES];
             _from = new sbyte[width * height * MAX_SURFACES];
+            _reach = new sbyte[width * height * MAX_SURFACES];
             _count = new byte[width * height];
             _door = new bool[width * height];
         }
@@ -69,12 +75,25 @@ namespace ClassicUO.Agent
         // The lowest z the k-th surface at (x, y) can be stepped onto from.
         public sbyte From(int x, int y, int k) => _from[((y - Y0) * Width + (x - X0)) * MAX_SURFACES + k];
 
+        // The z a step from the k-th surface at (x, y) is measured from.
+        public sbyte Reach(int x, int y, int k) => _reach[((y - Y0) * Width + (x - X0)) * MAX_SURFACES + k];
+
+        // ...from the surface nearest height z there (z itself where there is none).
+        public int ReachAt(int x, int y, int z)
+        {
+            int k = Surface(x, y, z);
+
+            return k < 0 ? z : Reach(x, y, k);
+        }
+
         // Ground: stepped onto from up to STEP_UP below it.
         public void AddSurface(int x, int y, int z) => AddSurface(x, y, z, z - STEP_UP);
 
-        // A surface stepped onto from `from` up: a static's from STEP_ONTO below its base, the ground from STEP_UP
-        // below its top.
-        public void AddSurface(int x, int y, int z, int from)
+        // A surface stepped onto from `from` up (a static's from STEP_ONTO below a stair's base or anything else's top,
+        // the ground from STEP_UP below its top), and stepped off from `reach` (its full top; z where not given).
+        public void AddSurface(int x, int y, int z, int from) => AddSurface(x, y, z, from, z);
+
+        public void AddSurface(int x, int y, int z, int from, int reach)
         {
             int i = (y - Y0) * Width + (x - X0);
             int n = _count[i];
@@ -86,6 +105,7 @@ namespace ClassicUO.Agent
 
             _z[i * MAX_SURFACES + n] = (sbyte) Math.Clamp(z, sbyte.MinValue, sbyte.MaxValue);
             _from[i * MAX_SURFACES + n] = (sbyte) Math.Clamp(from, sbyte.MinValue, sbyte.MaxValue);
+            _reach[i * MAX_SURFACES + n] = (sbyte) Math.Clamp(Math.Max(reach, z), sbyte.MinValue, sbyte.MaxValue);
             _count[i] = (byte) (n + 1);
         }
 
@@ -97,8 +117,11 @@ namespace ClassicUO.Agent
             }
         }
 
-        // The surface at (x, y) one can step onto from height z, or -1.
-        public int StepTo(int x, int y, int z)
+        // The surface at (x, y) one can step onto from height z (standing there; a step measured from `reach`, the top
+        // of what one stands on: z where not given), or -1.
+        public int StepTo(int x, int y, int z) => StepTo(x, y, z, z);
+
+        public int StepTo(int x, int y, int z, int reach)
         {
             int best = -1, bestDz = int.MaxValue;
 
@@ -106,7 +129,7 @@ namespace ClassicUO.Agent
             {
                 int dz = Z(x, y, k) - z;
 
-                if (z >= From(x, y, k) && -dz <= STEP_DOWN && Math.Abs(dz) < bestDz)
+                if (reach >= From(x, y, k) && -dz <= STEP_DOWN && Math.Abs(dz) < bestDz)
                 {
                     best = k;
                     bestDz = Math.Abs(dz);
@@ -218,7 +241,7 @@ namespace ClassicUO.Agent
                         return Partial(g, parent, best, startH - bestH, partialMin, stats);
                     }
 
-                    int z = g.Z(x, y, k);
+                    int z = g.Z(x, y, k), reach = g.Reach(x, y, k);
 
                     foreach ((int dx, int dy) in Steps)
                     {
@@ -231,9 +254,9 @@ namespace ClassicUO.Agent
                             continue;
                         }
 
-                        int nk = g.StepTo(nx, ny, z);
+                        int nk = g.StepTo(nx, ny, z, reach);
 
-                        if (nk < 0 || dx != 0 && dy != 0 && (g.StepTo(x + dx, y, z) < 0 || g.StepTo(x, y + dy, z) < 0))
+                        if (nk < 0 || dx != 0 && dy != 0 && (g.StepTo(x + dx, y, z, reach) < 0 || g.StepTo(x, y + dy, z, reach) < 0))
                         {
                             continue;
                         }
@@ -328,11 +351,11 @@ namespace ClassicUO.Agent
             height = Math.Min(height, mapH - y0);
 
             var g = new NavGrid(x0, y0, width, height);
-            var cell = new List<(sbyte Z, byte Height, bool Surface, bool Solid)>[64];
+            var cell = new List<(sbyte Z, byte Height, bool Surface, bool Solid, bool Bridge, byte Full)>[64];
 
             for (int i = 0; i < 64; i++)
             {
-                cell[i] = new List<(sbyte, byte, bool, bool)>();
+                cell[i] = new List<(sbyte, byte, bool, bool, bool, byte)>();
             }
 
             StaticsBlock[] buffer = Array.Empty<StaticsBlock>();
@@ -395,7 +418,7 @@ namespace ClassicUO.Agent
                             if (solid || surface)
                             {
                                 byte h = t.IsBridge ? (byte) (t.Height / 2) : t.Height;
-                                cell[(sb.Y << 3) + sb.X].Add((sb.Z, h, surface, solid));
+                                cell[(sb.Y << 3) + sb.X].Add((sb.Z, h, surface, solid, t.IsBridge, t.Height));
                             }
                         }
                     }
@@ -419,15 +442,19 @@ namespace ClassicUO.Agent
 
         // A place to stand is a surface top with nothing solid, and no other surface, in the
         // person's height above it.
-        private static void AddStandable(NavGrid g, int x, int y, bool landOk, sbyte landZ, List<(sbyte Z, byte Height, bool Surface, bool Solid)> objs)
+        internal static void AddStandable(NavGrid g, int x, int y, bool landOk, sbyte landZ,
+            List<(sbyte Z, byte Height, bool Surface, bool Solid, bool Bridge, byte Full)> objs)
         {
             Span<int> tops = stackalloc int[NavGrid.MAX_SURFACES + 8];
+            Span<int> order = stackalloc int[NavGrid.MAX_SURFACES + 8];
             Span<int> froms = stackalloc int[NavGrid.MAX_SURFACES + 8];
+            Span<int> reaches = stackalloc int[NavGrid.MAX_SURFACES + 8];
             int n = 0;
 
             if (landOk)
             {
                 froms[n] = landZ - NavGrid.STEP_UP;
+                reaches[n] = landZ;
                 tops[n++] = landZ;
             }
 
@@ -435,12 +462,33 @@ namespace ClassicUO.Agent
             {
                 if (o.Surface && n < tops.Length)
                 {
-                    froms[n] = o.Z - NavGrid.STEP_ONTO;
+                    // Movement.Check: onto a stair from STEP_ONTO below its base, onto anything else from that below its
+                    // top; and off it from its full top, wherever one stands on it.
+                    froms[n] = (o.Bridge ? o.Z : o.Z + o.Height) - NavGrid.STEP_ONTO;
+                    reaches[n] = o.Z + o.Full;
                     tops[n++] = o.Z + o.Height;
                 }
             }
 
-            tops.Slice(0, n).Sort(froms.Slice(0, n));
+            for (int i = 0; i < n; i++)
+            {
+                order[i] = i;
+            }
+
+            Span<int> sortedTops = stackalloc int[n];
+            tops.Slice(0, n).CopyTo(sortedTops);
+            sortedTops.Sort(order.Slice(0, n));
+            Span<int> f = stackalloc int[n], r = stackalloc int[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                f[i] = froms[order[i]];
+                r[i] = reaches[order[i]];
+            }
+
+            sortedTops.CopyTo(tops);
+            f.CopyTo(froms);
+            r.CopyTo(reaches);
 
             for (int i = 0; i < n; i++)
             {
@@ -466,15 +514,17 @@ namespace ClassicUO.Agent
 
                 if (clear && (i == 0 || top != tops[i - 1]))
                 {
-                    // One top made by several (the ground and a floor on it): stepped onto from the lowest any allows.
-                    int from = froms[i];
+                    // One top made by several (the ground and a floor on it): stepped onto from the lowest any allows,
+                    // and off from the highest.
+                    int from = froms[i], reach = reaches[i];
 
                     for (int j = i + 1; j < n && tops[j] == top; j++)
                     {
                         from = Math.Min(from, froms[j]);
+                        reach = Math.Max(reach, reaches[j]);
                     }
 
-                    g.AddSurface(x, y, top, from);
+                    g.AddSurface(x, y, top, from, reach);
                 }
             }
         }
@@ -499,7 +549,7 @@ namespace ClassicUO.Agent
             {
                 (int x, int y, int k) = queue.Dequeue();
                 tilesSeen.Add((x, y));
-                int z = g.Z(x, y, k);
+                int z = g.Z(x, y, k), reach = g.Reach(x, y, k);
 
                 foreach ((int dx, int dy) in Steps)
                 {
@@ -510,9 +560,9 @@ namespace ClassicUO.Agent
                         continue;
                     }
 
-                    int nk = g.StepTo(nx, ny, z);
+                    int nk = g.StepTo(nx, ny, z, reach);
 
-                    if (nk < 0 || dx != 0 && dy != 0 && (g.StepTo(x + dx, y, z) < 0 || g.StepTo(x, y + dy, z) < 0))
+                    if (nk < 0 || dx != 0 && dy != 0 && (g.StepTo(x + dx, y, z, reach) < 0 || g.StepTo(x, y + dy, z, reach) < 0))
                     {
                         continue;
                     }
@@ -638,9 +688,9 @@ namespace ClassicUO.Agent
 
                     for (int pk = 0, n = g.Count(px, py); pk < n; pk++)
                     {
-                        int pz = g.Z(px, py, pk);
+                        int pz = g.Z(px, py, pk), pr = g.Reach(px, py, pk);
 
-                        if (g.StepTo(x, y, pz) != k || dx != 0 && dy != 0 && (g.StepTo(px + dx, py, pz) < 0 || g.StepTo(px, py + dy, pz) < 0))
+                        if (g.StepTo(x, y, pz, pr) != k || dx != 0 && dy != 0 && (g.StepTo(px + dx, py, pz, pr) < 0 || g.StepTo(px, py + dy, pz, pr) < 0))
                         {
                             continue;
                         }

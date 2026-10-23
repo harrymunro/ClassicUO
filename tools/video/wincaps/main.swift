@@ -3,6 +3,7 @@
 // Each window is recorded whether or not other windows cover it. Built by build.sh; film.py runs it.
 //
 //   wincaps [--seconds N] [--stop FILE] [--fps 30] PID OUT.mov [PID OUT.mov ...]
+//   wincaps --displays     the number of displays it can record: 0 while the screen is locked (cuo-cym.32)
 //
 // Stops after N seconds, when FILE exists, or on SIGINT/SIGTERM. Writes OUT.mov.start (epoch seconds)
 // when each recording starts. A .mov can't be read until it is closed. Needs macOS 15 and the Screen
@@ -50,14 +51,16 @@ while i < args.count {
     case "--seconds": seconds = Double(args[i + 1])!; i += 2
     case "--stop": stopFile = args[i + 1]; i += 2
     case "--fps": fps = Int(args[i + 1])!; i += 2
+    case "--displays": i += 1
     default:
         guard i + 1 < args.count, let pid = Int32(args[i]) else { fputs("usage: wincaps [--seconds N] [--stop FILE] [--fps 30] PID OUT.mov ...\n", stderr); exit(2) }
         pairs.append((pid, args[i + 1])); i += 2
     }
 }
-guard !pairs.isEmpty else { fputs("wincaps: nothing to record\n", stderr); exit(2) }
+guard !pairs.isEmpty || args.first == "--displays" else { fputs("wincaps: nothing to record\n", stderr); exit(2) }
 
 let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
+if CommandLine.arguments.dropFirst().first == "--displays" { print(content.displays.count); exit(0) }
 var streams: [SCStream] = [], delegates: [Delegate] = [], keep: [AnyObject] = []
 for (pid, path) in pairs {
     let candidates = content.windows.filter { $0.owningApplication?.processID == pid && $0.frame.width > 200 }

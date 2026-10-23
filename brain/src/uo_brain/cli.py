@@ -252,6 +252,12 @@ def main() -> None:
                     help="a companion of a person's character fights only what the escort rule allows (in war mode within 4 "
                          "tiles of the leader or 6 of itself), and doesn't ask system one which creatures beyond it are the "
                          "leader's fight (cuo-cym.25)")
+    ss.add_argument("--no-hear-leader", action="store_true",
+                    help="a companion of a person's character hears only what its own client gets: the leader's lines a "
+                         "wall keeps from it aren't passed on from the leader's own client (cuo-cym.28)")
+    ss.add_argument("--leader-port", type=int, default=None,
+                    help="the agent port of the client the person plays the leader in; without it, the client on this "
+                         "machine whose character is the leader (cuo-cym.28)")
     ss.add_argument("--roleplay", action="store_true",
                     help="a party member that emotes and gestures in character: at the inn's table, on setting out, "
                          "resting, after a kill, over a fallen companion (cuo-cod.8)")
@@ -1133,6 +1139,11 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         companion = Companion(session, party, log=write, game=link.game, table=table, floor=link.floor,
                               voice=link.voice if not link.voice.plain else None, link=link,
                               persuade=not args.no_persuade, judge_reach=not args.no_judge_reach)
+    relay = None
+    if escorting and not args.no_hear_leader:
+        # The leader's lines a wall kept from this companion, from the leader's own client (relay.py, cuo-cym.28).
+        from .relay import Relay
+        relay = Relay(party.leader, rpc, port=args.leader_port, me_port=args.port, log=write)
     if party is not None and not party.leading and not huddling:
         follower = Follower(session, party, log=write, table=table) if not escorting else None
         if not args.no_memory:
@@ -1161,7 +1172,7 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
     await rpc.call("mode", mode="auto")
     mark = costs.ledger.mark()
     key_check(write)
-    listening = reporting = watching = ears = partying = None
+    listening = reporting = watching = ears = partying = relaying = None
 
     def doing() -> str:
         if companion is not None:
@@ -1201,10 +1212,12 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
                 partying = asyncio.create_task(link.game.keep(session.snap, stop))
             if huddling:
                 watching = asyncio.create_task(plan.huddle.watch(stop))
+            if relay is not None:
+                relaying = asyncio.create_task(relay.run(stop))
             summary = await (companion.run(stop, args.hours) if companion else follower.run(stop, args.hours)
                              if follower else plan.run(hours=args.hours, stop=stop))
     finally:
-        for task in (listening, reporting, watching, partying):
+        for task in (listening, reporting, watching, partying, relaying):
             if task:
                 task.cancel()
         await judge.close()
@@ -1220,6 +1233,8 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         summary |= ears.to_log()  # a follower's talk; a planner's summary has its own
     if table is not None:
         summary |= table.to_log()
+    if relay is not None:
+        summary["relay"] = relay.report()
     if session.roleplay is not None:
         summary |= session.roleplay.to_log()
     summary["costs"] = costs.ledger.summary(mark, kills=summary.get("kills"))

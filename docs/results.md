@@ -1678,6 +1678,22 @@ tile the grid reaches and the walker can't; a `+` one the walker reaches and the
 | Minoc | 0 | 0 | 2 |
 | Castle British (z 50), Britain Mine 1 (a mountainside), a spot by a Vesper bridge | 0 | 0 | 0 |
 
+**...but from the top of a stair** (cuo-u4j), 2026-10-23. The rule above measured a step from where one
+stands, and on a stair (a bridge tile) one stands half way up it: on the step at the Sweet Dreams inn's
+south door (a stair block at z 10, 10 high, under one at z 15, 5 high), stood on at 15 or 17 and 20 at its
+top, the floor at 20 was out of reach, so nothing planned into the inn ("no way there on the map", from
+the street at 1487,1621; the client's walker went in). The server (`Movement.Check`: the top of what one
+stands on, its full height) and the client's walker (`Pathfinder.CalculateMinMaxZ`: a bridge stood on
+gives its base plus its full height) both measure from the top, and both step onto a stair from 2 below
+its base and onto anything else from 2 below its top. The planner now does the same (`NavGrid.Reach`).
+`uv run python scripts/nav_check.py 5679 bench/2026-10-23-nav-check-u4j.json`, one headless client,
+with an eleventh place, the street west of that inn: there 4 tiles the walker reaches and the grid
+doesn't, and 2,642 both reach (the whole inn among them). The Britain inn's 79 and the healer's 3,018 are
+back: they are behind doors, which the check's walker doesn't open and a trip does. The first is the
+building east of the Britain inn (1494,1656), up a step (z 22, 5 high: 27 at its top) and through a door onto a floor at
+27; a trip there arrived (27 tiles, one door opened), as did trips from the street into the Sweet Dreams
+inn, on to its innkeeper and back out. Every other place as above.
+
 No tile the walker reaches was lost anywhere (`+` the same everywhere), stairs and the mountainside
 included. The large `-` counts inside the bank and upstairs at the healer's are the walker's own reach
 stopping at closed doors, which the grid passes at a cost; the change doesn't touch them.
@@ -3448,6 +3464,34 @@ uv run python scripts/escort_check.py --out bench/2026-10-19-escort.json   # the
   companion's first question on it said it was his fight. Two runs before these, with Roland free to walk,
   showed nothing either way: his client walked up to what he shot (10 tiles in 3 s), so a skeleton and a
   ratman archer were beside him within 2 s and the rule took them too.
+
+**Through the inn's wall** (cuo-cym.28), 2026-10-23 13:28 and 13:37, one run each way, windowed and filmed
+(each client recording itself, cuo-cym.32), the `party-player-talk` companions and a scripted leader. The
+party starts in the street west of the Sweet Dreams inn in Britain; the leader says "Follow me, in we go.",
+walks them onto the inn's ground floor (1496,1618), says "Wait here a moment, I'll be right back.", walks
+out to the street at 1488,1616 and says "Come on out here, all of you." aloud.
+
+```bash
+cd brain
+uv run python scripts/party_player.py --fleet fleets/party-player-inn.toml --walls --windowed
+uv run python scripts/party_player.py --fleet fleets/party-player-inn.toml --walls --windowed --set hear_leader=false
+```
+
+| | passed on from the leader's client | as before (`hear_leader = false`) |
+|---|---|---|
+| inside when called, tiles from the leader, in its sight | 8, 8, 9; none in sight | 8, 9, 9; none in sight |
+| the call read by | all three, as "come along" | nobody |
+| passed on, after the line was said | 1.5 s, to each | |
+| came out to the leader (within 3 tiles, 30 s) | all three | none |
+
+- **The server sent the line to nobody inside;** each brain found it in the leader's client and passed it
+  on. Their answers ("Right, I'm coming.") went out as speech does, so the leader saw none of them until
+  they came out.
+- **Where the leader stands matters:** in an earlier take from 1487,1621, five tiles further south, the
+  server sent the call to all three directly (the client's sight rule sees 28 of the ground floor's tiles
+  from there, through the west wall), and nothing was passed on. In the first take the walk out never
+  started: `[AgentGo` had put everyone under the inn's floor, and the planner couldn't plan up the inn's
+  steps from the street, a fault of 2026-10-19's change (cuo-u4j, [above](#a-tile-the-server-lets-nobody-onto)).
 
 **The huddle names who goes in** (cuo-cym.14), 2026-10-14 01:30 to 03:50: the lich scene, `plan=huddle`
 (a planner each and a plan the five agree), formed up, memory on, headless; three runs on the code as

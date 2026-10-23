@@ -14,6 +14,11 @@ fleet with --windowed. Recording loads the machine: say so in the experiment's r
 
 Needs the recorder built (tools/video/build.sh; done here if missing), ffmpeg, and the Screen Recording
 permission for the terminal it runs from.
+
+ScreenCaptureKit gets no frames while the Mac's screen is locked (it sees no display), which is how
+unattended runs go. Then (--source auto, the default) each client films itself instead (cuo-cym.32): its
+"record" RPC reads its own frames, --client-fps a second, into a FIFO that ffmpeg reads (raw/PORT.mp4).
+That costs the game thread a few milliseconds a frame read; --source screen or client forces either.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import os
 import re
 import shlex
 import socket
@@ -51,9 +57,13 @@ def listener(port: int) -> int | None:
 
 def status(port: int) -> dict:
     """The client's status over its agent RPC (one JSON line each way); {} when it doesn't answer."""
+    return rpc(port, "status")
+
+
+def rpc(port: int, method: str, params: dict | None = None) -> dict:
     try:
         with socket.create_connection(("127.0.0.1", port), timeout=3) as s:
-            s.sendall((json.dumps({"id": 1, "method": "status", "params": {}}) + "\n").encode())
+            s.sendall((json.dumps({"id": 1, "method": method, "params": params or {}}) + "\n").encode())
             buf = b""
             while True:
                 chunk = s.recv(65536)
@@ -110,6 +120,53 @@ def recorded(log: Path) -> dict[str, tuple[str, float]]:
     return out
 
 
+def screen_locked() -> bool:
+    """Whether ScreenCaptureKit sees no display (the screen locked or asleep): then it records nothing."""
+    if not WINCAPS.exists():
+        subprocess.run([str(HERE / "build.sh")], check=True)
+    r = subprocess.run([str(WINCAPS), "--displays"], capture_output=True, text=True)
+    return r.stdout.strip() == "0"
+
+
+class ClientRecording:
+    """One client filming itself (cuo-cym.32): its frames go into a FIFO, ffmpeg makes raw/PORT.mp4 of them."""
+
+    def __init__(self, port: int, raw_dir: Path, fps: int, log):
+        self.port, self.log = port, log
+        self.fifo = raw_dir / f"{port}.rgba"
+        self.out = raw_dir / f"{port}.mp4"
+        os.mkfifo(self.fifo)
+        self.started = rpc(port, "record", {"path": str(self.fifo), "fps": fps})
+        self.ffmpeg = None
+        if not self.started.get("recording"):
+            print(f"film: port {port} won't record: {self.started}", file=log, flush=True)
+            return
+        w, h = self.started["width"], self.started["height"]
+        Path(f"{self.out}.start").write_text(f"{self.started['start']:.3f}\n")
+        self.ffmpeg = subprocess.Popen(
+            ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", f"{w}x{h}",
+             "-framerate", str(fps), "-i", str(self.fifo), "-vf", "crop=trunc(iw/2)*2:trunc(ih/2)*2", "-an",
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+             "-pix_fmt", "yuv420p", str(self.out)], stderr=log)
+
+    def check(self) -> dict:
+        st = rpc(self.port, "record")
+        if st:
+            print(f"client {self.out.name}: {json.dumps(st)}", file=self.log, flush=True)
+        return st
+
+    def stop(self) -> None:
+        if self.ffmpeg is None:
+            return
+        self.check()
+        rpc(self.port, "record", {"stop": True})  # a client still running: the clip ends now; one gone ended it
+        try:
+            self.ffmpeg.wait(timeout=120)
+        except subprocess.TimeoutExpired:
+            self.ffmpeg.terminate()
+        self.fifo.unlink(missing_ok=True)
+
+
 def scales(log: Path) -> dict[str, float]:
     return {name: scale for name, (_, scale) in recorded(log).items()}
 
@@ -119,17 +176,31 @@ def make_clips(raw_dir: Path, stem: str, out_dir: Path, default_scale: float = 2
     all of them side by side too."""
     made = []
     seen = recorded(raw_dir / "wincaps.log")
-    for raw in sorted(raw_dir.glob("*.mov")):
-        title, scale = seen.get(raw.name, (raw.stem, default_scale))
-        who = title.split(" - ClassicUO")[0] or raw.stem
+    names = filmed_by_clients(raw_dir / "recorder.log")
+    for raw in sorted(raw_dir.glob("*.mov")) + sorted(raw_dir.glob("*.mp4")):
+        if raw.suffix == ".mp4":  # a client's own frames: no title bar
+            who, crop = names.get(raw.name, raw.stem), 0
+        else:
+            title, scale = seen.get(raw.name, (raw.stem, default_scale))
+            who, crop = title.split(" - ClassicUO")[0] or raw.stem, round(TITLE_BAR * scale)
         out = out_dir / f"{stem} - {who}.mp4"
-        if to_mp4(raw, out, round(TITLE_BAR * scale)):
+        if to_mp4(raw, out, crop):
             made.append(out)
     if len(made) > 1:
         grid = out_dir / f"{stem} - all.mp4"
         if side_by_side(made, grid):
             made.append(grid)
     return made
+
+
+def filmed_by_clients(log: Path) -> dict[str, str]:
+    """Each client recording's character, from the recorder's log ("client 5661.mp4 is Roland")."""
+    out = {}
+    for line in log.read_text().splitlines() if log.exists() else []:
+        m = re.match(r"client (\S+\.mp4) is (.+)$", line)
+        if m:
+            out[m.group(1)] = m.group(2)
+    return out
 
 
 def to_mp4(raw: Path, out: Path, crop_top: int) -> bool:
@@ -165,6 +236,10 @@ def main() -> int:
     ap.add_argument("--bead", default="", help="the bead the run is for")
     ap.add_argument("--wait", type=float, default=180, help="seconds to wait for the clients' windows (default 180)")
     ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--source", choices=["auto", "screen", "client"], default="auto",
+                    help="screen (ScreenCaptureKit), client (each client's own frames, works with the screen locked) "
+                         "or auto: client when the screen is locked (default)")
+    ap.add_argument("--client-fps", type=int, default=15, help="frames a second a client reads of itself (default 15)")
     ap.add_argument("--scale", type=float, default=2, help="pixels a point, where the recorder's log doesn't say")
     ap.add_argument("--out", type=Path, default=CLIPS, help=f"where the clips go (default {CLIPS})")
     ap.add_argument("--remake", type=Path, metavar="RAW_DIR",
@@ -201,6 +276,33 @@ def main() -> int:
               file=sys.stderr)
     names = {port: (status(port).get("player") or f"port {port}") for port in windows}
     recorder = None
+    source = args.source
+    if source == "auto":
+        source = "client" if screen_locked() else "screen"
+    if windows and source == "client":
+        log = (raw_dir / "recorder.log").open("a")
+        clients = []
+        for port in windows:
+            print(f"client {port}.mp4 is {names[port]}", file=log, flush=True)
+            clients.append(ClientRecording(port, raw_dir, args.client_fps, log))
+        started = time.time()
+        print(f"film: {', '.join(names.values())} filming themselves from {time.strftime('%H:%M:%S')} "
+              f"(the screen is locked or --source client)", file=sys.stderr)
+        try:
+            checked = started
+            while run.poll() is None:
+                time.sleep(1)
+                if time.time() - checked >= 30:
+                    checked = time.time()
+                    for c in clients:
+                        c.check()
+        except KeyboardInterrupt:
+            run.terminate()
+        code = run.wait()
+        for c in clients:
+            c.stop()
+        log.close()
+        return finish(raw_dir, stem, args, command, started - began, code)
     if windows:
         cmd = [str(WINCAPS), "--stop", str(stop_file), "--fps", str(args.fps)]
         for port, pid in windows.items():
@@ -221,8 +323,12 @@ def main() -> int:
     except subprocess.TimeoutExpired:
         recorder.terminate()
 
+    return finish(raw_dir, stem, args, command, started - began, code)
+
+
+def finish(raw_dir: Path, stem: str, args, command: list[str], offset: float, code: int) -> int:
+    day = datetime.date.today().isoformat()
     made = make_clips(raw_dir, stem, args.out, args.scale)
-    offset = started - began
     print(f"\nfilm: {len(made)} clips in {args.out} (recording began {offset:.0f} s into the command):")
     for m in made:
         print(f"  {m.name}  {mmss(duration(m))}")
@@ -230,7 +336,7 @@ def main() -> int:
         files = ", ".join(f"`{m.name}` ({mmss(duration(m))})" for m in made)
         print("\nRow for the vault's Footage log (fill in what it shows and when, anything staged, where used):")
         print(f"| {day} | {files} | {args.what} | `{shlex.join(command)}` | {args.bead} | | |")
-        raws = list(raw_dir.glob("*.mov"))
+        raws = list(raw_dir.glob("*.mov")) + list(raw_dir.glob("*.mp4"))
         size = sum(r.stat().st_size for r in raws) / 1e9
         print("\nRow for its Raw recordings table:")
         print(f"| `{raw_dir.name}` | the window recordings behind those clips, one per client | {len(raws)}, {size:.2f} GB |")

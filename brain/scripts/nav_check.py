@@ -1,4 +1,4 @@
-"""The planner grid's reach against the client's own walker's, at a few places, for one client (cuo-5y8).
+"""The planner grid's reach against the client's own walker's, at a few places, for one client (cuo-5y8; the inn by its steps, cuo-u4j).
 
   uv run python scripts/nav_check.py PORT OUT.json      (a client logged in on PORT)
 '-' = the grid reaches a tile the client's walker can't; '+' = the client reaches one the grid can't."""
@@ -8,7 +8,7 @@ from uo_brain.rpc import AgentRpc
 PLACES = [("tuft west of Britain", 1347, 1512), ("West Britain bank", 1425, 1690), ("Britain healer", 1471, 1611),
           ("Castle British", 1323, 1624), ("Britain inn", 1494, 1656), ("Cove", 2243, 1195),
           ("Britain Mine 1", 1443, 1228), ("Britain graveyard", 1384, 1492), ("Minoc", 2466, 544),
-          ("Vesper bridge", 2875, 760)]
+          ("Vesper bridge", 2875, 760), ("Sweet Dreams inn, the street west of it", 1487, 1621)]
 
 async def main(port, out):
     r = AgentRpc(port=port)

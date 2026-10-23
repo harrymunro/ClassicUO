@@ -124,6 +124,31 @@ namespace ClassicUO.UnitTests.Agent
         }
 
         [Fact]
+        public void A_stair_is_stepped_off_from_its_top_so_the_floor_above_the_inns_step_is_in_reach()
+        {
+            // cuo-u4j: the Britain inn's south door, from the street (z 12) up its step (a stair block at z 10, 10 high,
+            // under one at z 15, 5 high, both bridges: stood on at 17 and at 15, 20 at the top) to the floor at z 20.
+            // Measured from where one stands on the step (15), the floor was 3 out of reach and nobody planned into the inn.
+            var g = new NavGrid(100, 200, 3, 1);
+            AgentNav.AddStandable(g, 100, 200, true, 12, new List<(sbyte, byte, bool, bool, bool, byte)>());
+            AgentNav.AddStandable(g, 101, 200, true, 10, new List<(sbyte, byte, bool, bool, bool, byte)>
+                { (10, 5, true, false, true, 10), (15, 2, true, false, true, 5) });
+            AgentNav.AddStandable(g, 102, 200, true, 10, new List<(sbyte, byte, bool, bool, bool, byte)> { (20, 0, true, false, false, 0) });
+
+            var path = AgentNav.Plan(g, 100, 200, 12, 102, 200, 0);
+            path.Should().NotBeNull();
+            path.Last().Should().Be((102, 200, (sbyte) 20));
+            g.Reach(101, 200, 0).Should().Be(20);
+
+            // Anything but a stair is stepped onto only from within STEP_ONTO of its top, as the server has it: a 6-high
+            // block from the ground isn't.
+            var block = new NavGrid(100, 200, 2, 1);
+            AgentNav.AddStandable(block, 100, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)>());
+            AgentNav.AddStandable(block, 101, 200, false, 0, new List<(sbyte, byte, bool, bool, bool, byte)> { (0, 6, true, false, false, 6) });
+            block.StepTo(101, 200, 0, block.Reach(100, 200, 0)).Should().Be(-1);
+        }
+
+        [Fact]
         public void Stops_within_the_distance_asked()
         {
             NavGrid g = Field("..........");

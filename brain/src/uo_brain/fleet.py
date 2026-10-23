@@ -109,6 +109,10 @@ class Fleet:
     persuade: bool = True
     # ...and which creatures beyond the escort rule's tiles are the leader's fight is put to system one (cuo-cym.25).
     judge_reach: bool = True
+    # The leader's lines a wall kept from a companion are passed on from the leader's own client (cuo-cym.28); the
+    # client is the one on this machine whose character is the leader, or the one on leader_port.
+    hear_leader: bool = True
+    leader_port: int = 0
     roleplay: bool = False   # a party's members emote and gesture in character (cuo-cod.8)
     memory: bool = True      # false: every brain runs without its character's memory, so repeat runs are independent
     plan: str = "leader"     # a party's one plan: the leader's (cuo-4ar), or agreed in a huddle, a planner each (cuo-bih)
@@ -210,6 +214,7 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                  small_talk=bool(data.get("small_talk", True)), pace=bool(pace),
                  pace_factor=1.0 if isinstance(pace, bool) else float(pace),
                  persuade=bool(data.get("persuade", True)), judge_reach=bool(data.get("judge_reach", True)),
+                 hear_leader=bool(data.get("hear_leader", True)), leader_port=int(data.get("leader_port", 0)),
                  roleplay=bool(data.get("roleplay", False)), walk=bool(data.get("walk", False)),
                  form_up=bool(data.get("form_up", False)), game_party=bool(data.get("game_party", False)),
                  rally_map=bool(data.get("rally_map", False)),
@@ -385,6 +390,8 @@ def start_brain(fleet: Fleet, agent: Agent, out_dir: Path, hamlet: dict[str, Any
         cmd += ["--party-plan", fleet.plan] if fleet.plan != "leader" else []
         cmd += ["--no-persuade"] if fleet.plan == "player" and not fleet.persuade else []
         cmd += ["--no-judge-reach"] if fleet.plan == "player" and not fleet.judge_reach else []
+        cmd += ["--no-hear-leader"] if fleet.plan == "player" and not fleet.hear_leader else []
+        cmd += ["--leader-port", str(fleet.leader_port)] if fleet.plan == "player" and fleet.leader_port else []
     if agent.persona:
         persona = out_dir / f"{agent.name}.persona.json"
         persona.write_text(json.dumps({"name": agent.name, **agent.persona}, indent=2))
@@ -534,7 +541,8 @@ async def run(fleet: Fleet, out_dir: Path, every_s: float = 30.0) -> dict[str, A
               "raise": fleet.raise_fallen,
               **({"callouts_to": fleet.callouts_to} if fleet.callouts_to != "say" else {}),
               "small_talk": fleet.small_talk, "pace": fleet.pace if fleet.pace_factor == 1.0 or not fleet.pace else fleet.pace_factor,
-              **({"persuade": fleet.persuade, "judge_reach": fleet.judge_reach} if fleet.plan == "player" else {}),
+              **({"persuade": fleet.persuade, "judge_reach": fleet.judge_reach, "hear_leader": fleet.hear_leader}
+                 if fleet.plan == "player" else {}),
               "travel": fleet.travel, "rules": fleet.rules}
              if fleet.party else {}), **({} if fleet.memory else {"memory": False}),
           **({"plan": fleet.plan} if fleet.plan != "leader" else {}), **({"use": fleet.use} if fleet.use else {}),

@@ -330,7 +330,7 @@ namespace ClassicUO.Agent
                 {
                     int i = queue.Dequeue();
                     int x = g.X0 + i % g.Width, y = g.Y0 + i / g.Width;
-                    int z = _z[i];
+                    int z = _z[i], reach = g.ReachAt(x, y, z);
 
                     if (_steps[i] >= MAX_STEPS)
                     {
@@ -346,9 +346,9 @@ namespace ClassicUO.Agent
                             continue;
                         }
 
-                        int nk = g.StepTo(nx, ny, z);
+                        int nk = g.StepTo(nx, ny, z, reach);
 
-                        if (nk < 0 || dx != 0 && dy != 0 && (g.StepTo(x + dx, y, z) < 0 || g.StepTo(x, y + dy, z) < 0))
+                        if (nk < 0 || dx != 0 && dy != 0 && (g.StepTo(x + dx, y, z, reach) < 0 || g.StepTo(x, y + dy, z, reach) < 0))
                         {
                             continue;
                         }
@@ -417,6 +417,7 @@ namespace ClassicUO.Agent
                     int i = queue.Dequeue();
                     count++;
                     int cx = _g.X0 + i % _g.Width, cy = _g.Y0 + i / _g.Width, z = _floodZ[i];
+                    int reach = _g.ReachAt(cx, cy, z);
 
                     foreach ((int dx, int dy) in Steps8)
                     {
@@ -434,9 +435,9 @@ namespace ClassicUO.Agent
                             continue;
                         }
 
-                        int nk = _g.StepTo(nx, ny, z);
+                        int nk = _g.StepTo(nx, ny, z, reach);
 
-                        if (nk < 0 || dx != 0 && dy != 0 && (_g.StepTo(cx + dx, cy, z) < 0 || _g.StepTo(cx, cy + dy, z) < 0))
+                        if (nk < 0 || dx != 0 && dy != 0 && (_g.StepTo(cx + dx, cy, z, reach) < 0 || _g.StepTo(cx, cy + dy, z, reach) < 0))
                         {
                             continue;
                         }
