@@ -978,6 +978,29 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   the four came home ten times in the hour to the control's once, spent a third to three fifths of it at home
   (the control none) and said 46 lines to each other (the control 8); three of four were in Cove more than half
   the hour, the hunter whose ground is 120 tiles out a sixth of it. $0.06 a resident an hour.
+- **Its lands** (cuo-m3n.3): `lands = ["south-west of Cove Cemetery", "near Cove Orc Fort"]` in `[hamlet]`
+  names the grounds its residents work, each a hunting area of the world store (the square round its
+  spawns, plus 10 tiles). The planner is told them as the hamlet's lands ("working there is part of life in
+  Cove; between one piece of work and the next, come home"); each turn's situation says when a resident is on
+  them ("on Cove's lands (south-west of Cove Cemetery), 115 tiles from Cove and 165 from home") and, after 5
+  minutes away, how long it has been away from home. `hamlet-report` adds the share of the run in the hamlet
+  or its lands, and how many of a resident's pieces of work (hunts, sales, purchases, banking, trips but the
+  trip home) had it at home between one and the next. `fleets/hamlet-cove-lands.toml` is the four with their
+  lands and their work put as short pieces with home between.
+- **Its evenings** (cuo-m3n.5): `gather = "Cove healer"`, `gather_words = "the healer's house"`,
+  `day_minutes = 60` and `evening_minutes = 15` in `[hamlet]` make a run days of an hour whose last quarter
+  is the evening, on one clock for every resident (from the run's start). Each turn says the time of day ("day
+  2, afternoon; evening (the gathering at the healer's house) in about 12 minutes"), and of an evening the
+  planner is offered the `evening` goal: the resident walks to the gathering place; the first there keeps the
+  turns (a claim in the shared store, so two brains don't both host) once a neighbour has come (waiting up to
+  150 s, or 60 s once one has), and the others sit as they come. It is the party's table
+  ([the inn](#a-party-in-a-fight-on-the-road-and-at-the-inn)) in a hamlet scene: neighbours talking the day
+  over, each from its own day (its planner's goals since the last evening), news, worries and tomorrow, a
+  greeting to open and what each means to do tomorrow to close. Each keeps its own memories of it: up to three
+  things learned about a neighbour (relationship memories) and a plan or two for tomorrow (events); nothing of
+  it reaches the fights. Nobody is sent: one out hunting can miss it. `hamlet-report` counts each resident's
+  evening goals, tables kept, lines said at them and memories kept. `fleets/hamlet-cove-evenings.toml` is the
+  four with their lands and evenings, memory on, for three hours.
 
 ## Without a window
 
