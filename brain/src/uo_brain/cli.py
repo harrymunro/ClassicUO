@@ -208,6 +208,9 @@ def main() -> None:
     hr.add_argument("dirs", type=Path, nargs="+", metavar="DIR", help="a fleet run's folder, e.g. logs/fleet/RUN")
     hr.add_argument("--json", action="store_true", help="one JSON object a run, a line each")
     hr.add_argument("--shard", default="local", help="the store whose memories are read (default local)")
+    hr.add_argument("--lands", action="append", default=[], metavar="AREA",
+                    help="measure against these lands (hunting areas of the store; repeatable) a run whose file named "
+                         "none, to set it beside one that did (cuo-m3n.3)")
 
     add_world_args(sub)
     add_memory_args(sub)
@@ -355,8 +358,10 @@ def main() -> None:
         from . import hamlet
         from .world import World
         with World.open(args.shard) as world:
+            from .fleet import land_of
+            lands = [land_of(world, name) for name in args.lands] or None
             for d in args.dirs:
-                r = hamlet.report(d, world)
+                r = hamlet.report(d, world, lands=lands)
                 print(json.dumps(r) if args.json else hamlet.markdown(r))
         return
     if args.cmd in ("fleet", "fleet-report"):

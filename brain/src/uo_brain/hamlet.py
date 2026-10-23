@@ -437,8 +437,9 @@ def remembered(world: Any, me: str, neighbours: list[str], since: float) -> dict
     return out
 
 
-def report(out_dir: Path, world: Any = None) -> dict[str, Any]:
-    """The hamlet report of a fleet run (cuo-m3n): each resident against the hamlet, its work and its talk."""
+def report(out_dir: Path, world: Any = None, lands: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """The hamlet report of a fleet run (cuo-m3n): each resident against the hamlet, its work and its talk. `lands`:
+    measure against these (land_of) whatever the run's file named, to set a run without lands beside one with."""
     from . import fleet as fleets
     records = logs.read(out_dir / "fleet.jsonl")
     head = next((r for r in records if r["type"] == "fleet"), {})
@@ -453,7 +454,7 @@ def report(out_dir: Path, world: Any = None) -> dict[str, Any]:
         home = (spec.get("homes") or {}).get(name)
         h = Hamlet(spec["name"], [tuple(r) for r in spec["rects"]], int(spec.get("edge", EDGE)), name,
                    (int(home["x"]), int(home["y"])) if home else None, (home or {}).get("words", ""),
-                   lands=[dict(x) for x in spec.get("lands") or []])
+                   lands=[dict(x) for x in (lands if lands is not None else spec.get("lands") or [])])
         wheres = [r for r in records if r["type"] == "where" and r.get("agent") == name and r.get("x") is not None]
         log = out_dir / f"{name}.jsonl"
         session = logs.read_session(log) if log.exists() else []
@@ -486,6 +487,7 @@ def report(out_dir: Path, world: Any = None) -> dict[str, Any]:
         residents[name] = entry
     talked = {n: sum(1 for v in (r.get("talk") or {}).values() if v["said"] or v["heard"]) for n, r in residents.items()}
     return {"fleet": head.get("name"), "dir": str(out_dir), "hamlet": spec["name"], "told": spec.get("told", True),
+            **({"lands_given": [x["name"] for x in lands]} if lands is not None else {}),
             "residents": residents, "talked_with": talked,
             "together": {k: base["together"].get(k) for k in ("cost_usd", "cost_per_hour_usd", "kills", "deaths")}}
 

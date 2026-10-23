@@ -150,6 +150,9 @@ def test_the_hamlet_report_measures_each_resident_against_it(tmp_path):
         memories.Memory(w, "Maren").add("Talked with Wenna (2026-10-19): back safe.", kind="relationship",
                                         source="talk", importance=3, at=T0 + 1150)
         r = hamlet.report(tmp_path, w)
+        # A run whose file named no lands, measured against them (--lands): her time out on the woods counts.
+        given = hamlet.report(tmp_path, w, lands=[{"name": "the woods", "x": 2416, "y": 1172, "r": 25}])
+    assert given["lands_given"] == ["the woods"] and given["residents"]["Maren"]["in_hamlet_or_lands"] > 0.39
     m = r["residents"]["Maren"]
     assert m["samples"] == 41 and m["in_hamlet"] == 0.39 and m["at_home"] == 0.24 and m["came_home"] == 1
     assert m["longest_away_min"] == 12.0 and m["farthest"] == 131
