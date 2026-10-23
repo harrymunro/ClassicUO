@@ -175,7 +175,7 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
         if not isinstance(hamlet, dict) or not hamlet.get("name"):
             raise ValueError(f"{path}: [hamlet] needs a name (a region of the world store, e.g. \"Cove\")")
         hamlet = {"name": str(hamlet["name"]), "edge": int(hamlet.get("edge", 10)),
-                  "told": data.get("hamlet") is not False}
+                  "told": data.get("hamlet") is not False, "lands": [str(x) for x in hamlet.get("lands") or []]}
         if homeless := [a.name for a in agents if not a.home]:
             raise ValueError(f"{path}: in a hamlet every agent needs a home: {', '.join(homeless)}")
     party = bool(data.get("party", False))
@@ -244,15 +244,33 @@ def hamlet_of(fleet: Fleet, shard: str = "local", root: Path | None = None) -> d
             except WorldError as e:
                 raise ValueError(f"{a.name}'s home: {e}") from None
             homes[a.name] = {"x": x, "y": y, "words": a.home_words or label}
+        lands = [land_of(w, name) for name in fleet.hamlet.get("lands") or []]
     rects = [tuple(r) for r in region.rects]
     known = {}
     for a in fleet.agents:
         others = [{"name": o.name, "trade": o.persona.get("trade", ""), "home_words": homes[o.name]["words"],
                    **({"work": o.work} if o.work else {})} for o in fleet.agents if o.name != a.name]
         known[a.name] = Hamlet(region.name, rects, fleet.hamlet["edge"], a.name, (homes[a.name]["x"], homes[a.name]["y"]),
-                               homes[a.name]["words"], a.work, others)
+                               homes[a.name]["words"], a.work, others, lands)
     return {"name": region.name, "rects": [list(r) for r in rects], "edge": fleet.hamlet["edge"],
-            "told": fleet.hamlet["told"], "homes": homes, "known": known}
+            "told": fleet.hamlet["told"], "homes": homes, **({"lands": lands} if lands else {}), "known": known}
+
+
+def land_of(world: Any, name: str) -> dict[str, Any]:
+    """One of a hamlet's lands (cuo-m3n.3): a hunting area of the world store, as the square round its spawns (their
+    centre, and the farthest one's distance from it plus its spawn range and LAND_EDGE)."""
+    from .hamlet import LAND_EDGE, chebyshev
+    from .world import WorldError
+    try:
+        spawns = world.what_spawns(area=name, limit=100)
+    except WorldError:
+        spawns = []
+    if not spawns:
+        raise ValueError(f"the hamlet's land {name!r} is no hunting area of the world store")
+    cx = round(sum(s["x"] for s in spawns) / len(spawns))
+    cy = round(sum(s["y"] for s in spawns) / len(spawns))
+    r = max(chebyshev(cx, cy, s["x"], s["y"]) + min(int(s.get("range") or 10), 15) for s in spawns) + LAND_EDGE
+    return {"name": str(spawns[0].get("area") or name), "x": cx, "y": cy, "r": r}
 
 
 # ---------------------------------------------------------------- running it

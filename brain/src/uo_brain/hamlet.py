@@ -7,6 +7,7 @@ each chooses its day anywhere on the map, so they scatter and meet by chance. A 
     [hamlet]
     name = "Cove"     # a region of the world store: its area is the hamlet
     edge = 10         # tiles round it that still count as in it (its gate, the path by its walls)
+    lands = ["south-west of Cove Cemetery"]   # the grounds its residents work: hunting areas of the world store
 
     [[agent]]
     name = "Maren"
@@ -19,6 +20,11 @@ and that its days begin and end in the hamlet (`Hamlet.words`, in the system pro
 turn's situation says where it is against home and the hamlet (`Hamlet.where`), and "home" is a place
 for travel_to (`Hamlet.is_home`). Its talk knows where it lives and who its neighbours are
 (`Hamlet.lives`). Nothing is scripted: the planner still chooses every goal (2026-10-06).
+
+The hamlet's lands (cuo-m3n.3) are the grounds its residents work, each a hunting area round its spawns: a
+hunter whose ground is 120 tiles out is at work there, not away. The planner is told them, each turn's
+situation says when the resident is on them and how long it has been away from home, and the report counts
+the run in the hamlet or its lands, and whether a resident came home between one piece of work and the next.
 
 With `--set hamlet=false` the residents are told nothing (persona and long goals only, as the
 britain-lives NPCs are) and the fleet still measures them against the hamlet: the control.
@@ -43,6 +49,9 @@ HOME_TILES = 6     # within this many tiles of home is at home (a house's rooms 
 STILL_S = 600      # standing still this long away from home is a spell worth naming in the report
 STILL_TILES = 3    # ...within this many tiles of where the spell began
 SAMPLE_S = 30.0    # the fleet looks where each resident is this often
+LAND_EDGE = 10     # tiles round a land's spawns that are still that land
+AWAY_SAID_MIN = 5  # away from home this many minutes or more, each turn says how long
+WORK_GOALS = ("hunt", "sell", "buy", "bank", "restock", "travel_to")
 HOME_WORDS = re.compile(r"^\s*(?:back\s+)?(?:to\s+)?(?:my\s+|our\s+|the\s+)?(?:home|house)\b(?:\s*\(.*\))?\s*$", re.I)
 
 
@@ -61,6 +70,9 @@ class Hamlet:
     home_words: str = ""      # "the healer's house"
     work: str = ""
     neighbours: list[dict[str, str]] = field(default_factory=list)  # name, trade, home_words, work
+    lands: list[dict[str, Any]] = field(default_factory=list)       # name, x, y, r: the grounds its residents work
+    # When this resident was last seen at home (time.monotonic), for each turn's words: not part of what it knows.
+    home_at: float | None = field(default=None, compare=False)
 
     # ------------------------------------------------------------ where
 
@@ -78,6 +90,14 @@ class Hamlet:
         """In the hamlet or within its edge."""
         return self.beyond(x, y) <= self.edge
 
+    def on_lands(self, x: int, y: int) -> str | None:
+        """The name of the hamlet's land (cuo-m3n.3) this tile is on, or None."""
+        return next((land["name"] for land in self.lands if chebyshev(x, y, land["x"], land["y"]) <= land["r"]), None)
+
+    def at_work_or_home(self, x: int, y: int) -> bool:
+        """In the hamlet or on its lands."""
+        return self.inside(x, y) or self.on_lands(x, y) is not None
+
     def at_home(self, x: int, y: int) -> bool:
         return self.home is not None and chebyshev(x, y, *self.home) <= HOME_TILES
 
@@ -86,18 +106,27 @@ class Hamlet:
         return bool(place and self.home is not None and
                     (HOME_WORDS.match(place) or (self.home_words and place.strip().lower() == self.home_words.lower())))
 
-    def where(self, x: int, y: int) -> str:
-        """Where the resident is, against home and the hamlet, for each turn's situation."""
+    def where(self, x: int, y: int, now: float | None = None) -> str:
+        """Where the resident is, against home, the hamlet and its lands, for each turn's situation; away from home
+        AWAY_SAID_MIN minutes or more, how long (the first call counts as at home: a run starts there)."""
+        now = time.monotonic() if now is None else now
         home = f"home ({self.home_words})" if self.home_words else "home"
+        if self.home_at is None or self.at_home(x, y):
+            self.home_at = now
         if self.at_home(x, y):
             return f"at {home}, in {self.name}"
         far = chebyshev(x, y, *self.home) if self.home else None
+        away = int((now - self.home_at) // 60)
+        since = f"; away from home {away} minutes" if away >= AWAY_SAID_MIN else ""
         if self.beyond(x, y) == 0:
-            return f"in {self.name}" + (f", {far} tiles from {home}" if far is not None else "")
+            return f"in {self.name}" + (f", {far} tiles from {home}" if far is not None else "") + since
         if self.inside(x, y):
-            return f"at the edge of {self.name}" + (f", {far} tiles from {home}" if far is not None else "")
+            return f"at the edge of {self.name}" + (f", {far} tiles from {home}" if far is not None else "") + since
+        if land := self.on_lands(x, y):
+            return (f"on {self.name}'s lands ({land}), {self.beyond(x, y)} tiles from {self.name}"
+                    + (f" and {far} from {home}" if far is not None else "") + since)
         return (f"away from {self.name}: {self.beyond(x, y)} tiles from it"
-                + (f" and {far} from {home}" if far is not None else ""))
+                + (f" and {far} from {home}" if far is not None else "") + since)
 
     # ------------------------------------------------------------ words
 
@@ -121,6 +150,11 @@ class Hamlet:
             lines.append("Neighbours, who live in " + self.name + " too: " + "; ".join(
                 f"{n['name']}" + (f", {n['trade']}" if n.get("trade") else "")
                 + (f", at {n['home_words']}" if n.get("home_words") else "") for n in self.neighbours) + ".")
+        if self.lands:
+            lines.append(f"{self.name}'s lands, where its people work: "
+                         + "; ".join(f"{land['name']} (round {land['x']},{land['y']})" for land in self.lands)
+                         + f". Working there is part of life in {self.name}; between one piece of work and the next, "
+                         "come home.")
         lines.append(f"{self.name} is {me}'s life: the days begin and end there. Go out for work (a hunt nearby, "
                      "a trip to sell, buy or bank) and come back: when a piece of work is done, go home, and rest at "
                      f"home rather than out in the country. Free time is spent in {self.name}, where the neighbours "
@@ -133,7 +167,7 @@ class Hamlet:
     def to_json(self) -> dict[str, Any]:
         return {"name": self.name, "rects": [list(r) for r in self.rects], "edge": self.edge, "me": self.me,
                 "home": list(self.home) if self.home else None, "home_words": self.home_words, "work": self.work,
-                "neighbours": self.neighbours}
+                "neighbours": self.neighbours, **({"lands": self.lands} if self.lands else {})}
 
     @classmethod
     def from_json(cls, d: dict[str, Any]) -> "Hamlet":
@@ -141,7 +175,8 @@ class Hamlet:
         return cls(str(d["name"]), [tuple(int(v) for v in r) for r in d.get("rects") or []], int(d.get("edge", EDGE)),
                    str(d.get("me") or ""), (int(home[0]), int(home[1])) if home else None,
                    str(d.get("home_words") or ""), str(d.get("work") or ""),
-                   [{str(k): str(v) for k, v in n.items()} for n in d.get("neighbours") or []])
+                   [{str(k): str(v) for k, v in n.items()} for n in d.get("neighbours") or []],
+                   [{"name": str(x["name"]), "x": int(x["x"]), "y": int(x["y"]), "r": int(x["r"])} for x in d.get("lands") or []])
 
 
 def load(path: Path) -> Hamlet:
@@ -221,6 +256,15 @@ def work(session: list[dict[str, Any]]) -> dict[str, Any]:
             "items_bought": bought, "gold_banked": banked, "trips": dict(sorted(trips.items(), key=lambda kv: -kv[1]))}
 
 
+def home_between_work(session: list[dict[str, Any]], homes: list[tuple[float, bool]]) -> dict[str, int]:
+    """Of each piece of work and the next (goals of WORK_GOALS but a trip home), how many had the resident at home
+    between them (cuo-m3n.3)."""
+    starts = [x["t"] for x in session if x.get("type") == "goal" and x.get("tool") in WORK_GOALS
+              and not (x.get("tool") == "travel_to" and HOME_WORDS.match(str((x.get("args") or {}).get("place") or "")))]
+    pairs = list(zip(starts, starts[1:]))
+    return {"pairs": len(pairs), "home_between": sum(1 for a, b in pairs if any(on and a < t < b for t, on in homes))}
+
+
 def talk_by_neighbour(session: list[dict[str, Any]], neighbours: list[str]) -> dict[str, dict[str, int]]:
     """Lines said to and heard from each neighbour."""
     out = {n: {"said": 0, "heard": 0} for n in neighbours}
@@ -261,7 +305,8 @@ def report(out_dir: Path, world: Any = None) -> dict[str, Any]:
     for name in names:
         home = (spec.get("homes") or {}).get(name)
         h = Hamlet(spec["name"], [tuple(r) for r in spec["rects"]], int(spec.get("edge", EDGE)), name,
-                   (int(home["x"]), int(home["y"])) if home else None, (home or {}).get("words", ""))
+                   (int(home["x"]), int(home["y"])) if home else None, (home or {}).get("words", ""),
+                   lands=[dict(x) for x in spec.get("lands") or []])
         wheres = [r for r in records if r["type"] == "where" and r.get("agent") == name and r.get("x") is not None]
         log = out_dir / f"{name}.jsonl"
         session = logs.read_session(log) if log.exists() else []
@@ -278,6 +323,8 @@ def report(out_dir: Path, world: Any = None) -> dict[str, Any]:
         entry.update({
             "samples": n,
             "in_hamlet": round(sum(1 for _, on in inside if on) / n, 2),
+            "in_hamlet_or_lands": round(sum(1 for w in wheres if h.at_work_or_home(w["x"], w["y"])) / n, 2),
+            "home_between_work": home_between_work(session, homes),
             "at_home": round(sum(1 for _, on in homes if on) / n, 2),
             "came_home": arrivals,
             "longest_away_min": round(max((b - a for a, b in spells(away)), default=0) / 60, 1),
@@ -302,14 +349,18 @@ def markdown(r: dict[str, Any]) -> str:
     lines = [f"Hamlet {r['hamlet']} ({r['fleet']}, residents {'told' if r['told'] else 'not told: the control'}): "
              f"{len(r['residents'])} residents, {t['kills']} kills, {t['deaths']} deaths, ${t['cost_usd'] or 0:.4f} "
              f"together (${t['cost_per_hour_usd'] or 0:.3f}/h).", "",
-             "| resident | minutes | in the hamlet | at home | came home | longest away (min) | farthest (tiles) | "
-             "still away | talked with | $/h |", "|---|---|---|---|---|---|---|---|---|---|"]
+             "| resident | minutes | in the hamlet | ...or its lands | at home | came home | home between work | "
+             "longest away (min) | farthest (tiles) | still away | talked with | $/h |",
+             "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for name, a in r["residents"].items():
         if not a.get("samples"):
-            lines.append(f"| {name} | {a.get('minutes') or ''} | no positions | | | | | | | {a.get('error', '')[:60]} |")
+            lines.append(f"| {name} | {a.get('minutes') or ''} | no positions | | | | | | | | | {a.get('error', '')[:60]} |")
             continue
         cost = (a.get("cost_per_hour_usd") or {}).get("total", 0) if isinstance(a.get("cost_per_hour_usd"), dict) else 0
-        lines.append(f"| {name} | {a.get('minutes')} | {a['in_hamlet']:.0%} | {a['at_home']:.0%} | {a['came_home']} | "
+        hb = a.get("home_between_work") or {"pairs": 0, "home_between": 0}
+        lands = f"{a['in_hamlet_or_lands']:.0%}" if "in_hamlet_or_lands" in a else ""
+        lines.append(f"| {name} | {a.get('minutes')} | {a['in_hamlet']:.0%} | {lands} | {a['at_home']:.0%} | {a['came_home']} | "
+                     f"{hb['home_between']} of {hb['pairs']} | "
                      f"{a['longest_away_min']} | {a['farthest']} | {len(a['still_away'])} | "
                      f"{r['talked_with'].get(name, 0)} of {len(a['talk'])} | {cost:.3f} |")
     lines += ["", "| resident | goals | kills | gold from sales | bought | banked | deaths |", "|---|---|---|---|---|---|---|"]

@@ -37,13 +37,13 @@ def cove_store(root):
 
 def test_the_hamlet_fleet_loads_with_homes_and_the_control_keeps_it_to_measure_by(tmp_path):
     f = fleet.load(fleet.BRAIN_DIR / "fleets" / "hamlet-cove.toml")
-    assert f.hamlet == {"name": "Cove", "edge": 10, "told": True}
+    assert f.hamlet == {"name": "Cove", "edge": 10, "told": True, "lands": []}
     assert [a.home for a in f.agents] == ["Cove Gates", "2235,1187", "Cove healer", "Cove provisioner"]
     assert f.agents[2].home_words == "the healer's house" and "bandages" in f.agents[2].work
     # The personas don't name the place: the control knows nothing of it.
     assert not any("Cove" in v for a in f.agents for v in a.persona.values())
     control = fleet.load(fleet.BRAIN_DIR / "fleets" / "hamlet-cove.toml", ["hamlet=false"])
-    assert control.hamlet == {"name": "Cove", "edge": 10, "told": False}
+    assert control.hamlet == {"name": "Cove", "edge": 10, "told": False, "lands": []}
     homeless = tmp_path / "homeless.toml"
     homeless.write_text('[hamlet]\nname="Cove"\n[[agent]]\nname="a"\naccount="x"\npassword="x"\nport=1\ngoal="g"\n')
     with pytest.raises(ValueError, match="needs a home: a"):
@@ -153,6 +153,8 @@ def test_the_hamlet_report_measures_each_resident_against_it(tmp_path):
     m = r["residents"]["Maren"]
     assert m["samples"] == 41 and m["in_hamlet"] == 0.39 and m["at_home"] == 0.24 and m["came_home"] == 1
     assert m["longest_away_min"] == 12.0 and m["farthest"] == 131
+    # No lands in this run: in the hamlet or its lands is in the hamlet; home came between the hunt and the sale.
+    assert m["in_hamlet_or_lands"] == 0.39 and m["home_between_work"] == {"pairs": 1, "home_between": 1}
     assert [(s["minutes"], s["goal"]) for s in m["still_away"]] == [(11.0, "hunt(area=south-west of Cove Cemetery, minutes=15)")]
     assert m["work"]["kills"] == 3 and m["work"]["gold_from_sales"] == 120 and m["work"]["items_bought"] == 20
     assert m["work"]["goals"] == {"hunt": 1, "travel_to": 1, "sell": 1} and m["work"]["trips"] == {"home": 1}
@@ -161,7 +163,52 @@ def test_the_hamlet_report_measures_each_resident_against_it(tmp_path):
     wenna = r["residents"]["Wenna"]
     assert (wenna["in_hamlet"], wenna["at_home"], wenna["came_home"], wenna["still_away"]) == (1.0, 1.0, 0, [])
     text = hamlet.markdown(r)
-    assert "| Maren | " in text and "| 39% | 24% | 1 | 12.0 | 131 | 1 | 1 of 1 |" in text
+    assert "| Maren | " in text and "| 39% | 39% | 24% | 1 | 1 of 1 | 12.0 | 131 | 1 | 1 of 1 |" in text
     assert "- Maren stood still 11.0 min at 2416,1172" in text and "- Maren: Wenna 1/1" in text
     write(tmp_path / "fleet.jsonl", [{"t": T0, "type": "fleet", "name": "x", "agents": []}])
     assert "not a hamlet's run" in hamlet.report(tmp_path)["error"]
+
+
+# ---- the hamlet's lands and its work at hand (cuo-m3n.3)
+
+WOODS = {"name": "south-west of Cove Cemetery", "x": 2390, "y": 1180, "r": 40}
+
+
+def test_on_the_hamlets_lands_is_at_work_and_the_turn_says_how_long_since_home():
+    h = maren(lands=[WOODS])
+    assert h.where(2245, 1231, now=0) == "at home (the healer's house), in Cove"
+    assert h.on_lands(2400, 1190) == "south-west of Cove Cemetery" and h.at_work_or_home(2400, 1190)
+    assert h.where(2400, 1190, now=120) == ("on Cove's lands (south-west of Cove Cemetery), 115 tiles from Cove and "
+                                             "155 from home (the healer's house)")
+    assert h.where(2400, 1190, now=60 * 23).endswith("; away from home 23 minutes")
+    assert h.where(2600, 1190, now=60 * 24).startswith("away from Cove: 315 tiles from it")
+    assert not h.at_work_or_home(2600, 1190)
+    h.where(2245, 1231, now=60 * 30)  # home again: the count starts over
+    assert "away from home" not in h.where(2240, 1200, now=60 * 33)
+    words = maren(lands=[WOODS]).words()
+    assert "Cove's lands, where its people work: south-west of Cove Cemetery (round 2390,1180)" in words
+    assert "between one piece of work and the next, come home" in words
+    assert Hamlet.from_json(maren(lands=[WOODS]).to_json()).lands == [WOODS]
+    assert "lands" not in maren().to_json() and "lands" not in maren().words()
+
+
+def test_a_land_is_the_square_round_a_hunting_areas_spawns(tmp_path):
+    with World.open("local", tmp_path) as w:
+        w.replace_source("spawns", "fixture", [
+            {"map": "Felucca", "area": "south-west of Cove Cemetery", "region": "", "x": 2380, "y": 1170, "walk_range": 10,
+             "creature": "Boar"},
+            {"map": "Felucca", "area": "south-west of Cove Cemetery", "region": "", "x": 2400, "y": 1190, "walk_range": 20,
+             "creature": "BrownBear"}])
+        land = fleet.land_of(w, "south-west of Cove Cemetery")
+        assert land == {"name": "south-west of Cove Cemetery", "x": 2390, "y": 1180, "r": 10 + 15 + hamlet.LAND_EDGE}
+        with pytest.raises(ValueError, match="no hunting area"):
+            fleet.land_of(w, "the moon")
+
+
+def test_the_report_counts_the_lands_and_home_between_pieces_of_work():
+    session = [{"type": "goal", "t": 10, "tool": "hunt"}, {"type": "goal", "t": 100, "tool": "travel_to",
+               "args": {"place": "home"}}, {"type": "goal", "t": 200, "tool": "sell"},
+               {"type": "goal", "t": 300, "tool": "hunt"}, {"type": "goal", "t": 400, "tool": "rest"}]
+    homes = [(50, False), (150, True), (250, False), (350, False)]
+    # hunt -> sell had home between (the trip home isn't a piece of work); sell -> hunt didn't
+    assert hamlet.home_between_work(session, homes) == {"pairs": 2, "home_between": 1}
