@@ -154,3 +154,18 @@ def test_a_milestone_is_remembered(tmp_path):
     asyncio.run(p.step())
     rows = memory.Memory(w, "Brutus").list(search="long goal")
     assert rows and rows[0]["text"].startswith("Reached a long goal: save 100 gold") and rows[0]["importance"] == 4
+
+
+def test_with_memory_off_the_planner_still_sees_its_long_goals(tmp_path):
+    # cuo-rsw: long goals were kept beside memories, so --no-memory dropped them, and a hamlet resident with no goal
+    # of its own finished its session in 1.5 minutes.
+    w = World(tmp_path / "w.sqlite")
+    g = longgoals.LongGoals(w, "Brutus")
+    gid = g.add("reach 85 archery")
+    chat = scripted(reply(call("rest", {"seconds": 30, "why": "w"})))
+    p = planner.Planner(FakeSession(w), "", chat_fn=chat, memory=False)
+    assert p.memory is None and p.long is not None
+    asyncio.run(p.step())
+    user = chat.seen[0]["messages"][1]["content"]
+    assert f"{gid}. reach 85 archery" in user and "long_goal" in chat.seen[0]["tools"]
+    assert "remember" not in chat.seen[0]["tools"] and p.long.character == "Brutus"

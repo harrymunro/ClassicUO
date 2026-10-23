@@ -304,10 +304,13 @@ class Planner:
         self.restored = 0          # steps at the start of history carried over from a saved state
         self._last_session: str | None = None
         self._picked: tuple[str | None, int, str] | None = None  # area, step and section of the last memory pick
-        # The character's long goals (longgoals.py), kept beside its memories.
-        self.long = longgoals.LongGoals(self.memory.world) if self.memory else None
+        # The character's long goals (longgoals.py), kept beside its memories in the store, and kept with memory off
+        # too: without them an NPC with no goal of its own had nothing to do, and finished at once (cuo-rsw).
+        store = self.memory.world if self.memory else getattr(session, "world", None)
+        self.long = longgoals.LongGoals(store) if store is not None else None
         self.tools = goal_tools() + ([machine_tool()] if machines_allowed else []) + worlds.tool_schemas() \
-            + ([memories.remember_tool(), memories.recall_tool(), longgoals.tool()] if self.memory else []) \
+            + ([memories.remember_tool(), memories.recall_tool()] if self.memory else []) \
+            + ([longgoals.tool()] if self.long is not None else []) \
             + ([restock_tool(own=huddle is not None)] if party is not None else []) \
             + ([inn_tool()] if party is not None and table is not None else []) \
             + ([evening_tool(hamlet.gather["words"])] if party is None and table is not None
@@ -909,6 +912,8 @@ class Planner:
             self.memory.character = (snap.get("player") or {}).get("name") or None
         if self.long is not None and self.memory is not None:
             self.long.character = self.memory.character
+        elif self.long is not None and not self.long.character and snap.get("in_game"):
+            self.long.character = (snap.get("player") or {}).get("name") or None  # memory off: the name in game
         if not self.resumed and self.memory is not None and self.memory.character:
             self.resumed = True
             self.resume()
