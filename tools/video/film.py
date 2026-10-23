@@ -139,7 +139,10 @@ class ClientRecording:
         self.started = rpc(port, "record", {"path": str(self.fifo), "fps": fps})
         self.ffmpeg = None
         if not self.started.get("recording"):
+            # Perhaps it did start and only the reply was late: stop it, and let its writer out of the FIFO.
             print(f"film: port {port} won't record: {self.started}", file=log, flush=True)
+            rpc(port, "record", {"stop": True})
+            self.release()
             return
         w, h = self.started["width"], self.started["height"]
         Path(f"{self.out}.start").write_text(f"{self.started['start']:.3f}\n")
@@ -148,6 +151,14 @@ class ClientRecording:
              "-framerate", str(fps), "-i", str(self.fifo), "-vf", "crop=trunc(iw/2)*2:trunc(ih/2)*2", "-an",
              "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
              "-pix_fmt", "yuv420p", str(self.out)], stderr=log)
+
+    def release(self) -> None:
+        """A writer waiting for a reader on the FIFO (ffmpeg never opened it) let go, and the FIFO removed."""
+        try:
+            os.close(os.open(self.fifo, os.O_RDONLY | os.O_NONBLOCK))
+        except OSError:
+            pass
+        self.fifo.unlink(missing_ok=True)
 
     def check(self) -> dict:
         st = rpc(self.port, "record")
@@ -164,7 +175,7 @@ class ClientRecording:
             self.ffmpeg.wait(timeout=120)
         except subprocess.TimeoutExpired:
             self.ffmpeg.terminate()
-        self.fifo.unlink(missing_ok=True)
+        self.release()
 
 
 def scales(log: Path) -> dict[str, float]:

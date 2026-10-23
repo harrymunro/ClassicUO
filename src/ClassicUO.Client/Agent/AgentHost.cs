@@ -896,6 +896,19 @@ namespace ClassicUO.Agent
 
                     break;
 
+                case "observe":
+                    // This connection only watches (cuo-cym.28): it isn't the client's brain.
+                    _server.MarkObserver(conn);
+
+                    Reply(conn, id, w =>
+                    {
+                        w.WriteStartObject();
+                        w.WriteBoolean("observer", true);
+                        w.WriteEndObject();
+                    });
+
+                    break;
+
                 case "hear":
                     // A line the server didn't send this character, passed on by its brain (cuo-cym.28).
                     if (!Get(p, "name", out JsonElement hn) || !Get(p, "text", out JsonElement ht) || string.IsNullOrEmpty(ht.GetString()))
@@ -964,7 +977,8 @@ namespace ClassicUO.Agent
                             w.WriteNumber("start", rec.StartedAt);
                             w.WriteNumber("captured", rec.Captured);
                             w.WriteNumber("written", rec.Written);
-                            w.WriteNumber("dropped", rec.Dropped);
+                            w.WriteNumber("busy", rec.Busy);
+                            w.WriteNumber("repeated", Math.Max(0, rec.Written - rec.Captured));
                             w.WriteNumber("skipped", rec.Skipped);
                             w.WriteNumber("capture_ms", Math.Round(rec.CaptureMs, 2));
 

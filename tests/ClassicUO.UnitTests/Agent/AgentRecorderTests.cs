@@ -78,12 +78,25 @@ namespace ClassicUO.UnitTests.Agent
             }
 
             rec.Captured.Should().Be(AgentRecorder.BUFFERS);
-            rec.Dropped.Should().Be(2);
+            rec.Busy.Should().Be(2);
             gate.Set();
             rec.Stop(AgentRecorder.BUFFERS + 2);
             rec.Wait(5000).Should().BeTrue();
 
             Shades(kept.Bytes).Should().Equal(1, 2, 3, 4, 4, 4);
+        }
+
+        [Fact]
+        public void Slots_before_the_first_frame_show_it_so_the_clip_starts_when_the_recording_did()
+        {
+            var kept = new Kept();
+            var rec = new AgentRecorder(() => kept, fps: 10, width: 2, height: 2);
+            rec.Offer(2, 2, 2, Fill(30)); // nothing drawn in slots 0 and 1
+            rec.Offer(3, 2, 2, Fill(40));
+            rec.Stop(4);
+            rec.Wait(5000).Should().BeTrue();
+
+            Shades(kept.Bytes).Should().Equal(30, 30, 30, 40);
         }
 
         [Fact]

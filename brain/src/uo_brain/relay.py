@@ -83,8 +83,16 @@ class Relay:
         for port in [self.port] if self.fixed else [p for p in self._ports() if p != self.me_port]:
             try:
                 rpc = await self._connect(port)
-                j = await rpc.call("journal", since=1 << 62)
             except Exception:  # noqa: BLE001 - a client starting, or gone: try the next
+                continue
+            try:
+                j = await rpc.call("journal", since=1 << 62)
+                if j.get("player") == self.leader:
+                    # Only watching: on the person's client this connection mustn't count as its brain (the panel
+                    # would open on their screen, and their own brain couldn't start).
+                    await rpc.call("observe")
+            except Exception:  # noqa: BLE001 - an older client, or a slow one: not this one
+                await rpc.close()
                 continue
             if j.get("player") == self.leader:
                 self.rpc, self.port, self.leader_seq = rpc, port, j.get("journal_seq", 0)

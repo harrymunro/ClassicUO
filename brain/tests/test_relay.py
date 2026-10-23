@@ -14,6 +14,7 @@ class Client:
         self.lines: list[dict] = []
         self.heard: list[dict] = []
         self.closed = False
+        self.observer = False
 
     def add(self, name: str, text: str, source: str = "speech", type: str = "regular", **extra) -> None:
         self.lines.append({"seq": len(self.lines) + 1, "name": name, "text": text, "source": source, "type": type,
@@ -23,6 +24,9 @@ class Client:
         if method == "journal":
             return {"player": self.player, "serial": self.serial, "x": self.x, "y": self.y, "map": 0,
                     "journal_seq": len(self.lines), "journal": [e for e in self.lines if e["seq"] > p["since"]]}
+        if method == "observe":
+            self.observer = True
+            return {"observer": True}
         assert method == "hear"
         self.heard.append(p)
         self.add(p["name"], p["text"], type=p["type"], relayed=True)
@@ -56,6 +60,7 @@ def test_a_line_the_wall_kept_from_it_is_passed_on_within_earshot():
     r, leader, me, log = setup()
     steps(r, 0.0)
     assert r.port == 5661  # found by its character's name, not its own client or another's
+    assert leader.observer and not me.observer  # on the leader's client it says it only watches
     leader.add("Roland", "Wystan, wait for me at the inn.", source="self")
     steps(r, 1.0, 2.0)  # said at 1.0, its grace not over
     assert me.heard == []
@@ -122,3 +127,22 @@ def test_the_fleet_file_turns_it_off_or_names_the_port(tmp_path, monkeypatch):
     monkeypatch.setattr(fleet.subprocess, "Popen", lambda cmd, **_: seen.append(cmd))
     fleet.start_brain(fl, fl.agents[0], tmp_path)
     assert "--no-hear-leader" in seen[0] and seen[0][seen[0].index("--leader-port") + 1] == "5661"
+
+
+class Old(Client):
+    """A client from before the journal RPC."""
+
+    async def call(self, method, **p):
+        raise RuntimeError(f"unknown method '{method}' (-32601)")
+
+
+def test_a_client_that_cant_answer_is_closed_and_passed_over():
+    me, leader, old = Client("Isolde", 2, 0, 0), Client("Roland", 1, 3, 0), Old("x", 3, 0, 0)
+    clients = {5660: old, 5661: leader}
+
+    async def connect(port):
+        return clients[port]
+
+    r = relay.Relay("Roland", me, connect=connect, ports=lambda: [5660, 5661])
+    asyncio.run(r.step(now=0.0))
+    assert old.closed and r.port == 5661 and not leader.closed

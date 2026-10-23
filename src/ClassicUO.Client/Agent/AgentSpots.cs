@@ -507,12 +507,13 @@ namespace ClassicUO.Agent
                 }
             }
 
-            private bool Open(int x, int y, int z) => _g.Contains(x, y) && _g.StepTo(x, y, z) >= 0;
+            // A step from (fx, fy) at height z onto (x, y), measured from the top of what it stands on (cuo-u4j).
+            private bool Open(int fx, int fy, int x, int y, int z) => _g.Contains(x, y) && _g.StepTo(x, y, z, _g.ReachAt(fx, fy, z)) >= 0;
 
             // Walled on two opposite sides and open on the other two: a tile of a narrow way.
             private bool Narrow(int x, int y, int z)
             {
-                bool n = Open(x, y - 1, z), s = Open(x, y + 1, z), e = Open(x + 1, y, z), w = Open(x - 1, y, z);
+                bool n = Open(x, y, x, y - 1, z), s = Open(x, y, x, y + 1, z), e = Open(x, y, x + 1, y, z), w = Open(x, y, x - 1, y, z);
 
                 return n && s && !e && !w || e && w && !n && !s;
             }
@@ -539,10 +540,10 @@ namespace ClassicUO.Agent
                         continue;
                     }
 
-                    bool vertical = Open(x, y - 1, z);
+                    bool vertical = Open(x, y, x, y - 1, z);
                     (int ax, int ay) = vertical ? (0, 1) : (1, 0);
 
-                    if (Open(x - ax, y - ay, z) && !Narrow(x - ax, y - ay, z) || Open(x + ax, y + ay, z) && !Narrow(x + ax, y + ay, z))
+                    if (Open(x, y, x - ax, y - ay, z) && !Narrow(x - ax, y - ay, z) || Open(x, y, x + ax, y + ay, z) && !Narrow(x + ax, y + ay, z))
                     {
                         found.Add((x, y, steps));
                     }

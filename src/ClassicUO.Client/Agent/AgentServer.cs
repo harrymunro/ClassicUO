@@ -20,6 +20,7 @@ namespace ClassicUO.Agent
     {
         private readonly TcpListener _listener;
         private int _clients;
+        private int _observers;
 
         public AgentServer(ushort port)
         {
@@ -30,7 +31,21 @@ namespace ClassicUO.Agent
 
         public int Port { get; private set; }
 
-        public bool HasClient => Volatile.Read(ref _clients) > 0;
+        // A brain is connected: a connection that has said it only watches (`observe`: a companion's brain reading
+        // its leader's client, cuo-cym.28) isn't one, so it neither opens the panel nor keeps the client's own brain out.
+        public bool HasClient => Volatile.Read(ref _clients) - Volatile.Read(ref _observers) > 0;
+
+        public void MarkObserver(AgentConnection conn)
+        {
+            lock (conn)
+            {
+                if (!conn.Observer && !conn.Closed)
+                {
+                    conn.Observer = true;
+                    Interlocked.Increment(ref _observers);
+                }
+            }
+        }
 
         public void Start()
         {
@@ -88,6 +103,17 @@ namespace ClassicUO.Agent
             }
 
             conn.Close();
+
+            lock (conn)
+            {
+                conn.Closed = true;
+
+                if (conn.Observer)
+                {
+                    Interlocked.Decrement(ref _observers);
+                }
+            }
+
             Interlocked.Decrement(ref _clients);
         }
     }
@@ -102,6 +128,9 @@ namespace ClassicUO.Agent
         }
 
         public TcpClient Client { get; }
+
+        public bool Observer { get; set; }
+        public bool Closed { get; set; }
 
         public void Send(byte[] line)
         {

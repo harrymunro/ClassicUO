@@ -86,7 +86,7 @@ def test_the_neighbours_talk_their_day_over_and_keep_what_they_learned_of_each_o
     seats = {n: neighbour(w, n, chat) for n in ("Maren", "Wenna", "Tamsin")}
     seats["Wenna"].story.planner = SimpleNamespace(history=[
         planner.PlanStep("hunt", {"area": "south-west of Cove Cemetery", "why": "x"},
-                         {"ok": True, "summary": "4 kills"}, t=seats["Wenna"].story.since + 1)])
+                         {"ok": True, "result": "4 kills"}, t=seats["Wenna"].story.since + 1)])
 
     async def go():
         sitting = [asyncio.create_task(seats[n].sit(wait_s=5)) for n in seats]
@@ -162,3 +162,35 @@ def test_the_report_counts_each_residents_evenings():
                {"type": "table", "t": 2, "said": True}, {"type": "table", "t": 3, "said": True},
                {"type": "table", "t": 4, "kept": [5, 6]}]
     assert hamlet.evenings(session) == {"went": 1, "hosted": 1, "lines": 2, "memories": 2}
+
+
+def test_one_who_comes_while_the_host_waits_sits_at_the_table_it_then_opens(tmp_path, monkeypatch):
+    # The review of 2026-10-23: a host's claim is a row of table 0, and current() took it for an open table, so one
+    # who came while the host waited sat at table 0, never heard its turn, and the host spoke alone.
+    monkeypatch.setattr(hamlet, "GATHER_SOME_S", 1.0)
+    w = World.open("local", root=tmp_path)
+    h = maren(began=__import__("time").time() - 50 * 60)
+    seats = {n: neighbour(w, n) for n in ("Maren", "Wenna")}
+    assert seats["Maren"].claim("evening 0", 180) and seats["Maren"].current() is None
+
+    async def go():
+        first = asyncio.create_task(hamlet.gathering(Walker(["Wenna"]), seats["Maren"], h))
+        await asyncio.sleep(0.2)  # the host is waiting for the others
+        second = asyncio.create_task(hamlet.gathering(Walker(["Maren"]), seats["Wenna"], h))
+        return await first, await second
+
+    first, second = asyncio.run(go())
+    assert first.data["hosted"] and first.data["skipped"] == {} and second.data["sat_at"] == first.data["table"]
+    assert first.data["speakers"]["Wenna"] >= 3
+    w.close()
+
+
+def test_a_host_nobody_came_to_leaves_the_next_evening_free(tmp_path, monkeypatch):
+    monkeypatch.setattr(hamlet, "GATHER_S", 0.5)
+    w = World.open("local", root=tmp_path)
+    h = maren(began=__import__("time").time() - 50 * 60)
+    alone = asyncio.run(hamlet.gathering(Walker(), neighbour(w, "Maren"), h))
+    assert not alone.ok and "no neighbour came" in alone.summary
+    later = neighbour(w, "Wenna")
+    assert later.current() is None and later.claim("evening 2", 180)
+    w.close()

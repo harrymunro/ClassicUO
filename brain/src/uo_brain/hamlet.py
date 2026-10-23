@@ -254,7 +254,7 @@ class DayStory:
             args = {k: v for k, v in h.args.items() if k not in ("why", "x", "y")}
             res = h.result if isinstance(h.result, dict) else {}
             done.append(f"{h.tool}({', '.join(f'{k}={v}' for k, v in args.items())}): "
-                        f"{'done' if res.get('ok') else 'not done'}, {str(res.get('summary') or '')[:120]}")
+                        f"{'done' if res.get('ok') else 'not done'}, {str(res.get('result') or res.get('summary') or '')[:120]}")
         return "; ".join(done)
 
 
@@ -267,7 +267,7 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
         return Result(False, f"{hamlet.name} has no evening gathering")
     if not hamlet.is_evening(now):
         return Result(False, f"it isn't evening yet: {hamlet.when(now)}")
-    place, key = hamlet.gather, hamlet.evening_key(now)
+    place = hamlet.gather
     r = None
     for distance in (0, 1, 2):
         r = await session.travel_to(place["words"], place["x"], place["y"], distance=distance, refuse=False)
@@ -275,6 +275,9 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
             break
     if r is None or not r.ok:
         return Result(False, f"did not reach {place['words']}: {r.summary if r else ''}", r.data if r else {})
+    if not hamlet.is_evening(time.time()):
+        return Result(False, f"at {place['words']}, but the evening is over: {hamlet.when(time.time())}")
+    key = hamlet.evening_key(time.time())  # the evening of the arrival: a trip can outlast one
     await table.arrive()
     data: dict[str, Any] = {"evening": key, "place": place["words"]}
     tid = table.current()

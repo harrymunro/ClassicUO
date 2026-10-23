@@ -336,7 +336,8 @@ class Table:
 
     def current(self) -> int | None:
         """The table open now, if one is."""
-        r = self.world.db.execute("SELECT tid, kind FROM party_table WHERE party = ? ORDER BY id DESC LIMIT 1",
+        # A hamlet evening's host claims are rows of table 0 (claim), and aren't a table.
+        r = self.world.db.execute("SELECT tid, kind FROM party_table WHERE party = ? AND tid > 0 ORDER BY id DESC LIMIT 1",
                                   (self.party.party,)).fetchone()
         return r["tid"] if r and r["kind"] != "close" else None
 

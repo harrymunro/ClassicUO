@@ -62,7 +62,9 @@ namespace ClassicUO.Agent
         public int Height { get; }
         public double StartedAt { get; }
         public int Captured { get; private set; }
-        public int Dropped { get; private set; }
+        // Draws that found every buffer waiting on the writer: the slot is tried again at the next draw, and only
+        // shows as a repeated frame if no draw of it gets one.
+        public int Busy { get; private set; }
         public int Skipped { get; private set; }
         public long Written => Interlocked.Read(ref _written);
         public bool Stopped => _stopped;
@@ -93,7 +95,7 @@ namespace ClassicUO.Agent
 
             if (!_free.TryTake(out Color[] frame))
             {
-                Dropped++;
+                Busy++;
 
                 return;
             }
@@ -137,6 +139,12 @@ namespace ClassicUO.Agent
                     for (long s = lastSlot + 1; last != null && s < slot; s++)
                     {
                         Put(stream, last);
+                    }
+
+                    // The slots before the first frame read (none drawn yet) show it, so the clip starts at the start.
+                    for (long s = 0; last == null && frame != null && s < slot; s++)
+                    {
+                        Put(stream, frame);
                     }
 
                     if (frame == null)
