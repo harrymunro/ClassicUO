@@ -3706,6 +3706,61 @@ uv run uo-brain hamlet-report logs/fleet/RUN
   bandages, Tamsin hunted Cove's own vermin and took 347 gold to a bank, Brannoc spent the second half hour
   at the gatehouse with no gold or supplies after his deaths. No resident sold anything in either run.
 
+### Three runs each way, with the savages fought (cuo-m3n.4)
+
+2026-10-23, 15:30 to 22:23, the same file and measures as above, alternating told and control with 400 s
+between runs, headless, memory on, and before each run the four residents' earlier memories set aside
+(`stale = 1`, nothing deleted) so each starts from none. The client had the savage fix (cuo-ea4); the brain
+was a copy frozen at 15:00 (1e6d6a417, before the lands and evenings). Not filmed.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove.toml --out logs/fleet/<time>-hamlet-cove-told
+uv run uo-brain fleet fleets/hamlet-cove.toml --out logs/fleet/<time>-hamlet-cove-control --set hamlet=false
+uv run uo-brain hamlet-report logs/fleet/20261023-153023-hamlet-cove-told logs/fleet/20261023-175327-hamlet-cove-told \
+  logs/fleet/20261023-200959-hamlet-cove-told logs/fleet/20261023-164255-hamlet-cove-control \
+  logs/fleet/20261023-190128-hamlet-cove-control logs/fleet/20261023-212031-hamlet-cove-control
+```
+
+| three runs each, in order | told of the hamlet | told nothing (the control) |
+|---|---|---|
+| homecomings (all four) | 10, 10, 8 | 3, 0, 0 |
+| share of the hour in Cove (all four, by minutes) | 35%, 56%, 52% | 20%, 1%, 1% |
+| ...Brannoc, Wenna, Maren, Tamsin, first run | 79%, 18%, 8%, 33% | 42%, 1%, 37%, 1% |
+| ...second run | 62%, 88%\*, 4%, 96% | 0%, 1%, 1%, 1% |
+| ...third run | 63%, 81%\*, 7%, 68% | 0%, 1%, 2%, 1% |
+| home between two pieces of work (all four) | 6 of 16, 5 of 12, 5 of 14 | 2 of 36, 0 of 35, 0 of 38 |
+| lines said to a neighbour (all four) | 41, 29, 23 | 25, 37, 3 |
+| kills, deaths | 27 and 5, 14 and 3, 16 and 6 | 13 and 3, 39 and 0, 35 and 5 |
+| cost together | $0.248, $0.241, $0.278 | $0.290, $0.275, $0.281 |
+
+\* Wenna stopped her session after 13 and 34 minutes: the shares are of her minutes.
+
+- **Coming home holds up:** told where they live, the four came home 8 to 10 times an hour in every run, and
+  the control 0 to 3 times (2026-10-19: 10 and 1). Told, they were in Cove a third to over half the hour;
+  the control's last two runs spent 1% of it there, gone to Britain, Vesper and the orc fort for their long
+  goals. Brannoc the watchman was in Cove 62% to 79% of every told hour and came home 4 to 6 times.
+- **Talking doesn't:** the 46 lines against 8 of 2026-10-19 were one pair of runs. Here the told runs said 23 to
+  41 lines and the control 3 to 37: the control's second run said 37, at the hunting grounds they happened to
+  share (Tamsin and Maren north of Britain, Brannoc and Tamsin by the orc fort). They talk where they meet,
+  and being told of the hamlet makes them meet at home only as often as it brings them there.
+- **Maren isn't at the healer's:** told her place is the healer's house, she was there 2% to 6% of the hour and
+  in Cove 4% to 8%, out on hunts in the woods 120 tiles east to practise her healing and twice to a town's
+  bank 580 tiles off (2026-10-19: 55%). The work she was given takes her away; the hamlet's lands
+  (cuo-m3n.3) count the woods as at work.
+- **A hunter who stopped for want of arrows she had:** in the second and third told runs Wenna stopped (the
+  `finish` goal) after 13 and 34 minutes, with "Archery training is blocked: Cove has no arrow seller". She
+  had 300 arrows: the planner was never told an archer's arrows, so it set out to buy some, and the world
+  store had lost Cove's provisioner's wares when a sighting 2 tiles off replaced the imported shop (53
+  sightings had lost theirs). Told nothing, she went to Vesper for arrows and never stopped. Both fixed
+  after these runs (541e5d115). The arrows ran through the talk too: Tamsin offered to "carry your order if
+  you pay".
+- **Deaths with the savages fought:** 3 to 6 a told run, 0 to 5 a control, most of them Brannoc by the orc
+  fort (3 or 4 in each told run), whose work is thinning out its orcs; none was a savage left unfought.
+- **What they kept of each other:** every resident kept memories of its neighbours in the told runs (7 to 23
+  between them; the control 2 to 16), most of them talks ("Not hurt, just tired of walking to Vesper for
+  arrows"), and a few warnings passed on ("Told Wenna: the four at Cove Orc Fort").
+
 ## After a death
 
 2026-10-09, the local server: a warrior (Mortis) killed by three `still` daemons at the Britain

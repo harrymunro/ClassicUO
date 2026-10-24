@@ -974,10 +974,11 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   headless, walking (`rules = "realistic"`), on their own accounts and ports (headless3-6, 5671-5674), so
   they can run beside a party's fleet. The fisherman's own spot is on the jetty, with no walking route out,
   so Wenna lives on the square.
-- **Measured** ([results](results.md#a-hamlet-of-ai-residents), one run each way): told where they live,
-  the four came home ten times in the hour to the control's once, spent a third to three fifths of it at home
-  (the control none) and said 46 lines to each other (the control 8); three of four were in Cove more than half
-  the hour, the hunter whose ground is 120 tiles out a sixth of it. $0.06 a resident an hour.
+- **Measured** ([results](results.md#a-hamlet-of-ai-residents), one run each way, then
+  [three each way](results.md#three-runs-each-way-with-the-savages-fought-cuo-m3n4)): told where they live,
+  the four came home 8 to 10 times an hour in every run, the control 0 to 3, and were in Cove a third to over
+  half the hour (the control 1% to 20%). The talk didn't follow: 46 lines against 8 in the first pair, then
+  23 to 41 against 3 to 37, as they talk wherever they meet. $0.06 to $0.07 a resident an hour.
 - **Its lands** (cuo-m3n.3): `lands = ["south-west of Cove Cemetery", "near Cove Orc Fort"]` in `[hamlet]`
   names the grounds its residents work, each a hunting area of the world store (the square round its
   spawns, plus 10 tiles). The planner is told them as the hamlet's lands ("working there is part of life in
