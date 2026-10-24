@@ -272,8 +272,11 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
     now = time.time()
     if hamlet.gather is None:
         return Result(False, f"{hamlet.name} has no evening gathering")
-    if hamlet.until_evening(now) > EARLY_S:
-        return Result(False, f"it isn't evening yet: {hamlet.when(now)}")
+    # The turn's words floor the minutes: "in about 3 minutes" is up to 3:59, and refused at 3:01 Wenna asked four
+    # times in six seconds. So the goal goes while the words say 3 or fewer, and a refusal says from when it will.
+    if hamlet.until_evening(now) >= EARLY_S + 60:
+        return Result(False, f"it isn't evening yet: {hamlet.when(now)}; the `evening` goal can be set off for "
+                             f"from about {EARLY_S / 60:.0f} minutes before it")
     place = hamlet.gather
     r = None
     for distance in (0, 1, 2):
@@ -284,7 +287,7 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
         return Result(False, f"did not reach {place['words']}: {r.summary if r else ''}", r.data if r else {})
     # Set off a little early, as a neighbour would, and wait there: asked a minute before it began, every resident was
     # told "it isn't evening yet" three to seven times running and asked again at once.
-    if 0 < (early := hamlet.until_evening(time.time())) <= EARLY_S:
+    if 0 < (early := hamlet.until_evening(time.time())) < EARLY_S + 60:
         await session.rest(int(early) + 1)
     if not hamlet.is_evening(time.time()):
         return Result(False, f"at {place['words']}, but the evening is over: {hamlet.when(time.time())}")

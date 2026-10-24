@@ -3881,7 +3881,7 @@ uv run uo-brain hamlet-report RUN --lands "south-west of Cove Cemetery" --lands 
   no each time (0.2): the spawn spreads over 15 tiles, inside what she sees. The boars and cougars she hunts
   had been killed and hadn't come back. Her planner sent her back to the same ground after each hunt.
 
-### Evenings at the healer's house, one run of three hours (cuo-m3n.5)
+### Evenings at the healer's house, two runs (cuo-m3n.5)
 
 2026-10-24 01:05 to 04:10, headless, memory on, the residents' memories set aside first, on the same frozen
 copy as the lands run (541e5d115: before the savages' fix, the early evening and the table's fixes below) and
@@ -3931,6 +3931,42 @@ All four, three hours: 10 kills, 14 deaths, $0.897 ($0.292 an hour).
   walk's rule was not yet in (cuo-m3n.6).
 - **29 evening goals were refused as early,** most a minute before the evening began. Since c72c1e616 the goal
   goes from 3 minutes before it, and the resident waits there.
+
+**The check of the table's fixes.** 2026-10-24 06:40 to 08:13, the same four on a copy frozen at aac874ee3 (the
+table for those who came, the late-comer's turns, the early evening), the client of cuo-m3n.4, headless, memory
+on, the residents' memories set aside first. Shorter days, to have three evenings in an hour and a half:
+`hamlet-cove-evenings-check.toml` is the same file with `hours = 1.5`, and in `[hamlet]` `day_minutes = 30` and
+`evening_minutes = 10`. One run. Not filmed.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove-evenings-check.toml --out logs/fleet/20261024-064014-hamlet-cove-evenings-check
+uv run uo-brain hamlet-report logs/fleet/20261024-064014-hamlet-cove-evenings-check
+```
+
+| | Brannoc | Wenna | Maren | Tamsin |
+|---|---|---|---|---|
+| in Cove / Cove or its lands | 75% / 86% | 59% / 95% | 75% / 95% | 8% / 8% |
+| evening goals (refused as early) | 6 (2) | 11 (4) | 5 (2) | 1 (0) |
+| tables kept, sat at | 1, 3 | 2, 2 | 1, 2 | 0, 1 |
+| lines at them, memories kept | 19, 18 | 15, 20 | 12, 15 | 3, 5 |
+| deaths | 2 | 0 | 0 | 3 |
+
+All four, an hour and a half: 8 kills, 5 deaths, $0.448 ($0.289 an hour).
+
+- **Four tables, 49 lines, every one a talk.** Evening 1: Brannoc kept it with Maren and Wenna, the three who
+  had come (13 lines). Evening 2: Wenna, Brannoc and Maren (12). Evening 3: Maren, Brannoc and Wenna (12), and
+  then Wenna and Brannoc again, who came back after it closed (12). Nobody was named who wasn't there and no
+  turn was skipped; the most one resident said at a table was half its lines, at the table of two.
+- **The late-comer was given turns.** Tamsin sat at the first table after it opened and said three lines: the
+  liches she had seen by the cemetery road, twice, and her plan for tomorrow ("I'll run the Yew road with the
+  early carts"). In the first run Brannoc sat through two tables like that without a word.
+- **Tamsin came to one evening of three.** She spent the run on the road to Britain and back (8% of it in Cove),
+  died three times and banked 719 gold. Nobody is sent to the evening, and a carrier is often away.
+- **8 evening goals of 23 were refused as early,** against 29 of 44 in the first run. Six said "in about 3
+  minutes": the turn's words floor the minutes, so 3:01 to 3:59 read as 3 and the rule refused them; Wenna asked
+  four times in six seconds. Since then the goal goes while the words say 3 or fewer, and a refusal says from
+  when it will.
 
 ### The watchman's hour with the savages known (cuo-m3n.6)
 

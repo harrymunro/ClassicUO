@@ -1000,9 +1000,10 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   `day_minutes = 60` and `evening_minutes = 15` in `[hamlet]` make a run days of an hour whose last quarter
   is the evening, on one clock for every resident (from the run's start). Each turn says the time of day ("day
   2, afternoon; evening (the gathering at the healer's house) in about 12 minutes"), and of an evening the
-  planner is offered the `evening` goal (from 3 minutes before it begins: a resident that sets off early waits
-  there for it, since asked a minute early every resident was told "it isn't evening yet" three to seven
-  times running): the resident walks to the gathering place; the first there keeps the
+  planner is offered the `evening` goal (from 3 minutes before it begins, while the turn says "in about 3
+  minutes" or fewer: a resident that sets off early waits there for it, since asked a minute early every
+  resident was told "it isn't evening yet" three to seven times running; a refusal says from when it will
+  go): the resident walks to the gathering place; the first there keeps the
   turns (a claim in the shared store, so two brains don't both host) once a neighbour has come for the evening
   (waiting up to 150 s, or 60 s once one has), and the others sit as they come. Only a neighbour who came for
   the evening since the last table closed counts, not one who lives at the house or sat at an earlier table
@@ -1015,10 +1016,13 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   things learned about a neighbour (relationship memories) and a plan or two for tomorrow (events); nothing of
   it reaches the fights. Nobody is sent: one out hunting can miss it. `hamlet-report` counts each resident's
   evening goals, tables kept, lines said at them and memories kept. `fleets/hamlet-cove-evenings.toml` is the
-  four with their lands and evenings, memory on, for three hours. Measured once
-  ([results](results.md#evenings-at-the-healers-house-one-run-of-three-hours-cuo-m3n5)): every resident came
+  four with their lands and evenings, memory on, for three hours; `fleets/hamlet-cove-evenings-check.toml` the
+  same with half-hour days for an hour and a half, three evenings in a short run. Measured twice
+  ([results](results.md#evenings-at-the-healers-house-two-runs-cuo-m3n5)): every resident came
   to every evening; what they kept of each other was the day's news and each other's needs, and some of it was
-  acted on (bread bought for two who hadn't eaten, bandages offered at the table and fetched).
+  acted on (bread bought for two who hadn't eaten, bandages offered at the table and fetched). Then a check of
+  the table's fixes, an hour and a half of half-hour days: four tables, every one a talk between two or
+  three, nobody skipped, and the late-comer given turns.
 
 ## Without a window
 

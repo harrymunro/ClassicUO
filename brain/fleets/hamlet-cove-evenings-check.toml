@@ -1,0 +1,72 @@
+# A short check of the evenings (cuo-m3n.5): hamlet-cove-evenings.toml with days of half an hour whose last 10
+# minutes are the evening, for an hour and a half, so three evenings come in a run of half the length. To see the
+# evening's table at work (who is at it, a late-comer's turns), not what builds up over hours:
+#   uv run uo-brain fleet fleets/hamlet-cove-evenings-check.toml
+#   uv run uo-brain hamlet-report logs/fleet/RUN
+# Accounts headless3-6, ports 5671-5674, as the other hamlet files'.
+name = "hamlet-cove-evenings-check"
+server_port = 2593
+hours = 1.5
+headless = true
+rules = "realistic"   # people with lives of their own walk, talk at a human pace and gesture (cuo-iqb)
+
+[hamlet]
+name = "Cove"
+edge = 10
+lands = ["south-west of Cove Cemetery", "near Cove Orc Fort"]
+gather = "Cove healer"
+gather_words = "the healer's house"
+day_minutes = 30
+evening_minutes = 10
+
+[[agent]]
+name = "Brannoc"
+account = "headless3"
+password = "headless3"
+port = 5671
+profile = "npc"
+persona = { background = "a former soldier who took the watchman's post in a small coastal hamlet", temperament = "dutiful and gruff; slow to trust strangers, steady in a fight", trade = "watchman", wants = "to keep the orcs from ever reaching the houses" }
+long_goals = ["reach 85 swordsmanship", "keep the orcs to the south away from my neighbours"]
+home = "Cove Gates"
+home_words = "the gatehouse by the east gate"
+work = "keeps the hamlet safe: short sweeps of ten minutes or so to thin out the orcs near the Cove Orc Fort to the south (the hunting area 'near Cove Orc Fort') before they come north, and back on watch at the gate between sweeps"
+prep = ["[AgentReset", "[AgentGo 2283 1209", "[AgentKit warrior", "[AgentSupplies bandages 50 gold 200"]
+
+[[agent]]
+name = "Wenna"
+account = "headless4"
+password = "headless4"
+port = 5672
+profile = "npc"
+persona = { background = "a hunter who grew up in the woods along the coast", temperament = "quiet, patient and practical; dislikes waste", trade = "hunter", wants = "to put meat and coin into the hamlet without going far from it" }
+long_goals = ["reach 85 archery"]
+home = "2235,1187"   # the fisherman's own spot (2256,1181) is on the jetty, with no walking route out
+home_words = "the small house on the square, by the provisioner's"
+work = "hunts the beasts in the woods east of the hamlet (the hunting area 'south-west of Cove Cemetery': boars, bears, cougars) in short trips of ten minutes or so, and comes home between them to sell what she brings back to the smiths of the hamlet and to rest"
+prep = ["[AgentReset", "[AgentGo 2235 1187", "[AgentKit archer", "[AgentSupplies bandages 40 arrows 300 gold 200"]
+
+[[agent]]
+name = "Maren"
+account = "headless5"
+password = "headless5"
+port = 5673
+profile = "npc"
+persona = { background = "a healer's apprentice sent to learn her craft in a quiet place", temperament = "warm, talkative and a worrier; asks after everyone's health", trade = "healer's apprentice", wants = "to be the one her neighbours come to when they are hurt" }
+long_goals = ["reach 85 healing"]   # the kit starts her at 80
+home = "Cove healer"
+home_words = "the healer's house"
+work = "her place is the healer's house: she keeps it stocked with bandages and is there when her neighbours come back hurt; now and then a short hunt in the woods east of the hamlet ('south-west of Cove Cemetery') to practise her healing, and straight back"
+prep = ["[AgentReset", "[AgentGo 2244 1229", "[AgentKit warrior", "[AgentSupplies bandages 80 gold 200"]
+
+[[agent]]
+name = "Tamsin"
+account = "headless6"
+password = "headless6"
+port = 5674
+profile = "npc"
+persona = { background = "a carrier who runs errands between small places and the towns", temperament = "cheerful, shrewd and a gossip; knows everyone's business", trade = "carrier", wants = "to save enough to buy a cart and a horse" }
+long_goals = ["save 2000 gold"]
+home = "Cove provisioner"
+home_words = "the room above the provisioner's"
+work = "takes the hamlet's spare coin to a bank in a town (Cove has none: Vesper's and Britain's are the nearest), brings back what the hamlet's own shops don't sell, and earns her keep hunting near the hamlet between trips"
+prep = ["[AgentReset", "[AgentGo 2216 1194", "[AgentKit warrior", "[AgentSupplies bandages 40 gold 300"]

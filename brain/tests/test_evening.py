@@ -138,11 +138,19 @@ def test_the_evening_goal_hosts_when_first_and_sits_when_a_table_is_open(tmp_pat
     w = World.open("local", root=tmp_path)
     h = maren(began=0.0)
     early = asyncio.run(hamlet.gathering(Walker(), neighbour(w, "Maren"), Hamlet.from_json({**h.to_json(), "began": 10**10})))
-    assert not early.ok and "isn't evening yet" in early.summary
+    assert not early.ok and "isn't evening yet" in early.summary and "from about 3 minutes before it" in early.summary
+    # "In about 3 minutes" is up to 3:59 away, and the goal goes then, as the words say it may.
+    words = Hamlet.from_json({**h.to_json(), "began": __import__("time").time() - 41.5 * 60})
+    assert words.when(__import__("time").time()).endswith("in about 3 minutes")
+    walker = Walker(clock=words)
+    monkeypatch.setattr(hamlet, "GATHER_S", 0.0)
+    asyncio.run(hamlet.gathering(walker, neighbour(w, "Maren"), words))
+    assert walker.trips and 205 <= walker.rested[0] <= 215
+    four = Hamlet.from_json({**h.to_json(), "began": __import__("time").time() - 40.5 * 60})
+    assert "isn't evening yet" in asyncio.run(hamlet.gathering(Walker(), neighbour(w, "Maren"), four)).summary
     # Two minutes before it begins she sets off and waits there for it, rather than be told to wait and ask again.
     soon = Hamlet.from_json({**h.to_json(), "began": __import__("time").time() - 43 * 60})
     walker = Walker(clock=soon)
-    monkeypatch.setattr(hamlet, "GATHER_S", 0.0)
     alone = asyncio.run(hamlet.gathering(walker, neighbour(w, "Maren"), soon))
     assert walker.trips and 115 <= walker.rested[0] <= 125
     assert "no neighbour came" in alone.summary
