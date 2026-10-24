@@ -41,6 +41,7 @@ namespace ClassicUO.Agent
         private readonly sbyte[] _reach;
         private readonly byte[] _count;
         private readonly bool[] _door;
+        private byte[] _extra; // extra steps a tile costs: ground where stronger creatures spawn (cuo-m3n.13)
 
         public NavGrid(int x0, int y0, int width, int height)
         {
@@ -67,6 +68,33 @@ namespace ClassicUO.Agent
         }
 
         public bool IsDoor(int x, int y) => Contains(x, y) && _door[(y - Y0) * Width + (x - X0)];
+
+        // A square round (x, y) whose tiles cost `cost` extra steps each to walk on; where squares overlap the
+        // dearer counts, not both (the swamp on the road from Cove to Britain is eleven spawners' ground).
+        public void Price(int x, int y, int radius, int cost)
+        {
+            cost = Math.Clamp(cost, 0, byte.MaxValue);
+
+            if (cost == 0)
+            {
+                return;
+            }
+
+            _extra ??= new byte[Width * Height];
+
+            for (int ty = Math.Max(Y0, y - radius); ty <= Math.Min(Y0 + Height - 1, y + radius); ty++)
+            {
+                for (int tx = Math.Max(X0, x - radius); tx <= Math.Min(X0 + Width - 1, x + radius); tx++)
+                {
+                    int i = (ty - Y0) * Width + (tx - X0);
+                    _extra[i] = Math.Max(_extra[i], (byte) cost);
+                }
+            }
+        }
+
+        public int Extra(int x, int y) => _extra == null || !Contains(x, y) ? 0 : _extra[(y - Y0) * Width + (x - X0)];
+
+        public bool Priced => _extra != null;
 
         public int Count(int x, int y) => Contains(x, y) ? _count[(y - Y0) * Width + (x - X0)] : 0;
 
@@ -172,7 +200,7 @@ namespace ClassicUO.Agent
         private static readonly (int Dx, int Dy)[] Steps = { (0, -1), (1, 0), (0, 1), (-1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1) };
 
         // A* over the grid, one tile per step (diagonals cost the same in UO; a door costs a few
-        // more), never cutting a corner. Returns the tiles from start (excluded) to the first tile
+        // more, and a priced tile its price), never cutting a corner. Returns the tiles from start (excluded) to the first tile
         // within `distance` of the goal, or null. With `partialMin`, a search that can't get there
         // returns the way to the nearest tile it reached instead, if that is at least partialMin
         // tiles nearer the goal than the start.
@@ -262,7 +290,7 @@ namespace ClassicUO.Agent
                         }
 
                         int n = Index(g, nx, ny, nk);
-                        int nc = c + (g.IsDoor(nx, ny) ? 1 + NavGrid.DOOR_COST : 1);
+                        int nc = c + (g.IsDoor(nx, ny) ? 1 + NavGrid.DOOR_COST : 1) + g.Extra(nx, ny);
 
                         if (nc < cost[n])
                         {
@@ -730,8 +758,11 @@ namespace ClassicUO.Agent
         // h) with what travel knows applied. A trip up to `Direct` tiles is planned whole, in a box
         // round the start and the goal, widened when the way round something leaves it. A longer
         // one goes a hop at a time: to a point `Hop` tiles along the line to the goal, or the
-        // nearest place to it the grid allows, and is planned again from there.
-        public static TripPlan PlanTrip(Func<int, int, int, int, NavGrid> load, int sx, int sy, int sz, int gx, int gy, int distance, TripLimits lim)
+        // nearest place to it the grid allows, and is planned again from there. With `priced`, a
+        // hop's point on priced ground moves along the line off it, so the hop goes round that
+        // ground rather than into it.
+        public static TripPlan PlanTrip(Func<int, int, int, int, NavGrid> load, int sx, int sy, int sz, int gx, int gy, int distance, TripLimits lim,
+            Func<int, int, bool> priced = null)
         {
             var plan = new TripPlan();
             var clock = Stopwatch.StartNew();
@@ -761,6 +792,12 @@ namespace ClassicUO.Agent
 
                 plan.Hop = dist > lim.Direct;
                 (int tx, int ty) = plan.Hop ? HopToward(sx, sy, gx, gy, lim.Hop) : (gx, gy);
+
+                if (plan.Hop && priced != null && priced(tx, ty))
+                {
+                    (tx, ty) = HopOffPriced(sx, sy, gx, gy, lim.Hop, dist, priced);
+                }
+
                 int reach = plan.Hop ? HOP_SLACK : distance;
                 int span = Tiles(sx, sy, tx, ty);
                 var boxes = new List<(int X0, int Y0, int W, int H)>();
@@ -776,6 +813,7 @@ namespace ClassicUO.Agent
                 }
 
                 List<(int X, int Y, sbyte Z)> nearest = null;
+                NavGrid last = null;
 
                 for (int i = 0; i < boxes.Count; i++)
                 {
@@ -787,6 +825,8 @@ namespace ClassicUO.Agent
                     {
                         break;
                     }
+
+                    last = g;
 
                     // The boxes before the widest share the budget, and the widest has one of its own: searching all of
                     // a box that doesn't hold the way round can spend most of it. From where the first hop from the East
@@ -841,6 +881,16 @@ namespace ClassicUO.Agent
                     plan.Failure = "no route";
                     plan.Why ??= plan.Stats.HitLimit ? "too long a search" : "no way there on the map";
                 }
+                else if (last != null && last.Priced)
+                {
+                    foreach ((int px, int py, _) in plan.Path)
+                    {
+                        if (last.Extra(px, py) > 0)
+                        {
+                            plan.PricedSteps++;
+                        }
+                    }
+                }
 
                 return plan;
             }
@@ -851,6 +901,29 @@ namespace ClassicUO.Agent
         }
 
         private const int HOP_SLACK = 4; // a hop ends within this many tiles of its point
+
+        // The point nearest `hop` tiles along the line to the goal that isn't on priced ground, 10 tiles at a time
+        // either way, no nearer than half a hop; the point as it was when all of that is priced.
+        private static (int X, int Y) HopOffPriced(int sx, int sy, int gx, int gy, int hop, int dist, Func<int, int, bool> priced)
+        {
+            for (int k = 10; hop + k < dist || hop - k >= hop / 2; k += 10)
+            {
+                foreach (int d in new[] { hop + k, hop - k })
+                {
+                    if (d >= hop / 2 && d < dist)
+                    {
+                        (int x, int y) = HopToward(sx, sy, gx, gy, d);
+
+                        if (!priced(x, y))
+                        {
+                            return (x, y);
+                        }
+                    }
+                }
+            }
+
+            return HopToward(sx, sy, gx, gy, hop);
+        }
 
         private static NavGrid Timed(TripPlan plan, Func<NavGrid> load)
         {
@@ -938,6 +1011,7 @@ namespace ClassicUO.Agent
     {
         public List<(int X, int Y, sbyte Z)> Path;
         public bool Hop;        // the path ends at a stop on the way: plan again from there
+        public int PricedSteps; // steps of the path on priced ground (where stronger creatures spawn)
         public string Failure;  // set when there is no path
         public string Why;
         public readonly PlanStats Stats = new PlanStats();

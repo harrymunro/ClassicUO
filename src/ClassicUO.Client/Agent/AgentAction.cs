@@ -39,6 +39,11 @@ namespace ClassicUO.Agent
         // A skill's targets, answered to its target cursors in order (provocation asks for two).
         public uint[] Targets = System.Array.Empty<uint>();
 
+        // travel: squares of ground to go round where the way round isn't too long, each [x, y, radius, cost]: a
+        // tile in one costs `cost` extra steps (4 when not given). The brain sends the ground of spawners whose
+        // creatures are stronger than the character (cuo-m3n.13).
+        public (int X, int Y, int R, int Cost)[] Avoid = System.Array.Empty<(int, int, int, int)>();
+
         public AgentBehavior Behavior
         {
             get
@@ -139,11 +144,33 @@ namespace ClassicUO.Agent
                         a.Targets = targets.ToArray();
 
                         break;
+                    case "avoid" when v.ValueKind == JsonValueKind.Array:
+                        a.Avoid = ReadAreas(v);
+
+                        break;
                     case "source": a.Manual = v.GetString() == "manual"; break;
                 }
             }
 
             return a;
+        }
+
+        // [[x, y, radius, cost], ...]; an entry with fewer than three numbers is left out.
+        public static (int X, int Y, int R, int Cost)[] ReadAreas(JsonElement v)
+        {
+            var areas = new System.Collections.Generic.List<(int, int, int, int)>();
+
+            foreach (JsonElement e in v.EnumerateArray())
+            {
+                if (e.ValueKind != JsonValueKind.Array || e.GetArrayLength() < 3)
+                {
+                    continue;
+                }
+
+                areas.Add((e[0].GetInt32(), e[1].GetInt32(), e[2].GetInt32(), e.GetArrayLength() > 3 ? e[3].GetInt32() : 4));
+            }
+
+            return areas.ToArray();
         }
 
         // Serials travel as numbers; "self" names the player.

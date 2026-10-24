@@ -473,7 +473,8 @@ namespace ClassicUO.Agent
                     int px = world.Player.X, py = world.Player.Y;
                     int goalX = Get(p, "goal_x", out JsonElement gx) ? gx.GetInt32() : px;
                     int goalY = Get(p, "goal_y", out JsonElement gy) ? gy.GetInt32() : py;
-                    (NavGrid grid, TripPlan trip) = world.Agent.TravelView(goalX, goalY, rad);
+                    var navAvoid = Get(p, "avoid", out JsonElement na) && na.ValueKind == JsonValueKind.Array ? AgentAction.ReadAreas(na) : null;
+                    (NavGrid grid, TripPlan trip) = world.Agent.TravelView(goalX, goalY, rad, navAvoid);
                     var route = trip?.Path;
                     var onPath = new System.Collections.Generic.HashSet<(int, int)>();
 
@@ -622,6 +623,27 @@ namespace ClassicUO.Agent
                         if (trip != null)
                         {
                             w.WriteBoolean("hop", trip.Hop);
+                            w.WriteNumber("priced_steps", trip.PricedSteps);
+
+                            // The whole plan, every 8th tile and its last, for a plan wider than the drawing.
+                            if (route != null && Get(p, "route", out JsonElement rt) && rt.GetBoolean())
+                            {
+                                w.WriteStartArray("route");
+
+                                for (int i = 0; i < route.Count; i++)
+                                {
+                                    if (i % 8 == 7 || i == route.Count - 1)
+                                    {
+                                        w.WriteStartArray();
+                                        w.WriteNumberValue(route[i].X);
+                                        w.WriteNumberValue(route[i].Y);
+                                        w.WriteEndArray();
+                                    }
+                                }
+
+                                w.WriteEndArray();
+                            }
+
                             w.WriteNumber("plan_ms", Math.Round(trip.TotalMs, 1));
                             w.WriteNumber("load_ms", Math.Round(trip.LoadMs, 1));
                             w.WriteNumber("nodes", trip.Stats.Expanded);

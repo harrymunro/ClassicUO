@@ -43,6 +43,33 @@ def healer_in_shop(snap):
     return snap
 
 
+def test_a_trip_sends_the_ground_of_stronger_creatures_for_the_client_to_go_round(tmp_path):
+    """cuo-m3n.13: travel took the shortest road through the swamp where the hamlet's carrier died twice."""
+    w = World.open("test", root=tmp_path)
+    w.replace_source("creatures", "fixture", [
+        {"type": "PlagueBeast", "name": "a plague beast", "hits_min": 318, "hits_max": 404, "difficulty": "deadly"},
+        {"type": "Rabbit", "name": "a rabbit", "hits_min": 4, "hits_max": 6, "difficulty": "trivial"}])
+    w.replace_source("spawns", "fixture", [
+        {"area": "the swamp", "map": "Felucca", "x": 1100, "y": 1000, "walk_range": 30, "creature": "PlagueBeast",
+         "max_count": 3, "spawner": "swamp"},
+        {"area": "a field", "map": "Felucca", "x": 1150, "y": 1000, "walk_range": 20, "creature": "Rabbit",
+         "max_count": 5, "spawner": "field"}])
+    w.add_place("bank", "the far bank", 1200, 1000)
+    rpc = FakeRpc(copy.deepcopy(SNAPSHOT))
+    logged = []
+    asyncio.run(Session(rpc, w, None, log=logged.append).travel_to("the far bank"))
+    go = next(p for m, p in rpc.calls if m == "act" and p.get("verb") == "travel")
+    assert go["avoid"] == [[1100, 1000, 30, 4]]
+    assert next(r for r in logged if r["event"] == "travel")["avoiding"] == 1
+    # A ghost on its way to a healer is attacked by nothing: no ground to go round.
+    ghost = copy.deepcopy(SNAPSHOT)
+    ghost["player"]["dead"] = True
+    rpc = FakeRpc(ghost)
+    asyncio.run(Session(rpc, w, None).travel_to("the far bank"))
+    assert "avoid" not in next(p for m, p in rpc.calls if m == "act" and p.get("verb") == "travel")
+    w.close()
+
+
 def test_a_sold_out_shop_doesnt_send_the_buy_to_another_town(tmp_path):
     """cuo-1kk: Britain's healer was sold out, and a fleet NPC's buy walked on to the Cove healer, 770
     tiles and 6.6 minutes away. The buy ends instead, naming the next shop and how far it is."""

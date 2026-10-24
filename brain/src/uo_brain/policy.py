@@ -1414,12 +1414,19 @@ def keep_travelling(sit: Situation) -> bool:
     """Leaving while on a trip (to a bank, say): the trip goes on, at a run, unless something within
     10 tiles is ahead on it (within 60 degrees of the way). Fleeing away from whatever was nearest
     took an open-goal soak run's warrior off its road to the bank into the wilds, where it gathered a
-    dire wolf, a gazer, an ettin and an ogre, and died."""
+    dire wolf, a gazer, an ettin and an ogre, and died. The way is the road's, where the client says
+    where it goes next (`ahead`), else the line to the goal: from the swamp west of Cove the road home
+    runs north round the hills, and with the line to Cove for the way, a bog thing east of the road
+    was ahead; the carrier fled off it eight times in a minute among six creatures and died there
+    (cuo-m3n.13)."""
     travel = sit.agent.get("travel") or {}
     if travel.get("state") != "walking":
         return False
     p = sit.player
-    gx, gy = travel.get("x", p["x"]) - p["x"], travel.get("y", p["y"]) - p["y"]
+    ax, ay = (travel.get("ahead") or [p["x"], p["y"]])[:2]
+    gx, gy = ax - p["x"], ay - p["y"]
+    if (gx * gx + gy * gy) ** 0.5 < 3:  # no road ahead, or its end: the line to the goal
+        gx, gy = travel.get("x", p["x"]) - p["x"], travel.get("y", p["y"]) - p["y"]
     g = (gx * gx + gy * gy) ** 0.5
     if g < 3:
         return False

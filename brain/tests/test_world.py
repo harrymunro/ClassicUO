@@ -361,3 +361,24 @@ def test_a_dungeons_floor_is_said_to_be_out_of_a_walks_reach_and_listed_last(w):
     assert w.what_spawns(area="Covetous Level 1")[0]["reach"].startswith("not on foot")
     assert "reach" not in w.what_spawns(area="Britain Graveyard", near="Britain")[0]
     assert worlds.no_walk("Ilshenar", 5500, 1000) is None  # only Felucca and Trammel keep their dungeons apart
+
+
+def test_the_ground_a_trip_goes_round_is_where_creatures_stronger_than_you_spawn(w):
+    """cuo-m3n.13: the hamlet's carrier died twice in the swamp on the road from Cove to Britain's bank."""
+    w.replace_source("creatures", "fixture-peaceful", [
+        {**creature("Unicorn", (400, 450), (20, 30), 9000), "fight_mode": "Aggressor"}])
+    w.replace_source("spawns", "fixture-wide", spawn("the sea", None, 1300, 1600, "sea", [("Dragon", 1)])
+                     + spawn("a meadow", None, 1450, 1500, "uni", [("Unicorn", 2)]))
+    w.db.execute("UPDATE spawns SET walk_range = 175 WHERE spawner = 'sea'")
+    w.add_spawn_seen("wilderness near 1450,1450", "lich", 1460, 1450, 1)
+    got = {d["area"]: d for d in w.dangers_between(1495, 1629, 1300, 1300, 100)}
+    assert got["Dragon cave"] == {"x": 1200, "y": 1400, "r": 10, "cost": 4, "area": "Dragon cave", "creature": "a dragon"}
+    # A creature seen where no spawner is known: by its name, SEEN_RANGE round it; a lich is "stronger", not "far".
+    assert got["wilderness near 1450,1450"]["cost"] == 2 and got["wilderness near 1450,1450"]["r"] == World.SEEN_RANGE
+    # Fair fights and weaker are no danger to go round; nor what only fights back; nor a spawn as wide as a sea.
+    assert {"Britain Graveyard", "near Britain moongate", "Britain", "a meadow", "the sea"}.isdisjoint(got)
+    assert next(iter(got.values()))["cost"] == 4  # dearest first
+    # To a character with 300 hits the dragon is "stronger", not "far stronger": a cheaper square.
+    assert {d["area"]: d["cost"] for d in w.dangers_between(1495, 1629, 1300, 1300, 300)}["Dragon cave"] == 2
+    # The box round the two ends reaches 0.6 of the trip out, at least 150: a dungeon 3700 tiles off isn't in it.
+    assert "Covetous Level 1" not in got

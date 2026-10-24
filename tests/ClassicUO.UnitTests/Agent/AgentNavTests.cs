@@ -265,6 +265,72 @@ namespace ClassicUO.UnitTests.Agent
         }
 
         [Fact]
+        public void Priced_ground_is_gone_round_when_the_way_round_is_short()
+        {
+            // cuo-m3n.13: a square where stronger creatures spawn, across the straight way; open ground round it.
+            var g = new NavGrid(0, 0, 60, 40);
+
+            for (int x = 0; x < 60; x++)
+            {
+                for (int y = 0; y < 40; y++)
+                {
+                    g.AddSurface(x, y, 0);
+                }
+            }
+
+            g.Price(30, 20, 6, 4);
+            var path = AgentNav.Plan(g, 5, 20, 0, 55, 20, 0);
+
+            path.Should().NotBeNull();
+            path.Should().NotContain(p => g.Extra(p.X, p.Y) > 0, "seven tiles round is cheaper than 13 at 5 each");
+            g.Extra(30, 20).Should().Be(4);
+            g.Extra(37, 20).Should().Be(0);
+        }
+
+        [Fact]
+        public void Priced_ground_is_crossed_where_there_is_no_way_round_and_the_dearer_square_counts_where_two_overlap()
+        {
+            // A pass between walls, priced its whole width: the only way, so the plan goes through it all the same.
+            NavGrid g = Field(
+                "####.#####",
+                "####.#####",
+                "..........",
+                "####.#####",
+                "####.#####");
+            g.Price(104, 202, 0, 3);
+            g.Price(104, 202, 1, 2);
+            var path = AgentNav.Plan(g, 100, 202, 0, 109, 202, 0);
+
+            path.Should().NotBeNull();
+            path.Should().Contain(p => p.X == 104 && p.Y == 202);
+            g.Extra(104, 202).Should().Be(3, "the dearer of the two squares, not both");
+            g.Extra(103, 202).Should().Be(2);
+        }
+
+        [Fact]
+        public void A_hop_point_on_priced_ground_moves_along_the_line_off_it()
+        {
+            (var load, _) = LongField(1200, 120, 10_000, 0);
+
+            NavGrid Priced(int x0, int y0, int w, int h)
+            {
+                NavGrid g = load(x0, y0, w, h);
+                g.Price(310, 60, 20, 4);
+
+                return g;
+            }
+
+            var limits = new TripLimits { MaxBox = 500, Direct = 100, Hop = 300, Pocket = 20 };
+            TripPlan plan = AgentNav.PlanTrip(Priced, 10, 60, 0, 1100, 60, 0, limits, (x, y) => AgentNav.Tiles(310, 60, x, y) <= 20);
+
+            plan.Hop.Should().BeTrue();
+            plan.Path.Should().NotBeNull();
+            (int ex, int ey, _) = plan.Path[^1];
+            AgentNav.Tiles(310, 60, ex, ey).Should().BeGreaterThan(20, "the hop ends off the priced square");
+            plan.PricedSteps.Should().Be(plan.Path.Count(p => AgentNav.Tiles(310, 60, p.X, p.Y) <= 20));
+        }
+
+        [Fact]
         public void A_locked_door_is_blocked_and_planned_round()
         {
             var memory = new TravelMemory();

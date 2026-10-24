@@ -760,6 +760,53 @@ class World:
             spawners.sort(key=lambda s: -sum(c.get("max_count") or 0 for c in s["creatures"]))
         return [_compact(s) for s in spawners[:limit]]
 
+    # The ground a trip goes round (cuo-m3n.13): a spawner's walk range, or this far round a creature seen
+    # where no spawner is known; what each tile of it costs in extra steps, by the strongest creature there.
+    SEEN_RANGE = 10
+    DANGER_COST = {"far stronger": 4, "stronger": 2}
+    # Spawners this far outside the box round the two ends count, or 0.6 of the trip's length: the way can
+    # bend far out (from Cove to Britain's bank it runs 280 tiles north of Cove, round the hills).
+    DANGER_MARGIN = 150
+    DANGER_MAX = 120
+    DANGER_RANGE_MAX = 60  # wider spawns are the sea's or a whole region's (a deep sea serpent's is 175)
+
+    def dangers_between(self, ax: int, ay: int, bx: int, by: int, your_hits: int, map: str = DEFAULT_MAP,
+                        margin: int | None = None) -> list[dict[str, Any]]:
+        """The ground between two points where creatures stronger than the character spawn, for travel to
+        go round where the way round isn't too long (cuo-m3n.13): each spawner's square (its walk range,
+        or SEEN_RANGE round a creature seen) with the cost of a step on it and its strongest creature,
+        dearest first. Creatures that only fight back are left out. In one told hour the hamlet's
+        carrier died twice in the swamp south-east of the Shrine of Compassion, plague beasts and bog
+        things over eleven spawners, which the road from Cove to Britain's bank crosses."""
+        from .state import threat_words
+        m = max(self.DANGER_MARGIN, round(0.6 * max(abs(ax - bx), abs(ay - by)))) if margin is None else margin
+        rows = self.db.execute("SELECT * FROM spawns WHERE stale = 0 AND map = ? COLLATE NOCASE AND x BETWEEN ? AND ? "
+                               "AND y BETWEEN ? AND ?", (map, min(ax, bx) - m, max(ax, bx) + m,
+                                                         min(ay, by) - m, max(ay, by) + m)).fetchall()
+        creatures = self._creatures()
+        by_name = {(r["name"] or "").lower().removeprefix("a ").removeprefix("an "): r for r in creatures.values()}
+        out: dict[tuple[int, int, int], dict[str, Any]] = {}
+        for r in rows:
+            c = creatures.get(r["creature"].lower()) or by_name.get(r["creature"].lower())
+            if c is None or (c["fight_mode"] and c["fight_mode"] in PEACEFUL_MODES):
+                continue
+            hits = c["hits_max"] or c["hits_min"]
+            if not hits:
+                continue
+            words = threat_words({"hits": hits, "difficulty": c["difficulty"]}, your_hits)
+            cost = next((v for k, v in self.DANGER_COST.items() if words.startswith(k)), 0)
+            if not cost:
+                continue
+            radius = r["walk_range"] if r["walk_range"] is not None else self.SEEN_RANGE
+            if radius > self.DANGER_RANGE_MAX:
+                continue
+            key = (r["x"], r["y"], radius)
+            d = out.get(key)
+            if d is None or cost > d["cost"]:
+                out[key] = {"x": r["x"], "y": r["y"], "r": radius, "cost": cost, "area": r["area"],
+                            "creature": c["name"] or r["creature"]}
+        return sorted(out.values(), key=lambda d: -d["cost"])[:self.DANGER_MAX]
+
     def hunting_spots(self, archetype: str = "warrior", level: str = "new", near: Any = None,
                       map: str = DEFAULT_MAP, limit: int = 5) -> list[dict[str, Any]]:
         """Areas whose spawns suit a character, best first. Towns are left out. Creatures

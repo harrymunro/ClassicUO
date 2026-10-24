@@ -1169,7 +1169,7 @@ namespace ClassicUO.Agent
                     StopFollow();
                     _travelManual = a.Manual;
 
-                    return StartTravel(a.X, a.Y, Math.Max(0, a.Distance), a.WalkPace(TravelWalks));
+                    return StartTravel(a.X, a.Y, Math.Max(0, a.Distance), a.WalkPace(TravelWalks), a.Avoid);
 
                 // Keep within a few tiles of someone as they move (AgentFollow), until a stop, a
                 // trip, a walk or an errand.

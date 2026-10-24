@@ -23,6 +23,8 @@ namespace ClassicUO.Agent
         private const int TRAVEL_MAX_HOPS = 40;
         private const uint DOOR_SWING_MS = 1200;     // time a door gets to open before it's tried again
         private const uint STEP_REFUSED_MS = 15_000; // a tile the server sent a step back from is left alone this long
+        private const int TRAVEL_AHEAD = 10;         // how far along the path "ahead" looks
+        private const int AVOID_GOAL_SLACK = 3;      // a square this near the goal holds it
 
         private static readonly TripLimits TravelLimits = new TripLimits();
 
@@ -47,6 +49,12 @@ namespace ClassicUO.Agent
         private readonly TravelMemory _travelMemory = new TravelMemory();
         private readonly Dictionary<(int, int), Item> _doorsInView = new Dictionary<(int, int), Item>();
         private readonly HashSet<(int, int)> _travelNewlyBlocked = new HashSet<(int, int)>();
+
+        // Ground the trip goes round where the way round isn't too long (the act's `avoid`), less any square that
+        // holds the goal: a hunt's walk to its own ground isn't priced off it. And the steps of the plan now that
+        // lie on priced ground all the same.
+        private (int X, int Y, int R, int Cost)[] _travelAvoid = Array.Empty<(int, int, int, int)>();
+        private int _travelPriced;
 
         // The door being opened: what it looked like when clicked, and how often it was tried.
         private uint _doorSerial, _doorClickAt, _doorApproach, _doorApproachAt;
@@ -75,12 +83,22 @@ namespace ClassicUO.Agent
         public TravelMemory TravelMemory => _travelMemory;
         public string TravelPace => _travelWalk ? "walk" : "run";
         public bool TravelRunning => _travelPath != null && _travelRuns;
+        public int TravelAvoiding => _travelAvoid.Length;
+        public int TravelPricedSteps => _travelPriced;
 
-        private (string, string) StartTravel(int x, int y, int distance, bool walk = false)
+        // Where the road goes next: the tile of the path TRAVEL_AHEAD steps on from the player's place on it. The
+        // way to the goal in a line can point elsewhere: from the swamp west of Cove the road home runs north, round
+        // the hills (cuo-m3n.13).
+        public (int X, int Y)? TravelAhead => _travelPath == null || _travelPath.Count == 0 ? null
+            : ((int, int)?) (_travelPath[Math.Min(_travelIndex + TRAVEL_AHEAD, _travelPath.Count - 1)].X,
+                             _travelPath[Math.Min(_travelIndex + TRAVEL_AHEAD, _travelPath.Count - 1)].Y);
+
+        private (string, string) StartTravel(int x, int y, int distance, bool walk = false, (int X, int Y, int R, int Cost)[] avoid = null)
         {
             _travelGoalX = x;
             _travelGoalY = y;
             _travelDistance = distance;
+            _travelAvoid = AvoidFor(avoid, x, y);
             _travelWalk = walk;
             _travelRuns = !walk;
             _travelReplans = _travelHops = _travelDoors = _travelPlans = 0;
@@ -132,30 +150,73 @@ namespace ClassicUO.Agent
                 }
             }
 
+            foreach ((int ax, int ay, int r, int cost) in _travelAvoid)
+            {
+                grid.Price(ax, ay, r, cost);
+            }
+
             return grid;
+        }
+
+        // The squares to price for a trip to (gx, gy): those that don't hold it.
+        private static (int X, int Y, int R, int Cost)[] AvoidFor((int X, int Y, int R, int Cost)[] avoid, int gx, int gy)
+        {
+            if (avoid == null || avoid.Length == 0)
+            {
+                return Array.Empty<(int, int, int, int)>();
+            }
+
+            var keep = new List<(int, int, int, int)>();
+
+            foreach ((int x, int y, int r, int cost) a in avoid)
+            {
+                if (a.cost > 0 && a.r >= 0 && AgentNav.Tiles(a.x, a.y, gx, gy) > a.r + AVOID_GOAL_SLACK)
+                {
+                    keep.Add(a);
+                }
+            }
+
+            return keep.ToArray();
+        }
+
+        private bool OnPriced(int x, int y)
+        {
+            foreach ((int ax, int ay, int r, _) in _travelAvoid)
+            {
+                if (AgentNav.Tiles(ax, ay, x, y) <= r)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // For the `nav` view: the grid round the player, and the plan travel would make to (gx,
         // gy) from here, without setting off.
-        public (NavGrid Grid, TripPlan Plan) TravelView(int gx, int gy, int radius)
+        public (NavGrid Grid, TripPlan Plan) TravelView(int gx, int gy, int radius, (int X, int Y, int R, int Cost)[] avoid = null)
         {
             PlayerMobile p = _world.Player;
             (int ogx, int ogy) = (_travelGoalX, _travelGoalY);
+            var oavoid = _travelAvoid;
             _travelGoalX = gx;
             _travelGoalY = gy;
+            _travelAvoid = AvoidFor(avoid, gx, gy);
 
             try
             {
                 RememberWhatIsInView();
                 NavGrid grid = LoadTravelGrid(p.X - radius, p.Y - radius, 2 * radius + 1, 2 * radius + 1, null);
                 TripPlan plan = gx == p.X && gy == p.Y ? null
-                    : AgentNav.PlanTrip((x0, y0, w, h) => LoadTravelGrid(x0, y0, w, h, null), p.X, p.Y, p.Z, gx, gy, 0, TravelLimits);
+                    : AgentNav.PlanTrip((x0, y0, w, h) => LoadTravelGrid(x0, y0, w, h, null), p.X, p.Y, p.Z, gx, gy, 0, TravelLimits,
+                        _travelAvoid.Length != 0 ? OnPriced : null);
 
                 return (grid, plan);
             }
             finally
             {
                 (_travelGoalX, _travelGoalY) = (ogx, ogy);
+                _travelAvoid = oavoid;
             }
         }
 
@@ -226,7 +287,7 @@ namespace ClassicUO.Agent
             }
 
             TripPlan plan = AgentNav.PlanTrip((x0, y0, w, h) => LoadTravelGrid(x0, y0, w, h, avoid), p.X, p.Y, p.Z, _travelGoalX, _travelGoalY,
-                _travelDistance, TravelLimits);
+                _travelDistance, TravelLimits, _travelAvoid.Length != 0 ? OnPriced : null);
 
             _travelPlans++;
             _travelPlanMs += plan.TotalMs;
@@ -242,6 +303,7 @@ namespace ClassicUO.Agent
 
             _travelPath = plan.Path;
             _travelHop = plan.Hop;
+            _travelPriced = plan.PricedSteps;
             _travelWhy = string.Empty; // a way round that failed before this plan is no reason any more
             TravelState = "walking";
 

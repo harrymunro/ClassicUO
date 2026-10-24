@@ -614,6 +614,27 @@ def test_leaving_on_a_trip_keeps_to_the_road_unless_they_are_ahead(snapshot):
     assert dec.intent == "leave" and any(a["verb"] == "flee" for a in dec.actions)
 
 
+def test_ahead_on_a_trip_is_the_roads_way_where_the_client_says_where_it_goes(snapshot):
+    """cuo-m3n.13: from the swamp west of Cove the road home runs north round the hills; a bog thing east
+    of the road, toward Cove, was taken for ahead, and the carrier fled off the road among six creatures."""
+    pack_snapshot(snapshot, (4, "a gargoyle", 6, True, 100), (4, "a gargoyle", 7, True, 100))
+    for m in snapshot["mobiles"]:
+        m["dx"], m["dy"] = m["distance"], 0  # east, the way to the goal in a line
+    p = snapshot["player"]
+    snapshot["agent"]["travel"] = {"state": "walking", "x": p["x"] + 140, "y": p["y"], "ahead": [p["x"], p["y"] - 10]}
+    dec = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), policy.Memory(), CFG)
+    assert dec.intent == "leave" and not any(a["verb"] == "flee" for a in dec.actions)
+    assert "by the road: the trip goes on" in dec.note
+    # On the road itself, ahead: away from them.
+    snapshot["agent"]["travel"]["ahead"] = [p["x"] + 10, p["y"]]
+    dec = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), policy.Memory(), CFG)
+    assert any(a["verb"] == "flee" for a in dec.actions)
+    # At the end of the plan (ahead under the character): the line to the goal, as before.
+    snapshot["agent"]["travel"]["ahead"] = [p["x"], p["y"] - 1]
+    dec = policy.decide(state.build(snapshot, set(), [], bestiary=PACK_BESTIARY), answers("fight"), policy.Memory(), CFG)
+    assert any(a["verb"] == "flee" for a in dec.actions)
+
+
 def test_leaving_by_the_road_lets_the_fight_go_so_the_walk_goes_on(snapshot):
     """cuo-1ts: on the walk to Cove a warrior engaged a reaper, then left it and an ettin by the road at
     1.0 for 35 s with nothing sent; travel waits while the agent is engaged, so it stood there and died."""

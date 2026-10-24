@@ -4028,6 +4028,40 @@ twice, nobody else. Brannoc was in Cove 83% of the hour and at home 72%, and kil
   shortest road and doesn't go round what it saw on it (cuo-m3n.13).
 - cuo-m3n.6 is closed: the watchman died less than twice in the hour.
 
+### The road round the swamp (cuo-m3n.13)
+
+2026-10-24, the soak server (2595), one headless client, a warrior of 95 hits (Brutus), the client with the priced
+ground and the store as the hamlet runs left it. The plans come from the `nav` view, hop by hop, without and with
+the squares the session would send (`World.dangers_between`: 48 between Cove and Britain, the swamp's eleven
+spawners among them); the walk is one `do travel`, at a run, with the fight loop beside it. Single runs.
+
+```bash
+cd brain
+uv run uo-brain --port 5580 client --headless --account warrior --character Brutus --server-port 2595
+uv run python scripts/route_check.py 5580 2216 1194 1650 1608    # and 5580 1650 1608 2216 1194
+uv run uo-brain --port 5580 say "[AgentGo 2216 1194"
+uv run uo-brain --port 5580 do travel "East Britain bank" --defend --judge jev --timeout 900
+```
+
+| plan | steps | on priced ground | sampled points on far-stronger ground | planning, the longest hop |
+|---|---|---|---|---|
+| Cove to East Britain bank, as before | 1260 | (not priced) | 5 of 40 (about 160 steps) | 44 ms, 133,038 nodes |
+| the same, priced | 1380 | 42 | 2 of 44 | 75 ms, 135,456 nodes (a second plan: 1381 steps, 60 ms) |
+| East Britain bank to Cove, as before | 1272 | (not priced) | 6 of 41 | 117 ms, 530,442 nodes |
+| the same, priced | 1387 | 43 | 1 of 44 | 133 ms, 543,658 nodes |
+
+- **Round the west of the swamp:** both ways the old road ran south-west through the swamp's east side (2094,972
+  to 1999,1100); the priced one keeps along its north edge at y 905 to 920 and goes down its west side at x 1915
+  to 1960, through ground of fair fights for a new warrior (earth elementals, ettins, ogres, gargoyles). The 42
+  steps left are at its north-west corner. 120 steps longer.
+- **The walk** arrived in 337 s (the hamlet's walks through the swamp: 495 to 562 s, at a walk), lowest health
+  71 of 95, 40 leave decisions, nothing fought. In view on the way: reapers and an ogre east of Britain, a corpser,
+  a gazer, zombies, a dire wolf, and a bog thing from the swamp's edge. Its `travelled` record: `avoiding` 48,
+  `priced_steps` 42 on the first hop and 0 on the second.
+- **The road ahead:** the snapshot's `travel.ahead` gave the plan's tile 10 steps on all the way (at 2258,933 it
+  pointed to 2262,925, north-west with the road, while Britain lay south-west).
+- Not yet measured: the carrier's trips in a hamlet run.
+
 ## After a death
 
 2026-10-09, the local server: a warrior (Mortis) killed by three `still` daemons at the Britain

@@ -856,6 +856,22 @@ namespace ClassicUO.Agent
                 w.WriteNumber("plan_ms", Math.Round(agent.TravelPlanMs, 1));
                 w.WriteNumber("plan_ms_max", Math.Round(agent.TravelPlanMsMax, 1));
 
+                // Where the road goes next, and the ground of stronger creatures the trip goes round (cuo-m3n.13): how
+                // many squares, and how many steps of the plan now cross them all the same.
+                if (agent.TravelAhead is (int aheadX, int aheadY))
+                {
+                    w.WriteStartArray("ahead");
+                    w.WriteNumberValue(aheadX);
+                    w.WriteNumberValue(aheadY);
+                    w.WriteEndArray();
+                }
+
+                if (agent.TravelAvoiding != 0)
+                {
+                    w.WriteNumber("avoiding", agent.TravelAvoiding);
+                    w.WriteNumber("priced_steps", agent.TravelPricedSteps);
+                }
+
                 // Steps the server sent back on this trip: the tiles are gone round (cuo-4v1).
                 if (agent.TravelStepsRefused != 0)
                 {

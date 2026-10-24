@@ -311,9 +311,13 @@ class Session:
         if tiles(*start, tx, ty) > 30 and not ghost:
             await self.play("set_out")
         go = {"x": tx, "y": ty, "distance": distance, "pace": "walk" if walking else "run"}
+        # The ground where creatures stronger than the character spawn, for the client to go round where the
+        # way round isn't too long (cuo-m3n.13); a ghost is attacked by nothing.
+        if not ghost and (dangers := self.world.dangers_between(*start, tx, ty, snap["player"].get("hits_max") or 100)):
+            go["avoid"] = [[d["x"], d["y"], d["r"], d["cost"]] for d in dangers]
         res = await self.act("travel", **go)
         self.log("travel", to=name, x=tx, y=ty, status=res.get("status"), detail=res.get("detail"),
-                 **({"pace": "walk"} if walking else {}))
+                 **({"pace": "walk"} if walking else {}), **({"avoiding": len(go["avoid"])} if "avoid" in go else {}))
         if res.get("status") != "done":
             return Result(False, f"could not set off for {name}: {res.get('detail') or res.get('status')}")
         waited = 0.0
@@ -368,8 +372,8 @@ class Session:
         self.world.add_route(from_name, name, trail, outcome="ok" if ok else "stuck",
                              stuck_at=stuck or None, duration_s=seconds)
         self.log("travelled", to=name, state=state, seconds=seconds, stuck_at=stuck,
-                 **{k: travel[k] for k in ("why", "stuck_why", "refused", "replans", "doors", "hops", "plans", "plan_ms_max")
-                    if travel.get(k) not in (None, [])})
+                 **{k: travel[k] for k in ("why", "stuck_why", "refused", "replans", "doors", "hops", "plans", "plan_ms_max",
+                                           "avoiding", "priced_steps") if travel.get(k) not in (None, [])})
         if ok:
             return Result(True, f"arrived at {name} in {seconds} s" + (", at a walk with the party" if walking else ""),
                           {"seconds": seconds, "replans": travel.get("replans", 0),
