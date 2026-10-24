@@ -1499,6 +1499,49 @@ uv run uo-brain --port 5666 do --shard evh-check travel "Cove healer" --defend -
 Before this, walks 2 to 4 fought the reaper every time, for up to 40 s. Walk 5's runs from other
 creatures took it a longer way round. Single runs.
 
+**From Cove to Britain, and back from the East Britain bank** (cuo-m3n.7), 2026-10-24. In this month's
+fleet logs no trip from Cove to a place in Britain arrived but one: 7 stopped with "no route (no way
+there on the map)" after their first hop, among them every trip from Brannoc's gatehouse by the east
+gate. A long trip's hop heads for a point 300 tiles along the straight line, and from the gatehouse the
+first box held only the Cove Orc Fort's valley, 142 tiles nearer that point and a dead end; the hop
+took it, and from the valley no box holds the way out. From the square (2228,1191) the valley was only
+85 nearer, not enough to take, so the box was widened and the hop went round the north (969 tiles): the
+one trip that arrived, Tamsin's of 2026-10-19. A hop now takes the nearest place only when no wider box
+holds a way to its point. The way back had its own fault: the first hop from the East Britain bank ends
+at 1947,1419, and from there the last 299 tiles are planned whole. The second box held no way round (it
+lies 30 tiles north of it), and searching all of that box spent most of the 400,000 tiles, so the
+widest, which holds it, ran out ("too long a search"; the client before this change, the same). The
+widest box now has a budget of its own. On the soak server (port 2595), one headless client, the plan
+from each place by the `nav` RPC (`goal_x`, `goal_y`) after `[AgentGo` there, with the client before
+the change and after:
+
+| from, to | before | after |
+|---|---|---|
+| the gatehouse (2285,1209), the East Britain bank | first hop 203 tiles, into the valley | first hop 904 tiles round the north, 95 to 101 ms |
+| the gatehouse, the West Britain bank | first hop 203 tiles, into the valley | 883 tiles, 82 ms |
+| the square (2228,1191), the East Britain bank | 969 tiles | the same |
+| 1947,1419 (the first hop's end from the East bank), the Cove healer | "too long a search", 113 ms | 971 tiles, 107 ms, 493,389 tiles searched |
+| 2000,1380 and 1975,1400, the Cove healer | "too long a search" | 932 and 952 tiles, 106 and 128 ms |
+| the forest west of Cove (2105,1235), the Cove healer | 808 tiles | the same |
+| the West and East Britain banks, the Cove healer (first hops) | 322 and 300 tiles | the same |
+
+From inside the valley (2143,1338) toward Britain there is still no way (known limits). Walked with
+the brain's defend-only fight loop, on a copy of the world store, single runs:
+
+```bash
+uv run uo-brain --port 5580 do --shard m3n7-check travel "East Britain bank" --defend --mode auto --timeout 1500
+uv run uo-brain --port 5580 do --shard m3n7-check travel "Cove healer" --defend --mode auto --timeout 1500
+```
+
+| trip | outcome | hops, plans | stuck spots | longest plan | Jev's fight calls |
+|---|---|---|---|---|---|
+| the gatehouse to the East Britain bank | arrived in 332 s | 1, 3 | 1 | 54 ms | 103, $0.0050 |
+| the East Britain bank to the Cove healer | arrived in 322 s | 1, 2 | 0 | 79 ms | 98, $0.0047 |
+
+Before the second change the trip back stopped with "too long a search" at 1947,1419 after 91 s. Two
+walks with only the client's reflexes (no brain) went the same way round and died to what lives on it,
+at 2084,996 (the bog thing north of the hills) and 1805,1389.
+
 **Rows of houses** (cuo-ql6), 2026-10-09, local server. Seven small houses (each 8 tiles
 square) placed with deeds by a staff character in a row across y 1327–1334 in the forest north of Britain, removed afterwards.
 Two routes: across the row (1445,1280 to within 1 of 1445,1385; the row comes into view on the

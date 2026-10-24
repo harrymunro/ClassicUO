@@ -447,6 +447,42 @@ namespace ClassicUO.UnitTests.Agent
         }
 
         [Fact]
+        public void A_hop_that_reaches_only_the_nearest_place_in_its_box_goes_round_in_a_wider_one()
+        {
+            // cuo-m3n.7: from Cove's east gate toward Britain the first hop's box held only the Cove Orc Fort's valley,
+            // nearer the hop's point than the start and a dead end, and the trip took it. Here a wall (x 350, from y 150
+            // south) stands between the start and the hop's point, joined by one along y 150 west to x 250; the way to
+            // the point goes north round both, out of the first box.
+            (var load, _) = LongField(600, 400, 10_000, 0);
+
+            NavGrid Walled(int x0, int y0, int w, int h)
+            {
+                NavGrid g = load(x0, y0, w, h);
+
+                for (int y = 150; y < 400; y++)
+                {
+                    g.Block(350, y);
+                }
+
+                for (int x = 250; x <= 350; x++)
+                {
+                    g.Block(x, 150);
+                }
+
+                return g;
+            }
+
+            var limits = new TripLimits { MaxBox = 500, Direct = 100, Hop = 100, Pocket = 20 };
+            TripPlan plan = AgentNav.PlanTrip(Walled, 400, 200, 0, 100, 200, 0, limits);
+
+            plan.Hop.Should().BeTrue();
+            plan.Path.Should().NotBeNull();
+            plan.Stats.Partial.Should().BeFalse();
+            AgentNav.Tiles(plan.Path[^1].X, plan.Path[^1].Y, 300, 200).Should().BeLessOrEqualTo(4, "it reached the hop's point");
+            plan.Path.Should().Contain(q => q.Y < 150, "round the north");
+        }
+
+        [Fact]
         public void A_hop_point_lies_on_the_line_to_the_goal()
         {
             AgentNav.HopToward(0, 0, 1000, 500, 300).Should().Be((300, 150));
@@ -519,7 +555,8 @@ namespace ClassicUO.UnitTests.Agent
         public void A_plan_keeps_to_its_node_budget()
         {
             // A goal behind a ring too wide for the pocket check: the search runs out of budget
-            // and gives up rather than search every box it could widen to.
+            // and gives up rather than search every box it could widen to, after the widest has
+            // had one of its own (cuo-m3n.7).
             (var load, _) = LongField(700, 700, 10_000, 0);
 
             NavGrid Ringed(int x0, int y0, int w, int h)
@@ -541,8 +578,36 @@ namespace ClassicUO.UnitTests.Agent
             TripPlan plan = AgentNav.PlanTrip(Ringed, 100, 350, 0, 350, 350, 0, limits);
 
             plan.Path.Should().BeNull();
-            plan.Stats.Expanded.Should().BeLessOrEqualTo(limits.MaxNodes + 1);
+            plan.Stats.Expanded.Should().BeLessOrEqualTo(2 * (limits.MaxNodes + 1));
             plan.Stats.HitLimit.Should().BeTrue();
+        }
+
+        [Fact]
+        public void The_widest_box_has_a_budget_of_its_own()
+        {
+            // cuo-m3n.7: from where the first hop from the East Britain bank toward Cove ends, the way round the north
+            // of the hills lies beyond the second box. Searching all of that box spent most of the budget, and the widest,
+            // which holds the way, ran out. Here a wall (x 200, from y 20 south) leaves a way round only north of y 20.
+            (var load, _) = LongField(500, 500, 10_000, 0);
+
+            NavGrid Walled(int x0, int y0, int w, int h)
+            {
+                NavGrid g = load(x0, y0, w, h);
+
+                for (int y = 20; y < 500; y++)
+                {
+                    g.Block(200, y);
+                }
+
+                return g;
+            }
+
+            var limits = new TripLimits { MaxBox = 500, MaxNodes = 150_000, Pocket = 20 };
+            TripPlan plan = AgentNav.PlanTrip(Walled, 100, 250, 0, 300, 250, 0, limits);
+
+            plan.Path.Should().NotBeNull(plan.Why);
+            plan.Path[^1].Should().Be((300, 250, (sbyte) 0));
+            plan.Grids.Should().Be(4, "the pocket check's, then the first box, the second and the widest");
         }
 
         [Fact]

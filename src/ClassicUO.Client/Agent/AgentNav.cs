@@ -763,18 +763,24 @@ namespace ClassicUO.Agent
                 (int tx, int ty) = plan.Hop ? HopToward(sx, sy, gx, gy, lim.Hop) : (gx, gy);
                 int reach = plan.Hop ? HOP_SLACK : distance;
                 int span = Tiles(sx, sy, tx, ty);
-                (int, int, int, int) last = default;
+                var boxes = new List<(int X0, int Y0, int W, int H)>();
 
                 foreach (int widen in new[] { 1, 3, 6 })
                 {
-                    (int x0, int y0, int w, int h) box = Box(sx, sy, tx, ty, (24 + span / 4) * widen, lim.MaxBox);
+                    (int, int, int, int) b = Box(sx, sy, tx, ty, (24 + span / 4) * widen, lim.MaxBox);
 
-                    if (box == last)
+                    if (boxes.Count == 0 || b != boxes[^1])
                     {
-                        break; // as wide as it can be
+                        boxes.Add(b); // a box as wide as it can be is searched once
                     }
+                }
 
-                    last = box;
+                List<(int X, int Y, sbyte Z)> nearest = null;
+
+                for (int i = 0; i < boxes.Count; i++)
+                {
+                    (int x0, int y0, int w, int h) box = boxes[i];
+                    bool widest = i == boxes.Count - 1;
                     NavGrid g = Timed(plan, () => load(box.x0, box.y0, box.w, box.h));
 
                     if (g == null)
@@ -782,16 +788,40 @@ namespace ClassicUO.Agent
                         break;
                     }
 
+                    // The boxes before the widest share the budget, and the widest has one of its own: searching all of
+                    // a box that doesn't hold the way round can spend most of it. From where the first hop from the East
+                    // Britain bank toward Cove ends, the way round the north of the hills lies 30 tiles beyond the
+                    // second box, and the widest ran out (cuo-m3n.7).
                     var stats = new PlanStats();
-                    plan.Path = Plan(g, sx, sy, sz, tx, ty, reach, lim.MaxNodes - plan.Stats.Expanded, plan.Hop ? lim.Hop / 3 : 0, stats);
+                    int budget = widest ? lim.MaxNodes : lim.MaxNodes - plan.Stats.Expanded;
+                    plan.Path = Plan(g, sx, sy, sz, tx, ty, reach, budget, plan.Hop ? lim.Hop / 3 : 0, stats);
                     plan.Stats.Expanded += stats.Expanded;
                     plan.Stats.HitLimit |= stats.HitLimit;
                     plan.Stats.Partial = stats.Partial;
 
-                    if (plan.Path != null || !stats.TouchedEdge && !stats.HitLimit || plan.Stats.Expanded >= lim.MaxNodes)
+                    if (plan.Path != null && stats.Partial && stats.TouchedEdge && !widest)
                     {
-                        break; // found, searched all there is, or out of budget
+                        // Only the nearest place to the hop's point, and the box held the search in: a wider one may
+                        // hold the way round to the point itself. The nearest place can be a dead end: from Cove's
+                        // east gate toward Britain it was the Cove Orc Fort's valley, where no hop went on, and the
+                        // way is round the north of the hills (cuo-m3n.7).
+                        nearest = plan.Path;
                     }
+                    else if (plan.Path != null || !stats.TouchedEdge && !stats.HitLimit || widest)
+                    {
+                        break; // found, searched all there is, or searched the widest
+                    }
+
+                    if (plan.Stats.Expanded >= lim.MaxNodes)
+                    {
+                        i = boxes.Count - 2; // out of the shared budget: on to the widest
+                    }
+                }
+
+                if (plan.Path == null && nearest != null)
+                {
+                    plan.Path = nearest; // no wider box got there either
+                    plan.Stats.Partial = true;
                 }
 
                 if (plan.Path != null && plan.Hop)
@@ -900,7 +930,7 @@ namespace ClassicUO.Agent
         public int MaxBox = 900;        // the largest grid side
         public int Direct = 360;        // trips up to this long are planned whole
         public int Hop = 300;           // longer ones a hop this long at a time
-        public int MaxNodes = 400_000;  // per plan, shared by its searches: bounds the time it takes
+        public int MaxNodes = 400_000;  // shared by a plan's searches before its widest box, which has as many again: bounds the time it takes
         public int Pocket = 96;         // half the side of the box searched round the goal for a closed pocket
     }
 
