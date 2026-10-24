@@ -807,6 +807,43 @@ class World:
                             "creature": c["name"] or r["creature"]}
         return sorted(out.values(), key=lambda d: -d["cost"])[:self.DANGER_MAX]
 
+    def grounds_for(self, x: int, y: int, your_hits: int, map: str = DEFAULT_MAP, radius: int = 250, limit: int = 3,
+                    exclude: Iterable[str] = ()) -> list[dict[str, Any]]:
+        """Hunting grounds near (x, y) where no creature is stronger than the character, nearest first:
+        what a hunt refused its ground is pointed to (cuo-m3n.15). Told only to hunt another ground, two
+        of the hamlet's hunters went to the Cove Orc Fort's savages and one to the liches east of Cove.
+        A ground is a spawn area outside the towns, from the shard's own spawners (not sightings); its
+        distance is to its nearest spawner, and `kinds` are a few of its creatures."""
+        from .state import threat_words
+        skip = {a.lower() for a in exclude}
+        rows = self.db.execute("SELECT * FROM spawns WHERE stale = 0 AND map = ? COLLATE NOCASE AND source != 'seen' "
+                               "AND walk_range IS NOT NULL AND MAX(ABS(x - ?), ABS(y - ?)) <= ?",
+                               (map, x, y, radius)).fetchall()
+        creatures = self._creatures()
+        areas: dict[str, dict[str, Any]] = {}
+        for r in rows:
+            if r["area"].lower() in skip:
+                continue
+            reg = self.regions().named(map, r["region"]) if r["region"] else None
+            if reg and (reg.kind in TOWN_KINDS or reg.guarded):
+                continue
+            a = areas.setdefault(r["area"], {"area": r["area"], "x": r["x"], "y": r["y"], "distance": tiles(x, y, r["x"], r["y"]),
+                                             "kinds": [], "ok": True})
+            if (d := tiles(x, y, r["x"], r["y"])) < a["distance"]:
+                a.update(x=r["x"], y=r["y"], distance=d)
+            c = creatures.get(r["creature"].lower())
+            if c is None or not (c["hits_max"] or c["hits_min"]):
+                continue
+            peaceful = bool(c["fight_mode"] and c["fight_mode"] in PEACEFUL_MODES)
+            words = threat_words({"hits": c["hits_max"] or c["hits_min"], "difficulty": c["difficulty"]}, your_hits)
+            if words.startswith(("stronger", "far stronger")) and not peaceful:
+                a["ok"] = False
+            name = (c["name"] or r["creature"]).removeprefix("a ").removeprefix("an ")
+            if name not in a["kinds"]:
+                a["kinds"].append(name)
+        good = sorted((a for a in areas.values() if a.pop("ok") and a["kinds"]), key=lambda a: a["distance"])
+        return [{**a, "kinds": a["kinds"][:4]} for a in good[:limit]]
+
     def hunting_spots(self, archetype: str = "warrior", level: str = "new", near: Any = None,
                       map: str = DEFAULT_MAP, limit: int = 5) -> list[dict[str, Any]]:
         """Areas whose spawns suit a character, best first. Towns are left out. Creatures

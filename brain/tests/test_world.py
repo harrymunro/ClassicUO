@@ -382,3 +382,14 @@ def test_the_ground_a_trip_goes_round_is_where_creatures_stronger_than_you_spawn
     assert {d["area"]: d["cost"] for d in w.dangers_between(1495, 1629, 1300, 1300, 300)}["Dragon cave"] == 2
     # The box round the two ends reaches 0.6 of the trip out, at least 150: a dungeon 3700 tiles off isn't in it.
     assert "Covetous Level 1" not in got
+
+
+def test_grounds_for_a_character_hold_nothing_stronger_than_it_and_lie_outside_the_towns(w):
+    """cuo-m3n.15: told only to hunt another ground, the hamlet's hunters went to the orc fort's savages."""
+    got = w.grounds_for(1495, 1629, 100, radius=500)
+    assert [g["area"] for g in got] == ["Britain Graveyard", "near Britain moongate"]
+    assert got[0]["distance"] == 154 and set(got[0]["kinds"]) == {"spectre", "wraith", "skeleton", "zombie"}
+    # The dragon's cave is out for this character, the town's rabbits are the town's, and a refused ground is left out.
+    assert [g["area"] for g in w.grounds_for(1495, 1629, 100, radius=500, exclude=["britain graveyard"])] == [
+        "near Britain moongate"]
+    assert w.grounds_for(1495, 1629, 100, radius=100) == []

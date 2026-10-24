@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import time
 from datetime import datetime, timedelta, timezone
 
 from conftest import SNAPSHOT, mage_snapshot
@@ -67,6 +68,26 @@ def test_a_trip_sends_the_ground_of_stronger_creatures_for_the_client_to_go_roun
     rpc = FakeRpc(ghost)
     asyncio.run(Session(rpc, w, None).travel_to("the far bank"))
     assert "avoid" not in next(p for m, p in rpc.calls if m == "act" and p.get("verb") == "travel")
+    w.close()
+
+
+def test_a_refused_hunt_names_the_nearest_grounds_where_nothing_is_stronger_than_the_character(tmp_path):
+    """cuo-m3n.15: refused their emptied ground and told to hunt another, two of the hamlet's hunters went to the
+    orc fort's savages and one to the liches east of Cove."""
+    w = World.open("test", root=tmp_path)
+    w.replace_source("creatures", "fixture", [
+        {"type": "Boar", "name": "a boar", "hits_min": 15, "hits_max": 15, "difficulty": "weak", "fight_mode": "Aggressor"},
+        {"type": "Lich", "name": "a lich", "hits_min": 103, "hits_max": 120, "difficulty": "strong", "fight_mode": "Closest"}])
+    w.replace_source("spawns", "fixture", [
+        {"area": area, "map": "Felucca", "x": x, "y": 1000, "walk_range": 20, "creature": kind, "max_count": 5,
+         "spawner": area, "min_delay_s": 300, "max_delay_s": 600}
+        for area, x, kind in (("the empty wood", 1020, "Boar"), ("the liches' ground", 1050, "Lich"),
+                              ("the far wood", 1100, "Boar"))])
+    s = Session(FakeRpc(copy.deepcopy(SNAPSHOT)), w, judge=object())
+    s.emptied["the empty wood"] = (time.monotonic(), "nothing hostile in sight for 4 min", "5 min to 10 min")
+    r = asyncio.run(s.hunt("the empty wood", 10))
+    assert not r.ok and r.summary.startswith("not hunting the empty wood again yet")
+    assert r.summary.endswith(". Grounds within 250 tiles where nothing is stronger than you: the far wood (100 tiles: boar)")
     w.close()
 
 
@@ -513,7 +534,7 @@ def test_a_hunt_that_finds_its_ground_empty_says_so_and_isnt_sent_back_to_it_for
     assert not again.ok and again.summary == (
         "not hunting south-west of Cove Cemetery again yet: 0 min ago a hunt there found it empty (nothing hostile "
         "in sight for 10 min); one of its creatures comes back every 5 min to 10 min. Hunt another ground, do other "
-        "work, or come back in 15 min")
+        "work, or come back in 15 min. No ground within 250 tiles holds only creatures no stronger than you")
     s.emptied["south-west of cove cemetery"] = (s.emptied["south-west of cove cemetery"][0] - 15 * 60, "x", "")
     assert s.empty_ground("south-west of Cove Cemetery") is None
     w.close()

@@ -63,7 +63,9 @@ Rules:
   seen recently.
 - A hunt that ended with nothing to fight for a while found its ground empty: its creatures come
   back one at a time (the result says how often), so code refuses another hunt there for 15
-  minutes. Hunt another ground, or do other work and come back.
+  minutes. Hunt another ground, or do other work and come back. A refused hunt names the nearest
+  grounds where nothing is stronger than the character; another ground may hold creatures that
+  are (savages, liches), so ask what_spawns before going to one it doesn't name.
 - If a goal fails, read why and try something different (another vendor, another area,
   waiting for a respawn) rather than repeating the same thing. A vendor that is sold out
   restocks in about an hour: buy elsewhere, or go on with what you have if it is enough.

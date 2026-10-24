@@ -177,6 +177,26 @@ class Session:
         return (f"not hunting {name} again yet: {ago:.0f} min ago a hunt there found it empty ({why}){back}. Hunt "
                 f"another ground, do other work, or come back in {self.EMPTY_MINUTES - ago:.0f} min")
 
+    GROUNDS_TILES = 250
+
+    async def grounds_words(self, refused: str) -> str:
+        """For a refused hunt: the nearest grounds where nothing is stronger than the character, and not refused
+        themselves (cuo-m3n.15). Told only to hunt another ground, the hamlet's hunters went to the Cove Orc
+        Fort's savages and the liches east of Cove, and two died."""
+        if self.rpc is None:  # a session with no client to ask where the character is
+            return ""
+        snap = await self.snap()
+        if not snap.get("in_game") or "player" not in snap:
+            return ""
+        x, y = self.where(snap)
+        found = [g for g in self.world.grounds_for(x, y, snap["player"].get("hits_max") or 100, radius=self.GROUNDS_TILES,
+                                                   limit=6, exclude=[refused, *self.emptied])
+                 if not self.avoided(g["x"], g["y"])][:3]
+        if not found:
+            return f". No ground within {self.GROUNDS_TILES} tiles holds only creatures no stronger than you"
+        return (f". Grounds within {self.GROUNDS_TILES} tiles where nothing is stronger than you: "
+                + "; ".join(f"{g['area']} ({g['distance']} tiles: {', '.join(g['kinds'])})" for g in found))
+
     def last_leave(self) -> dict[str, Any] | None:
         """Where this character last left creatures behind, and how long ago: for its party's reports."""
         if not self.left_from:
@@ -862,7 +882,9 @@ class Session:
         if spot is None or (refused := self.avoided(spot[0], spot[1]) or self.empty_ground(spot[2])):
             if forming is not None and self.leads_party:
                 forming.off(rally_key)  # the others don't wait at the edge for a hunt that isn't coming
-            return Result(False, refused if spot else f"no hunting area called {area!r} in the world store")
+            if spot is None:
+                return Result(False, f"no hunting area called {area!r} in the world store")
+            return Result(False, refused + await self.grounds_words(spot[2]))
         cx, cy, name, radius = spot
         self.hunting_area = name
         try:
