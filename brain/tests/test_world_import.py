@@ -245,6 +245,70 @@ namespace Server.Mobiles
 }
 '''
 
+# cuo-m3n.10: no horse, ostard or llama was known by its body (a mount's is its base call's first number, a horse's one
+# of an array's), and one cow in a thousand is born mad, which made every cow attack on sight.
+ANIMALS = '''
+namespace Server.Mobiles
+{
+    public partial class Horse : BaseMount
+    {
+        private static readonly int[] m_IDs =
+        {
+            0xC8, 0x3E9F,
+            0xE2, 0x3EA0,
+            0xE4, 0x3EA1,
+            0xCC, 0x3EA2
+        };
+
+        public Horse() : base(0xE2, 0x3EA0, AIType.AI_Animal, FightMode.Aggressor)
+        {
+            var random = Utility.Random(4);
+
+            Body = m_IDs[random * 2];
+            ItemID = m_IDs[random * 2 + 1];
+            SetHits(28, 45);
+            SetDamage(3, 4);
+        }
+    }
+
+    public class DesertOstard : BaseMount
+    {
+        public DesertOstard() : base( 0xD2, 0x3EA3, AIType.AI_Animal, FightMode.Aggressor)
+        {
+            SetHits(71, 88);
+            SetDamage(5, 15);
+        }
+    }
+
+    public class Cow : BaseCreature
+    {
+        public Cow() : base(AIType.AI_Animal, FightMode.Aggressor)
+        {
+            Body = Utility.RandomList(0xD8, 0xE7);
+            SetHits(18);
+            SetDamage(1, 4);
+
+            if (Core.AOS && Utility.Random(1000) == 0) // 0.1% chance to have mad cows
+            {
+                FightMode = FightMode.Closest;
+            }
+        }
+    }
+
+    public class Ronin : BaseCreature
+    {
+        public Ronin() : base(AIType.AI_Melee)
+        {
+            Body = Female ? 0x191 : 0x190;
+            SetHits(400, 450);
+            SetDamage(15, 20);
+        }
+
+        public override int Wool => Body == 0xCF ? 3 : 0;
+    }
+}
+'''
+
 MOONGATES = '''
 public class PMList
 {
@@ -279,6 +343,7 @@ def modernuo(tmp_path) -> Path:
         root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Undead.cs": MOBILES,
         root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Plant" / "Magic" / "Reaper.cs": PLANTS,
         root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Humanoid" / "Savages.cs": SAVAGES,
+        root / "Projects" / "UOContent" / "Mobiles" / "Animals" / "Animals.cs": ANIMALS,
         root / "Projects" / "UOContent" / "Items" / "Misc" / "PublicMoongate.cs": MOONGATES,
     }
     for rel, spawners in SPAWNS.items():
@@ -414,6 +479,21 @@ def test_every_body_a_creature_can_have_and_the_most_dangerous_of_a_shared_one(m
         assert beasts[184]["type"] == beasts[183]["type"] == "Savage" and beasts[183]["damage"] == "23-27"
         assert [k["type"] for k in beasts[183]["kinds"]] == ["Savage", "SavageShaman"]
         assert beasts[56]["name"] == "a skeleton"
+
+
+def test_a_mounts_body_an_arrays_one_of_two_and_a_rare_mad_cow_isnt_the_kind(modernuo, tmp_path):
+    """cuo-m3n.10: the hunter stood 24 minutes in a field of horses and cows, "three hostiles in sight": no horse
+    was known by its body and the cow was read as one that attacks on sight, so the spot was never quiet and the
+    hunt never walked on."""
+    rows = {r["type"]: r for r in parse_creatures(modernuo / "Projects" / "UOContent" / "Mobiles", modernuo)}
+    assert rows["Horse"]["body"] == 0xE2 and json.loads(rows["Horse"]["bodies"]) == [0xC8, 0xE4, 0xCC]
+    assert rows["DesertOstard"]["body"] == 0xD2 and rows["DesertOstard"]["bodies"] is None
+    assert rows["Ronin"]["body"] == 0x191 and rows["Ronin"]["bodies"] == "[400]"  # not the 3 and 0 of a comparison
+    assert rows["Cow"]["fight_mode"] == "Aggressor" and rows["Horse"]["fight_mode"] == "Aggressor"
+    with World.open("local", root=tmp_path / "field") as w:
+        import_modernuo(w, modernuo)
+        beasts = w.bestiary()
+        assert all(beasts[b]["peaceful"] is True for b in (0xC8, 0xE2, 0xE4, 0xCC, 0xD8, 0xE7, 0xD2))
 
 
 def test_creatures_that_cannot_move(modernuo, tmp_path):

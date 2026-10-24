@@ -503,6 +503,13 @@ _KARMA = re.compile(r"\bKarma\s*=\s*(-?\d+)\s*;")
 # Every body a class sets: a savage is 184 or 183 by sex, a skeleton one of a RandomList.
 _BODY = re.compile(r"\bBody\s*=\s*(Utility\.RandomList\([^)]*\)|0x[0-9A-Fa-f]+|\d+)")
 _NUMBER = re.compile(r"0x[0-9A-Fa-f]+|\d+")
+_N = r"(0x[0-9A-Fa-f]+|\d+)"
+# ...or one of two (Body = Female ? 0x191 : 0x190), or one of an array's (a horse's m_IDs[random * 2]: every other
+# entry, the rest being the items ridden). A mount's body is its base call's first number, before the item's: no horse,
+# ostard or llama was known by its body, so a field of horses was "three hostiles in sight" (cuo-m3n.10).
+_BODY_EITHER = re.compile(r"\bBody\s*=(?!=)\s*[^;?]*\?\s*" + _N + r"\s*:\s*" + _N + r"\s*;")
+_BODY_FROM = re.compile(r"\bBody\s*=\s*(\w+)\[([^\]]*)\]")
+_MOUNT_BODY = re.compile(r":\s*base\(\s*(?:\"[^\"]*\"\s*,\s*)?" + _N + r"\s*,\s*(?:0x[0-9A-Fa-f]+|\d+)\s*[,)]")
 _NAME = re.compile(r"\bDefaultName\s*=>\s*\"([^\"]+)\"|\bName\s*=\s*\"([^\"]+)\"\s*;")
 # A name drawn from a list (a savage is "Khaonem"): the kind is named by its type ("a savage shaman").
 _NAMELIST = re.compile(r"\bName\s*=\s*NameList\.RandomName\(")
@@ -512,6 +519,18 @@ _ROOTED = re.compile(r"\bDisallowAllMoves\s*=>\s*true\b")  # a reaper, a corpser
 # for characters with negative karma; the rest attack on sight.
 _AI = re.compile(r":\s*base\([^;{]*?\bAIType\.\w+\s*(?:,\s*FightMode\.(\w+))?")  # a mount's name and body first
 _FIGHT_MODE = re.compile(r"\bFightMode\s*=\s*FightMode\.(\w+)\s*;")
+
+
+def body_ids(body: str) -> list[int]:
+    """Every body a class's text sets, its mount's first."""
+    out = [int(hit.group(1), 0) for hit in _MOUNT_BODY.finditer(body)]
+    out += [int(n, 0) for hit in _BODY.finditer(body) for n in _NUMBER.findall(hit.group(1))]
+    out += [int(n, 0) for hit in _BODY_EITHER.finditer(body) for n in hit.groups()]
+    for hit in _BODY_FROM.finditer(body):
+        if arr := re.search(r"\b" + re.escape(hit.group(1)) + r"\s*=\s*(?:new\s*\w*\s*\[\s*\]\s*)?\{([^}]*)\}", body):
+            ids = [int(n, 0) for n in _NUMBER.findall(arr.group(1))]
+            out += ids[::2] if re.search(r"\*\s*2\b", hit.group(2)) else ids
+    return out
 
 
 def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
@@ -534,7 +553,7 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
                 c["fame"] = int(hit.group(1))
             if hit := _KARMA.search(body):
                 c["karma"] = int(hit.group(1))
-            bodies = list(dict.fromkeys(int(n, 0) for hit in _BODY.finditer(body) for n in _NUMBER.findall(hit.group(1))))
+            bodies = list(dict.fromkeys(body_ids(body)))
             if bodies:
                 c["body"], c["bodies"] = bodies[0], bodies
             if hit := _NAME.search(body):
@@ -544,8 +563,15 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
                 c["name"] = f"{'an' if words[0] in 'aeiou' else 'a'} {words}"
             if _ROOTED.search(body):
                 c["rooted"] = True
-            if hit := _FIGHT_MODE.search(body) or _AI.search(body):
-                c["fight_mode"] = hit.group(1) or "Closest"
+            # The constructor's own mode first: one set in the body is a healer's, or a rare chance (one cow in a
+            # thousand is born mad, Closest), which made every cow one that attacks on sight.
+            ai = _AI.search(body)
+            if ai and ai.group(1):
+                c["fight_mode"] = ai.group(1)
+            elif hit := _FIGHT_MODE.search(body):
+                c["fight_mode"] = hit.group(1)
+            elif ai:
+                c["fight_mode"] = "Closest"
             found.setdefault(c["type"], c)
 
     def resolved(t: str, depth: int = 0) -> dict[str, Any]:
