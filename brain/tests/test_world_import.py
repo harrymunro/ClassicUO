@@ -175,6 +175,53 @@ namespace Server.Mobiles
 }
 '''
 
+SAVAGES = '''
+namespace Server.Mobiles
+{
+    public class Savage : BaseCreature
+    {
+        public Savage() : base(AIType.AI_Melee)
+        {
+            Name = NameList.RandomName("savage");
+
+            if (Female = Utility.RandomBool())
+            {
+                Body = 184;
+            }
+            else
+            {
+                Body = 183;
+            }
+
+            SetHits(96, 115);
+            SetDamage(23, 27);
+            Fame = 1000;
+        }
+    }
+
+    public class SavageShaman : BaseCreature
+    {
+        public SavageShaman() : base(AIType.AI_Mage)
+        {
+            Name = NameList.RandomName("savage shaman");
+
+            if (Female = Utility.RandomBool())
+            {
+                Body = 184;
+            }
+            else
+            {
+                Body = 183;
+            }
+
+            SetHits(126, 145);
+            SetDamage(4, 10);
+            Fame = 1000;
+        }
+    }
+}
+'''
+
 PLANTS = '''
 namespace Server.Mobiles
 {
@@ -231,6 +278,7 @@ def modernuo(tmp_path) -> Path:
         root / "Distribution" / "Configuration" / "expansion.json": json.dumps({"Id": 11, "Name": "Endless Journey"}),
         root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Undead.cs": MOBILES,
         root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Plant" / "Magic" / "Reaper.cs": PLANTS,
+        root / "Projects" / "UOContent" / "Mobiles" / "Monsters" / "Humanoid" / "Savages.cs": SAVAGES,
         root / "Projects" / "UOContent" / "Items" / "Misc" / "PublicMoongate.cs": MOONGATES,
     }
     for rel, spawners in SPAWNS.items():
@@ -350,6 +398,22 @@ def test_creature_parsing(modernuo):
     assert rows["Rat"]["hits_min"] == rows["Rat"]["hits_max"] == 9 and rows["Rat"]["note"] == "hits taken from strength"
     assert rows["Lich"]["difficulty"] == "strong" and rows["Lich"]["name"] is None
     assert rows["Zombie"]["source"] == "modernuo:Projects/UOContent/Mobiles/Monsters/Undead.cs"
+
+
+def test_every_body_a_creature_can_have_and_the_most_dangerous_of_a_shared_one(modernuo, tmp_path):
+    """cuo-m3n.6: a savage is 184 or 183 by sex and named from a list ("Khaonem"); only 184 was read, and the
+    bestiary gave 184 the shaman's 4-10 a blow (more hits) where a savage's is 23-27. The hamlet's watchman
+    died 3 or 4 times an hour to them."""
+    rows = {r["type"]: r for r in parse_creatures(modernuo / "Projects" / "UOContent" / "Mobiles", modernuo)}
+    assert rows["Savage"]["body"] == 184 and rows["Savage"]["bodies"] == "[183]"
+    assert rows["Savage"]["name"] == "a savage" and rows["SavageShaman"]["name"] == "a savage shaman"
+    assert rows["Skeleton"]["bodies"] == "[56]" and rows["Zombie"]["bodies"] is None
+    with World.open("local", root=tmp_path / "savages") as w:
+        import_modernuo(w, modernuo)
+        beasts = w.bestiary()
+        assert beasts[184]["type"] == beasts[183]["type"] == "Savage" and beasts[183]["damage"] == "23-27"
+        assert [k["type"] for k in beasts[183]["kinds"]] == ["Savage", "SavageShaman"]
+        assert beasts[56]["name"] == "a skeleton"
 
 
 def test_creatures_that_cannot_move(modernuo, tmp_path):

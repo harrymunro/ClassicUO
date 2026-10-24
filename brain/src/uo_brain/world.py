@@ -68,7 +68,8 @@ CREATE INDEX IF NOT EXISTS spawns_source ON spawns(source);
 CREATE TABLE IF NOT EXISTS creatures (
     id INTEGER PRIMARY KEY, type TEXT NOT NULL, name TEXT, body INTEGER,
     hits_min INTEGER, hits_max INTEGER, damage_min INTEGER, damage_max INTEGER,
-    fame INTEGER, karma INTEGER, difficulty TEXT, rooted INTEGER NOT NULL DEFAULT 0, fight_mode TEXT, {_COMMON});
+    fame INTEGER, karma INTEGER, difficulty TEXT, rooted INTEGER NOT NULL DEFAULT 0, fight_mode TEXT,
+    bodies TEXT, {_COMMON});
 CREATE INDEX IF NOT EXISTS creatures_type ON creatures(type COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS creatures_source ON creatures(source);
 
@@ -98,6 +99,7 @@ PEACEFUL_MODES = ("Aggressor", "None", "Evil")
 ADDED_COLUMNS = [
     ("creatures", "rooted", "INTEGER NOT NULL DEFAULT 0"),  # can't move from its spot (a reaper, a corpser)
     ("creatures", "fight_mode", "TEXT"),  # ModernUO's FightMode: Closest attacks on sight, Aggressor only fights back
+    ("creatures", "bodies", "TEXT"),  # the other bodies it can have (JSON): a male savage is 183, a female 184
 ]
 
 FTS_SCHEMA = """
@@ -216,6 +218,10 @@ def now() -> str:
 
 def tiles(ax: int, ay: int, bx: int, by: int) -> int:
     return max(abs(ax - bx), abs(ay - by))
+
+
+def _danger(entry: dict[str, Any]) -> tuple[int, int]:
+    return (GRADES.index(entry["difficulty"]) if entry.get("difficulty") in GRADES else -1, entry["hits"])
 
 
 def grade_creature(hits_min: int | None, hits_max: int | None, damage_min: int | None,
@@ -508,7 +514,8 @@ class World:
 
     def bestiary(self) -> dict[int, dict[str, Any]]:
         """What each body graphic is, for describing creatures in fights: body -> {name, hits,
-        damage, difficulty, caster, rooted, peaceful}. Where several creature types share a body, the strongest.
+        damage, difficulty, caster, rooted, peaceful}. Where several creature types share a body, the most
+        dangerous (by difficulty, then hits: body 184 is a savage, 23-27 a blow, before the shaman who shares it).
         peaceful: it only fights back (a bird, a deer); None when the import didn't say."""
         if getattr(self, "_bestiary", None) is not None:
             return self._bestiary
@@ -523,10 +530,11 @@ class World:
                      "difficulty": r["difficulty"], "caster": "/Magic/" in (r["source"] or ""),
                      "rooted": bool(r["rooted"]),
                      "peaceful": None if not r["fight_mode"] else r["fight_mode"] in PEACEFUL_MODES}
-            kinds = (out[r["body"]]["kinds"] if r["body"] in out else []) + [entry]
-            if r["body"] not in out or hits > out[r["body"]]["hits"]:
-                out[r["body"]] = dict(entry)
-            out[r["body"]]["kinds"] = kinds  # every kind with this body, to tell them apart by name
+            for body in dict.fromkeys([r["body"], *_load_json(r["bodies"], [])]):
+                kinds = (out[body]["kinds"] if body in out else []) + [entry]
+                if body not in out or _danger(entry) > _danger(out[body]):
+                    out[body] = dict(entry)
+                out[body]["kinds"] = kinds  # every kind with this body, to tell them apart by name
         return out
 
     def add_spawn_seen(self, area: str, creature: str, x: int, y: int, count: int, map: str = DEFAULT_MAP) -> int:

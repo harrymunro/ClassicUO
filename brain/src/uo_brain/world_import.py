@@ -500,8 +500,12 @@ _STATS = {
 }
 _FAME = re.compile(r"\bFame\s*=\s*(-?\d+)\s*;")
 _KARMA = re.compile(r"\bKarma\s*=\s*(-?\d+)\s*;")
-_BODY = re.compile(r"\bBody\s*=\s*(?:Utility\.RandomList\(\s*)?(0x[0-9A-Fa-f]+|\d+)")
+# Every body a class sets: a savage is 184 or 183 by sex, a skeleton one of a RandomList.
+_BODY = re.compile(r"\bBody\s*=\s*(Utility\.RandomList\([^)]*\)|0x[0-9A-Fa-f]+|\d+)")
+_NUMBER = re.compile(r"0x[0-9A-Fa-f]+|\d+")
 _NAME = re.compile(r"\bDefaultName\s*=>\s*\"([^\"]+)\"|\bName\s*=\s*\"([^\"]+)\"\s*;")
+# A name drawn from a list (a savage is "Khaonem"): the kind is named by its type ("a savage shaman").
+_NAMELIST = re.compile(r"\bName\s*=\s*NameList\.RandomName\(")
 _ROOTED = re.compile(r"\bDisallowAllMoves\s*=>\s*true\b")  # a reaper, a corpser: never moves from its spot
 # How it picks a fight: the constructor's base(..., AIType.X, FightMode.Y), Closest when left out, or a
 # FightMode set in the body (a healer). Aggressor (birds, deer) and None only fight back; Evil only goes
@@ -530,10 +534,14 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
                 c["fame"] = int(hit.group(1))
             if hit := _KARMA.search(body):
                 c["karma"] = int(hit.group(1))
-            if hit := _BODY.search(body):
-                c["body"] = int(hit.group(1), 0)
+            bodies = list(dict.fromkeys(int(n, 0) for hit in _BODY.finditer(body) for n in _NUMBER.findall(hit.group(1))))
+            if bodies:
+                c["body"], c["bodies"] = bodies[0], bodies
             if hit := _NAME.search(body):
                 c["name"] = hit.group(1) or hit.group(2)
+            elif _NAMELIST.search(body):
+                words = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", c["type"]).lower()
+                c["name"] = f"{'an' if words[0] in 'aeiou' else 'a'} {words}"
             if _ROOTED.search(body):
                 c["rooted"] = True
             if hit := _FIGHT_MODE.search(body) or _AI.search(body):
@@ -545,7 +553,7 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
         base = c.get("base")
         if depth < 8 and base in found and base != t:
             b = resolved(base, depth + 1)
-            for k in ("hits", "str", "damage", "fame", "karma", "body", "name", "rooted", "fight_mode"):
+            for k in ("hits", "str", "damage", "fame", "karma", "body", "bodies", "name", "rooted", "fight_mode"):
                 c.setdefault(k, b.get(k))
         return c
 
@@ -558,7 +566,9 @@ def parse_creatures(mobiles: Path, root: Path) -> list[dict[str, Any]]:
         if hits is None or (c.get("damage") is None and c.get("fame") is None):
             continue
         dmg = c.get("damage") or (None, None)
+        others = [b for b in c.get("bodies") or () if b != c.get("body")]
         rows.append({"type": t, "name": c.get("name"), "body": c.get("body"),
+                     "bodies": json.dumps(others) if others else None,
                      "hits_min": hits[0], "hits_max": hits[1], "damage_min": dmg[0], "damage_max": dmg[1],
                      "fame": c.get("fame"), "karma": c.get("karma"),
                      "difficulty": grade_creature(hits[0], hits[1], dmg[0], dmg[1], c.get("fame")),

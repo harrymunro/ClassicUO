@@ -43,6 +43,8 @@ BODY_KINDS = {
     56: "skeleton", 57: "skeleton", 58: "wisp", 74: "imp", 98: "hell hound", 138: "orcish lord",
     140: "orcish mage", 181: "orc scout", 182: "orc bomber", 189: "orc brute", 211: "black bear",
     212: "grizzly bear", 213: "polar bear", 215: "giant rat", 225: "timber wolf", 238: "sewer rat",
+    # Savages are named from a list ("Khaonem"), so only the body says what one is (cuo-m3n.6).
+    183: "savage", 184: "savage", 185: "savage rider", 186: "savage rider",
 }
 
 

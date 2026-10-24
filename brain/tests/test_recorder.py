@@ -85,6 +85,18 @@ def test_a_creature_seen_again_and_again_becomes_a_spawn(tmp_path):
     assert w.what_spawns(area="wilderness near 1000,1000")
 
 
+def test_a_savage_goes_in_by_its_body_not_its_own_name(tmp_path):
+    # cuo-m3n.6: savages are named from a list, and the Cove Orc Fort's went in as 'khaonem' and 'masena'.
+    w = World(tmp_path / "w.sqlite")
+    r = Recorder(w, FakeJudge(nouls={"regular_0": 0.9}))
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["mobiles"] = [dict(snap["mobiles"][0], name="Khaonem", body=183)]
+    for _ in range(6):
+        r.observe(snap)
+    next(iter(r._sightings.values())).first -= 120
+    assert asyncio.run(r.flush()) == ["spawn: savage in wilderness near 1000,1000"]
+
+
 def test_shop_signs_go_in_as_places(tmp_path):
     w = World(tmp_path / "w.sqlite")
     r = Recorder(w, FakeJudge())
