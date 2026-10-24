@@ -328,3 +328,39 @@ def test_a_corpse_out_in_the_wilds_is_left_while_danger_was_seen_around_it(tmp_p
     w.db.execute("UPDATE notes SET last_seen = ?", ((datetime.now(timezone.utc) - timedelta(minutes=16)).isoformat(),))
     assert asyncio.run(s.recover_corpse()).summary == "could not get back to the corpse: went"
     w.close()
+
+
+def test_a_ghost_stands_off_where_the_step_in_is_in_the_healers_sight(tmp_path):
+    """cuo-m3n.9: the Cove healer stands in her east doorway; from the north the step to within 4 of her fell
+    behind her wall and she never offered. The stand-off is where that step is in her sight, our side first."""
+    w = World.open("test", root=tmp_path)
+    rpc = FakeRpc(copy.deepcopy(SNAPSHOT))
+    asked = []
+
+    async def call(method, **params):
+        if method == "sight":
+            asked.append(params["pairs"])
+            # She sees east and north-east only.
+            return {"in_sight": [x2 > x1 for x1, _, _, x2, _, _ in params["pairs"]]}
+        return {"status": "done"}
+    rpc.call = call
+    s = Session(rpc, w, None)
+    # The ghost is north of her: its own side (north) is behind the wall, so the nearest seen spot, north-east.
+    assert asyncio.run(s.stand_off(100, 100, 100, 90, 0)) == (106, 94)
+    assert asyncio.run(s.stand_off(100, 100, 100, 90, 0, attempt=1)) == (106, 100)  # the next, east
+    assert asyncio.run(s.stand_off(100, 100, 100, 90, 0, attempt=2)) == (106, 106)
+    assert asyncio.run(s.stand_off(100, 100, 100, 90, 0, attempt=3)) == (105, 95)  # then 5 off, for a small house
+    # Our own side first, the spot and the step to within 4 on the way in, eye to eye.
+    assert asked[0][:2] == [[100, 100, 14, 100, 94, 14], [100, 100, 14, 100, 96, 14]]
+    # Seen from our own side, that's where.
+    assert asyncio.run(s.stand_off(100, 100, 110, 100, 0)) == (106, 100)
+
+    async def across_her_wall(method, **params):
+        # She sees the step in from the west but not the spot 6 off (outside her wall), only 5 off (inside).
+        return {"in_sight": [x2 >= 95 if x2 < 100 else False for _, _, _, x2, _, _ in params["pairs"]]}
+    rpc.call = across_her_wall
+    assert asyncio.run(s.stand_off(100, 100, 90, 100, 0)) == (95, 100)
+    # A client that doesn't answer: our own side, as before.
+    s.rpc = FakeRpc(copy.deepcopy(SNAPSHOT))
+    assert asyncio.run(s.stand_off(100, 100, 100, 90, 0)) == (100, 94)
+    w.close()

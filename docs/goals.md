@@ -48,8 +48,12 @@ A death no longer ends the session. Two goals for the planner, carried out by co
   hurt on the way, but a character resurrected in the wilds comes back with little health among
   what killed it: a soak character died five times running that way. Once alive it stands and
   heals, fighting back if attacked, until its health is back to 70%, and a caster's mana (a mage's, a necromancer's, a paladin's) to 50%, at most two minutes: resurrected with no mana to recall, every planner model sometimes set off on foot, and in the logs that walk died 3 times in 4 (cuo-tyv). A ModernUO healer offers only when a ghost steps to within 4 tiles of it from
-  further out, in its sight, at most every 2 s, so the ghost stands off at 6 tiles and walks in, up
-  to three times a healer and at most three healers. In auto mode the client accepts the offer
+  further out, in its sight, at most every 2 s, so the ghost stands off at 6 tiles (or 5) and walks in, up
+  to three times a healer and at most three healers. It stands off where the healer sees it and sees the
+  step to within 4 on the way in, asked of the client's line of sight, its own side first and each try the
+  next (cuo-m3n.9: the Cove healer stands in her doorway, and from the north every walk in reached her
+  out of her sight; a ghost walked to five healers over 15 minutes, and [from that spot](results.md#after-a-death)
+  the Cove healer raised 2 ghosts of 5 before and 6 of 6 after). In auto mode the client accepts the offer
   itself (a priced healer's too, paid from the bank); with you driving, the gump is yours.
 - **`recover_corpse`:** once alive, walk back to where it died, open its own corpse (the client
   knows it: the corpse that appeared there, with its body) and take everything back. On an AOS-era

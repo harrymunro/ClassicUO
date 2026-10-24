@@ -27,7 +27,7 @@ from .facts import FactPicker
 from .judge import Judge
 from .logs import session_name
 from .routine import HuntWatch, RoutineConfig
-from .rpc import AgentRpc
+from .rpc import AgentRpc, RpcError
 from .world import World, WorldError, name_score, near_xy, tiles, tokens, wilds_area
 
 # A vendor place's kind -> words its title carries in game ("Lucy the healer").
@@ -956,12 +956,41 @@ class Session:
                  and any(w in f"{m.get('name', '')} {m.get('label', '')}".lower() for w in self.HEALER_WORDS)]
         return min(found, key=lambda m: m["distance"]) if found else None
 
+    STAND_OFF = 6  # tiles from a healer a ghost walks in from
+    AROUND = ((0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1))
+
+    async def stand_off(self, hx: int, hy: int, px: int, py: int, z: int, attempt: int = 0) -> tuple[int, int]:
+        """Where a ghost stands before walking in to a healer at (hx, hy): 6 tiles off (or 5, in a small house) where
+        the healer sees it, and sees the step to within 4 tiles on the way in (the server's rule, asked of the client),
+        our own side first and then the nearest; each attempt the next. The Cove healer stands in her house's east
+        doorway and walks about inside it: from the north the step to within 4 of her fell behind her wall, she never
+        offered, and a ghost walked to five healers over 15 minutes (cuo-m3n.9). A spot she sees only across her wall
+        is walked in from by her door, out of her sight, so the spot itself must be seen too. Without the client's
+        answer, our own side at 6, as before."""
+        d = max(1, tiles(px, py, hx, hy))
+        ours = (hx + round((px - hx) * self.STAND_OFF / d), hy + round((py - hy) * self.STAND_OFF / d))
+        around = {(hx + dx * k, hy + dy * k) for k in (self.STAND_OFF, self.STAND_OFF - 1) for dx, dy in self.AROUND}
+        around = sorted(around - {ours}, key=lambda c: (tiles(hx, hy, *c) != self.STAND_OFF, tiles(px, py, *c),
+                                                        abs(c[0] - px) + abs(c[1] - py)))
+        spots = [ours, *around]
+
+        def crossing(c: tuple[int, int]) -> list[int]:
+            k = tiles(hx, hy, *c)
+            return [hx + round((c[0] - hx) * 4 / k), hy + round((c[1] - hy) * 4 / k), z + 14]
+        pairs = [pair for c in spots for pair in ([hx, hy, z + 14, *c, z + 14], [hx, hy, z + 14, *crossing(c)])]
+        try:
+            seen = (await self.rpc.call("sight", pairs=pairs))["in_sight"]
+        except (RpcError, KeyError, TypeError):
+            return ours
+        good = [c for i, c in enumerate(spots) if seen[2 * i] and seen[2 * i + 1]] or [ours]
+        return good[attempt % len(good)]
+
     async def resurrect(self, tries: int = 3, wait_s: float = 8.0) -> Result:
         """As a ghost, walk to the nearest healer and step up to it until it offers to resurrect
         (the client accepts in auto mode). On ModernUO a healer offers only when a ghost steps to
         within 4 tiles of it from further out, in its sight, and not more than once every 2 s, so
-        arriving isn't enough: the ghost stands off at 6 tiles and walks in, up to `tries` times
-        per healer, at most three healers."""
+        arriving isn't enough: the ghost stands off at 6 tiles where that step is in the healer's
+        sight (`stand_off`) and walks in, up to `tries` times per healer, at most three healers."""
         snap = await self.snap()
         if not snap["player"]["dead"]:
             return Result(True, "already alive")
@@ -991,17 +1020,16 @@ class Session:
             if not r.ok:
                 tried.append(f"{h['name']}: {r.summary}")
                 continue
-            for _ in range(tries):
+            for attempt in range(tries):
                 snap = await self.snap()
                 if not snap["player"]["dead"]:
                     break
                 mob = self.healer_in_view(snap)
                 px, py = self.where(snap)
                 hx, hy = (px + mob["dx"], py + mob["dy"]) if mob else (h["x"], h["y"])
-                # Stand off at 6 tiles on our side of the healer, then walk in to 1.
-                d = max(1, tiles(px, py, hx, hy))
-                ox, oy = hx + round((px - hx) * 6 / d), hy + round((py - hy) * 6 / d)
-                if tiles(px, py, hx, hy) < 5:
+                # Stand off at 6 tiles, then walk in to 1.
+                ox, oy = await self.stand_off(hx, hy, px, py, snap["player"].get("z") or 0, attempt)
+                if tiles(px, py, hx, hy) < 5 or attempt:
                     await self.walk_to(ox, oy, 1, pace="run")
                 await self.walk_to(hx, hy, 1, pace="run")
                 for _ in range(int(wait_s)):

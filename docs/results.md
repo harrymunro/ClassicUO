@@ -3895,6 +3895,27 @@ supplied with bandages and bank your gold." --hours 0.2 --log logs/4b3-runN.json
   while danger was seen there in the last 15 minutes, unless `go_anyway`. Run 3 had both.
 - Single runs, one character. The pre-AOS path (taking each item and `rewear`) hasn't run live.
 
+**A healer who never offered** (cuo-m3n.9), 2026-10-24. In the lands run of the hamlet Tamsin's ghost walked
+to five healers over 15 minutes, three of them twice, and none offered; the journal held no refusal. A
+ModernUO healer offers only on the step that brings a ghost within 4 tiles of it, in its sight. The Cove
+healer stands in her house's east doorway between its doors and walks about inside, and from the north
+the step to within 4 of her fell in the doorway or behind her wall, and every later walk in went back the
+same way. The stand-off is now a spot 6 tiles off (or 5, in a small house) that she sees, with the step
+to within 4 on the way in in her sight too, asked of the client (`sight` pairs), our own side first and
+each try the next. On the soak server (port 2595), one headless client, a warrior killed with
+`[AgentSlay` where Tamsin died (2157,958), then `uv run uo-brain --port 5580 do --shard m3n7-check resurrect`
+(a copy of the world store), single runs one after another:
+
+| | before (541e5d115) | after |
+|---|---|---|
+| raised by the Cove healer | 2 of 5 (116 s, 100 s) | 6 of 6 (100 to 143 s) |
+| not raised at all (Cove healer, then the two wandering healers by Cove Guard Post) | 3 of 5 | 0 |
+
+The wandering healers by Cove Guard Post were not where the store has them on any of the tries: they walk
+about their spawner. Three of the six after were on a first version that wanted only the step in seen;
+one of those walked in from outside the healer's west wall by her door, out of her sight, before a later
+try worked, and the spot itself is now seen too.
+
 ## After-action review run
 
 Single smoke run on 2026-10-07: `uo-brain review logs/arena-jev.jsonl` (the first Jev arena
