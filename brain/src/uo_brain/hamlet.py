@@ -290,10 +290,11 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
         return Result(False, f"at {place['words']}, but the evening is over: {hamlet.when(time.time())}")
     key = hamlet.evening_key(time.time())  # the evening of the arrival: a trip can outlast one
     await table.arrive()
+    table.come(key)
     data: dict[str, Any] = {"evening": key, "place": place["words"]}
     tid = table.current()
     if tid is None and table.claim(key, GATHER_S + 30):
-        present, waited = await seen_here(session, table, place, stop)
+        present, waited = await seen_here(session, table, place, key, stop)
         data |= {"hosted": True, "present": present, "gather_s": round(waited)}
         if len(present) < 2:
             return Result(False, f"at {place['words']}, but no neighbour came within {GATHER_S:.0f} s", data)
@@ -316,16 +317,20 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
                         + "; each keeps its own memories of it", data)
 
 
-async def seen_here(session: Any, table: Any, place: dict[str, Any], stop: Any = None) -> tuple[list[str], float]:
-    """Who of the neighbours is at the gathering place, by this resident's own client: everyone, or one other after
-    GATHER_SOME_S, or whoever has come by GATHER_S."""
+async def seen_here(session: Any, table: Any, place: dict[str, Any], key: str,
+                    stop: Any = None) -> tuple[list[str], float]:
+    """Who of the neighbours has come for the evening `key` and is at the gathering place, by this resident's own
+    client: everyone, or one other after GATHER_SOME_S, or whoever has come by GATHER_S. One who only stands there
+    (at home, or resting after an earlier table) isn't at the table."""
     began = time.time()
     others = [n for n in table.party.members if n != table.party.me]
     present: list[str] = []
     while not (stop is not None and stop.is_set()):
         snap = await session.snap()
         p = snap.get("player") or {}
+        came = table.comers(key)
         present = [m["name"] for m in snap.get("mobiles") or [] if m.get("name") in others and not m.get("dead")
+                   and m["name"] in came
                    and chebyshev(p.get("x", 0) + m.get("dx", 0), p.get("y", 0) + m.get("dy", 0), place["x"], place["y"])
                    <= GATHER_TILES]
         waited = time.time() - began

@@ -321,6 +321,20 @@ class Table:
         live = [r for r in rows if now - r["t"] < window_s]
         return bool(live) and live[0]["who"] == self.me
 
+    def come(self, key: str) -> None:
+        """Coming for a hamlet's evening `key`: who its host waits for, not whoever stands by the house."""
+        self.add(0, "come", key)
+
+    def comers(self, key: str) -> set[str]:
+        """Who has come for the evening `key` since the last table closed. One who sat at that table and went to
+        rest, or who lives at the house, isn't waiting for the next: in the evenings run of 2026-10-24 the healer's
+        apprentice, resting at home, was counted at two tables and named for turns she never heard."""
+        closed = self.world.db.execute("SELECT MAX(t) FROM party_table WHERE party = ? AND kind = 'close'",
+                                       (self.party.party,)).fetchone()[0] or 0.0
+        return {r["who"] for r in self.world.db.execute(
+            "SELECT who FROM party_table WHERE party = ? AND tid = 0 AND kind = 'come' AND text = ? AND t > ?",
+            (self.party.party, key, closed))}
+
     # ---- the store ------------------------------------------------------------------
 
     def add(self, tid: int, kind: str, text: str = "", phase: str = "", to: str = "", who: str | None = None) -> int:
@@ -389,11 +403,20 @@ class Table:
         self.add(tid, "open", json.dumps(present))
         self.log({"type": "table", "t": began, "open": tid, "present": present})
         skipped: dict[str, int] = {}
-        for phase in self.plan(len(present), self.lines_wanted):
+        present, phases = list(present), self.plan(len(present), self.lines_wanted)
+        for phase in phases:  # it grows as late-comers sit
             if stop is not None and stop.is_set():
                 break
             said = self.rows(tid)
+            # One who sits down after the table opened has turns too, and a line on tomorrow: two who came late to
+            # the hamlet's evenings sat through a table each and were never named.
+            for r in said:
+                if r["kind"] == "sit" and r["who"] not in present:
+                    present.append(r["who"])
+                    phases.append("lessons")
             out = {p for p, n in skipped.items() if n >= 2}
+            if not [p for p in present if p != self.me and p not in out]:
+                break  # nobody left to talk with: a keeper whose neighbour never sat spoke nine lines to itself
             who = self.next_speaker(present, said, phase, out)
             if who is None:
                 continue
@@ -427,6 +450,7 @@ class Table:
             tid = self.current()
         if tid is None:
             return None
+        self.add(tid, "sit")
         seen, answered, quiet_since = 0, set(), time.time()
         self.emoted, self.last_emoted = [], False
         if self.ears is not None:

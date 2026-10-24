@@ -504,7 +504,9 @@ personas and no talk.
     the banter, then what each would do differently. The leader's brain keeps the turns in the
     party store (the one the last line was aimed at, else the one who has said least, never the
     same twice running); each line is written by the speaker's own brain from its persona, its
-    memories and its own story of the hunt, with what has been said so far.
+    memories and its own story of the hunt, with what has been said so far. One who sits down after
+    the table opened is given turns too; one named twice without answering is passed over, and a
+    keeper left with nobody else answering closes the table.
   - **Its own story of the hunt,** gathered by its fight loop, in code: what it fought, the lowest
     its health got and what was on it then, who was beside it, whether it died, who healed whom,
     what it shouted and what it heard, who fell, whether it ran or ran out.
@@ -1001,15 +1003,22 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   planner is offered the `evening` goal (from 3 minutes before it begins: a resident that sets off early waits
   there for it, since asked a minute early every resident was told "it isn't evening yet" three to seven
   times running): the resident walks to the gathering place; the first there keeps the
-  turns (a claim in the shared store, so two brains don't both host) once a neighbour has come (waiting up to
-  150 s, or 60 s once one has), and the others sit as they come. It is the party's table
+  turns (a claim in the shared store, so two brains don't both host) once a neighbour has come for the evening
+  (waiting up to 150 s, or 60 s once one has), and the others sit as they come. Only a neighbour who came for
+  the evening since the last table closed counts, not one who lives at the house or sat at an earlier table
+  and stayed. One who sits after the table opened is given turns and a line on tomorrow, and a keeper left
+  with nobody answering closes the table; in the first run three tables of seven were one resident talking
+  alone. It is the party's table
   ([the inn](#a-party-in-a-fight-on-the-road-and-at-the-inn)) in a hamlet scene: neighbours talking the day
   over, each from its own day (its planner's goals since the last evening), news, worries and tomorrow, a
   greeting to open and what each means to do tomorrow to close. Each keeps its own memories of it: up to three
   things learned about a neighbour (relationship memories) and a plan or two for tomorrow (events); nothing of
   it reaches the fights. Nobody is sent: one out hunting can miss it. `hamlet-report` counts each resident's
   evening goals, tables kept, lines said at them and memories kept. `fleets/hamlet-cove-evenings.toml` is the
-  four with their lands and evenings, memory on, for three hours.
+  four with their lands and evenings, memory on, for three hours. Measured once
+  ([results](results.md#evenings-at-the-healers-house-one-run-of-three-hours-cuo-m3n5)): every resident came
+  to every evening; what they kept of each other was the day's news and each other's needs, and some of it was
+  acted on (bread bought for two who hadn't eaten, bandages offered at the table and fetched).
 
 ## Without a window
 

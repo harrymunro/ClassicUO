@@ -211,3 +211,21 @@ def test_a_host_nobody_came_to_leaves_the_next_evening_free(tmp_path, monkeypatc
     later = neighbour(w, "Wenna")
     assert later.current() is None and later.claim("evening 2", 180)
     w.close()
+
+
+def test_a_neighbour_who_only_stands_by_the_house_isnt_at_the_table(tmp_path, monkeypatch):
+    # The evenings run of 2026-10-24: Maren lives at the healer's house and rested there after the evening's first
+    # table; Wenna, coming after it, counted her present twice and spoke nine lines to herself each time.
+    monkeypatch.setattr(hamlet, "GATHER_S", 0.5)
+    monkeypatch.setattr(hamlet, "GATHER_SOME_S", 0.0)
+    w = World.open("local", root=tmp_path)
+    h = maren(began=__import__("time").time() - 50 * 60)
+    seats = {n: neighbour(w, n) for n in ("Maren", "Wenna")}
+    alone = asyncio.run(hamlet.gathering(Walker(["Maren"]), seats["Wenna"], h))
+    assert not alone.ok and "no neighbour came" in alone.summary and alone.data["present"] == ["Wenna"]
+    # One who came for the evening and sat at its first table isn't waiting for the next.
+    seats["Maren"].come("evening 1")
+    assert seats["Wenna"].comers("evening 1") == {"Maren", "Wenna"}
+    seats["Maren"].add(1, "close")
+    assert seats["Wenna"].comers("evening 1") == set() and seats["Wenna"].comers("evening 2") == set()
+    w.close()

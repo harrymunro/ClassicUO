@@ -3870,6 +3870,57 @@ uv run uo-brain hamlet-report RUN --lands "south-west of Cove Cemetery" --lands 
   run; m3n.4's told runs had him die 3 or 4 times.
 - Next: the same pair again once the store knows the savages (cuo-m3n.6) and with the client's route fixes.
 
+### Evenings at the healer's house, one run of three hours (cuo-m3n.5)
+
+2026-10-24 01:05 to 04:10, headless, memory on, the residents' memories set aside first, on the same frozen
+copy as the lands run (541e5d115: before the savages' fix, the early evening and the table's fixes below) and
+the client of cuo-m3n.4. `hamlet-cove-evenings.toml`: the four with their lands, days of an hour whose last
+quarter is the evening, the gathering at the healer's house (Maren's home). One run. Not filmed.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove-evenings.toml --out logs/fleet/20261024-010548-hamlet-cove-evenings
+uv run uo-brain hamlet-report logs/fleet/20261024-010548-hamlet-cove-evenings
+```
+
+| | Brannoc | Wenna | Maren | Tamsin |
+|---|---|---|---|---|
+| in Cove / Cove or its lands | 54% / 63% | 33% / 72% | 60% / 86% | 79% / 80% |
+| homecomings | 13 | 8 | 8 | 8 |
+| evening goals (refused as early) | 12 (8) | 8 (3) | 10 (7) | 14 (11) |
+| tables kept, sat at | 1, 3 | 3, 2 | 1, 2 | 2, 1 |
+| memories kept at them | 19 | 20 | 13 | 13 |
+| later planner calls that saw one | 22 | 25 | 23 | 27 |
+| deaths, minutes resting | 5, 72 | 3, 43 | 3, 91 | 3, 110 |
+
+All four, three hours: 10 kills, 14 deaths, $0.897 ($0.292 an hour).
+
+- **Three evenings, seven tables, 72 lines.** Every resident came to every evening. Four tables were a real
+  talk between neighbours: evening 1 had Wenna, Maren and Brannoc (12 lines), then Brannoc and Tamsin (9).
+  Evening 2 had Maren and Wenna (12). Evening 3 had Tamsin, Maren and Wenna (12).
+- **Three tables were one resident talking alone,** 27 lines in all, from two faults (fixed since,
+  2026-10-24). The keeper counted as present anyone standing within 8 tiles of the healer's house. That
+  included Maren, who lives there and was resting, and the turns named for her went unanswered: Wenna kept two
+  tables "with" her, nine lines of her own each, down to "Maren, I've asked four times now. Look at the bite,
+  or I'll go find Tamsin." And one who sat down after a table opened was never named: Brannoc sat through
+  tables 3 and 5 without a line, and kept memories of both.
+- **What they remember of each other** is the day's news and each other's needs. Maren: "Brannoc had only bread
+  at dawn and went hungry most of the day, so he needs tea and a warm seat by the fire." Wenna: "Tamsin got
+  twenty Clean Bandages from Vesper, has fifty in mind, and is short on gold; she will help fetch my corpse
+  tomorrow." Tamsin: "Tomorrow I'll see about fetching Wenna's corpse from the open ground east of Minoc, but
+  only with company." Brannoc: "Maren cooks for the hamlet and made sure I sat by the fire and got tea."
+- **Some of it was acted on.** After the first evening, Maren bought bread and then meat because "Wenna and
+  Brannoc have had little to eat since dawn". She also walked to the gate to look in on Brannoc. Tamsin went to
+  the gatehouse twice for the bandages Brannoc had offered her at the table. Wenna planned the trees north of
+  the mill for the next day three times, then hunted south-west of the cemetery again.
+- **The deaths emptied their pockets.** Five of the 14 deaths were to the savages by the orc fort and four on
+  long trips north (to the East Britain bank, Minoc). Of 12 tries at a corpse one got it back (Maren's); the
+  rest found it gone or died again on the way. From the second day Tamsin, Brannoc, Wenna and then Maren had no
+  gold or bandages and rested at home "until the evening gathering": Tamsin rested 110 of her 184 minutes. The store didn't yet know the savages, and the corpse
+  walk's rule was not yet in (cuo-m3n.6).
+- **29 evening goals were refused as early,** most a minute before the evening began. Since c72c1e616 the goal
+  goes from 3 minutes before it, and the resident waits there.
+
 ## After a death
 
 2026-10-09, the local server: a warrior (Mortis) killed by three `still` daemons at the Britain

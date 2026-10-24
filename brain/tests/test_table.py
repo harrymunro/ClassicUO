@@ -324,3 +324,45 @@ def test_a_line_sent_as_a_list_or_written_like_one_is_read_as_the_line():
     assert table.clean_line("  Hold   the front. ") == "Hold the front." and table.clean_line(None) == ""
     assert table.TRAILING.sub("", "tears a corner off a honey cake and passes it down to") == \
         "tears a corner off a honey cake and passes it down"
+
+
+def test_one_who_sits_down_after_the_table_opened_is_given_turns_and_a_line_on_tomorrow(tmp_path):
+    # The hamlet's evenings of 2026-10-24: Brannoc came to two tables after they had opened, sat through each and was
+    # never named, as the table's turns went only to those there when it opened.
+    w = World.open("local", root=tmp_path)
+    chat = talker()
+    roland, isolde, wystan = (seat(w, n, chat) for n in ("Roland", "Isolde", "Wystan"))
+
+    async def go():
+        sitting = [asyncio.create_task(s.sit(wait_s=5)) for s in (roland, isolde)]
+        hosting = asyncio.create_task(roland.host(["Roland", "Isolde"]))
+        await asyncio.sleep(0.3)  # Wystan comes in once the table is open
+        late = asyncio.create_task(wystan.sit(wait_s=5))
+        held = await hosting
+        await asyncio.gather(*sitting, late)
+        return held
+
+    held = asyncio.run(go())
+    assert held["speakers"]["Wystan"] >= 1 and held["skipped"] == {}
+    lessons = [r for r in roland.rows(held["table"]) if r["kind"] == "line" and r["phase"] == "lessons"]
+    assert {r["who"] for r in lessons} == {"Roland", "Isolde", "Wystan"}
+    w.close()
+
+
+def test_a_keeper_left_with_nobody_answering_closes_the_table_and_doesnt_talk_to_itself(tmp_path, monkeypatch):
+    # Wenna kept two tables for Maren, who was resting at home and never sat: nine lines of her own each,
+    # "Maren, I've asked four times now".
+    monkeypatch.setattr(table, "TURN_S", 0.5)
+    w = World.open("local", root=tmp_path)
+    roland = seat(w, "Roland", talker())
+
+    async def go():
+        sitting = asyncio.create_task(roland.sit(wait_s=5))
+        held = await roland.host(["Roland", "Isolde"])  # Isolde's brain never sits down
+        await sitting
+        return held
+
+    held = asyncio.run(go())
+    assert held["skipped"] == {"Isolde": 2} and held["speakers"]["Roland"] <= 2 and held["lines"] <= 2
+    assert roland.current() is None
+    w.close()
