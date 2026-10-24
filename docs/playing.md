@@ -220,7 +220,9 @@ person; until a title is known, only red and criminal players are flagged.
 
 In a town the world store has as guarded, the character says "Guards!" when a creature or player within 13 tiles
 has turned criminal, which one does by harming an innocent (its notoriety in the snapshot goes from grey to
-criminal), and again every 8 s while one is still about. It runs beside every goal, in the session's look at each
+criminal), and again every 8 s while one is still about, or at once when the character is hit (a creature that
+followed it in from outside is a candidate only from its first harm inside the town: a savage rider that followed a
+resident home from the orc fort took her from full health to a fifth in one blow at her door). It runs beside every goal, in the session's look at each
 snapshot, and the session log has a `guards` record of each call. On ModernUO a guard then comes at once for any
 such one within 14 tiles of the caller and kills it; without a call, one comes only if a townsperson stood within 8
 tiles of the creature when it first struck (`GuardedRegion`). A lich that followed a hamlet resident home killed

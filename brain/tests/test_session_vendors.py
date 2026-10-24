@@ -643,9 +643,18 @@ def test_in_a_guarded_town_a_creature_turned_criminal_close_by_is_called_the_gua
     s._guards_called -= Session.GUARDS_EVERY_S
     asyncio.run(look(snap))
     assert said() == ["Guards!", "Guards!"]  # still about: called again
+    # A fresh hit is called on at once, not after GUARDS_EVERY_S: a creature is a candidate only from its first harm
+    # inside the town.
+    s._guards_called = time.monotonic() - Session.GUARDS_HIT_S
+    snap["player"]["hits"] -= 20
+    asyncio.run(look(snap))
+    assert said() == ["Guards!"] * 3
+    s._guards_called = time.monotonic() - Session.GUARDS_HIT_S
+    asyncio.run(look(snap))
+    assert said() == ["Guards!"] * 3  # no new hit: the 8 s wait again
     # Out of the guards' ground, or with nothing criminal near (a lich still gray, or out of their reach): no call.
     for x, noto, far in ((1100, "criminal", 5), (1000, "gray", 5), (1000, "criminal", 16)):
         s._guards_called -= Session.GUARDS_EVERY_S
         snap["player"]["x"], snap["mobiles"][0]["notoriety"], snap["mobiles"][0]["distance"] = x, noto, far
         asyncio.run(look(snap))
-    assert len(said()) == 2
+    assert len(said()) == 3
