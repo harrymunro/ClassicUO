@@ -504,7 +504,13 @@ namespace ClassicUO.Agent
                         continue; // the surface itself
                     }
 
-                    if (bottom < top + NavGrid.PERSON_HEIGHT && objTop > top + 2)
+                    // Ground with a surface lying on it that rises above it is stood on as that surface: the ground
+                    // under the first piece of Vesper's bridge, 2 below its top, was nearer the ground behind it, so
+                    // every step planned onto that tile went to the ground, and from there the next piece is out of
+                    // reach. The server stands a walker on the piece (cuo-m3n.8).
+                    bool covered = landOk && top == landZ && o.Surface && bottom <= top && o.Z + o.Height > top;
+
+                    if (covered || bottom < top + NavGrid.PERSON_HEIGHT && objTop > top + 2)
                     {
                         clear = false;
 

@@ -1698,6 +1698,28 @@ No tile the walker reaches was lost anywhere (`+` the same everywhere), stairs a
 included. The large `-` counts inside the bank and upstairs at the healer's are the walker's own reach
 stopping at closed doors, which the grid passes at a cost; the change doesn't touch them.
 
+**...and the foot of Vesper's bridge** (cuo-m3n.8), 2026-10-24. In the control runs of cuo-m3n.4 every trip
+to the Vesper bowyer (2861,812; 9 trips) and to the armourer and weaponsmith beside it (2835,805; 3) stopped
+41 to 63 tiles short with "no route: nowhere to stand there, or closed off". Those shops are reached over
+a bridge from the south (x 2848 to 2852, from y 849), a ramp: a piece at z 0, 5 high (a bridge, stood on at
+2), then each row a piece at the last one's base under one 5 higher. The planner's map had the ground under
+the first piece as somewhere to stand too, nearer the street behind it than the piece's top, so every
+step planned onto that tile went to the ground, and from the ground the next piece is out of reach. Its
+only way on was past a lamp post at 2847,850 (an item, not in the map files); once the lamp post was in
+view, a trip planned again and the goal's surroundings were a closed pocket. The client's walker climbed
+it: on the soak server, `walk_to` up the bridge went z 2, 12, 21 and down to 2 at 818, none refused. Ground
+with a surface lying on it that rises above it is now no place to stand. `uv run python scripts/nav_check.py
+5580 bench/2026-10-24-nav-check-m3n8.json`, one headless client on the soak server (port 2595), and the
+client before the change (`...-m3n8-base.json`), with a twelfth place, the foot of that bridge:
+
+| place | `+` before (the walker only) | `+` after | `,` before | `,` after |
+|---|---|---|---|---|
+| Vesper, the foot of the bridge to its shops (2848,851) | 116 | 3 | 1,259 | 1,370 |
+| the other eleven | as above | the same | as above | the same |
+
+Single trips on the soak server after the lamp post was seen: from 2858,869 to the bowyer in 24 s and to the
+armourer and weaponsmith's spot in 18 s, from 2864,846 to the bowyer in 22 s, each through one door, none stuck.
+
 ## Routine hunt calls
 
 Jev's routine hunt calls, 2026-10-07, one run over 10 hand-made situations with no game

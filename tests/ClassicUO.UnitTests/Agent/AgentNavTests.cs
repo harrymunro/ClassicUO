@@ -149,6 +149,38 @@ namespace ClassicUO.UnitTests.Agent
         }
 
         [Fact]
+        public void The_ground_under_a_bridges_first_piece_is_no_place_to_stand_so_the_ramp_is_climbed()
+        {
+            // cuo-m3n.8: the south end of Vesper's bridge at x 2848. The ground at z 0, then a piece at z 0 (5 high, a
+            // bridge: stood on at 2), then each row a piece at the last one's base under one 5 higher. The ground under
+            // the first piece was a place to stand, nearer the ground behind than the piece's top, so every plan stepped
+            // onto it, and from the ground the piece at z 5 is out of reach. The server stands a walker on the piece.
+            var g = new NavGrid(100, 200, 4, 1);
+            AgentNav.AddStandable(g, 100, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)>());
+            AgentNav.AddStandable(g, 101, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)> { (0, 2, true, false, true, 5) });
+            AgentNav.AddStandable(g, 102, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)>
+                { (0, 2, true, false, true, 5), (5, 2, true, false, true, 5) });
+            AgentNav.AddStandable(g, 103, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)>
+                { (5, 2, true, false, true, 5), (10, 2, true, false, true, 5) });
+
+            g.Count(101, 200).Should().Be(1);
+            g.Z(101, 200, 0).Should().Be(2);
+            var path = AgentNav.Plan(g, 100, 200, 0, 103, 200, 0);
+            path.Should().NotBeNull();
+            path.Select(q => (int) q.Z).Should().Equal(2, 7, 12);
+
+            // A floor with no height on the ground is still one place to stand there, and a solid thing a step high
+            // still leaves the ground.
+            var floor = new NavGrid(100, 200, 2, 1);
+            AgentNav.AddStandable(floor, 100, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)> { (0, 0, true, false, false, 0) });
+            AgentNav.AddStandable(floor, 101, 200, true, 0, new List<(sbyte, byte, bool, bool, bool, byte)> { (0, 1, false, true, false, 1) });
+            floor.Count(100, 200).Should().Be(1);
+            floor.Z(100, 200, 0).Should().Be(0);
+            floor.Count(101, 200).Should().Be(1);
+            floor.Z(101, 200, 0).Should().Be(0);
+        }
+
+        [Fact]
         public void Stops_within_the_distance_asked()
         {
             NavGrid g = Field("..........");
