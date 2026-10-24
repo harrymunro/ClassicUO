@@ -106,6 +106,27 @@ def test_a_residents_planner_is_told_where_it_lives_and_where_it_is_each_turn(tm
     assert "Where" not in plain.system.split("Who you plan for")[0][-200:] and "hamlet of" not in plain.system
 
 
+def test_a_resident_with_no_players_goal_doesnt_finish_its_days(tmp_path):
+    """cuo-m3n.3: the watchman, sure every way out of Cove was too dangerous, finished half an hour into an hour."""
+    from test_planner import world
+    s = FakeSession(world(tmp_path))
+    s.hamlet = maren()
+    chat = scripted(reply(call("finish", {"summary": "staying home, the roads are too dangerous"})),
+                    reply(call("rest", {"seconds": 60, "why": "at home"})))
+    p = planner.Planner(s, "", chat_fn=chat, persona={"name": "Maren", "trade": "healer's apprentice"})
+    step = asyncio.run(p.step())
+    assert not step.result["ok"] and step.result["result"].startswith("not finishing: you live in Cove")
+    assert p.finished is None
+    assert asyncio.run(p.step()).tool == "rest"
+    # A player's goal can be done with, and outside a hamlet nobody lives anywhere.
+    for goal, hamlet in (("buy 10 bandages", maren()), ("", None)):
+        s = FakeSession(world(tmp_path))
+        s.hamlet = hamlet
+        p = planner.Planner(s, goal, chat_fn=scripted(reply(call("finish", {"summary": "done"}))))
+        asyncio.run(p.step())
+        assert p.finished == "done"
+
+
 def test_travel_to_home_goes_to_the_residents_home(tmp_path):
     from test_planner import world
     from uo_brain.session import Session

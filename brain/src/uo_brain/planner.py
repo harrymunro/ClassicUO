@@ -469,7 +469,7 @@ class Planner:
 
         defended = getattr(self.session, "defended", None)
         tool, args = await (defended(think()) if defended else think())
-        return await self.carry_out(tool, args)
+        return await self.carry_out(tool, args, chosen=True)
 
     def steer(self, area: str, rev: int) -> tuple[str, dict[str, Any]]:
         """The hunt goal a huddle's plan sends this member on (sent_in), noted as the plan's, not its planner's."""
@@ -672,7 +672,8 @@ class Planner:
         self.no_tool += 1
         return "rest", {"seconds": 30, "why": "the planner gave no goal"}
 
-    async def carry_out(self, tool: str, args: dict[str, Any]) -> PlanStep:
+    async def carry_out(self, tool: str, args: dict[str, Any], chosen: bool = False) -> PlanStep:
+        """Carry out a goal: the planner's own choice (`chosen`), or one code sends (a huddle's plan, over budget)."""
         why = str(args.get("why", ""))
         if self.on_goal:
             await self.on_goal(self.goal, describe_goal(tool, args), why)
@@ -813,6 +814,12 @@ class Planner:
                         except machines.MachineError as e:
                             r = Result(False, f"plan not used: {e}")
                     s.machine = self.machine
+                case "finish" if chosen and not self.goal and (hamlet := getattr(s, "hamlet", None)) is not None:
+                    # A resident has no player's goal to be done with, and a finish would only end its days in the
+                    # hamlet early: the watchman, sure every way out of Cove was too dangerous, finished half an hour
+                    # into an hour (cuo-m3n.3).
+                    r = Result(False, f"not finishing: you live in {hamlet.name} and your days there go on; choose "
+                                      "what to do next (rest at home, your work, the neighbours)")
                 case _:
                     self.finished = str(args.get("summary", "finished"))
                     r = Result(True, self.finished)

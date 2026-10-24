@@ -956,7 +956,10 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   and end in the hamlet: work out, then home, rest at home, free time where the neighbours are, a long trip
   only for a reason. Each turn's situation says where it is against home and the hamlet ("at home (the
   healer's house), in Cove", "away from Cove: 131 tiles from it and 171 from home"). Its talk knows where
-  it lives and who its neighbours are. Nothing is scripted: the planner still chooses every goal.
+  it lives and who its neighbours are. Nothing is scripted: the planner still chooses every goal, but a
+  resident with no player's goal can't `finish`: code answers "not finishing: you live in Cove and your days
+  there go on" and the planner chooses again (cuo-m3n.3: the watchman, sure every way out was too
+  dangerous, finished half an hour into an hour). Over budget it still stops.
 - **The control:** `--set hamlet=false` tells the residents nothing (their personas don't name the place,
   so they are britain-lives NPCs who happen to start in Cove) and the fleet still measures them against it.
 - **Measured:** the fleet samples where every resident is every 30 s (records of type `where` in
