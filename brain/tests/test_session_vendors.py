@@ -1,5 +1,6 @@
 import asyncio
 import copy
+from datetime import datetime, timedelta, timezone
 
 from conftest import SNAPSHOT, mage_snapshot
 
@@ -301,3 +302,29 @@ def test_a_hunt_named_by_a_place_goes_to_the_spawn_at_it_not_the_biggest_that_na
     assert s.hunt_spot("Cove Orc Fort")[:3] == (2171, 1356, "near Cove Orc Fort")
     assert s.hunt_spot("west of Cove Orc Fort")[:3] == (1958, 1305, "west of Cove Orc Fort")
     assert s.hunt_spot("Britain Graveyard")[:3] == (1369, 1475, "Britain Graveyard")  # the biggest, as before
+
+
+def test_a_corpse_out_in_the_wilds_is_left_while_danger_was_seen_around_it(tmp_path):
+    """cuo-m3n.6: only a region's dangers were looked at, so the hamlet's watchman, dead to savages by the
+    Cove Orc Fort where no region is, walked straight back to them and died on the way."""
+    from uo_brain.session import Result
+    w = World.open("test", root=tmp_path)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["player"].update(dead=False, last_death={"x": 2204, "y": 1255})
+    s = Session(FakeRpc(snap), w, None)
+
+    async def travel_to(**_):
+        return Result(False, "went")
+    s.travel_to = travel_to
+    w.add_note("Stronger than a new character, seen 2026-10-23 15:33: 1 lich.", area="near 2400,1100",
+               tags=["danger"], source="seen")
+    assert asyncio.run(s.recover_corpse()).summary == "could not get back to the corpse: went"  # far off
+    w.add_note("Stronger than a new character, seen 2026-10-23 15:33: 1 Masena.", area="near 2150,1300",
+               tags=["danger"], source="seen")  # the place beside the corpse's
+    r = asyncio.run(s.recover_corpse())
+    assert not r.ok and r.summary.startswith("not going back yet: danger was seen by the corpse, at near 2150,1300 "
+                                             "0 min ago: Stronger than a new character")
+    assert asyncio.run(s.recover_corpse(go_anyway=True)).summary == "could not get back to the corpse: went"
+    w.db.execute("UPDATE notes SET last_seen = ?", ((datetime.now(timezone.utc) - timedelta(minutes=16)).isoformat(),))
+    assert asyncio.run(s.recover_corpse()).summary == "could not get back to the corpse: went"
+    w.close()

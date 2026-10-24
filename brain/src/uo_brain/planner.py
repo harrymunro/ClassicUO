@@ -127,7 +127,7 @@ def goal_tools() -> list[dict[str, Any]]:
            "ghost steps up to it). Only when the character is dead.", {}, []),
         fn("recover_corpse", "After being resurrected, walk back to where the character died, open its corpse "
            "and take back everything (equipment goes back on). Fails when the corpse has decayed or is gone. Refuses "
-           "while danger was seen there in the last 15 minutes, unless go_anyway.",
+           "while danger was seen there or close by in the last 15 minutes, unless go_anyway.",
            {"go_anyway": {"type": "boolean", "description": "Go even though danger was seen there lately."}}, []),
         fn("finish", "End the session: the goal is done or impossible, or the character can't be resurrected.",
            {"summary": s}, ["summary"]),

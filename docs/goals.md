@@ -54,7 +54,12 @@ A death no longer ends the session. Two goals for the planner, carried out by co
 - **`recover_corpse`:** once alive, walk back to where it died, open its own corpse (the client
   knows it: the corpse that appeared there, with its body) and take everything back. On an AOS-era
   server opening your own corpse puts it all back and on; on an older one the client takes each
-  item into the pack and puts back on what was worn (`rewear`), one at a time.
+  item into the pack and puts back on what was worn (`rewear`), one at a time. It refuses while
+  danger was seen by the corpse in the last 15 minutes, unless the planner says `go_anyway`: in the
+  corpse's region, and in its 50 tiles of the wilds and the eight places beside them, where dangers
+  outside any region are noted. Until cuo-m3n.6 only a region was looked at, so a corpse in the wilds
+  was always walked back to: the hamlet's watchman died on the way back to savages by the Cove Orc
+  Fort more than once an hour.
 - **The planner decides:** it is told the character is dead, and once alive, where its corpse is
   and how long ago it died (`your_corpse`), until it has taken it back. It is told to rest after a
   resurrection (the character comes back with little health), to wait while what killed it is still

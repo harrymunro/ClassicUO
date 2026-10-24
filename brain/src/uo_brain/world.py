@@ -208,6 +208,11 @@ def near_xy(name: str) -> tuple[int, int] | None:
     return (int(m[1]), int(m[2])) if m else None
 
 
+def wilds_area(x: int, y: int) -> str:
+    """The name dangers seen outside any region are noted by: one place per 50 tiles, not one per creature."""
+    return f"near {round(x, -1) // 50 * 50},{round(y, -1) // 50 * 50}"
+
+
 class WorldError(ValueError):
     """A query the store can't answer as asked (unknown place, bad coordinates)."""
 
@@ -827,6 +832,21 @@ class World:
             return None
         ago = (datetime.now(timezone.utc) - datetime.fromisoformat(r["last_seen"])).total_seconds() / 60
         return f"{round(ago)} min ago: {r['text']}"
+
+    def danger_near(self, x: int, y: int, minutes: float = 60, map: str = DEFAULT_MAP) -> str | None:
+        """The latest danger seen within `minutes` around a tile: in its region, and in its place of the
+        wilds and the eight beside it, since what was seen there moves about. Says where and how long ago."""
+        region = self.region_at(x, y, map)
+        areas = list(dict.fromkeys([*([region["name"]] if region else []),
+                                    *(wilds_area(x + dx, y + dy) for dx in (-50, 0, 50) for dy in (-50, 0, 50))]))
+        since = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat(timespec="seconds")
+        r = self.db.execute("SELECT area, text, last_seen FROM notes WHERE stale = 0 AND source = 'seen' AND tags LIKE "
+                            f"'%\"danger\"%' AND area COLLATE NOCASE IN ({','.join('?' * len(areas))}) AND last_seen >= ? "
+                            "ORDER BY last_seen DESC LIMIT 1", (*areas, since)).fetchone()
+        if not r:
+            return None
+        ago = (datetime.now(timezone.utc) - datetime.fromisoformat(r["last_seen"])).total_seconds() / 60
+        return f"at {r['area']} {round(ago)} min ago: {r['text']}"
 
     def _outcomes(self, area: str, kit: str) -> list[dict[str, Any]]:
         """Averages per loop, without the per-creature totals (those are in outcomes())."""

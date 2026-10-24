@@ -1,5 +1,6 @@
 import asyncio
 import time
+from datetime import datetime, timedelta
 
 from uo_brain import costs, heartbeat, memory, planner
 from uo_brain.world import World
@@ -94,7 +95,7 @@ def test_a_restarted_brain_carries_on_with_the_same_goal_summary_and_focus(tmp_p
 def test_earlier_days_are_digested_once(tmp_path):
     w = World(tmp_path / "w.sqlite")
     mem = memory.Memory(w, "Brutus")
-    day = time.time() - 2 * 86400
+    day = (datetime.now() - timedelta(days=2)).replace(hour=12, minute=0).timestamp()  # its memories on one day, run at any hour
     mem.add("Had to leave Britain Graveyard: a lich.", source="leave", importance=4, at=day)
     mem.add("Hunted Britain Graveyard: 8 kills.", source="goal", at=day + 600)
     mem.add("Today's memory.", source="goal")

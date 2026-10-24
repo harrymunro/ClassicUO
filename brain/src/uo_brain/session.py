@@ -28,7 +28,7 @@ from .judge import Judge
 from .logs import session_name
 from .routine import HuntWatch, RoutineConfig
 from .rpc import AgentRpc
-from .world import World, WorldError, name_score, near_xy, tiles, tokens
+from .world import World, WorldError, name_score, near_xy, tiles, tokens, wilds_area
 
 # A vendor place's kind -> words its title carries in game ("Lucy the healer").
 VENDOR_TITLES: dict[str, tuple[str, ...]] = {
@@ -180,8 +180,7 @@ class Session:
             kind = BODY_KINDS.get(m.get("body", 0)) or str(known.get("name") or m.get("name") or "a creature")
             x, y = p["x"] + m.get("dx", 0), p["y"] + m.get("dy", 0)
             region = self.world.region_at(x, y)
-            # Out in the wilds there is no region name: one place per 50 tiles, not one per creature.
-            area = region["name"] if region else f"near {round(x, -1) // 50 * 50},{round(y, -1) // 50 * 50}"
+            area = region["name"] if region else wilds_area(x, y)  # out in the wilds there is no region name
             self.dangers.setdefault(area, {})[m["serial"]] = kind.removeprefix("a ").removeprefix("an ")
 
     def danger_words(self, since: dict[str, dict[int, str]]) -> str:
@@ -1137,11 +1136,12 @@ class Session:
         death = snap["player"].get("last_death")
         if not death:
             return Result(False, "no death this session to go back to")
-        region = self.world.region_at(death["x"], death["y"])
-        if region and not go_anyway and (danger := self.world.recent_danger(region["name"], minutes=15)):
-            # In a soak a second death came walking back to a corpse with the lich that made it still there.
-            return Result(False, f"not going back yet: the corpse lies in {region['name']}, where danger was seen "
-                                 f"{danger}; wait, or call recover_corpse with go_anyway when it is worth the risk")
+        # In a soak a second death came walking back to a corpse with the lich that made it still there. Out in
+        # the wilds, where only a region was looked at, the hamlet's watchman walked back to savages and died
+        # on the way, more than once an hour (cuo-m3n.6).
+        if not go_anyway and (danger := self.world.danger_near(death["x"], death["y"], minutes=15)):
+            return Result(False, f"not going back yet: danger was seen by the corpse, {danger}; wait, or call "
+                                 "recover_corpse with go_anyway when it is worth the risk")
         began = time.monotonic()
         r = await self.travel_to(x=death["x"], y=death["y"], distance=1, refuse=False, pace="run")
         if not r.ok:
