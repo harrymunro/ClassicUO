@@ -230,6 +230,21 @@ def test_seen_place_retires_a_contradicted_fact(w):
     assert w.stats()["places"]["stale"] == 1
 
 
+def test_a_shop_seen_elsewhere_keeps_what_it_sells(w, tmp_path):
+    # cuo-m3n.4: Cove's provisioner, seen 2 tiles from the spawner, took the imported shop's place and its wares
+    # with it: nobody near Cove sold arrows, and the hamlet's hunter gave up her archery.
+    w.add_place("mage_shop", "Britain mage shop", 1490, 1550, source="seen")
+    assert w.find_place("black pearl", near="1490,1550")[0]["source"] == "seen"
+    w.add_place("mage_shop", "Britain mage shop", 1491, 1550, source="seen")  # seen again: still kept
+    assert w.find_place("spellbook", near="1490,1550")[0]["x"] == 1491
+    # A store whose sightings lost them gets them back when it opens.
+    w.db.execute("UPDATE places SET sells = NULL WHERE source = 'seen'")
+    w.db.commit()
+    again = World(w.path)
+    assert again.find_place("reagents", near="1490,1550")[0]["sells"] == ["reagents", "black pearl", "spellbook"]
+    again.close()
+
+
 def test_seen_place_in_the_same_spot_is_listed_once(w):
     w.add_place("bank", "West Britain bank", 1426, 1690, source="seen")
     banks = w.find_place("bank", near="1425,1690")

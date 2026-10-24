@@ -194,7 +194,11 @@ def test_a_dead_character_is_resurrected_and_goes_back_for_its_corpse(tmp_path):
 
 def test_describe_puts_the_situation_in_words():
     d = describe(json.loads(json.dumps(SNAPSHOT)))
-    assert d["health"] == "60/100" and d["bandages"] == 40 and d["hostiles_in_sight"] == 2
+    assert d["health"] == "60/100" and d["bandages"] == 40 and d["hostiles_in_sight"] == 2 and "arrows" not in d
+    snap = json.loads(json.dumps(SNAPSHOT))
+    snap["player"].update(weapon="a bow", ranged={"kind": "bow", "ammo": "arrows", "range": 10})
+    snap["player"]["supplies"]["arrows"] = 300
+    assert describe(snap)["arrows"] == 300  # cuo-m3n.4: an archer told nothing of hers went to buy some
 
 
 def test_a_bird_is_not_a_hostile(tmp_path):

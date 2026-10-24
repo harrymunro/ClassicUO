@@ -124,8 +124,9 @@ spots where the character got stuck, and hunts add outcomes (kills per hour, dea
 `uo-brain world outcomes` adds the rest from the log). Jev keeps it clean: it says what an
 unfamiliar title means (a choice), whether a creature is a regular of the area rather than
 passing through (a yes/no), and whether a sighting shows a stored place has moved (a yes/no,
-which marks the old fact stale). So attended sessions on a public shard double as mapping
-runs.
+which marks the old fact stale). A shop seen where it stands keeps the wares the imported copy
+it replaces listed: Cove's provisioner, seen 2 tiles off, once stopped selling arrows. So
+attended sessions on a public shard double as mapping runs.
 
 **From session logs** (`outcomes.py`). `uo-brain world outcomes LOG [LOG...]` reads
 session logs (a `uo-brain session` log is read together with its `.decisions.jsonl`) and

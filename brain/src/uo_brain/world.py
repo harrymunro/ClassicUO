@@ -382,6 +382,7 @@ class World:
         for table, column, decl in ADDED_COLUMNS:
             if column not in {r[1] for r in self.db.execute(f"PRAGMA table_info({table})")}:
                 self.db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+        self._keep_wares()  # sightings stored before they kept a shop's wares
         try:
             self.db.executescript(FTS_SCHEMA)
             self.fts = True
@@ -464,7 +465,8 @@ class World:
         """Record a place. The same (map, kind, name) from the same source is updated in
         place. A game observation (source "seen") marks other sources' copies of the place
         stale when they put it more than 3 tiles away, and confirms (last_seen) the places of
-        the same kind other sources put within SAME_PLACE_TILES: a map marker, say."""
+        the same kind other sources put within SAME_PLACE_TILES: a map marker, say. A sighting
+        that names no wares keeps those of another source's copy."""
         kind = kind.strip().lower().replace(" ", "_")
         if region is None:
             hit = self.region_at(x, y, map)
@@ -480,6 +482,8 @@ class World:
         else:
             rid = self.insert("places", {"kind": kind, "name": name, "map": map, "source": source, **fields})
         if source == "seen":
+            if not sells:
+                self._keep_wares(rid)
             self.db.execute("UPDATE places SET stale = 1 WHERE map = ? AND kind = ? AND name = ? COLLATE NOCASE "
                             "AND source != 'seen' AND MAX(ABS(x - ?), ABS(y - ?)) > 3", (map, kind, name, x, y))
             self.db.execute("UPDATE places SET last_seen = ? WHERE map = ? AND kind = ? AND source != 'seen' "
@@ -487,6 +491,20 @@ class World:
                             (fields["last_seen"], map, kind, x, y, SAME_PLACE_TILES))
         self.db.commit()
         return rid
+
+    def _keep_wares(self, row_id: int | None = None) -> None:
+        """A sighting names a shop but not its wares: it takes them from the nearest other source's copy of the
+        place, the one it retires (cuo-m3n.4: Cove's provisioner, seen 2 tiles off, stopped selling arrows, and
+        the hamlet's hunter gave up her archery). The caller commits."""
+        where, args = "source = 'seen' AND sells IS NULL", []
+        if row_id is not None:
+            where, args = where + " AND id = ?", [row_id]
+        for r in self.db.execute(f"SELECT id, map, kind, name, x, y FROM places WHERE {where}", args).fetchall():
+            o = self.db.execute("SELECT sells FROM places WHERE source != 'seen' AND sells IS NOT NULL AND map = ? "
+                                "AND kind = ? AND name = ? COLLATE NOCASE ORDER BY ABS(x - ?) + ABS(y - ?) LIMIT 1",
+                                (r["map"], r["kind"], r["name"], r["x"], r["y"])).fetchone()
+            if o:
+                self.db.execute("UPDATE places SET sells = ? WHERE id = ?", (o["sells"], r["id"]))
 
     def bestiary(self) -> dict[int, dict[str, Any]]:
         """What each body graphic is, for describing creatures in fights: body -> {name, hits,

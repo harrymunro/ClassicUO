@@ -1290,6 +1290,10 @@ def describe(snap: dict[str, Any], world: World | None = None, companions: dict[
         out["harmless_wildlife_in_sight"] = sorted(set(calm))[:3]
     if plays == "mage":
         del out["bandages"]
+    if ranged := p.get("ranged"):
+        # A bow shoots nothing without them: told nothing of her 300 arrows, the hamlet's hunter went to buy some,
+        # found no seller near and gave up her archery (cuo-m3n.4).
+        out[ranged.get("ammo", "arrows")] = s.get(ranged.get("ammo", "arrows"), 0)
     # A party's companions aren't strangers: "a unknown player 2 tiles away" was the mage beside it (cuo-4ar).
     names = {m["serial"]: m.get("name") for m in snap.get("mobiles") or []}
     threats = [t for t in snap["agent"].get("threats") or [] if names.get(t["serial"]) not in (companions or {})]

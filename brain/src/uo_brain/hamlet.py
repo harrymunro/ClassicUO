@@ -428,14 +428,16 @@ def talk_by_neighbour(session: list[dict[str, Any]], neighbours: list[str]) -> d
     return out
 
 
-def remembered(world: Any, me: str, neighbours: list[str], since: float) -> dict[str, list[str]]:
-    """What the resident's memory keeps of each neighbour, from this run: memories naming them."""
+def remembered(world: Any, me: str, neighbours: list[str], since: float, until: float) -> dict[str, list[str]]:
+    """What the resident's memory kept of each neighbour in this run: memories naming them, kept between its first
+    record and its last, and those set aside since too (cuo-m3n.4 set each run's aside before the next, and every
+    run's report showed the last run's)."""
     from datetime import datetime, timezone
-    stamp = datetime.fromtimestamp(since, timezone.utc).isoformat(timespec="seconds")
+    stamp = lambda t: datetime.fromtimestamp(t, timezone.utc).isoformat(timespec="seconds")
     out: dict[str, list[str]] = {}
     for n in neighbours:
-        rows = world.db.execute("SELECT kind, text FROM memories WHERE character = ? AND stale = 0 AND t >= ? "
-                                "AND text LIKE ? ORDER BY t", (me, stamp, f"%{n}%")).fetchall()
+        rows = world.db.execute("SELECT kind, text FROM memories WHERE character = ? AND t >= ? AND t <= ? "
+                                "AND text LIKE ? ORDER BY t", (me, stamp(since), stamp(until), f"%{n}%")).fetchall()
         out[n] = [f"{r['kind']}: {r['text'][:200]}" for r in rows]
     return out
 
@@ -453,6 +455,7 @@ def report(out_dir: Path, world: Any = None, lands: list[dict[str, Any]] | None 
     names = [a["name"] for a in head.get("agents") or []]
     residents: dict[str, Any] = {}
     began = min((r["t"] for r in records), default=time.time())
+    ended = max((r["t"] for r in records), default=time.time()) + 60  # what the last reflection keeps
     for name in names:
         home = (spec.get("homes") or {}).get(name)
         h = Hamlet(spec["name"], [tuple(r) for r in spec["rects"]], int(spec.get("edge", EDGE)), name,
@@ -486,7 +489,7 @@ def report(out_dir: Path, world: Any = None, lands: list[dict[str, Any]] | None 
             "evenings": evenings(session),
         })
         if world is not None:
-            entry["remembers"] = remembered(world, name, [x for x in names if x != name], began)
+            entry["remembers"] = remembered(world, name, [x for x in names if x != name], began, ended)
         residents[name] = entry
     talked = {n: sum(1 for v in (r.get("talk") or {}).values() if v["said"] or v["heard"]) for n, r in residents.items()}
     return {"fleet": head.get("name"), "dir": str(out_dir), "hamlet": spec["name"], "told": spec.get("told", True),

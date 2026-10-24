@@ -149,6 +149,10 @@ def test_the_hamlet_report_measures_each_resident_against_it(tmp_path):
         from uo_brain import memory as memories
         memories.Memory(w, "Maren").add("Talked with Wenna (2026-10-19): back safe.", kind="relationship",
                                         source="talk", importance=3, at=T0 + 1150)
+        # The next run's memory, and this one's set aside before it: the report keeps to its own run (cuo-m3n.4).
+        memories.Memory(w, "Maren").add("Talked with Wenna (2026-10-20): the next run.", kind="relationship",
+                                        source="talk", importance=3, at=T0 + 9000)
+        w.db.execute("UPDATE memories SET stale = 1")
         r = hamlet.report(tmp_path, w)
         # A run whose file named no lands, measured against them (--lands): her time out on the woods counts.
         given = hamlet.report(tmp_path, w, lands=[{"name": "the woods", "x": 2416, "y": 1172, "r": 25}])
@@ -162,7 +166,7 @@ def test_the_hamlet_report_measures_each_resident_against_it(tmp_path):
     assert m["work"]["kills"] == 3 and m["work"]["gold_from_sales"] == 120 and m["work"]["items_bought"] == 20
     assert m["work"]["goals"] == {"hunt": 1, "travel_to": 1, "sell": 1} and m["work"]["trips"] == {"home": 1}
     assert m["talk"] == {"Wenna": {"said": 1, "heard": 1}} and r["talked_with"] == {"Maren": 1, "Wenna": 0}
-    assert m["remembers"]["Wenna"][0].startswith("relationship: Talked with Wenna")
+    assert [x[:43] for x in m["remembers"]["Wenna"]] == ["relationship: Talked with Wenna (2026-10-19"]
     wenna = r["residents"]["Wenna"]
     assert (wenna["in_hamlet"], wenna["at_home"], wenna["came_home"], wenna["still_away"]) == (1.0, 1.0, 0, [])
     text = hamlet.markdown(r)
