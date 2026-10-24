@@ -261,7 +261,8 @@ def hamlet_of(fleet: Fleet, shard: str = "local", root: Path | None = None) -> d
     known = {}
     for a in fleet.agents:
         others = [{"name": o.name, "trade": o.persona.get("trade", ""), "home_words": homes[o.name]["words"],
-                   **({"work": o.work} if o.work else {})} for o in fleet.agents if o.name != a.name]
+                   "home": f"{homes[o.name]['x']},{homes[o.name]['y']}", **({"work": o.work} if o.work else {})}
+                  for o in fleet.agents if o.name != a.name]
         known[a.name] = Hamlet(region.name, rects, fleet.hamlet["edge"], a.name, (homes[a.name]["x"], homes[a.name]["y"]),
                                homes[a.name]["words"], a.work, others, lands, gather,
                                fleet.hamlet.get("day_minutes", 60) * 60, fleet.hamlet.get("evening_minutes", 15) * 60,

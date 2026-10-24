@@ -240,3 +240,24 @@ def test_the_report_counts_the_lands_and_home_between_pieces_of_work():
     homes = [(50, False), (150, True), (250, False), (350, False)]
     # hunt -> sell had home between (the trip home isn't a piece of work); sell -> hunt didn't
     assert hamlet.home_between_work(session, homes) == {"pairs": 2, "home_between": 1}
+
+
+def test_a_neighbours_home_is_a_place_to_go(tmp_path):
+    """Maren, taking the watchman the bandages she had promised, asked for "Cove east gate" and "Cove gatehouse"."""
+    h = maren()
+    h.neighbours[0]["home"] = "2285,1209"
+    h.neighbours[0]["home_words"] = "the gatehouse by the east gate"
+    assert h.neighbour_home("Brannoc's home") == (2285, 1209, "Brannoc's home")
+    assert h.neighbour_home("to brannoc's house") == (2285, 1209, "Brannoc's home")
+    assert h.neighbour_home("Cove gatehouse") is None  # only as a last resort, after the store's own places
+    for said in ("Cove gatehouse", "Cove east gate", "the gatehouse"):
+        assert h.neighbour_home(said, loose=True) == (2285, 1209, "Brannoc's home"), said
+    for said in ("Wenna's home", "Cove", "the gate to Britain", "Tamsin's room"):  # no home known, or not one
+        assert h.neighbour_home(said, loose=True) is None, said
+    assert 'travel_to "Brannoc\'s home" goes to a neighbour\'s' in h.words()
+    from uo_brain.session import Session
+    cove_store(tmp_path)
+    s = Session(None, World.open("local", tmp_path), None)
+    s.hamlet = h
+    assert s.resolve("Cove east gate", None, None) == (2285, 1209, "Brannoc's home")
+    assert s.resolve("Cove healer", None, None)[2] == "Cove healer"  # the store's own places first

@@ -954,7 +954,9 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   that exist today: hunting near the hamlet and selling to its shops, keeping the healer's house stocked,
   carrying coin to a town's bank. Gathering and crafting stay out (2026-10-06).
 - **What a resident is told:** its planner's system prompt says where it lives, its home (and that
-  `travel_to "home"` goes there), its work, its neighbours by name, trade and home, and that its days begin
+  `travel_to "home"` goes there), its work, its neighbours by name, trade and home (`travel_to "Brannoc's home"` goes
+  to a neighbour's, and so do the words for it the store has no place for, "Cove gatehouse": taking the watchman the
+  bandages she had promised, Maren asked for "Cove east gate" and "Cove gatehouse" and went nowhere), and that its days begin
   and end in the hamlet: work out, then home, rest at home, free time where the neighbours are, a long trip
   only for a reason. Each turn's situation says where it is against home and the hamlet ("at home (the
   healer's house), in Cove", "away from Cove: 131 tiles from it and 171 from home"). Its talk knows where

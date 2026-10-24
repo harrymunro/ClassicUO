@@ -331,11 +331,16 @@ class Session:
             return x, y, place or f"{x},{y}"
         if not place:
             return None
-        if (hamlet := getattr(self, "hamlet", None)) is not None and hamlet.is_home(place):
+        hamlet = getattr(self, "hamlet", None)
+        if hamlet is not None and hamlet.is_home(place):
             return *hamlet.home, "home"
+        if hamlet is not None and (theirs := hamlet.neighbour_home(place)):
+            return theirs
         found = self.world.place(place, limit=1)
         if found:
             return found[0]["x"], found[0]["y"], found[0]["name"]
+        if hamlet is not None and (theirs := hamlet.neighbour_home(place, loose=True)):
+            return theirs
         xy = near_xy(place)
         return (xy[0], xy[1], place) if xy else None
 

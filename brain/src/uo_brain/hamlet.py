@@ -67,6 +67,7 @@ GATHER_SOME_S = 60.0  # ...or this long once one other has come
 GATHER_TILES = 8   # close enough to the gathering place to be at it
 EARLY_S = 180.0    # a resident may set off for the evening this long before it begins, and waits there
 HOME_WORDS = re.compile(r"^\s*(?:back\s+)?(?:to\s+)?(?:my\s+|our\s+|the\s+)?(?:home|house)\b(?:\s*\(.*\))?\s*$", re.I)
+NEIGHBOUR_HOME = re.compile(r"^\s*(?:to\s+)?(?P<name>[\w-]+)'s\s+(?:home|house|place|room|door)\b", re.I)
 
 
 def chebyshev(x1: int, y1: int, x2: int, y2: int) -> int:
@@ -124,6 +125,27 @@ class Hamlet:
         """A travel_to place that means this resident's home: "home", "my home", "back home", "the house"."""
         return bool(place and self.home is not None and
                     (HOME_WORDS.match(place) or (self.home_words and place.strip().lower() == self.home_words.lower())))
+
+    def neighbour_home(self, place: str | None, loose: bool = False) -> tuple[int, int, str] | None:
+        """A travel_to place that means a neighbour's home: "Brannoc's home"; with `loose`, also the words for it
+        with or without the hamlet's name ("Cove gatehouse" for "the gatehouse by the east gate"). Maren, taking the
+        watchman the bandages she had promised, asked for "Cove east gate" and "Cove gatehouse", and neither was a
+        place the store knew."""
+        if not place:
+            return None
+        homed = [n for n in self.neighbours if n.get("home")]
+        if m := NEIGHBOUR_HOME.match(place):
+            n = next((n for n in homed if n["name"].lower() == m["name"].lower()), None)
+        elif loose:
+            said = set(re.findall(r"[a-z]+", place.lower())) - {"the", "a", "to", "by", "of", self.name.lower()}
+            n = next((n for n in homed if said and said <= set(re.findall(r"[a-z]+", n.get("home_words", "").lower()))),
+                     None)
+        else:
+            n = None
+        if n is None:
+            return None
+        x, y = (int(v) for v in n["home"].split(","))
+        return x, y, f"{n['name']}'s home"
 
     def where(self, x: int, y: int, now: float | None = None) -> str:
         """Where the resident is, against home, the hamlet and its lands, for each turn's situation; away from home
@@ -197,7 +219,9 @@ class Hamlet:
         if self.neighbours:
             lines.append("Neighbours, who live in " + self.name + " too: " + "; ".join(
                 f"{n['name']}" + (f", {n['trade']}" if n.get("trade") else "")
-                + (f", at {n['home_words']}" if n.get("home_words") else "") for n in self.neighbours) + ".")
+                + (f", at {n['home_words']}" if n.get("home_words") else "") for n in self.neighbours) + "."
+                + (f" travel_to \"{self.neighbours[0]['name']}'s home\" goes to a neighbour's."
+                   if any(n.get("home") for n in self.neighbours) else ""))
         if self.lands:
             lines.append(f"{self.name}'s lands, where its people work: "
                          + "; ".join(f"{land['name']} (round {land['x']},{land['y']})" for land in self.lands)
