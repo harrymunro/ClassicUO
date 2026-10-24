@@ -61,6 +61,9 @@ Rules:
   and another spot of the same place counts as there. Code refuses goals within 30 tiles of it
   for 30 minutes. Bank, restock or hunt somewhere else. hunting_spots marks areas with danger
   seen recently.
+- A hunt that ended with nothing to fight for a while found its ground empty: its creatures come
+  back one at a time (the result says how often), so code refuses another hunt there for 15
+  minutes. Hunt another ground, or do other work and come back.
 - If a goal fails, read why and try something different (another vendor, another area,
   waiting for a respawn) rather than repeating the same thing. A vendor that is sold out
   restocks in about an hour: buy elsewhere, or go on with what you have if it is enough.

@@ -433,3 +433,60 @@ def test_a_hunt_a_red_player_ended_keeps_the_character_off_that_spot_for_a_while
     assert not again.ok and again.summary.startswith("not going back near Britain Graveyard yet: it left there 0 min "
                                                      "ago (a red or criminal player came close)")
     w.close()
+
+
+def test_a_hunt_that_finds_its_ground_empty_says_so_and_isnt_sent_back_to_it_for_a_while(tmp_path, monkeypatch):
+    """cuo-m3n.11: the hamlet's hunter stood 10 minutes at a time on her ground, 19 animals over 50 tiles round its
+    centre. The hunt said the creatures spawned over 15 tiles (its radius, kept to 15 for the rally), so Jev said it
+    all fit in sight and the patrols kept to 10 tiles; told "nothing to fight for 10 minutes", her planner sent her
+    back to the same emptied ground three times."""
+    from uo_brain import session as sessions
+    from uo_brain.session import Result
+    w = World(tmp_path / "w.sqlite")
+    w.insert("spawns", {"area": "south-west of Cove Cemetery", "map": "Felucca", "x": 2416, "y": 1172, "walk_range": 50,
+                        "creature": "Boar", "max_count": 7, "spawner": "a", "min_delay_s": 300, "max_delay_s": 600,
+                        "source": "test", "last_seen": "2026-10-24T00:00:00+00:00"})
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["mobiles"], snap["agent"]["engaged"] = [], 0
+    s = Session(FakeRpc(snap), w, judge=object())
+    assert s.ground("south-west of Cove Cemetery", 2416, 1172, 15) == (50, "5 min to 10 min")
+    assert s.ground("south-west of Cove Cemetery", 2000, 1000, 15) == (15, "")  # not this spawner's centre
+    clock, made = [1000.0], []
+    real = sessions.HuntWatch
+
+    def watch(*a, **kw):
+        made.append(real(*a, clock=lambda: clock[0], **kw))
+        return made[-1]
+
+    async def walk(*a, **kw):
+        return Result(True, "arrived")
+
+    async def defended(work):
+        return await work
+
+    class Stats:
+        def summary(self):
+            return {"client_stats": {}}
+
+    async def run(rpc, judge, lcfg, pcfg, log, stop, on_snapshot=None, **kw):
+        on_snapshot(copy.deepcopy(snap))
+        clock[0] += 601  # ten minutes with nothing in sight
+        on_snapshot(copy.deepcopy(snap))
+        return Stats()
+
+    s.travel_to, s.defended = walk, defended
+    monkeypatch.setattr(sessions, "HuntWatch", watch)
+    monkeypatch.setattr(sessions.loop, "run", run)
+    r = asyncio.run(s.hunt("south-west of Cove Cemetery", 12))
+    assert made[0].words(snap)["this_hunt"]["area_size"].startswith("creatures spawn over about 50 tiles")
+    assert r.data["stopped_because"] == "nothing to fight for 10 minutes"
+    assert r.summary.endswith("; the ground is empty: its creatures come back one at a time, every 5 min to 10 min, "
+                              "so it isn't hunted again for 15 min")
+    again = asyncio.run(s.hunt("south-west of Cove Cemetery", 12))
+    assert not again.ok and again.summary == (
+        "not hunting south-west of Cove Cemetery again yet: 0 min ago a hunt there found it empty (nothing hostile "
+        "in sight for 10 min); one of its creatures comes back every 5 min to 10 min. Hunt another ground, do other "
+        "work, or come back in 15 min")
+    s.emptied["south-west of cove cemetery"] = (s.emptied["south-west of cove cemetery"][0] - 15 * 60, "x", "")
+    assert s.empty_ground("south-west of Cove Cemetery") is None
+    w.close()

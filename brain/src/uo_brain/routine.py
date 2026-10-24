@@ -197,6 +197,10 @@ class HuntWatch:
                 self.last_quiet_ask = now
         return look
 
+    def quiet_for(self) -> float:
+        """Seconds since anything hostile was in sight or the character was fighting."""
+        return self.clock() - self.last_hostile
+
     def left(self, why: str) -> None:
         """The fight loop decided to leave the area (policy.Decision.leave_why): end the hunt."""
         if self.left_why is None:

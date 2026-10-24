@@ -86,6 +86,10 @@ class Session:
         # there are refused for a while: told not to, a soak run's planner still sent its warrior to
         # "the skeleton spawner" of the graveyard it had just left two gargoyles at, and it died.
         self.left_from: list[tuple[int, int, float, str, str]] = []
+        # Grounds a hunt found empty: area (lower case) -> (monotonic time, why, how often its creatures come back).
+        # Told "nothing to fight for 10 minutes", a hamlet's hunter was sent back to the same emptied ground three
+        # times (cuo-m3n.11).
+        self.emptied: dict[str, tuple[float, str, str]] = {}
         # A party that walks its trips together (cuo-cod.7): "walk" makes every trip a walk (the client runs
         # while there is danger, and to catch up); `leads` has the leader wait for anyone who falls behind.
         self.pace = "run"
@@ -140,6 +144,38 @@ class Session:
     # On ModernUO and RunUO a corpse turns to bones 7 minutes after the death and is gone 7 minutes after that; the
     # client keeps its own as bones (AgentController.IsOwnRemains). A shard with other times would want its own.
     CORPSE_LASTS_S = 14 * 60
+
+    # A ModernUO spawner brings back one creature each 5 to 10 minutes (BaseSpawner.OnTick), so a ground hunted empty
+    # stays thin for a while. A hunt that ends this quiet on a stop about the spot found it empty.
+    EMPTY_MINUTES = 15
+    EMPTY_QUIET_S = 180.0
+    EMPTY_STOPS = ("nothing to fight for", "Jev: not worth staying here", "handed back to the planner")
+    PATROL_TILES = 40  # a patrol goes no further than this from the centre of a spawn, however wide it spreads
+
+    def ground(self, name: str, cx: int, cy: int, radius: int) -> tuple[int, str]:
+        """How far round (cx, cy) the hunt's creatures spawn, and how often one comes back, from the world store.
+        hunt_spot's radius is kept to 15 for the rally at the edge; told that, Jev answered a ground of 19 animals
+        over 50 tiles that it all fit in sight, and the patrols kept within 10 tiles of the centre (cuo-m3n.11)."""
+        try:
+            rows = self.world.what_spawns(area=name, near=[cx, cy], limit=1)
+        except WorldError:
+            rows = []
+        if not rows or tiles(rows[0]["x"], rows[0]["y"], cx, cy) > radius:
+            return radius, ""
+        return max(radius, int(rows[0].get("range") or 0)), str(rows[0].get("respawn") or "")
+
+    def empty_ground(self, name: str) -> str | None:
+        """Why a hunt of `name` is refused, or None: a hunt there found it empty in the last EMPTY_MINUTES."""
+        found = self.emptied.get(name.lower())
+        if found is None:
+            return None
+        at, why, respawn = found
+        ago = (time.monotonic() - at) / 60
+        if ago >= self.EMPTY_MINUTES:
+            return None
+        back = f"; one of its creatures comes back every {respawn}" if respawn else ""
+        return (f"not hunting {name} again yet: {ago:.0f} min ago a hunt there found it empty ({why}){back}. Hunt "
+                f"another ground, do other work, or come back in {self.EMPTY_MINUTES - ago:.0f} min")
 
     def last_leave(self) -> dict[str, Any] | None:
         """Where this character last left creatures behind, and how long ago: for its party's reports."""
@@ -819,7 +855,7 @@ class Session:
         if spot is not None and rally_key == "area":
             # A party with a planner each: one rally for the place, whatever each planner called it.
             rally_key = f"hunt:{spot[2].lower()}"
-        if spot is None or (refused := self.avoided(spot[0], spot[1])):
+        if spot is None or (refused := self.avoided(spot[0], spot[1]) or self.empty_ground(spot[2])):
             if forming is not None and self.leads_party:
                 forming.off(rally_key)  # the others don't wait at the edge for a hunt that isn't coming
             return Result(False, refused if spot else f"no hunting area called {area!r} in the world store")
@@ -858,8 +894,10 @@ class Session:
         first: dict[str, Any] = {}
         last: dict[str, Any] = {}
         # When to head back, whether to stay, whether to walk elsewhere in the spawn: Jev's calls.
+        spread, respawn = self.ground(name, cx, cy, radius)
         hw = HuntWatch(name, minutes, self.judge, RoutineConfig(min_bandages=min_bandages, max_weight_pct=max_weight_pct),
-                       log=self._log, archetype=self.archetype, radius=radius, bestiary=self.world.bestiary())
+                       log=self._log, archetype=self.archetype, radius=spread, bestiary=self.world.bestiary())
+        patrol = min(spread, self.PATROL_TILES)
         asking: list[asyncio.Task] = []
 
         held: list[float] = []  # when a stop was first held back for the party's fight
@@ -883,7 +921,7 @@ class Session:
                     and not self.fallen_beside(snap):
                 # Quiet: wander to another spot of the spawn to find something.
                 a = random.uniform(0, 6.283)
-                tx, ty = cx + round(radius * 0.7 * math.cos(a)), cy + round(radius * 0.7 * math.sin(a))
+                tx, ty = cx + round(patrol * 0.7 * math.cos(a)), cy + round(patrol * 0.7 * math.sin(a))
                 asyncio.get_running_loop().create_task(self.act("travel", x=tx, y=ty, distance=1, **self.paced()))
             if why:
                 stop.set()
@@ -921,6 +959,12 @@ class Session:
             p = (last or first).get("player") or {}
             for lx, ly in {(cx, cy), (p.get("x", cx), p.get("y", cy))}:
                 self.left_from.append((lx, ly, time.monotonic(), name, why[0]))
+        empty = ""
+        if why and why[0].startswith(self.EMPTY_STOPS) and hw.quiet_for() >= self.EMPTY_QUIET_S:
+            self.emptied[name.lower()] = (time.monotonic(), f"nothing hostile in sight for {hw.quiet_for() / 60:.0f} min",
+                                          respawn)
+            empty = (f"the ground is empty: its creatures come back one at a time"
+                     + (f", every {respawn}" if respawn else "") + f", so it isn't hunted again for {self.EMPTY_MINUTES} min")
         s = stats.summary()["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         routine = hw.summary()
@@ -940,6 +984,8 @@ class Session:
         }
         if retreat:
             data["then"] = retreat
+        if empty:
+            data["empty"] = empty
         if formed:
             data["formed_up"] = formed
         if self.machine is not None:
@@ -953,7 +999,7 @@ class Session:
         self.log("hunted", area=name, kit=kit, routine=routine, **data)
         return Result(data["deaths"] == 0, f"hunted {name} for {mins} min: {data['kills']} kills, "
                                            f"stopped because {data['stopped_because']}"
-                                           + (f"; then {retreat}" if retreat else ""), data)
+                                           + (f"; then {retreat}" if retreat else "") + (f"; {empty}" if empty else ""), data)
 
     # ------------------------------------------------------------ after a death (cuo-4b3)
 
