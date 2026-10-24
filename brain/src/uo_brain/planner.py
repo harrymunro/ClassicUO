@@ -56,7 +56,8 @@ Rules:
   the bag gets heavy, the character is in danger, or nothing has shown up for a while. Its
   result says why it ended; plan the next goal from that.
 - If a hunt ended because the character left the area (stronger creatures or a pack came at it;
-  the result names them), don't hunt there again for at least 30 minutes: they are still about,
+  the result names them), or because a red or criminal player came close, don't hunt there again
+  for at least 30 minutes: they are still about,
   and another spot of the same place counts as there. Code refuses goals within 30 tiles of it
   for 30 minutes. Bank, restock or hunt somewhere else. hunting_spots marks areas with danger
   seen recently.
@@ -66,7 +67,7 @@ Rules:
 - If the character is dead, call resurrect: as a ghost it walks to the nearest healer. Once alive,
   call recover_corpse to go back and take its things from its corpse, unless what killed it is still
   standing there (then wait or rest first, or leave the corpse if it is lost). A corpse decays in
-  some minutes, so don't put it off long. Call finish when the player's goal is done or impossible,
+  some minutes (your_corpse says how many are left), so don't put it off long. Call finish when the player's goal is done or impossible,
   or the character can't be resurrected. A resurrected character has little health: rest until it
   is nearly full before going back to the corpse with creatures about, and before hunting.
 - The character may have long goals that outlive this session (skills to raise, gold to save,
@@ -402,8 +403,11 @@ class Planner:
                 situation["time_of_day"] = hamlet.when(time.time())
         if self.corpse_at and snap.get("in_game") and not snap["player"]["dead"]:
             x, y, t = self.corpse_at
-            situation["your_corpse"] = (f"at {x},{y}, from a death {(time.monotonic() - t) / 60:.0f} min ago, with your "
-                                        f"things on it until you recover_corpse (corpses decay in time)")
+            ago, lasts = time.monotonic() - t, getattr(self.session, "CORPSE_LASTS_S", 14 * 60)
+            situation["your_corpse"] = (f"at {x},{y}, from a death {ago / 60:.0f} min ago, with your things on it until "
+                                        f"you recover_corpse: it lasts about {max(0.0, lasts - ago) / 60:.0f} more minutes"
+                                        if ago < lasts else f"at {x},{y}, from a death {ago / 60:.0f} min ago: it will "
+                                        f"have decayed by now, with your things")
             if held := self.party_at(x, y):
                 situation["your_corpse"] += (f"; {' and '.join(held)} of your party {'is' if len(held) == 1 else 'are'} "
                                              f"there now, so the place is held: go back for it")
@@ -992,7 +996,7 @@ class Planner:
         self.know(snap)
         p0 = snap.get("player") or {}
         death = p0.get("last_death") or {"x": p0.get("x"), "y": p0.get("y")}
-        self.corpse_at = (death["x"], death["y"], time.monotonic())
+        self.corpse_at = (death["x"], death["y"], time.monotonic() - (death.get("ago_s") or 0))
         p = snap.get("player") or {}
         here = self.session.world.region_at(p.get("x", 0), p.get("y", 0)) if isinstance(
             getattr(self.session, "world", None), worlds.World) else None

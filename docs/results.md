@@ -3921,6 +3921,35 @@ All four, three hours: 10 kills, 14 deaths, $0.897 ($0.292 an hour).
 - **29 evening goals were refused as early,** most a minute before the evening began. Since c72c1e616 the goal
   goes from 3 minutes before it, and the resident waits there.
 
+### The watchman's hour with the savages known (cuo-m3n.6)
+
+2026-10-24 04:17 to 05:20, one told run of `hamlet-cove.toml`, headless, memory on, the residents' memories set
+aside first, the store re-imported just before (savages known by both bodies: a savage "strong", 23 to 27 a
+blow), the brain frozen at c72c1e616 (the corpse walk's danger rule in the wilds, the healer stand-off) and the
+client with the route fixes. Not filmed.
+
+```bash
+cd brain
+uv run uo-brain world import-modernuo
+uv run uo-brain fleet fleets/hamlet-cove.toml --out logs/fleet/20261024-041754-hamlet-cove-told-m3n6
+uv run uo-brain hamlet-report logs/fleet/20261024-041754-hamlet-cove-told-m3n6 --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort"
+```
+
+All four: 21 kills, 3 deaths, $0.323. Brannoc died 3 times (m3n.4's told runs: 3 to 6 among the four, most of
+them his; the told run of 22:40: none), and nobody else died. In Cove 67% of the hour, at home 40%.
+
+- **04:26, back to the fort two minutes after leaving it.** His first sweep ended as a red player came close,
+  savages stronger than him in view; he went home, bought 10 bandages and went straight back, and died in 50 s
+  to three savages and a rider. A hunt ended by a red or criminal player now keeps the character off that spot
+  for 30 minutes, as a leave did.
+- **04:38, `go_anyway`.** At 04:32 the corpse walk was refused ("danger was seen by the corpse ... 7 min ago");
+  five minutes later his planner went anyway, "at full health, so I'll go now, carefully", and he died on the
+  way. Left to the planner, which is now told the minutes the corpse has left.
+- **05:06, a corpse long gone.** He walked back 27 minutes after the death, once the danger had aged past 15
+  minutes, found the corpse gone, and died among the savages by it. A corpse lasts 14 minutes; no walk is now
+  begun after that ([after a death](#after-a-death)).
+- Next: a told run with these changes and the client that keeps its bones.
+
 ## After a death
 
 2026-10-09, the local server: a warrior (Mortis) killed by three `still` daemons at the Britain
@@ -3966,6 +3995,26 @@ The wandering healers by Cove Guard Post were not where the store has them on an
 about their spawner. Three of the six after were on a first version that wanted only the step in seen;
 one of those walked in from outside the healer's west wall by her door, out of her sight, before a later
 try worked, and the spot itself is now seen too.
+
+**A corpse lasts 14 minutes, and its bones were no corpse to the client** (cuo-m3n.6), 2026-10-24. On ModernUO
+(and RunUO) a corpse turns to bones 7 minutes after the death, with everything still on it, and is deleted 7
+minutes later. The client counted no bones as a corpse, so every walk back that arrived after 7 minutes found
+"the corpse is gone". Every `recover_corpse` that walked, in four hamlet runs (2026-10-23/24: the told run of
+22:40, the lands run, the evenings run, the watchman's run), by minutes from the death to the result:
+
+| minutes after the death | took everything back | the corpse is gone | died on the way |
+|---|---|---|---|
+| under 7.1 | 4 (5.6, 5.6, 6.8, 7.0) | 0 | 1 |
+| 7.1 to 14 | 0 | 4 (7.2, 10.7, 13.9, 14.0) | 3 |
+| over 14 | 0 | 7 (15.8 to 40.0) | 1 |
+
+The client now keeps its own corpse by its serial once seen, so it stays its own as bones (`own` and `bones` in
+the snapshot), and the brain begins no walk once the 14 minutes are up. The danger refusal and `your_corpse`
+say how many minutes are left. Live on the soak server (port 2595), one headless client: a warrior killed with
+`[AgentSlay` in Cove's street carrying 300 gold, 40 bandages and 3 potions, resurrected by the Cove healer, then
+`uv run uo-brain --port 5580 do --shard m3n7-check recover-corpse` 529 s after the death: its bones were listed
+as its own, opened, "You quickly gather all of your belongings.", everything back in 8 s. One run; the client
+before the change wasn't tried live (the table above is its record).
 
 ## After-action review run
 

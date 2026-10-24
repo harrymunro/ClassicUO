@@ -330,6 +330,39 @@ def test_a_corpse_out_in_the_wilds_is_left_while_danger_was_seen_around_it(tmp_p
     w.close()
 
 
+
+def test_a_corpse_lasts_fourteen_minutes_and_its_bones_are_still_its_own(tmp_path):
+    """cuo-m3n.6: a corpse turns to bones after 7 minutes, with everything still on it for 7 more. The client counted
+    no bones as a corpse, so every walk back after 7 minutes found "the corpse is gone"; and the watchman walked back
+    27 minutes after a death, to a corpse long gone, and died among the savages by it."""
+    from uo_brain.session import Result
+    w = World.open("test", root=tmp_path)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["player"].update(dead=False, last_death={"x": 2204, "y": 1255, "ago_s": 900})
+    rpc = FakeRpc(snap)
+    s = Session(rpc, w, None)
+    walks = []
+
+    async def travel_to(**kw):
+        walks.append(kw)
+        return Result(True, "arrived")
+    s.travel_to = travel_to
+    r = asyncio.run(s.recover_corpse())
+    assert not r.ok and r.summary == ("the corpse will have decayed by now: the death was 15 min ago, and a corpse "
+                                      "lasts about 14 minutes (7, then 7 as bones)") and walks == []
+    snap["player"]["last_death"]["ago_s"] = 360
+    w.add_note("Stronger than a new character, seen 2026-10-24 04:26: 3 savages.", area="near 2200,1250",
+               tags=["danger"], source="seen")
+    r = asyncio.run(s.recover_corpse())
+    assert "danger was seen by the corpse" in r.summary and "wait (it lasts about 8 more minutes), let it go" in r.summary
+    # Ten minutes on, at its bones: opened, and everything comes back.
+    snap["player"]["last_death"]["ago_s"] = 600
+    snap["corpses"] = [{"serial": 7, "name": "bones", "distance": 1, "own": True, "bones": True, "opened": False, "items": []}]
+    snap["journal"] = [{"text": "You quickly gather all of your belongings."}]
+    r = asyncio.run(s.recover_corpse(go_anyway=True))
+    assert r.ok and ("act", {"verb": "use", "target": 7}) in rpc.calls
+    w.close()
+
 def test_a_ghost_stands_off_where_the_step_in_is_in_the_healers_sight(tmp_path):
     """cuo-m3n.9: the Cove healer stands in her east doorway; from the north the step to within 4 of her fell
     behind her wall and she never offered. The stand-off is where that step is in her sight, our side first."""
@@ -363,4 +396,40 @@ def test_a_ghost_stands_off_where_the_step_in_is_in_the_healers_sight(tmp_path):
     # A client that doesn't answer: our own side, as before.
     s.rpc = FakeRpc(copy.deepcopy(SNAPSHOT))
     assert asyncio.run(s.stand_off(100, 100, 100, 90, 0)) == (100, 94)
+    w.close()
+
+
+def test_a_hunt_a_red_player_ended_keeps_the_character_off_that_spot_for_a_while(tmp_path, monkeypatch):
+    """cuo-m3n.6: the watchman's hunt by the orc fort ended as a red player came close, savages stronger than him
+    in view; two minutes later he went back to hunt there and died in 50 s. A leave kept a character off a spot
+    for 30 minutes; this didn't."""
+    from uo_brain import session as sessions
+    from uo_brain.session import Result
+    w = World(tmp_path / "w.sqlite")
+    w.add_place("graveyard", "Britain Graveyard", 1369, 1475, source="test")
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["threats"] = [{"kind": "red", "name": "Ogger", "distance": 6}]
+    s = Session(FakeRpc(snap), w, judge=object())
+
+    async def walk(*a, **kw):
+        return Result(True, "arrived")
+
+    async def defended(work):
+        return await work
+
+    class Stats:
+        def summary(self):
+            return {"client_stats": {}}
+
+    async def run(rpc, judge, lcfg, pcfg, log, stop, on_snapshot=None, **kw):
+        on_snapshot(copy.deepcopy(snap))
+        return Stats()
+
+    s.travel_to, s.defended = walk, defended
+    monkeypatch.setattr(sessions.loop, "run", run)
+    r = asyncio.run(s.hunt("Britain Graveyard", 5))
+    assert r.data["stopped_because"] == "a red or criminal player came close"
+    again = asyncio.run(s.hunt("Britain Graveyard", 5))
+    assert not again.ok and again.summary.startswith("not going back near Britain Graveyard yet: it left there 0 min "
+                                                     "ago (a red or criminal player came close)")
     w.close()

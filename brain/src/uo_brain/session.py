@@ -137,6 +137,9 @@ class Session:
 
     AVOID_TILES = 30
     AVOID_MINUTES = 30
+    # On ModernUO and RunUO a corpse turns to bones 7 minutes after the death and is gone 7 minutes after that; the
+    # client keeps its own as bones (AgentController.IsOwnRemains). A shard with other times would want its own.
+    CORPSE_LASTS_S = 14 * 60
 
     def last_leave(self) -> dict[str, Any] | None:
         """Where this character last left creatures behind, and how long ago: for its party's reports."""
@@ -912,6 +915,12 @@ class Session:
                 for lx, ly in {(cx, cy), (p.get("x", cx), p.get("y", cy))}:
                     self.left_from.append((lx, ly, time.monotonic(), name, hw.left_why.split(";")[0]))
             retreat = await self.defended(self.retreat())
+        elif why and why[0] == "a red or criminal player came close":
+            # Driven off as surely as by a leave: the watchman went back to the orc fort two minutes after a red
+            # player there ended his hunt, savages stronger than him in view, and died in 50 s (cuo-m3n.6).
+            p = (last or first).get("player") or {}
+            for lx, ly in {(cx, cy), (p.get("x", cx), p.get("y", cy))}:
+                self.left_from.append((lx, ly, time.monotonic(), name, why[0]))
         s = stats.summary()["client_stats"]
         mins = round((time.monotonic() - began) / 60, 1)
         routine = hw.summary()
@@ -1164,12 +1173,19 @@ class Session:
         death = snap["player"].get("last_death")
         if not death:
             return Result(False, "no death this session to go back to")
+        # The watchman walked back 27 minutes after a death, to a corpse long gone, and died among the savages
+        # by it (cuo-m3n.6).
+        ago = death.get("ago_s")
+        if ago is not None and ago > self.CORPSE_LASTS_S:
+            return Result(False, f"the corpse will have decayed by now: the death was {ago / 60:.0f} min ago, and a "
+                                 f"corpse lasts about {self.CORPSE_LASTS_S // 60} minutes (7, then 7 as bones)")
         # In a soak a second death came walking back to a corpse with the lich that made it still there. Out in
         # the wilds, where only a region was looked at, the hamlet's watchman walked back to savages and died
         # on the way, more than once an hour (cuo-m3n.6).
         if not go_anyway and (danger := self.world.danger_near(death["x"], death["y"], minutes=15)):
-            return Result(False, f"not going back yet: danger was seen by the corpse, {danger}; wait, or call "
-                                 "recover_corpse with go_anyway when it is worth the risk")
+            left = "" if ago is None else f" (it lasts about {(self.CORPSE_LASTS_S - ago) / 60:.0f} more minutes)"
+            return Result(False, f"not going back yet: danger was seen by the corpse, {danger}; wait{left}, let it "
+                                 "go, or call recover_corpse with go_anyway when it is worth the risk")
         began = time.monotonic()
         r = await self.travel_to(x=death["x"], y=death["y"], distance=1, refuse=False, pace="run")
         if not r.ok:
@@ -1192,7 +1208,7 @@ class Session:
                 break
             c = next((c for c in snap.get("corpses", []) if c.get("serial") == corpse["serial"]), None)
             items = (c or {}).get("items") or []
-            if c is None:  # an AOS self-loot leaves bones, which aren't a corpse any more
+            if c is None or c.get("bones") and not corpse.get("bones"):  # an AOS self-loot leaves bones
                 done = "the corpse turned to bones"
                 break
             if c.get("opened") and not items:

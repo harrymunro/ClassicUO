@@ -416,7 +416,9 @@ namespace ClassicUO.Agent
 
             foreach (Item it in world.Items.Values)
             {
-                if (it.IsCorpse && it.OnGround && !it.IsDestroyed && it.Distance <= radius)
+                // The character's own corpse stays one as bones (AgentController.IsOwnRemains).
+                if ((it.IsCorpse || world.Agent.CorpseSerial != 0 && it.Serial == world.Agent.CorpseSerial)
+                    && it.OnGround && !it.IsDestroyed && it.Distance <= radius)
                 {
                     _corpses.Add(it);
                 }
@@ -439,6 +441,11 @@ namespace ClassicUO.Agent
                 if (world.Agent.OwnCorpse(c))
                 {
                     w.WriteBoolean("own", true);
+                }
+
+                if (!c.IsCorpse)
+                {
+                    w.WriteBoolean("bones", true);
                 }
 
                 bool? monster = world.Agent.CorpseOfMonster(c.Serial);

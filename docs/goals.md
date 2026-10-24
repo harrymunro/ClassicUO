@@ -15,7 +15,7 @@ gold". Type it into the panel's goal box, pick a goal template, or use `-agent g
 - **A running summary:** steps that leave the 12-step window are folded, four at a time, into a summary of the whole session (at most about 200 words, under the headings Done, Going on, Failed and why, Left to do, with place names and counts copied exactly) by one Haiku call (kind `compact`), so a long session keeps its arc while the prompt stays the same size. The same call is a memory flush: it names up to three things from those steps worth keeping in the character's [memory](world-and-memory.md#the-characters-memory) (`source` `flush`). When the session ends, the rest is folded and the summary is kept as a memory. Each fold is logged (records of type `fold`, with its tokens and cost); the session summary counts them.
 - **The panel** shows the step and why ("hunting at Britain Graveyard for up to 15 min: supplied with 80 bandages; time to hunt"). *pause* keeps the goal but stops work on it.
 - **Handing over:** switching to combat assist (Alt+A) stops the agent walking at once and pauses the planner, so it stops costing tokens. Switching back to auto tells the planner you drove for a while, and it resumes from wherever the character is, with whatever it carries.
-- **Danger seen on the way:** every goal's result names the stronger creatures seen during it, and they are kept in the world store as "danger" notes that the planner's `hunting_spots` shows for the area. An area with danger noted within the hour goes to the back of `hunting_spots` (`recent_danger`: "12 min ago: ..."), and the planner is told not to hunt where a hunt ended in a leave for at least 30 minutes.
+- **Danger seen on the way:** every goal's result names the stronger creatures seen during it, and they are kept in the world store as "danger" notes that the planner's `hunting_spots` shows for the area. An area with danger noted within the hour goes to the back of `hunting_spots` (`recent_danger`: "12 min ago: ..."), and the planner is told not to hunt where a hunt ended in a leave, or because a red or criminal player came close, for at least 30 minutes; code refuses goals within 30 tiles of either for that long (cuo-m3n.6: the hamlet's watchman went back to the orc fort two minutes after a red player there ended his hunt, and died in 50 s).
 - **Never standing still:** while the planner thinks, Jev fights what attacks, as it does during travel and errands; a hunt that ended in a leave hands over with the creatures possibly still about.
 - **Its own strategy lines, never yours:** `set_strategy` puts the planner's lines in a block of their own at the end of the strategy, under "From the planner (it may change these):", and a later call replaces only that block (empty text takes it out). Your lines and templates stay as they are. It may change them at most once every 10 minutes, so a change gets a hunt to show; the session summary counts the changes (`strategy_changes`).
 - **Plans for fights:** the planner can set one with `set_machine` ([Plans for fights](#plans-for-fights)); `--no-machines` hides the tool.
@@ -56,18 +56,22 @@ A death no longer ends the session. Two goals for the planner, carried out by co
   the Cove healer raised 2 ghosts of 5 before and 6 of 6 after). In auto mode the client accepts the offer
   itself (a priced healer's too, paid from the bank); with you driving, the gump is yours.
 - **`recover_corpse`:** once alive, walk back to where it died, open its own corpse (the client
-  knows it: the corpse that appeared there, with its body) and take everything back. On an AOS-era
+  knows it: the corpse that appeared there, with its body, and after that by its serial, so it stays
+  its own as bones) and take everything back. On ModernUO and RunUO a corpse turns to bones 7 minutes
+  after the death, with everything still on it, and is gone 7 minutes later; until cuo-m3n.6 the client
+  counted no bones as a corpse, and in four hamlet runs every walk back that arrived after 7 minutes found
+  it gone. A walk is not begun once the 14 minutes are up ("the corpse will have decayed by now"). On an AOS-era
   server opening your own corpse puts it all back and on; on an older one the client takes each
   item into the pack and puts back on what was worn (`rewear`), one at a time. It refuses while
   danger was seen by the corpse in the last 15 minutes, unless the planner says `go_anyway`: in the
   corpse's region, and in its 50 tiles of the wilds and the eight places beside them, where dangers
   outside any region are noted. Until cuo-m3n.6 only a region was looked at, so a corpse in the wilds
   was always walked back to: the hamlet's watchman died on the way back to savages by the Cove Orc
-  Fort more than once an hour.
+  Fort more than once an hour. The refusal says how many minutes the corpse has left.
 - **The planner decides:** it is told the character is dead, and once alive, where its corpse is
-  and how long ago it died (`your_corpse`), until it has taken it back. It is told to rest after a
-  resurrection (the character comes back with little health), to wait while what killed it is still
-  there, and that corpses decay. The next call stays with the planner's own model: a death isn't
+  and how long ago it died and how many minutes the corpse has left (`your_corpse`), until it has taken
+  it back. It is told to rest after a resurrection (the character comes back with little health), to wait
+  while what killed it is still there, and that corpses decay. The next call stays with the planner's own model: a death isn't
   a hard moment since 2026-10-12 ([escalation](#goals-and-the-planner)).
 - **In a party that raises its fallen** (`raise = true` in a fleet file, off unless asked for), the
   ghost of a member whose companions are winning the fight waits by its corpse for one of them to

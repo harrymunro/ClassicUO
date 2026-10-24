@@ -35,6 +35,21 @@ namespace ClassicUO.UnitTests.Agent
         }
 
         [Fact]
+        public void The_own_corpse_is_its_own_by_serial_once_seen_and_stays_so_as_bones()
+        {
+            // cuo-m3n.6: a corpse turns to bones after 7 minutes with everything still on it for 7 more, and
+            // IsCorpse doesn't count bones: every walk back after 7 minutes found "the corpse is gone".
+            var death = (X: 2200, Y: 1376, At: 1000u, Body: (ushort) 0x190);
+            AgentController.IsOwnRemains(0x4001, true, 0x190, 2201, 1377, 0, death).Should().BeTrue();
+            AgentController.IsOwnRemains(0x4002, true, 0x191, 2201, 1377, 0, death).Should().BeFalse(); // another body
+            AgentController.IsOwnRemains(0x4003, true, 0x190, 2210, 1376, 0, death).Should().BeFalse(); // too far off
+            AgentController.IsOwnRemains(0x4001, false, 0x190, 2201, 1377, 0x4001, death).Should().BeTrue(); // its bones
+            AgentController.IsOwnRemains(0x4004, false, 0x190, 2201, 1377, 0x4001, death).Should().BeFalse(); // others'
+            AgentController.IsOwnRemains(0x4004, false, 0x190, 2201, 1377, 0, death).Should().BeFalse(); // bones never seen
+            AgentController.IsOwnRemains(0x4001, true, 0x190, 2201, 1377, 0x4001, (0, 0, 0u, (ushort) 0)).Should().BeFalse();
+        }
+
+        [Fact]
         public void Does_nothing_when_healthy()
         {
             ReflexPolicy.Decide(Healthy(), Cfg).Action.Should().Be(ReflexAction.None);

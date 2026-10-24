@@ -26,6 +26,8 @@ namespace ClassicUO.Agent
         private uint _wornAt, _rewearAt;
 
         public (int X, int Y, uint At, ushort Body) LastDeath { get; private set; }
+        // The own corpse's serial once seen: it keeps it as bones, which IsCorpse doesn't count (cuo-m3n.6).
+        public uint CorpseSerial { get; private set; }
         public int Resurrections { get; private set; }
 
         // Called each tick while alive: what is worn, so a death can tell what to put back on.
@@ -60,6 +62,7 @@ namespace ClassicUO.Agent
         {
             PlayerMobile p = _world.Player;
             LastDeath = (p.X, p.Y, Time.Ticks, _bodyAlive);
+            CorpseSerial = 0;
             _wornAtDeath.Clear();
             _wornAtDeath.AddRange(_wornNow);
             _rewear.Clear();
@@ -79,8 +82,38 @@ namespace ClassicUO.Agent
         // its body. Other players' corpses stay out of reach of the brain's take.
         public bool OwnCorpse(Item c)
         {
-            return c != null && c.IsCorpse && LastDeath.At != 0 && Math.Max(Math.Abs(c.X - LastDeath.X), Math.Abs(c.Y - LastDeath.Y)) <= 2
-                   && (LastDeath.Body == 0 || c.Amount == LastDeath.Body);
+            if (c == null)
+            {
+                return false;
+            }
+
+            bool own = IsOwnRemains(c.Serial, c.IsCorpse, c.Amount, c.X, c.Y, CorpseSerial, LastDeath);
+
+            if (own && c.IsCorpse)
+            {
+                CorpseSerial = c.Serial;
+            }
+
+            return own;
+        }
+
+        // ...and once seen it is known by its serial, and stays its own as bones: on ModernUO and RunUO a corpse
+        // turns to bones after 7 minutes with everything still on it for 7 more. Every walk back that came after
+        // 7 minutes found "the corpse is gone" (cuo-m3n.6).
+        internal static bool IsOwnRemains(uint serial, bool corpse, ushort amount, int x, int y, uint known,
+                                          (int X, int Y, uint At, ushort Body) death)
+        {
+            if (death.At == 0)
+            {
+                return false;
+            }
+
+            if (known != 0 && serial == known)
+            {
+                return true;
+            }
+
+            return corpse && Math.Max(Math.Abs(x - death.X), Math.Abs(y - death.Y)) <= 2 && (death.Body == 0 || amount == death.Body);
         }
 
         // The healer's (or an ankh's) offer to bring the ghost back. Answered only in auto mode with
