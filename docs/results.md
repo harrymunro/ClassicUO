@@ -4096,6 +4096,7 @@ uv run uo-brain --port 5580 do travel "East Britain bank" --defend --judge jev -
   `priced_steps` 42 on the first hop and 0 on the second.
 - **The road ahead:** the snapshot's `travel.ahead` gave the plan's tile 10 steps on all the way (at 2258,933 it
   pointed to 2262,925, north-west with the road, while Britain lay south-west).
+
 #### In a told hour, then the ground widened
 
 2026-10-24, the test server (2593), one told hour of the hamlet on that brain (90c3f5dbd) and client, headless,
@@ -4143,6 +4144,37 @@ uv run python scripts/route_check.py 5580 2217 1192 2880 683     # to the Vesper
 The Britain road can't go round all of it: from Cove the only way west passes between the swamp and the fields of
 fair fights, so the Vesper bank is the safer one by far, and the planner can now name it.
 
+#### A second told hour, on the widened ground
+
+2026-10-24, the test server (2593), one told hour of the hamlet on the brain of 3c9cfa38e (the widened ground, the
+bank's town, the hunt with no supplies and the third corpse run refused, the guards called), the same client,
+headless, memory on, the residents' memories set aside. Single run.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove.toml --out logs/fleet/20261024-130311-hamlet-cove-told-m3n16
+uv run uo-brain hamlet-report logs/fleet/20261024-130311-hamlet-cove-told-m3n16 \
+  --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort"
+```
+
+- **The hour:** 25 kills, no deaths, $0.289 ($0.271 an hour). Wenna 16 kills, Brannoc 6, Tamsin 2, Maren 1; in
+  Cove or its lands Brannoc 28%, Wenna 70%, Maren 94%, Tamsin 63% (64% of the four hours together); home between
+  work 7 of 23.
+- **The bank road:** Tamsin's first trip, to the nearest bank with no town named, was Britain's east bank: a plan
+  of 1176 steps, 107 on priced ground, walked at a resident's pace and cut off at 600 s, 62 tiles short (bog things,
+  a plague beast, a wisp and gorillas seen on the way). Told "Britain" from there, she was told it had no bank (its
+  west bank is 70 tiles from the town's middle); told "West Britain", she walked 282 tiles to it in 120 s and banked
+  300 gold. The way home was cut off at 600 s too, 246 tiles short north of the swamp, and the next trip arrived in
+  151 s. Nothing hit her on either road.
+- **Brannoc** bought bandages and hunted the fort and then the wilderness 155 tiles east, 6 kills and no deaths;
+  no corpse run, no trip to the bank, no hunt with nothing to heal by. He stood still there for 10 minutes on his
+  last hunt and was still away at the end.
+- **No call for the guards:** nothing turned criminal near a resident in Cove.
+
+So a bank "at" a town is the nearest of the town's own banks, and a trip still on its way at its time limit goes
+on ([travel](goals.md#travel-banking-shops-and-hunting)). From the east bank, "Britain" is that bank now, and from
+Cove too; the Vesper bank is not taken unless named, though its road is the safer.
+
 ## Calling the guards (cuo-m3n.14)
 
 2026-10-24, the soak server (2595), one headless warrior (Brutus, 95 hits) in Cove's street at 2262,1212, inside the
@@ -4168,7 +4200,7 @@ uv run uo-brain --port 5580 say "[AgentSpawn Lich 1 5 e 15"; uv run uo-brain --p
   the lich, so none came of itself.
 - A lich that wasn't the staff's, led in from the cemetery, couldn't be staged: none was there, and the undead that
   were didn't follow the warrior 160 tiles into town.
-- Not yet measured: a hamlet run.
+- In a told hour of the hamlet after it ([above](#a-second-told-hour-on-the-widened-ground)), nothing turned criminal near a resident in Cove, and nothing was called.
 
 ## After a death
 

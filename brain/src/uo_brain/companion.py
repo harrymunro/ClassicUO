@@ -61,6 +61,7 @@ from __future__ import annotations
 import asyncio
 import re
 import time
+import weakref
 import zlib
 from collections import deque
 from collections.abc import Callable
@@ -525,7 +526,7 @@ def named_places(world: Any, lines: list[str], here: tuple[int, int], kinds: dic
     return out
 
 
-_VOCAB: dict[int, tuple[float, set[str]]] = {}
+_VOCAB: dict[int, tuple[float, set[str], weakref.ref]] = {}
 
 
 def _vocabulary(world: Any) -> set[str]:
@@ -535,10 +536,11 @@ def _vocabulary(world: Any) -> set[str]:
     from .world import tokens
     now = time.monotonic()
     got = _VOCAB.get(id(world))
-    if got is None or now - got[0] > 60:
+    # By id, and checked to be the same store: a store closed and freed leaves its id to the next one made.
+    if got is None or now - got[0] > 60 or got[2]() is not world:
         names = [r[0] for r in world.db.execute("SELECT name FROM places WHERE stale = 0 UNION SELECT name FROM regions "
                                                 "WHERE stale = 0")]
-        got = (now, {t for n in names for t in tokens(n)})
+        got = (now, {t for n in names for t in tokens(n)}, weakref.ref(world))
         _VOCAB[id(world)] = got
     return got[1]
 

@@ -565,9 +565,115 @@ def test_a_bank_at_a_named_town_is_that_towns_and_one_that_brings_no_gold_says_t
     # Without a town, the nearest; a town with no bank of its own is said to have none, and nothing is walked.
     asyncio.run(s.bank("gold", ""))
     assert trips[-1] == "Britain banker"
-    r = asyncio.run(s.bank("", "gold:200", place="Cove"))
+    r = asyncio.run(s.bank("", "bandage:50", place="Cove"))
     assert not r.ok and r.summary == "no bank at Cove: the nearest to it is Britain banker, 300 tiles from it"
     assert len(trips) == 2
+    w.close()
+
+
+def test_a_box_that_held_no_gold_isnt_asked_for_gold_again_until_gold_goes_in(tmp_path):
+    """The watchman went to the bank for gold three times, ten minutes a trip, to be told "moved 0 items"."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("bank", "Vesper minter", 1000, 1030)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["player"]["gold"] = 0
+    snap["agent"]["errand"] = {"state": "done", "detail": "moved 0 items", "moved": 0}
+    rpc = FakeRpc(snap)
+    s = Session(rpc, w, None)
+    trips = []
+
+    async def walk(name, x, y, **kw):
+        trips.append(name)
+        from uo_brain.session import Result
+        return Result(True, "arrived")
+
+    s.travel_to = walk
+    assert asyncio.run(s.bank("", "gold:200")).summary.endswith("no gold came out: the bank box holds none")
+    r = asyncio.run(s.bank("", "gold:200"))
+    assert not r.ok and r.summary == "not going to the bank for gold: 0 min ago the box held none, and none has gone in since"
+    assert len(trips) == 1
+    # With other work there, the trip goes on without the gold.
+    r = asyncio.run(s.bank("", "gold:200,bandage:50"))
+    assert len(trips) == 2 and r.summary.endswith("; gold left out: 0 min ago the box held none, and none has gone in since")
+    errand = [p for m, p in rpc.calls if m == "act" and p.get("verb") == "bank"][-1]
+    assert errand["withdraw"] == "bandage:50"
+    # Gold put in: asked for again.
+    banked = []
+
+    async def call(method, **params):
+        rpc.calls.append((method, params))
+        if method == "snapshot":
+            out = copy.deepcopy(snap)
+            out["player"]["gold"] = 0 if banked else 300
+            return out
+        banked.append(params.get("verb") == "bank" or None)
+        return {"status": "done"}
+
+    rpc.call = call
+    asyncio.run(s.bank("gold", ""))
+    assert s.box_no_gold is None
+    w.close()
+
+
+def test_a_bank_at_a_town_is_any_of_its_banks_the_nearest_first(tmp_path):
+    """cuo-m3n.13: 62 tiles short of Britain's east bank, the carrier told "Britain" was told it had none: its
+    west bank, the nearest to the town's middle, was 70 tiles from it. She walked 282 tiles to it."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("town", "Britain", 1000, 1000, region="Britain")
+    w.add_place("bank", "West Britain bank", 930, 1060, region="Britain")
+    w.add_place("bank", "East Britain bank", 1155, 980, region="Britain")
+    w.add_place("bank", "Moonglow bank", 1500, 1000, region="Moonglow")
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["player"].update(x=1200, y=1000)
+    snap["agent"]["errand"] = {"state": "done", "detail": "moved 1 item", "moved": 1}
+    s = Session(FakeRpc(snap), w, None)
+    trips = []
+
+    async def walk(name, x, y, **kw):
+        trips.append(name)
+        from uo_brain.session import Result
+        return Result(True, "arrived")
+
+    s.travel_to = walk
+    assert asyncio.run(s.bank("gold", "", place="Britain")).ok
+    assert trips == ["East Britain bank"]
+    w.close()
+
+
+class Walking(FakeRpc):
+    """A trip that moves `step` tiles a second, and arrives at the `arrive`th look, if given."""
+
+    def __init__(self, snap, step, arrive=None):
+        super().__init__(snap)
+        self.step, self.arrive, self.looks = step, arrive, 0
+
+    async def call(self, method, **params):
+        if method != "snapshot":
+            return await super().call(method, **params)
+        snap = copy.deepcopy(self.snap)
+        snap["player"]["x"] += self.step * self.looks
+        done = self.arrive is not None and self.looks >= self.arrive
+        snap["agent"]["travel"] = {"state": "arrived" if done else "walking", "left": 40}
+        self.looks += 1
+        return snap
+
+
+def test_a_trip_still_on_its_way_at_its_time_limit_goes_on(tmp_path):
+    """cuo-m3n.13: walked at a resident's pace round the swamp, the carrier's trip to the bank was cut off at 600 s,
+    62 tiles short."""
+    w = World.open("test", root=tmp_path)
+    r = asyncio.run(Session(Walking(copy.deepcopy(SNAPSHOT), 25, arrive=2), w, None).travel_to(x=1100, y=1000,
+                                                                                              timeout_s=1))
+    assert r.ok
+    # One that has stopped getting anywhere times out at the limit; one that goes on and on, at GOING_TIMES it.
+    began = time.monotonic()
+    r = asyncio.run(Session(Walking(copy.deepcopy(SNAPSHOT), 0), w, None).travel_to(x=1100, y=1000, timeout_s=1))
+    assert not r.ok and "timed out" in r.summary and time.monotonic() - began < 1.8
+    s = Session(Walking(copy.deepcopy(SNAPSHOT), 25), w, None)
+    s.GOING_TIMES = 2
+    r = asyncio.run(s.travel_to(x=1100, y=1000, timeout_s=1))
+    assert not r.ok and "timed out" in r.summary and r.data["seconds"] == 2
+    w.close()
 
 
 def test_a_hunt_with_nothing_to_heal_by_is_refused_before_the_walk(tmp_path):

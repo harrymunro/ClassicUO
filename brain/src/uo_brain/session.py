@@ -17,6 +17,7 @@ import math
 import random
 import re
 import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -105,6 +106,7 @@ class Session:
         self.raise_fallen = False  # a party raises its fallen where they fell: a ghost waits for it (cuo-cym.4)
         self.hamlet = None  # hamlet.Hamlet: where a resident lives, its home a place for travel_to (cuo-m3n)
         self.deaths: list[tuple[int, int, float]] = []  # (x, y, wall time) of each death a corpse run was asked about
+        self.box_no_gold: float | None = None  # when a withdrawal of gold last brought none (monotonic)
         self._guards_called = -1e9  # when "Guards!" was last said (monotonic)
         self._hits_seen = 1 << 30   # the character's hits at the last look, for a fresh hit
         self._guarded: dict[tuple[int, int], bool] = {}  # 8-tile cell -> in a guarded region
@@ -121,6 +123,11 @@ class Session:
     LAG_TILES = 8      # a companion further behind the leader than this is waited for
     LAG_WAIT_S = 20.0  # ...this long at a time
     LAG_FAR = 60       # one further off than this is on business of its own: not waited for
+    # A trip still on its way at its time limit goes on, up to GOING_TIMES the limit: one that covered GOING_TILES
+    # in the last GOING_S. Walked at a resident's pace round the swamp, the bank road from Cove is over 600 s.
+    GOING_TIMES = 3
+    GOING_TILES = 20
+    GOING_S = 60.0
 
     def laggards(self, snap: dict[str, Any], to: tuple[int, int] | None = None) -> list[str]:
         """The party's members who have fallen behind the leader on a walk: alive, more than LAG_TILES
@@ -400,7 +407,14 @@ class Session:
         began = time.monotonic()
         trail: list[list[int]] = [list(start)]
         travel: dict[str, Any] = {}
-        while time.monotonic() - began < timeout_s and not self.interrupt.is_set():
+        lately: deque[tuple[float, list[int]]] = deque([(began, list(start))])
+
+        def in_time() -> bool:
+            spent = time.monotonic() - began
+            return spent < timeout_s or (spent < timeout_s * self.GOING_TIMES
+                                         and tiles(*lately[0][1], *lately[-1][1]) >= self.GOING_TILES)
+
+        while in_time() and not self.interrupt.is_set():
             await asyncio.sleep(1.0)
             snap = await self.snap()
             if not snap.get("in_game"):
@@ -409,6 +423,9 @@ class Session:
             if snap["player"]["dead"] and not ghost:
                 return Result(False, "died on the way", {"at": list(self.where(snap))})
             pos = list(self.where(snap))
+            lately.append((time.monotonic(), pos))
+            while lately[0][0] < time.monotonic() - self.GOING_S:
+                lately.popleft()
             if tiles(*pos, *trail[-1]) >= 8:
                 trail.append(pos)
             travel = snap["agent"].get("travel") or {}
@@ -568,6 +585,7 @@ class Session:
         return {"state": "failed", "detail": "timed out"}
 
     AT_TILES = 60  # a place of a kind "at" a town or place is no further than this from it
+    BOX_EMPTY_S = 3600.0  # a bank box found with no gold isn't asked for gold again for this long
 
     async def go_near(self, kind: str, within: int, skip: set[str] = frozenset(),
                       sells: str | None = None, max_walk: int | None = None,
@@ -576,17 +594,22 @@ class Session:
         With `sells`, places known not to sell that item are left out (a wandering healer is a
         healer that sells no bandages), and those known to sell it come first. With `max_walk`, a
         place further than that isn't walked to: the result names it and how far it is. With `at`
-        (a town or place), the one nearest that instead, if there is one within AT_TILES of it."""
+        (a town or place), the nearest of those in its town or within AT_TILES of it, if there is one."""
         snap = await self.snap()
         near = list(self.where(snap))
         if at:
             if (target := self.resolve(at, None, None)) is None:
                 return None, Result(False, f"no place called {at!r} in the world store")
-            near = list(target[:2])
-        found = [p for p in self.world.find_place(kind, near=near, limit=12) if p["name"] not in skip]
-        if at and found and (off := tiles(*near, found[0]["x"], found[0]["y"])) > self.AT_TILES:
-            return found[0], Result(False, f"no {kind} at {target[2]}: the nearest to it is {found[0]['name']}, "
-                                           f"{off} tiles from it")
+            found = [p for p in self.world.find_place(kind, near=list(target[:2]), limit=12) if p["name"] not in skip]
+            # A town's banks are its own however far from its middle: told "Britain", the carrier at its east bank
+            # was sent off to look for one, its west bank 70 tiles from the middle being too far to count.
+            ours = [p for p in found if p.get("region") == target[2] or tiles(*target[:2], p["x"], p["y"]) <= self.AT_TILES]
+            if found and not ours:
+                return found[0], Result(False, f"no {kind} at {target[2]}: the nearest to it is {found[0]['name']}, "
+                                               f"{tiles(*target[:2], found[0]['x'], found[0]['y'])} tiles from it")
+            found = sorted(ours, key=lambda p: tiles(*near, p["x"], p["y"]))
+        else:
+            found = [p for p in self.world.find_place(kind, near=near, limit=12) if p["name"] not in skip]
         if sells:
             want = tokens(sells)
             def stocks(p: dict[str, Any]) -> bool | None:
@@ -626,7 +649,17 @@ class Session:
         """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank or the one at
         `place`. From Cove the banks of Vesper and Britain are as far, and which was nearer turned on
         where in Cove the carrier stood: told to draw from the Vesper bank she had just walked to
-        safely, she went to Britain's and died on the way."""
+        safely, she went to Britain's and died on the way. Gold isn't asked of a box that held none in the last
+        BOX_EMPTY_S, unless gold has gone in since."""
+        left_out = ""
+        if self.box_no_gold is not None and time.monotonic() - self.box_no_gold < self.BOX_EMPTY_S:
+            items = [i.strip() for i in withdraw.split(",") if i.strip()]
+            if gold := [i for i in items if i.lower().startswith("gold")]:
+                ago = f"{(time.monotonic() - self.box_no_gold) / 60:.0f} min ago the box held none, and none has gone in since"
+                withdraw = ",".join(i for i in items if i not in gold)
+                if not withdraw and not deposit.strip():
+                    return Result(False, f"not going to the bank for gold: {ago}")
+                left_out = f"; gold left out: {ago}"
         bank, failed = await self.go_near("bank", 10, at=place)
         if failed:
             return failed
@@ -644,7 +677,10 @@ class Session:
         # minutes a trip, to be told "moved 0 items").
         if ok and "gold" in withdraw.lower() and (after.get("gold") or 0) <= (before.get("gold") or 0):
             detail += "; no gold came out: the bank box holds none"
-        return Result(ok, f"{bank['name']}: {detail}",
+            self.box_no_gold = time.monotonic()
+        elif ok and (after.get("gold") or 0) < (before.get("gold") or 0):
+            self.box_no_gold = None  # gold went in
+        return Result(ok, f"{bank['name']}: {detail}{left_out}",
                       data | {"weight_before": before.get("weight"), "gold_before": before.get("gold")})
 
     async def vendor(self, kind: str, words: tuple[str, ...], exclude: set[int] = frozenset(),
