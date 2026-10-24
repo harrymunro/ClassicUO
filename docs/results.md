@@ -3997,6 +3997,37 @@ them his; the told run of 22:40: none), and nobody else died. In Cove 67% of the
   begun after that ([after a death](#after-a-death)).
 - Next: a told run with these changes and the client that keeps its bones.
 
+### The watchman's hour with his bones kept (cuo-m3n.6)
+
+2026-10-24 08:20 to 09:24, one told run of `hamlet-cove.toml`, headless, memory on, the residents' memories set
+aside first, the brain frozen at 850b60c62 (a corpse kept as bones and no walk to it after 14 minutes, the
+planner told the minutes it has left, a spot a red player drove the character off kept for 30 minutes) and the
+client that keeps its own corpse as bones. Not filmed.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove.toml --out logs/fleet/20261024-082030-hamlet-cove-told-m3n6b
+uv run uo-brain hamlet-report logs/fleet/20261024-082030-hamlet-cove-told-m3n6b --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort"
+```
+
+All four: 22 kills, 3 deaths, $0.285. Brannoc died once (the hour before: 3; m3n.4's told runs: 3 or 4), Tamsin
+twice, nobody else. Brannoc was in Cove 83% of the hour and at home 72%, and killed nothing.
+
+- **His one death was a lich that followed him home.** Driven off the fort by two savages and then off the
+  wilderness east by liches, he walked home at 59 of 95 and set off for the healer's, 43 tiles, for bandages. A
+  lich had come in after him (seen by 2250,1200); fleeing it he left the guards' ground east of the gate, was
+  paralysed ("You cannot move!") and died in 14 s at 2323,1227. Four minutes later the corpse walk was refused
+  for the lich seen by it, his planner went anyway, and he took everything back in 20 s.
+- **He did no work.** Both his sweeps at the fort ended inside half a minute, "2 coming at once: 2 savages
+  (stronger than you each)", and the 30-minute rule kept him off it in between; he rested at home 5 to 10
+  minutes at a time for most of the hour. Both spawners at the fort hold savages among the orcs, so the work
+  the fleet file gives him isn't one a lone warrior of his kit can do (cuo-m3n.12).
+- **Tamsin died twice on the road to Britain's bank.** Her road from Cove crosses the swamp at about 2000 to
+  2080, 1000 to 1070 (plague beasts, bog things, slimes): she walked through it to bank 300 gold, died in it
+  walking home (09:00, at 2078,1068), and again going back for the gold (09:19, at 2055,1009). Travel takes the
+  shortest road and doesn't go round what it saw on it (cuo-m3n.13).
+- cuo-m3n.6 is closed: the watchman died less than twice in the hour.
+
 ## After a death
 
 2026-10-09, the local server: a warrior (Mortis) killed by three `still` daemons at the Britain
