@@ -375,11 +375,16 @@ class HuntWatch:
         if self.radius:
             hunt["area_size"] = (f"creatures spawn over about {self.radius} tiles around the centre; the character "
                                  "sees about 18 tiles around itself")
-        hostiles = [m for m in snap["mobiles"] if m.get("monster") and not m.get("dead")]
+        # Hostile as the quiet rule counts it: the quiet question said "nothing hostile is in sight" beside "2 hostile
+        # creatures in sight", horses and eagles that only fight back (cuo-m3n.10).
+        hostiles = [m for m in snap["mobiles"] if threatening(m, self.bestiary)]
+        calm = sum(1 for m in snap["mobiles"] if m.get("monster") and not m.get("dead")) - len(hostiles)
         close = sum(1 for m in hostiles if m["distance"] <= 3)
         quiet_s = now - self.last_hostile
         around = (f"{len(hostiles)} hostile creature{'s' if len(hostiles) != 1 else ''} in sight, {close} close"
                   if hostiles else f"nothing hostile in sight for {round(quiet_s)} seconds")
+        if calm:
+            around += f"; {calm} creature{'s' if calm != 1 else ''} in sight that only fight{'s' if calm == 1 else ''} back"
         return {"you": you, "this_hunt": hunt, "around_now": around}
 
     def summary(self) -> dict[str, Any]:

@@ -992,10 +992,10 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   minutes away, how long it has been away from home. `hamlet-report` adds the share of the run in the hamlet
   or its lands, and how many of a resident's pieces of work (hunts, sales, purchases, banking, trips but the
   trip home) had it at home between one and the next. `fleets/hamlet-cove-lands.toml` is the four with their
-  lands and their work put as short pieces with home between. Measured once
-  ([results](results.md#the-hamlets-lands-one-run-cuo-m3n3)): in Cove or its lands 72% of the hour, as
+  lands and their work put as short pieces with home between. Measured twice
+  ([results](results.md#the-hamlets-lands-two-runs-cuo-m3n3)): in Cove or its lands 72% of the hour, as
   without them (66% to 81%), and home between pieces of work 4 of 15, with eight deaths to the savages by
-  the orc fort.
+  the orc fort; then, with the night's fixes, 81% (every resident 72% or more) and 9 of 20, with three deaths.
 - **Its evenings** (cuo-m3n.5): `gather = "Cove healer"`, `gather_words = "the healer's house"`,
   `day_minutes = 60` and `evening_minutes = 15` in `[hamlet]` make a run days of an hour whose last quarter
   is the evening, on one clock for every resident (from the run's start). Each turn says the time of day ("day

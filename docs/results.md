@@ -3826,7 +3826,7 @@ uv run uo-brain hamlet-report logs/fleet/20261023-153023-hamlet-cove-told logs/f
   between them; the control 2 to 16), most of them talks ("Not hurt, just tired of walking to Vesper for
   arrows"), and a few warnings passed on ("Told Wenna: the four at Cove Orc Fort").
 
-### The hamlet's lands, one run (cuo-m3n.3)
+### The hamlet's lands, two runs (cuo-m3n.3)
 
 2026-10-23/24, headless, memory on, the residents' memories set aside before each run, on a copy of the brain
 frozen at 541e5d115 (the arrows and the shop's wares fixed, before the savages' bestiary fix and the store
@@ -3842,16 +3842,16 @@ uv run uo-brain fleet fleets/hamlet-cove-lands.toml --out logs/fleet/20261023-23
 uv run uo-brain hamlet-report RUN --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort" --json
 ```
 
-| | m3n.4's told runs (1e6d6a417) | told, 541e5d115 | with its lands, 541e5d115 |
-|---|---|---|---|
-| in Cove or its lands (all four, by minutes) | 66%, 81%, 76% | 71% | 72% |
-| ...Brannoc, Wenna, Maren, Tamsin | first: 80%, 92%, 57%, 33% | 66%, 87%, 92%, 42% | 92%, 92%, 86%, 28% |
-| in Cove itself | 35%, 56%, 52% | 31% | 36% |
-| home between two pieces of work | 6 of 16, 5 of 12, 5 of 14 | 11 of 24 | 4 of 15 |
-| homecomings | 10, 10, 8 | 8 | 8 |
-| lines said to a neighbour | 41, 29, 23 | 43 | 36 |
-| kills, deaths | 27 and 5, 14 and 3, 16 and 6 | 19 and 1 | 14 and 8 |
-| cost together | $0.248, $0.241, $0.278 | $0.328 | $0.252 |
+| | m3n.4's told runs (1e6d6a417) | told, 541e5d115 | with its lands, 541e5d115 | with its lands again, c72c1e616 |
+|---|---|---|---|---|
+| in Cove or its lands (all four, by minutes) | 66%, 81%, 76% | 71% | 72% | 81% |
+| ...Brannoc, Wenna, Maren, Tamsin | first: 80%, 92%, 57%, 33% | 66%, 87%, 92%, 42% | 92%, 92%, 86%, 28% | 72%, 89%, 88%, 75% |
+| in Cove itself | 35%, 56%, 52% | 31% | 36% | 35% |
+| home between two pieces of work | 6 of 16, 5 of 12, 5 of 14 | 11 of 24 | 4 of 15 | 9 of 20 |
+| homecomings | 10, 10, 8 | 8 | 8 | 10 |
+| lines said to a neighbour | 41, 29, 23 | 43 | 36 | 56 |
+| kills, deaths | 27 and 5, 14 and 3, 16 and 6 | 19 and 1 | 14 and 8 | 28 and 3 |
+| cost together | $0.248, $0.241, $0.278 | $0.328 | $0.252 | $0.297 |
 
 - **Naming the lands changed nothing measured:** told only that they live in Cove, the four were in Cove or
   on its two grounds 66% to 81% of the hour; told of the lands as well, 72%. Wenna and Maren were there 86%
@@ -3868,7 +3868,18 @@ uv run uo-brain hamlet-report RUN --lands "south-west of Cove Cemetery" --lands 
 - **The baseline run's watchman didn't die:** in the told run of 22:40 Brannoc was driven off the fort without
   a death, then waited at home for the 30-minute rule and the liches (59% of the hour at home, 1 kill). One
   run; m3n.4's told runs had him die 3 or 4 times.
-- Next: the same pair again once the store knows the savages (cuo-m3n.6) and with the client's route fixes.
+- **Again, with what was fixed overnight** (2026-10-24 05:26 to 06:32, `--out logs/fleet/20261024-052658-hamlet-cove-lands-b`,
+  the brain frozen at c72c1e616, the store re-imported at 05:20 with the savages and the horses known, the
+  client with the route fixes): every resident was in Cove or its lands most of the hour (72% to 89%), Tamsin
+  too, and Brannoc came through it alive with 13 kills. Home between pieces of work, the acceptance's other
+  half, was 9 of 20. One run.
+- **Who still died:** Tamsin twice and Maren once. Tamsin went to hunt the orc fort for coin and died in
+  90 s, then died walking home from a corpse 20 minutes gone (no walk is begun after 14 minutes since
+  850b60c62).
+- **Wenna stood 14.6 minutes on her ground among horses, eagles and bulls,** now known as only fighting
+  back. With nothing hostile in sight the routine asked whether to walk elsewhere in the spawn, and Jev said
+  no each time (0.2): the spawn spreads over 15 tiles, inside what she sees. The boars and cougars she hunts
+  had been killed and hadn't come back. Her planner sent her back to the same ground after each hunt.
 
 ### Evenings at the healer's house, one run of three hours (cuo-m3n.5)
 

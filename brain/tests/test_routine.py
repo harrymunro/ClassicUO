@@ -297,3 +297,18 @@ def test_a_hunt_left_from_a_pack_ends_once_nothing_is_coming():
     hw3, _ = watch(HeuristicJudge())
     hw3.left("a pack")
     assert hw3.observe(clear).stop == "left the area: a pack"
+
+
+def test_what_only_fights_back_isnt_counted_hostile_in_the_words_either():
+    # cuo-m3n.10: the quiet question said "nothing hostile is in sight" beside "2 hostile creatures in sight",
+    # horses and eagles that only fight back.
+    clock = Clock()
+    hw = HuntWatch("south-west of Cove Cemetery", 15, FakeJev(), RoutineConfig(), log=LOG.append, clock=clock,
+                   bestiary={0xC8: {"name": "a horse", "peaceful": True}})
+    calm = snap(hostiles=False)
+    calm["mobiles"] += [{"serial": 0x500 + i, "name": "a horse", "body": 0xC8, "monster": True, "distance": 9 + i,
+                         "dead": False, "war_mode": False} for i in range(2)]
+    hw.observe(calm)
+    clock.t += 90
+    assert hw.words(calm)["around_now"] == "nothing hostile in sight for 90 seconds; 2 creatures in sight that only fight back"
+    assert hw.words(snap())["around_now"] == "2 hostile creatures in sight, 1 close"
