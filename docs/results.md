@@ -3826,7 +3826,7 @@ uv run uo-brain hamlet-report logs/fleet/20261023-153023-hamlet-cove-told logs/f
   between them; the control 2 to 16), most of them talks ("Not hurt, just tired of walking to Vesper for
   arrows"), and a few warnings passed on ("Told Wenna: the four at Cove Orc Fort").
 
-### The hamlet's lands, two runs (cuo-m3n.3)
+### The hamlet's lands, four runs (cuo-m3n.3, cuo-m3n.11)
 
 2026-10-23/24, headless, memory on, the residents' memories set aside before each run, on a copy of the brain
 frozen at 541e5d115 (the arrows and the shop's wares fixed, before the savages' bestiary fix and the store
@@ -3842,16 +3842,16 @@ uv run uo-brain fleet fleets/hamlet-cove-lands.toml --out logs/fleet/20261023-23
 uv run uo-brain hamlet-report RUN --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort" --json
 ```
 
-| | m3n.4's told runs (1e6d6a417) | told, 541e5d115 | with its lands, 541e5d115 | with its lands again, c72c1e616 |
-|---|---|---|---|---|
-| in Cove or its lands (all four, by minutes) | 66%, 81%, 76% | 71% | 72% | 81% |
-| ...Brannoc, Wenna, Maren, Tamsin | first: 80%, 92%, 57%, 33% | 66%, 87%, 92%, 42% | 92%, 92%, 86%, 28% | 72%, 89%, 88%, 75% |
-| in Cove itself | 35%, 56%, 52% | 31% | 36% | 35% |
-| home between two pieces of work | 6 of 16, 5 of 12, 5 of 14 | 11 of 24 | 4 of 15 | 9 of 20 |
-| homecomings | 10, 10, 8 | 8 | 8 | 10 |
-| lines said to a neighbour | 41, 29, 23 | 43 | 36 | 56 |
-| kills, deaths | 27 and 5, 14 and 3, 16 and 6 | 19 and 1 | 14 and 8 | 28 and 3 |
-| cost together | $0.248, $0.241, $0.278 | $0.328 | $0.252 | $0.297 |
+| | m3n.4's told runs (1e6d6a417) | told, 541e5d115 | with its lands, 541e5d115 | with its lands again, c72c1e616 | and the empty ground, 4d93f759d |
+|---|---|---|---|---|---|
+| in Cove or its lands (all four, by minutes) | 66%, 81%, 76% | 71% | 72% | 81% | 64% |
+| ...Brannoc, Wenna, Maren, Tamsin | first: 80%, 92%, 57%, 33% | 66%, 87%, 92%, 42% | 92%, 92%, 86%, 28% | 72%, 89%, 88%, 75% | 48%, 83%, 85%, 38% |
+| in Cove itself | 35%, 56%, 52% | 31% | 36% | 35% | 53% |
+| home between two pieces of work | 6 of 16, 5 of 12, 5 of 14 | 11 of 24 | 4 of 15 | 9 of 20 | 10 of 20 |
+| homecomings | 10, 10, 8 | 8 | 8 | 10 | 15 |
+| lines said to a neighbour | 41, 29, 23 | 43 | 36 | 56 | 29 |
+| kills, deaths | 27 and 5, 14 and 3, 16 and 6 | 19 and 1 | 14 and 8 | 28 and 3 | 7 and 6 |
+| cost together | $0.248, $0.241, $0.278 | $0.328 | $0.252 | $0.297 | $0.299 |
 
 - **Naming the lands changed nothing measured:** told only that they live in Cove, the four were in Cove or
   on its two grounds 66% to 81% of the hour; told of the lands as well, 72%. Wenna and Maren were there 86%
@@ -3880,6 +3880,26 @@ uv run uo-brain hamlet-report RUN --lands "south-west of Cove Cemetery" --lands 
   back. With nothing hostile in sight the routine asked whether to walk elsewhere in the spawn, and Jev said
   no each time (0.2): the spawn spreads over 15 tiles, inside what she sees. The boars and cougars she hunts
   had been killed and hadn't come back. Her planner sent her back to the same ground after each hunt.
+- **And with the empty ground** (2026-10-24 09:31 to 10:36, `--out logs/fleet/20261024-093147-hamlet-cove-lands-c`,
+  the brain frozen at 4d93f759d: a hunt told its spawn's real spread and patrolling across it, a ground found
+  empty not hunted again for 15 minutes; the client that keeps its bones). It began 7 minutes after the told
+  hour of 08:20, in which Wenna and Maren had killed 22 on the cemetery ground. One run. Not filmed.
+- **The hunters moved on from an empty ground** (cuo-m3n.11): Wenna's five hunts on the cemetery ground and
+  the wilds by it ended in 2.9 to 7.4 minutes, four on "Jev was unsure twice running" and one, after 4
+  kills, on "walked round the spawn 4 times and found nothing", against two of 10 minutes or more standing
+  still the time before. Twice, going straight back, she was told the ground had been found empty and to come back in 14
+  minutes. Maren's two there ended in 3.9 and 4.9 minutes.
+- **But sent elsewhere, they went where they couldn't fight.** Wenna and Maren were both refused the
+  cemetery ground and went to the orc fort ("I'll shoot at the orcs near the fort"): Wenna left at once with a
+  kill, and Maren died on the way, to two savage riders. Maren later hunted the liches' ground east of Cove,
+  left it in 12 s, and a lich followed her 173 tiles home and killed her at the healer's house, "under the
+  protection of the town guards": no guard came, and nobody called one. Tamsin hunted by Cove Cemetery and
+  died to a lich there. The refusal says "hunt another ground", and nothing in it, or in the planner's choice,
+  keeps that ground one the character can fight (cuo-m3n.15; the guards, cuo-m3n.14).
+- **Six deaths:** Brannoc twice at the fort (his first sweep, 0.2 minutes in, and the corpse walk), Maren
+  twice and Tamsin twice as above, Tamsin's second on the bank road at 1931,1341, west of the fort (the
+  travel before cuo-m3n.13). In Cove or its lands 64% of the hour, Brannoc 48% and Tamsin 38%: not the
+  acceptance.
 
 ### Evenings at the healer's house, two runs (cuo-m3n.5)
 
