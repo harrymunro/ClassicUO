@@ -611,3 +611,41 @@ def test_a_corpse_that_two_deaths_lie_by_is_let_go_even_with_go_anyway(tmp_path)
     r = asyncio.run(s.recover_corpse(go_anyway=True))
     assert r.summary == "not going back, even with go_anyway: died 2 times by the corpse in 5 min; let it go"
     assert len(trips) == 2
+
+
+def test_in_a_guarded_town_a_creature_turned_criminal_close_by_is_called_the_guards_on(tmp_path):
+    """cuo-m3n.14: a lich that followed Maren home killed her at the healer's house in Cove, and nobody called the
+    guards. Staged there, a lich took a warrior to 25 hits of 95 in 8 s with no guard; called, one came in a second."""
+    import json
+    w = World.open("test", root=tmp_path)
+    w.replace_source("regions", "fixture", [{"name": "Cove", "map": "Felucca", "kind": "town", "guarded": 1,
+                                             "rects": json.dumps([[950, 950, 1050, 1050]])}])
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["mobiles"] = [{"serial": 0x200, "name": "a lich", "monster": True, "notoriety": "criminal", "distance": 5,
+                        "dead": False, "dx": 5, "dy": 0},
+                       {"serial": 0x201, "name": "a cat", "monster": False, "notoriety": "gray", "distance": 2,
+                        "dead": False, "dx": 2, "dy": 0}]
+    rpc = FakeRpc(snap)
+    logged = []
+    s = Session(rpc, w, None, log=logged.append)
+
+    def said():
+        return [p["text"] for m, p in rpc.calls if m == "act" and p.get("verb") == "say"]
+
+    async def look(snap):
+        s.seen(snap)
+        await asyncio.sleep(0)
+
+    asyncio.run(look(snap))
+    assert said() == ["Guards!"] and next(r for r in logged if r["event"] == "guards")["on"] == ["a lich"]
+    asyncio.run(look(snap))
+    assert said() == ["Guards!"]  # not again within GUARDS_EVERY_S
+    s._guards_called -= Session.GUARDS_EVERY_S
+    asyncio.run(look(snap))
+    assert said() == ["Guards!", "Guards!"]  # still about: called again
+    # Out of the guards' ground, or with nothing criminal near (a lich still gray, or out of their reach): no call.
+    for x, noto, far in ((1100, "criminal", 5), (1000, "gray", 5), (1000, "criminal", 16)):
+        s._guards_called -= Session.GUARDS_EVERY_S
+        snap["player"]["x"], snap["mobiles"][0]["notoriety"], snap["mobiles"][0]["distance"] = x, noto, far
+        asyncio.run(look(snap))
+    assert len(said()) == 2

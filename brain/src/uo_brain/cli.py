@@ -319,6 +319,9 @@ def main() -> None:
     add_run_args(h, shard=False)
     r = dsub.add_parser("rest")
     r.add_argument("seconds", type=float, nargs="?", default=30)
+    r.add_argument("--defend", action="store_true",
+                   help="fight what is close or attacking while resting, as the planner's rests do (Jev's defend-only loop)")
+    add_run_args(r, shard=False)
     dsub.add_parser("resurrect", help="as a ghost, walk to the nearest healer and be resurrected")
     dsub.add_parser("recover-corpse", help="back to where the character died, take everything from its corpse")
 
@@ -1307,7 +1310,7 @@ async def do_goal(rpc: AgentRpc, args) -> None:
             case "recover-corpse":
                 res = await session.recover_corpse()
             case _:
-                res = await session.rest(args.seconds)
+                res = await (session.defended(session.rest(args.seconds)) if args.defend else session.rest(args.seconds))
     finally:
         if judge:
             await judge.close()

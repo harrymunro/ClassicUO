@@ -216,6 +216,18 @@ person; until a title is known, only red and criminal players are flagged.
 - **Defensive only:** the agent never attacks a player, whatever the mode.
 - **The world store** notes "A red player was seen here." for the area, never who.
 
+## Calling the guards
+
+In a town the world store has as guarded, the character says "Guards!" when a creature or player within 13 tiles
+has turned criminal, which one does by harming an innocent (its notoriety in the snapshot goes from grey to
+criminal), and again every 8 s while one is still about. It runs beside every goal, in the session's look at each
+snapshot, and the session log has a `guards` record of each call. On ModernUO a guard then comes at once for any
+such one within 14 tiles of the caller and kills it; without a call, one comes only if a townsperson stood within 8
+tiles of the creature when it first struck (`GuardedRegion`). A lich that followed a hamlet resident home killed
+her at Cove's healer's house, and nobody called (cuo-m3n.14). Staged there, a lich took a warrior from 95 hits to
+25 in 8 s with no call; called, a guard killed it before it struck ([results](results.md#calling-the-guards-cuo-m3n14)).
+A creature the character struck first harms it lawfully, so no guard comes for it.
+
 ## Line of sight
 
 The server doesn't shoot an arrow through a wall, and doesn't take a spell's, a song's or a pet

@@ -105,6 +105,9 @@ class Session:
         self.raise_fallen = False  # a party raises its fallen where they fell: a ghost waits for it (cuo-cym.4)
         self.hamlet = None  # hamlet.Hamlet: where a resident lives, its home a place for travel_to (cuo-m3n)
         self.deaths: list[tuple[int, int, float]] = []  # (x, y, wall time) of each death a corpse run was asked about
+        self._guards_called = -1e9  # when "Guards!" was last said (monotonic)
+        self._guarded: dict[tuple[int, int], bool] = {}  # 8-tile cell -> in a guarded region
+        self._calls: set[asyncio.Task] = set()  # lines said from a snapshot hook, kept until sent
 
     def paced(self) -> dict[str, str]:
         """The pace for a short walk of the session's own, when every trip has one (travel_pace)."""
@@ -222,11 +225,46 @@ class Session:
 
     def seen(self, snap: dict[str, Any]) -> None:
         self.note_dangers(snap)
+        self.call_guards(snap)
         if self.recorder is None:
             return
         self.recorder.observe(snap)
         if self.recorder.due():
             asyncio.get_running_loop().create_task(self.recorder.flush())
+
+    GUARDS_TILES = 13      # ModernUO sends a guard for a candidate within 14 tiles of a line with "guards" in it
+    GUARDS_EVERY_S = 8.0   # called again while one is still about, no oftener than this
+
+    def call_guards(self, snap: dict[str, Any]) -> None:
+        """In a guarded town, says "Guards!" when a creature or player close by has turned criminal (one that
+        harms an innocent does, and its notoriety in the snapshot says so). On ModernUO a guard comes at once
+        for such a one within 14 tiles of a line with "guards" in it, and otherwise only if a townsperson stood
+        within 8 tiles of it when it first struck (GuardedRegion). A lich that followed Maren home killed her at
+        the healer's house in Cove, and nobody called (cuo-m3n.14). Staged there, a lich took a warrior from 95
+        hits to 25 in 8 s with no guard; called at its first strike, a guard killed it in a second."""
+        if self.rpc is None or not snap.get("in_game") or snap["player"]["dead"]:
+            return
+        now = time.monotonic()
+        if now - self._guards_called < self.GUARDS_EVERY_S:
+            return
+        on = [m for m in snap.get("mobiles", []) if m.get("notoriety") == "criminal" and not m.get("dead")
+              and m.get("distance", 99) <= self.GUARDS_TILES and m.get("name") not in self.pcfg.companions]
+        p = snap["player"]
+        if not on or not self.guarded(p["x"], p["y"]):
+            return
+        self._guards_called = now
+        task = asyncio.get_running_loop().create_task(self.rpc.call("act", verb="say", text="Guards!"))
+        self._calls.add(task)
+        task.add_done_callback(self._calls.discard)
+        self.log("guards", at=[p["x"], p["y"]], on=[m.get("name") for m in on][:4])
+
+    def guarded(self, x: int, y: int) -> bool:
+        """Whether the store has (x, y) in a guarded region, by 8-tile cell."""
+        cell = (x // 8, y // 8)
+        if cell not in self._guarded:
+            region = self.world.region_at(x, y)
+            self._guarded[cell] = bool(region and region.get("guarded"))
+        return self._guarded[cell]
 
     def note_dangers(self, snap: dict[str, Any]) -> None:
         """Creatures stronger than the character, by kind and area, for the goal's result and the

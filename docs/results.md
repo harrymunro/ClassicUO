@@ -10,7 +10,7 @@
 
 - **Fights:** [Arena](#arena), [Judgment benchmark](#judgment-benchmark), [Fewer fight calls](#fewer-fight-calls), [Plans for fights](#plans-for-fights), [Walls and summons in a swarm](#walls-and-summons-in-a-swarm), [Line of sight](#line-of-sight), [Where it runs](#where-it-runs), [When a leave stops](#when-a-leave-stops), [Real input](#real-input)
 - **Models:** [Models for each role](#models-for-each-role), [Haiku or Sonnet for plans, reviews and guides](#haiku-or-sonnet-for-plans-reviews-and-guides), [Opus for the planner's one-off calls](#opus-for-the-planners-one-off-calls), [Sonnet for the planner's hard moments](#sonnet-for-the-planners-hard-moments), [Jev and Microsoft's Decision 1](#jev-and-microsofts-decision-1)
-- **Sessions towards a goal:** [Unattended runs](#unattended-runs), [Travel and errands](#travel-and-errands), [Routine hunt calls](#routine-hunt-calls), [After a death](#after-a-death), [After-action review run](#after-action-review-run)
+- **Sessions towards a goal:** [Unattended runs](#unattended-runs), [Travel and errands](#travel-and-errands), [Routine hunt calls](#routine-hunt-calls), [Calling the guards](#calling-the-guards-cuo-m3n14), [After a death](#after-a-death), [After-action review run](#after-action-review-run)
 - **World knowledge and memory:** [World store and fact picking](#world-store-and-fact-picking), [UO Renaissance's map page](#uo-renaissances-map-page), [Map markers](#map-markers), [The planner with memories](#the-planner-with-memories), [Long-range memory over a long soak](#long-range-memory-over-a-long-soak)
 - **Several agents:** [Several agents on one server](#several-agents-on-one-server), [Headless clients](#headless-clients), [A party on one plan](#a-party-on-one-plan), [A party that helps, calls out and talks](#a-party-that-helps-calls-out-and-talks), [A party that goes in together](#a-party-that-goes-in-together), [NPCs with lives of their own](#npcs-with-lives-of-their-own), [A hamlet of AI residents](#a-hamlet-of-ai-residents)
 - **Public shards:** [Renaissance rules rehearsal](#renaissance-rules-rehearsal)
@@ -4126,6 +4126,33 @@ uv run python scripts/route_check.py 5580 2217 1192 2880 683     # to the Vesper
 
 The Britain road can't go round all of it: from Cove the only way west passes between the swamp and the fields of
 fair fights, so the Vesper bank is the safer one by far, and the planner can now name it.
+
+## Calling the guards (cuo-m3n.14)
+
+2026-10-24, the soak server (2595), one headless warrior (Brutus, 95 hits) in Cove's street at 2262,1212, inside the
+guards' ground and 9 tiles from the nearest townsperson, a lich spawned 5 tiles east. Single runs.
+
+```bash
+cd brain
+uv run uo-brain --port 5580 client --headless --account warrior --character Brutus --server-port 2595
+uv run python scripts/guards_check.py 5580 Lich --say     # "Guards!" at the lich's first strike; without --say, the control
+uv run uo-brain --port 5580 say "[AgentSpawn Lich 1 5 e 15"; uv run uo-brain --port 5580 do rest 75 --defend --judge jev
+```
+
+| run | the lich | the character |
+|---|---|---|
+| agent off, "Guards!" said at the first strike | a guard came within a second and killed it | 67 of 95 after the one strike |
+| the control: agent off, nothing said | struck for 8 s, no guard; called at 25 hits, a guard came at once | 25 of 95 |
+| the session's call, resting with the fight loop beside it | turned criminal as it began to cast; "Guards!" then, and a guard killed it | unhurt |
+| agent off, `scripts/guards_check.py` again | a guard came | 88 of 95 |
+
+- The lich's notoriety in the snapshot turned from grey to criminal two seconds before its first spell struck, which
+  is when the session called: ModernUO makes a creature that harms an innocent a guard candidate for 15 s, and sends a
+  guard for any within 14 tiles of a line with "guards" in it. In the staged spot no townsperson was within 8 tiles of
+  the lich, so none came of itself.
+- A lich that wasn't the staff's, led in from the cemetery, couldn't be staged: none was there, and the undead that
+  were didn't follow the warrior 160 tiles into town.
+- Not yet measured: a hamlet run.
 
 ## After a death
 
