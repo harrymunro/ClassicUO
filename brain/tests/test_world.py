@@ -372,9 +372,12 @@ def test_the_ground_a_trip_goes_round_is_where_creatures_stronger_than_you_spawn
     w.db.execute("UPDATE spawns SET walk_range = 175 WHERE spawner = 'sea'")
     w.add_spawn_seen("wilderness near 1450,1450", "lich", 1460, 1450, 1)
     got = {d["area"]: d for d in w.dangers_between(1495, 1629, 1300, 1300, 100)}
-    assert got["Dragon cave"] == {"x": 1200, "y": 1400, "r": 10, "cost": 4, "area": "Dragon cave", "creature": "a dragon"}
+    # Its walk range and as far again as a monster notices a character from.
+    assert got["Dragon cave"] == {"x": 1200, "y": 1400, "r": 10 + World.NOTICE_RANGE, "cost": 4, "area": "Dragon cave",
+                                  "creature": "a dragon"}
     # A creature seen where no spawner is known: by its name, SEEN_RANGE round it; a lich is "stronger", not "far".
-    assert got["wilderness near 1450,1450"]["cost"] == 2 and got["wilderness near 1450,1450"]["r"] == World.SEEN_RANGE
+    assert got["wilderness near 1450,1450"]["cost"] == 2
+    assert got["wilderness near 1450,1450"]["r"] == World.SEEN_RANGE + World.NOTICE_RANGE
     # Fair fights and weaker are no danger to go round; nor what only fights back; nor a spawn as wide as a sea.
     assert {"Britain Graveyard", "near Britain moongate", "Britain", "a meadow", "the sea"}.isdisjoint(got)
     assert next(iter(got.values()))["cost"] == 4  # dearest first
@@ -382,6 +385,24 @@ def test_the_ground_a_trip_goes_round_is_where_creatures_stronger_than_you_spawn
     assert {d["area"]: d["cost"] for d in w.dangers_between(1495, 1629, 1300, 1300, 300)}["Dragon cave"] == 2
     # The box round the two ends reaches 0.6 of the trip out, at least 150: a dungeon 3700 tiles off isn't in it.
     assert "Covetous Level 1" not in got
+
+
+def test_a_spawner_of_fair_fights_is_ground_to_go_round_when_they_come_together(w):
+    """cuo-m3n.13: going round the swamp, the carrier (95 hits) died to two reapers, a gazer, a gargoyle and a
+    corpser together, each a fair fight, from the spawners west of it."""
+    w.replace_source("creatures", "fixture-field", [creature("Ettin", (82, 99), (7, 17), 3000),
+                                                    creature("Gazer", (58, 75), (5, 17), 3500)])
+    w.replace_source("spawns", "fixture-field",
+                     spawn("the field", None, 1450, 1450, "field", [("Ettin", 7), ("Gazer", 7), ("Zombie", 7)], count=7)
+                     + spawn("a hill", None, 1400, 1500, "hill", [("Ettin", 1), ("Zombie", 3)], count=4))
+    assert grade_creature(82, 99, 7, 17, 3000) == grade_creature(58, 75, 5, 17, 3500) == "moderate"
+    got = {d["area"]: d for d in w.dangers_between(1495, 1629, 1300, 1300, 95)}
+    # Seven at once, a third of them of each kind: 7/3 ettins and 7/3 gazers, 404 hits, over three times 95.
+    assert got["the field"]["cost"] == World.CROWD_COST and got["the field"]["creature"] == "a ettin, a gazer at once"
+    # One ettin among zombies isn't a crowd; nor are the graveyard's two spectres and two wraiths (240 hits).
+    assert "a hill" not in got and "Britain Graveyard" not in got
+    # Nor is the field to a character with 300 hits.
+    assert "the field" not in {d["area"] for d in w.dangers_between(1495, 1629, 1300, 1300, 300)}
 
 
 def test_grounds_for_a_character_hold_nothing_stronger_than_it_and_lie_outside_the_towns(w):

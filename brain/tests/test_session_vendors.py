@@ -60,7 +60,7 @@ def test_a_trip_sends_the_ground_of_stronger_creatures_for_the_client_to_go_roun
     logged = []
     asyncio.run(Session(rpc, w, None, log=logged.append).travel_to("the far bank"))
     go = next(p for m, p in rpc.calls if m == "act" and p.get("verb") == "travel")
-    assert go["avoid"] == [[1100, 1000, 30, 4]]
+    assert go["avoid"] == [[1100, 1000, 30 + World.NOTICE_RANGE, 4]]
     assert next(r for r in logged if r["event"] == "travel")["avoiding"] == 1
     # A ghost on its way to a healer is attacked by nothing: no ground to go round.
     ghost = copy.deepcopy(SNAPSHOT)
@@ -538,3 +538,76 @@ def test_a_hunt_that_finds_its_ground_empty_says_so_and_isnt_sent_back_to_it_for
     s.emptied["south-west of cove cemetery"] = (s.emptied["south-west of cove cemetery"][0] - 15 * 60, "x", "")
     assert s.empty_ground("south-west of Cove Cemetery") is None
     w.close()
+
+
+def test_a_bank_at_a_named_town_is_that_towns_and_one_that_brings_no_gold_says_the_box_holds_none(tmp_path):
+    """cuo-m3n.13: told to draw from the Vesper bank, the carrier went to Britain's, as near from Cove, and died
+    on the way; the watchman went to the bank three times to be told "moved 0 items"."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("bank", "Britain banker", 1300, 1000)
+    w.add_place("bank", "Vesper minter", 1000, 1330)
+    w.add_place("town", "Vesper", 1010, 1340)
+    w.add_place("town", "Cove", 1000, 1000)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["errand"] = {"state": "done", "detail": "moved 0 items", "moved": 0}
+    s = Session(FakeRpc(snap), w, None)
+    trips = []
+
+    async def walk(name, x, y, **kw):
+        trips.append(name)
+        from uo_brain.session import Result
+        return Result(True, "arrived")
+
+    s.travel_to = walk
+    r = asyncio.run(s.bank("", "gold:200", place="Vesper"))
+    assert trips == ["Vesper minter"] and r.ok
+    assert r.summary == "Vesper minter: moved 0 items; no gold came out: the bank box holds none"
+    # Without a town, the nearest; a town with no bank of its own is said to have none, and nothing is walked.
+    asyncio.run(s.bank("gold", ""))
+    assert trips[-1] == "Britain banker"
+    r = asyncio.run(s.bank("", "gold:200", place="Cove"))
+    assert not r.ok and r.summary == "no bank at Cove: the nearest to it is Britain banker, 300 tiles from it"
+    assert len(trips) == 2
+
+
+def test_a_hunt_with_nothing_to_heal_by_is_refused_before_the_walk(tmp_path):
+    """The watchman walked 345 tiles to hunt by Vesper with no bandages or potions, and stopped at once."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("graveyard", "Britain Graveyard", 1369, 1475, source="test")
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["player"]["supplies"] = {"bandages": 0, "heal_potions": 0}
+    s = Session(FakeRpc(snap), w, None)
+    walked = []
+
+    async def walk(*a, **kw):
+        walked.append(a)
+
+    s.travel_to = walk
+    r = asyncio.run(s.hunt("Britain Graveyard", 5))
+    assert not r.ok and not walked
+    assert r.summary.startswith("not hunting Britain Graveyard: out of bandages and heal potions; restock first")
+
+
+def test_a_corpse_that_two_deaths_lie_by_is_let_go_even_with_go_anyway(tmp_path):
+    """The watchman went back for his corpse with go_anyway three times, to the savages by it, and died each
+    time: four deaths in twenty minutes."""
+    w = World.open("test", root=tmp_path)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["player"]["last_death"] = {"x": 1100, "y": 1000, "ago_s": 300}
+    rpc = FakeRpc(snap)
+    s = Session(rpc, w, None)
+    trips = []
+
+    async def walk(*a, **kw):
+        trips.append(kw)
+        from uo_brain.session import Result
+        return Result(False, "died on the way")
+
+    s.travel_to = walk
+    assert asyncio.run(s.recover_corpse(go_anyway=True)).summary.startswith("could not get back to the corpse")
+    # Asked again about the same death: still one death there.
+    assert asyncio.run(s.recover_corpse(go_anyway=True)).summary.startswith("could not get back to the corpse")
+    rpc.snap["player"]["last_death"] = {"x": 1104, "y": 1003, "ago_s": 20}
+    r = asyncio.run(s.recover_corpse(go_anyway=True))
+    assert r.summary == "not going back, even with go_anyway: died 2 times by the corpse in 5 min; let it go"
+    assert len(trips) == 2

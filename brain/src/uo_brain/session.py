@@ -26,7 +26,7 @@ from . import calls, loop, policy, state
 from .facts import FactPicker
 from .judge import Judge
 from .logs import session_name
-from .routine import HuntWatch, RoutineConfig
+from .routine import MAGE_KINDS, HuntWatch, RoutineConfig, out_of_supplies
 from .rpc import AgentRpc, RpcError
 from .world import World, WorldError, name_score, near_xy, tiles, tokens, wilds_area
 
@@ -104,6 +104,7 @@ class Session:
         self.hunting_area = ""  # the hunt it is on or on its way to: whom a huddle's rally waits for (cuo-cym.5)
         self.raise_fallen = False  # a party raises its fallen where they fell: a ghost waits for it (cuo-cym.4)
         self.hamlet = None  # hamlet.Hamlet: where a resident lives, its home a place for travel_to (cuo-m3n)
+        self.deaths: list[tuple[int, int, float]] = []  # (x, y, wall time) of each death a corpse run was asked about
 
     def paced(self) -> dict[str, str]:
         """The pace for a short walk of the session's own, when every trip has one (travel_pace)."""
@@ -144,6 +145,10 @@ class Session:
     # On ModernUO and RunUO a corpse turns to bones 7 minutes after the death and is gone 7 minutes after that; the
     # client keeps its own as bones (AgentController.IsOwnRemains). A shard with other times would want its own.
     CORPSE_LASTS_S = 14 * 60
+    # Died this often this near the corpse while it lasts, the character isn't sent back even with go_anyway: the
+    # watchman went back three times with it to the savages by his corpse and died each time, four deaths in 20 min.
+    CORPSE_DEATHS = 2
+    CORPSE_NEAR = 30
 
     # A ModernUO spawner brings back one creature each 5 to 10 minutes (BaseSpawner.OnTick), so a ground hunted empty
     # stays thin for a while. A hunt that ends this quiet on a stop about the spot found it empty.
@@ -513,14 +518,26 @@ class Session:
         await self.act("stop")  # the client's errand would go on, and take over the next walk
         return {"state": "failed", "detail": "timed out"}
 
+    AT_TILES = 60  # a place of a kind "at" a town or place is no further than this from it
+
     async def go_near(self, kind: str, within: int, skip: set[str] = frozenset(),
-                      sells: str | None = None, max_walk: int | None = None) -> tuple[dict[str, Any] | None, Result | None]:
+                      sells: str | None = None, max_walk: int | None = None,
+                      at: str | None = None) -> tuple[dict[str, Any] | None, Result | None]:
         """The nearest place of a kind (or selling an item), walked to if further than `within`.
         With `sells`, places known not to sell that item are left out (a wandering healer is a
         healer that sells no bandages), and those known to sell it come first. With `max_walk`, a
-        place further than that isn't walked to: the result names it and how far it is."""
+        place further than that isn't walked to: the result names it and how far it is. With `at`
+        (a town or place), the one nearest that instead, if there is one within AT_TILES of it."""
         snap = await self.snap()
-        found = [p for p in self.world.find_place(kind, near=list(self.where(snap)), limit=12) if p["name"] not in skip]
+        near = list(self.where(snap))
+        if at:
+            if (target := self.resolve(at, None, None)) is None:
+                return None, Result(False, f"no place called {at!r} in the world store")
+            near = list(target[:2])
+        found = [p for p in self.world.find_place(kind, near=near, limit=12) if p["name"] not in skip]
+        if at and found and (off := tiles(*near, found[0]["x"], found[0]["y"])) > self.AT_TILES:
+            return found[0], Result(False, f"no {kind} at {target[2]}: the nearest to it is {found[0]['name']}, "
+                                           f"{off} tiles from it")
         if sells:
             want = tokens(sells)
             def stocks(p: dict[str, Any]) -> bool | None:
@@ -556,9 +573,12 @@ class Session:
                 return known[0]
         return None
 
-    async def bank(self, deposit: str = "gold,loot", withdraw: str = "") -> Result:
-        """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank."""
-        place, failed = await self.go_near("bank", 10)
+    async def bank(self, deposit: str = "gold,loot", withdraw: str = "", place: str | None = None) -> Result:
+        """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank or the one at
+        `place`. From Cove the banks of Vesper and Britain are as far, and which was nearer turned on
+        where in Cove the carrier stood: told to draw from the Vesper bank she had just walked to
+        safely, she went to Britain's and died on the way."""
+        bank, failed = await self.go_near("bank", 10, at=place)
         if failed:
             return failed
         before = (await self.snap())["player"]
@@ -567,10 +587,15 @@ class Session:
         ok = e.get("state") == "done"
         data = {"gold_carried": after.get("gold"), "weight": f"{after.get('weight')}/{after.get('weight_max')}",
                 "bandages": after["supplies"].get("bandages"), "moved": e.get("moved", 0)}
-        self.log("bank", place=place["name"], ok=ok, detail=e.get("detail"), **data)
+        self.log("bank", place=bank["name"], ok=ok, detail=e.get("detail"), **data)
         if ok:
-            self.world.add_place("bank", place["name"], place["x"], place["y"], z=place.get("z"), source="seen")
-        return Result(ok, f"{place['name']}: {e.get('detail', e.get('state'))}",
+            self.world.add_place("bank", bank["name"], bank["x"], bank["y"], z=bank.get("z"), source="seen")
+        detail = e.get("detail", e.get("state"))
+        # A withdrawal of gold that brought none: the box holds none (the watchman went three times, ten
+        # minutes a trip, to be told "moved 0 items").
+        if ok and "gold" in withdraw.lower() and (after.get("gold") or 0) <= (before.get("gold") or 0):
+            detail += "; no gold came out: the bank box holds none"
+        return Result(ok, f"{bank['name']}: {detail}",
                       data | {"weight_before": before.get("weight"), "gold_before": before.get("gold")})
 
     async def vendor(self, kind: str, words: tuple[str, ...], exclude: set[int] = frozenset(),
@@ -886,6 +911,12 @@ class Session:
                 return Result(False, f"no hunting area called {area!r} in the world store")
             return Result(False, refused + await self.grounds_words(spot[2]))
         cx, cy, name, radius = spot
+        snap = await self.snap() if self.rpc is not None else None
+        if snap and not snap["player"]["dead"] and (out := out_of_supplies(
+                snap, (self.archetype or state.archetype_of(snap)) in MAGE_KINDS)):
+            if forming is not None and self.leads_party:
+                forming.off(rally_key)
+            return Result(False, f"not hunting {name}: {out}; restock first (buy them, or withdraw them or gold at a bank)")
         self.hunting_area = name
         try:
             return await self._hunt(name, cx, cy, radius, minutes, min_bandages, max_weight_pct, log_path, forming, rally_key)
@@ -1254,6 +1285,14 @@ class Session:
         # In a soak a second death came walking back to a corpse with the lich that made it still there. Out in
         # the wilds, where only a region was looked at, the hamlet's watchman walked back to savages and died
         # on the way, more than once an hour (cuo-m3n.6).
+        when = time.time() - (ago or 0)
+        if not any(abs(t - when) < 60 and tiles(x, y, death["x"], death["y"]) <= 3 for x, y, t in self.deaths):
+            self.deaths.append((death["x"], death["y"], when))
+        here = [t for x, y, t in self.deaths
+                if 0 <= when - t <= self.CORPSE_LASTS_S and tiles(x, y, death["x"], death["y"]) <= self.CORPSE_NEAR]
+        if len(here) >= self.CORPSE_DEATHS:
+            return Result(False, f"not going back, even with go_anyway: died {len(here)} times by the corpse in "
+                                 f"{max(1, round((when - min(here)) / 60))} min; let it go")
         if not go_anyway and (danger := self.world.danger_near(death["x"], death["y"], minutes=15)):
             left = "" if ago is None else f" (it lasts about {(self.CORPSE_LASTS_S - ago) / 60:.0f} more minutes)"
             return Result(False, f"not going back yet: danger was seen by the corpse, {danger}; wait{left}, let it "

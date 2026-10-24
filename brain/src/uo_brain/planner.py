@@ -112,9 +112,12 @@ def goal_tools() -> list[dict[str, Any]]:
            "Returns kills, supplies used and why it stopped.",
            {"area": {**s, "description": "A spawn area or place name, e.g. 'Britain Graveyard'."},
             "minutes": {"type": "number", "description": "How long at most, 3 to 20."}}, ["area", "minutes"]),
-        fn("bank", "At the nearest bank (walking there first): deposit gold and/or loot, withdraw supplies.",
+        fn("bank", "At the nearest bank, or the one in a town you name (walking there first): deposit gold "
+                   "and/or loot, withdraw supplies. Every bank opens the same box.",
            {"deposit": {**s, "description": "Comma list from gold, loot, all; '' for none."},
-            "withdraw": {**s, "description": "Comma list of item:count, e.g. 'bandage:100' or 'gold:200'; '' for none."}}, []),
+            "withdraw": {**s, "description": "Comma list of item:count, e.g. 'bandage:100' or 'gold:200'; '' for none."},
+            "place": {**s, "description": "Optional: the town or place whose bank, e.g. 'Vesper'; the nearest when not given."}},
+           []),
         fn("buy", "Buy an item from the nearest vendor that sells it (walking there first, if it is within 200 "
                   "tiles; a further shop is named in the result, for a travel_to first if the trip is worth it).",
            {"item": {**s, "description": "e.g. bandage, black pearl, heal potion."},
@@ -758,7 +761,8 @@ class Planner:
                         r = Result(r.ok, f"{r.summary}; dead here now, killed by you and your party: {', '.join(dead)}{won}",
                                    r.data)
                 case "bank":
-                    r = await s.defended(s.bank(str(args.get("deposit", "gold,loot")), str(args.get("withdraw", ""))))
+                    r = await s.defended(s.bank(str(args.get("deposit", "gold,loot")), str(args.get("withdraw", "")),
+                                                **({"place": str(args["place"])} if args.get("place") else {})))
                 case "buy":
                     r = await s.defended(s.buy(str(args.get("item", "")), int(args.get("count", 1)),
                                                args.get("vendor_kind") or None))
@@ -1229,7 +1233,7 @@ def describe_goal(tool: str, args: dict[str, Any]) -> str:
         case "bank":
             parts = [p for p in (f"deposit {args.get('deposit')}" if args.get("deposit") else "",
                                  f"withdraw {args.get('withdraw')}" if args.get("withdraw") else "") if p]
-            return "banking: " + (", ".join(parts) or "looking")
+            return "banking: " + (", ".join(parts) or "looking") + (f" at {args['place']}" if args.get("place") else "")
         case "buy":
             return f"buying {args.get('count')} {args.get('item')}"
         case "sell":

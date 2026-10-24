@@ -31,6 +31,7 @@ import difflib
 import json
 import re
 import sqlite3
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -764,6 +765,13 @@ class World:
     # where no spawner is known; what each tile of it costs in extra steps, by the strongest creature there.
     SEEN_RANGE = 10
     DANGER_COST = {"far stronger": 4, "stronger": 2}
+    # A monster notices a character this far beyond the ground it walks (10 for most of ModernUO's, and 2
+    # more): a trip round the swamp at the edge of its spawns' ranges met a bog thing there and died.
+    NOTICE_RANGE = 12
+    # A spawner of fair fights is a danger when it holds this many times the character's hits at once: west
+    # of the swamp two reapers, a gazer, a gargoyle and a corpser came together and killed the carrier.
+    CROWD_TIMES = 3
+    CROWD_COST = 2
     # Spawners this far outside the box round the two ends count, or 0.6 of the trip's length: the way can
     # bend far out (from Cove to Britain's bank it runs 280 tiles north of Cove, round the hills).
     DANGER_MARGIN = 150
@@ -774,10 +782,13 @@ class World:
                         margin: int | None = None) -> list[dict[str, Any]]:
         """The ground between two points where creatures stronger than the character spawn, for travel to
         go round where the way round isn't too long (cuo-m3n.13): each spawner's square (its walk range,
-        or SEEN_RANGE round a creature seen) with the cost of a step on it and its strongest creature,
-        dearest first. Creatures that only fight back are left out. In one told hour the hamlet's
-        carrier died twice in the swamp south-east of the Shrine of Compassion, plague beasts and bog
-        things over eleven spawners, which the road from Cove to Britain's bank crosses."""
+        or SEEN_RANGE round a creature seen, and NOTICE_RANGE beyond) with the cost of a step on it and
+        its strongest creature, dearest first. Creatures that only fight back are left out. A spawner of
+        fair fights counts as stronger when the ones it holds at once have CROWD_TIMES the character's
+        hits between them (each kind its share of the spawner's count, no more than its own). In one told
+        hour the hamlet's carrier died twice in the swamp south-east of the Shrine of Compassion, plague
+        beasts and bog things over eleven spawners, which the road from Cove to Britain's bank crosses;
+        going round it, she died on its edge and in the reapers' and gargoyles' field west of it."""
         from .state import threat_words
         m = max(self.DANGER_MARGIN, round(0.6 * max(abs(ax - bx), abs(ay - by)))) if margin is None else margin
         rows = self.db.execute("SELECT * FROM spawns WHERE stale = 0 AND map = ? COLLATE NOCASE AND x BETWEEN ? AND ? "
@@ -785,7 +796,9 @@ class World:
                                                          min(ay, by) - m, max(ay, by) + m)).fetchall()
         creatures = self._creatures()
         by_name = {(r["name"] or "").lower().removeprefix("a ").removeprefix("an "): r for r in creatures.values()}
+        kinds = Counter(r["spawner"] for r in rows if r["spawner"])
         out: dict[tuple[int, int, int], dict[str, Any]] = {}
+        crowds: dict[tuple[int, int, int], dict[str, Any]] = {}
         for r in rows:
             c = creatures.get(r["creature"].lower()) or by_name.get(r["creature"].lower())
             if c is None or (c["fight_mode"] and c["fight_mode"] in PEACEFUL_MODES):
@@ -793,18 +806,26 @@ class World:
             hits = c["hits_max"] or c["hits_min"]
             if not hits:
                 continue
-            words = threat_words({"hits": hits, "difficulty": c["difficulty"]}, your_hits)
-            cost = next((v for k, v in self.DANGER_COST.items() if words.startswith(k)), 0)
-            if not cost:
-                continue
             radius = r["walk_range"] if r["walk_range"] is not None else self.SEEN_RANGE
             if radius > self.DANGER_RANGE_MAX:
                 continue
-            key = (r["x"], r["y"], radius)
+            key = (r["x"], r["y"], radius + self.NOTICE_RANGE)
+            words = threat_words({"hits": hits, "difficulty": c["difficulty"]}, your_hits)
+            cost = next((v for k, v in self.DANGER_COST.items() if words.startswith(k)), 0)
+            if not cost:
+                if words == "a fair fight" and r["spawner"] and r["spawner_count"]:
+                    g = crowds.setdefault(key, {"hits": 0.0, "area": r["area"], "names": []})
+                    g["hits"] += min(r["max_count"] or r["spawner_count"], r["spawner_count"] / kinds[r["spawner"]]) * hits
+                    g["names"].append(c["name"] or r["creature"])
+                continue
             d = out.get(key)
             if d is None or cost > d["cost"]:
-                out[key] = {"x": r["x"], "y": r["y"], "r": radius, "cost": cost, "area": r["area"],
+                out[key] = {"x": key[0], "y": key[1], "r": key[2], "cost": cost, "area": r["area"],
                             "creature": c["name"] or r["creature"]}
+        for key, g in crowds.items():
+            if g["hits"] >= self.CROWD_TIMES * max(your_hits, 1) and out.get(key, {}).get("cost", 0) < self.CROWD_COST:
+                out[key] = {"x": key[0], "y": key[1], "r": key[2], "cost": self.CROWD_COST, "area": g["area"],
+                            "creature": ", ".join(g["names"][:3]) + " at once"}
         return sorted(out.values(), key=lambda d: -d["cost"])[:self.DANGER_MAX]
 
     def grounds_for(self, x: int, y: int, your_hits: int, map: str = DEFAULT_MAP, radius: int = 250, limit: int = 3,

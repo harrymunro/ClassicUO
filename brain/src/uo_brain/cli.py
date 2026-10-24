@@ -302,9 +302,10 @@ def main() -> None:
                    help="fight what is close or attacking on the way, as the planner's trips do (Jev's defend-only loop; "
                         "never seeks or loots)")
     add_run_args(t, shard=False)
-    b = dsub.add_parser("bank", help="at the nearest bank: deposit gold/loot, withdraw supplies")
+    b = dsub.add_parser("bank", help="at the nearest bank (or --at a town's): deposit gold/loot, withdraw supplies")
     b.add_argument("--deposit", default="gold,loot")
     b.add_argument("--withdraw", default="", help='e.g. "bandage:100,heal potion:5"')
+    b.add_argument("--at", default=None, help="the town or place whose bank (default: the nearest)")
     bu = dsub.add_parser("buy", help="buy an item from the nearest vendor that sells it")
     bu.add_argument("item")
     bu.add_argument("count", type=int)
@@ -1292,7 +1293,7 @@ async def do_goal(rpc: AgentRpc, args) -> None:
                     trip = session.travel_to(args.place, distance=args.distance, timeout_s=args.timeout)
                 res = await (session.defended(trip) if args.defend else trip)
             case "bank":
-                res = await session.bank(args.deposit, args.withdraw)
+                res = await session.bank(args.deposit, args.withdraw, args.at)
             case "buy":
                 res = await session.buy(args.item, args.count, args.vendor)
             case "sell":

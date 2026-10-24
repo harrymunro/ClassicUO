@@ -125,7 +125,7 @@ class HuntWatch:
     # ------------------------------------------------------------ snapshots
 
     def mage(self, snap: dict[str, Any]) -> bool:
-        return self.kind(snap) in ("mage", "mage-tamer", "necromancer")
+        return self.kind(snap) in MAGE_KINDS
 
     def kind(self, snap: dict[str, Any]) -> str:
         return self.archetype or archetype_of(snap)
@@ -209,20 +209,12 @@ class HuntWatch:
     def floor(self, snap: dict[str, Any], quiet_s: float) -> str | None:
         """The stops that need no judgment."""
         p = snap["player"]
-        s = p.get("supplies", {})
         if p["dead"]:
             return "died"
         if p.get("weight_max") and p["weight"] * 100 >= self.cfg.full_bag_pct * p["weight_max"]:
             return "the bag is full"
-        if self.mage(snap):
-            book = [sp for sp in (snap.get("magic") or {}).get("spells", [])
-                    if sp["name"] in ATTACK_SPELLS or sp["name"] in NECRO_ATTACK_SPELLS]
-            if book and all(sp.get("missing") == "reagents" for sp in book):
-                return "out of reagents for every attack spell"
-        elif s.get("bandages", 0) == 0 and s.get("heal_potions", 0) == 0:
-            return "out of bandages and heal potions"
-        if (a := ammo(p)) and a[1] == 0:
-            return f"out of {a[0]}"
+        if out := out_of_supplies(snap, self.mage(snap)):
+            return out
         if self.first and (self.first.get("pets") or []) and not (snap.get("pets") or []) \
                 and (p.get("skills") or {}).get("Animal Taming", 0) >= 50:
             return "the pet is gone"
@@ -449,6 +441,26 @@ def questions(words: dict[str, Any], who: str, strategy: str = "", quiet: bool =
             },
         }
     return qs
+
+
+MAGE_KINDS = ("mage", "mage-tamer", "necromancer")  # who hunts on reagents, not bandages
+
+
+def out_of_supplies(snap: dict[str, Any], mage: bool) -> str | None:
+    """The supplies a hunt can't go on without, gone: a hunt stops on it, and one isn't set off on
+    (the watchman walked 345 tiles to hunt with an empty pack and stopped at once)."""
+    p = snap["player"]
+    s = p.get("supplies", {})
+    if mage:
+        book = [sp for sp in (snap.get("magic") or {}).get("spells", [])
+                if sp["name"] in ATTACK_SPELLS or sp["name"] in NECRO_ATTACK_SPELLS]
+        if book and all(sp.get("missing") == "reagents" for sp in book):
+            return "out of reagents for every attack spell"
+    elif s.get("bandages", 0) == 0 and s.get("heal_potions", 0) == 0:
+        return "out of bandages and heal potions"
+    if (a := ammo(p)) and a[1] == 0:
+        return f"out of {a[0]}"
+    return None
 
 
 def ammo(p: dict[str, Any]) -> tuple[str, int] | None:

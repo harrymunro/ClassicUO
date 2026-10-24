@@ -4080,7 +4080,52 @@ uv run uo-brain --port 5580 do travel "East Britain bank" --defend --judge jev -
   `priced_steps` 42 on the first hop and 0 on the second.
 - **The road ahead:** the snapshot's `travel.ahead` gave the plan's tile 10 steps on all the way (at 2258,933 it
   pointed to 2262,925, north-west with the road, while Britain lay south-west).
-- Not yet measured: the carrier's trips in a hamlet run.
+#### In a told hour, then the ground widened
+
+2026-10-24, the test server (2593), one told hour of the hamlet on that brain (90c3f5dbd) and client, headless,
+memory on, the residents' memories set aside. Single run.
+
+```bash
+cd brain
+uv run uo-brain fleet fleets/hamlet-cove.toml --out logs/fleet/20261024-104251-hamlet-cove-told-m3n13
+uv run uo-brain hamlet-report logs/fleet/20261024-104251-hamlet-cove-told-m3n13 \
+  --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort"
+```
+
+- **The hour:** 13 kills, 6 deaths counted (Brannoc 4, Tamsin 2, and a third of hers in the hour's last
+  minute), $0.352. Wenna 9 kills and Maren 4, neither dying; in Cove or its lands Brannoc 43%, Wenna 83%, Maren
+  89%, Tamsin 52%; home between work 13 of 25.
+- **The bank road:** Tamsin banked 300 gold at Vesper (298 s there, 324 s back, `priced_steps` 6 and 0), and
+  Brannoc made three round trips to it, all arrived. Told to draw from "the Vesper bank", she was sent to
+  Britain's, as near from where she stood in Cove, and died on the way twice: once at 1905,1266 to two reapers,
+  a gazer, a gargoyle and a corpser together, each a fair fight and so not priced, from the spawners west of the
+  swamp (89% to dead in 5 s); once at 2042,880, the plan's line along the swamp's north edge, where a bog thing
+  came out to her from its spawn (100% to 18% in 3 s). The swamp itself was gone round.
+- **Brannoc** died on the fort road (his own hunt there), then went back for his corpse with `go_anyway` three
+  times and died each time; then three trips to Vesper's bank, 10 minutes each, for "moved 0 items" (the box
+  holds no gold), and one to hunt by Vesper with no bandages or potions, which stopped at once.
+
+So the ground priced grew (cuo-m3n.13): each square reaches `NOTICE_RANGE` (12) beyond the walk range, as far as
+a monster notices a character from (10 for most of ModernUO's), and a spawner of fair fights is priced as
+stronger when those it holds at once have three times the character's hits between them. The bank goal takes the
+town whose bank (`place`), and says when a withdrawal of gold brought none; a hunt with nothing to heal by is
+refused before the walk; and two deaths by a corpse end the going back for it, `go_anyway` or not. The plans again,
+from the Cove healer and from Cove, for Brutus (95 hits), single runs:
+
+```bash
+uv run python scripts/route_check.py 5580 2245 1229 1653 1610    # to East Britain bank
+uv run python scripts/route_check.py 5580 2217 1192 2880 683     # to the Vesper minter
+```
+
+| plan | steps | on priced ground | sampled points on far-stronger / stronger ground |
+|---|---|---|---|
+| the Cove healer to East Britain bank, as before | 1266 | (not priced) | 6 / 13 of 41 |
+| the same, priced (77 squares) | 1478 | 208 | 3 / 4 of 47 |
+| Cove to the Vesper minter, as before | 765 | (not priced) | 0 / 10 of 26 |
+| the same, priced (80 squares) | 872 | 22 | 0 / 0 of 28 |
+
+The Britain road can't go round all of it: from Cove the only way west passes between the swamp and the fields of
+fair fights, so the Vesper bank is the safer one by far, and the planner can now name it.
 
 ## After a death
 
