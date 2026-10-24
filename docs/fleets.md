@@ -998,7 +998,9 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   `day_minutes = 60` and `evening_minutes = 15` in `[hamlet]` make a run days of an hour whose last quarter
   is the evening, on one clock for every resident (from the run's start). Each turn says the time of day ("day
   2, afternoon; evening (the gathering at the healer's house) in about 12 minutes"), and of an evening the
-  planner is offered the `evening` goal: the resident walks to the gathering place; the first there keeps the
+  planner is offered the `evening` goal (from 3 minutes before it begins: a resident that sets off early waits
+  there for it, since asked a minute early every resident was told "it isn't evening yet" three to seven
+  times running): the resident walks to the gathering place; the first there keeps the
   turns (a claim in the shared store, so two brains don't both host) once a neighbour has come (waiting up to
   150 s, or 60 s once one has), and the others sit as they come. It is the party's table
   ([the inn](#a-party-in-a-fight-on-the-road-and-at-the-inn)) in a hamlet scene: neighbours talking the day

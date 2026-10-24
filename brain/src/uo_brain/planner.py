@@ -173,9 +173,9 @@ def evening_tool(place: str) -> dict[str, Any]:
     return {"type": "function", "function": {
         "name": "evening",
         "description": f"Of an evening, go to {place} where the neighbours gather, sit with whoever comes and talk the "
-                       "day over: what each did, news, worries, tomorrow. Each remembers what was said. Only in the "
-                       "evening (each turn says the time of day); it takes a few minutes, and it is the hamlet's way "
-                       "of ending a day.",
+                       "day over: what each did, news, worries, tomorrow. Each remembers what was said. In the evening, "
+                       "or up to 3 minutes before it to be there when it begins (each turn says the time of day); it "
+                       "takes a few minutes, and it is the hamlet's way of ending a day.",
         "parameters": {"type": "object", "properties": {
             "why": {"type": "string", "description": "One short sentence for the player: why this goal now."}},
             "required": ["why"]}}}

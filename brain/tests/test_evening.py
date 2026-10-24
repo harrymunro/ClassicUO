@@ -48,6 +48,8 @@ def test_a_day_has_its_evening_and_each_turn_says_the_time_of_day():
     assert not h.is_evening(1000.0 + 44 * 60) and h.is_evening(1000.0 + 46 * 60)
     assert h.evening_key(1000.0 + 50 * 60) == "evening 1" and h.evening_key(1000.0 + 110 * 60) == "evening 2"
     assert h.when(1000.0 + 5 * 60) == "day 1, morning; evening (the gathering at the healer's house) in about 40 minutes"
+    assert h.when(1000.0 + 44.5 * 60).endswith("in under a minute")  # it said "in about 0 minutes"
+    assert h.until_evening(1000.0 + 43 * 60) == 120 and h.until_evening(1000.0 + 50 * 60) == 0
     assert h.when(1000.0 + 30 * 60).startswith("day 1, afternoon")
     assert h.when(1000.0 + 50 * 60) == ("day 1, evening: the neighbours gather at the healer's house to talk the day "
                                         "over (the `evening` goal), for about 10 more minutes")
@@ -110,14 +112,21 @@ def test_the_neighbours_talk_their_day_over_and_keep_what_they_learned_of_each_o
 
 
 class Walker:
-    """A resident's session: its trips, and what its client sees at the gathering place."""
+    """A resident's session: its trips, and what its client sees at the gathering place. A rest moves the hamlet's
+    clock on (`clock`) as if the time had passed."""
 
-    def __init__(self, seen=()):
-        self.trips, self.seen = [], list(seen)
+    def __init__(self, seen=(), clock=None):
+        self.trips, self.seen, self.rested, self.clock = [], list(seen), [], clock
 
     async def travel_to(self, *a, **kw):
         self.trips.append((a, kw))
         return Result(True, "arrived")
+
+    async def rest(self, seconds):
+        self.rested.append(seconds)
+        if self.clock is not None:
+            self.clock.began -= seconds
+        return Result(True, f"rested {seconds} s")
 
     async def snap(self):
         return {"player": {"x": 2245, "y": 1231},
@@ -130,6 +139,14 @@ def test_the_evening_goal_hosts_when_first_and_sits_when_a_table_is_open(tmp_pat
     h = maren(began=0.0)
     early = asyncio.run(hamlet.gathering(Walker(), neighbour(w, "Maren"), Hamlet.from_json({**h.to_json(), "began": 10**10})))
     assert not early.ok and "isn't evening yet" in early.summary
+    # Two minutes before it begins she sets off and waits there for it, rather than be told to wait and ask again.
+    soon = Hamlet.from_json({**h.to_json(), "began": __import__("time").time() - 43 * 60})
+    walker = Walker(clock=soon)
+    monkeypatch.setattr(hamlet, "GATHER_S", 0.0)
+    alone = asyncio.run(hamlet.gathering(walker, neighbour(w, "Maren"), soon))
+    assert walker.trips and 115 <= walker.rested[0] <= 125
+    assert "no neighbour came" in alone.summary
+    monkeypatch.setattr(hamlet, "GATHER_S", 150.0)
     h.began = __import__("time").time() - 50 * 60  # 50 minutes into the day: evening
     seats = {n: neighbour(w, n) for n in ("Maren", "Wenna")}
 

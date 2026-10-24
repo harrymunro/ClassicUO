@@ -65,6 +65,7 @@ WORK_GOALS = ("hunt", "sell", "buy", "bank", "restock", "travel_to")
 GATHER_S = 150.0   # the first at an evening's gathering waits this long for the others
 GATHER_SOME_S = 60.0  # ...or this long once one other has come
 GATHER_TILES = 8   # close enough to the gathering place to be at it
+EARLY_S = 180.0    # a resident may set off for the evening this long before it begins, and waits there
 HOME_WORDS = re.compile(r"^\s*(?:back\s+)?(?:to\s+)?(?:my\s+|our\s+|the\s+)?(?:home|house)\b(?:\s*\(.*\))?\s*$", re.I)
 
 
@@ -156,6 +157,10 @@ class Hamlet:
     def is_evening(self, now: float) -> bool:
         return self.gather is not None and self.day_of(now)[1] >= self.day_s - self.evening_s
 
+    def until_evening(self, now: float) -> float:
+        """Seconds until the evening begins: 0 in one, else until today's (tomorrow's once it is over)."""
+        return 0.0 if self.is_evening(now) else self.day_s - self.evening_s - self.day_of(now)[1]
+
     def evening_key(self, now: float) -> str:
         return f"evening {self.day_of(now)[0]}"
 
@@ -167,7 +172,9 @@ class Hamlet:
             return (f"day {day}, evening: the neighbours gather at {self.gather['words']} to talk the day over "
                     f"(the `evening` goal), for about {int(left // 60)} more minutes")
         part = "morning" if into < (self.day_s - self.evening_s) / 2 else "afternoon"
-        return f"day {day}, {part}; evening (the gathering at {self.gather['words']}) in about {int((left - self.evening_s) // 60)} minutes"
+        soon = left - self.evening_s
+        return (f"day {day}, {part}; evening (the gathering at {self.gather['words']}) "
+                + (f"in about {int(soon // 60)} minutes" if soon >= 60 else "in under a minute"))
 
     # ------------------------------------------------------------ words
 
@@ -265,7 +272,7 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
     now = time.time()
     if hamlet.gather is None:
         return Result(False, f"{hamlet.name} has no evening gathering")
-    if not hamlet.is_evening(now):
+    if hamlet.until_evening(now) > EARLY_S:
         return Result(False, f"it isn't evening yet: {hamlet.when(now)}")
     place = hamlet.gather
     r = None
@@ -275,6 +282,10 @@ async def gathering(session: Any, table: Any, hamlet: Hamlet, stop: Any = None) 
             break
     if r is None or not r.ok:
         return Result(False, f"did not reach {place['words']}: {r.summary if r else ''}", r.data if r else {})
+    # Set off a little early, as a neighbour would, and wait there: asked a minute before it began, every resident was
+    # told "it isn't evening yet" three to seven times running and asked again at once.
+    if 0 < (early := hamlet.until_evening(time.time())) <= EARLY_S:
+        await session.rest(int(early) + 1)
     if not hamlet.is_evening(time.time()):
         return Result(False, f"at {place['words']}, but the evening is over: {hamlet.when(time.time())}")
     key = hamlet.evening_key(time.time())  # the evening of the arrival: a trip can outlast one
