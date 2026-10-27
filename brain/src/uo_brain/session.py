@@ -260,7 +260,10 @@ class Session:
         the healer's house in Cove, and nobody called (cuo-m3n.14). Staged there, a lich took a warrior from 95
         hits to 25 in 8 s with no guard; called at its first strike, a guard killed it in a second. A savage rider
         that had followed Wenna home from the fort took her from full health to a fifth in one blow at her door:
-        it is a candidate only from its first harm inside the town, so a fresh hit is called on at once."""
+        it is a candidate only from its first harm inside the town, so a fresh hit is called on at once. A savage is
+        red ("murderer") to the client whatever it does (AlwaysMurderer), though harming an innocent makes it criminal
+        and a candidate like any other, so a red creature fighting close by is called on too: savages killed all seven
+        who died in a lands hour, one of them at the watchman's gate in Cove, and the call never came (cuo-m3n.20)."""
         if self.rpc is None or not snap.get("in_game") or snap["player"]["dead"]:
             return
         p = snap["player"]
@@ -269,8 +272,10 @@ class Session:
         now = time.monotonic()
         if now - self._guards_called < (self.GUARDS_HIT_S if hit else self.GUARDS_EVERY_S):
             return
-        on = [m for m in snap.get("mobiles", []) if m.get("notoriety") == "criminal" and not m.get("dead")
-              and m.get("distance", 99) <= self.GUARDS_TILES and m.get("name") not in self.pcfg.companions]
+        on = [m for m in snap.get("mobiles", []) if not m.get("dead") and m.get("distance", 99) <= self.GUARDS_TILES
+              and m.get("name") not in self.pcfg.companions
+              and (m.get("notoriety") == "criminal" or m.get("notoriety") == "murderer" and m.get("monster")
+                   and (m.get("war_mode") or m.get("attacking_me")))]
         if not on or not self.guarded(p["x"], p["y"]):
             return
         self._guards_called = now

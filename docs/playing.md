@@ -222,7 +222,11 @@ In a town the world store has as guarded, the character says "Guards!" when a cr
 has turned criminal, which one does by harming an innocent (its notoriety in the snapshot goes from grey to
 criminal), and again every 8 s while one is still about, or at once when the character is hit (a creature that
 followed it in from outside is a candidate only from its first harm inside the town: a savage rider that followed a
-resident home from the orc fort took her from full health to a fifth in one blow at her door). It runs beside every goal, in the session's look at each
+resident home from the orc fort took her from full health to a fifth in one blow at her door). A red creature
+(notoriety "murderer") fighting close by, in war mode or attacking the character, is called on too: a savage is red
+to the client whatever it does, though harming an innocent makes it criminal and a candidate like any other, and
+savages killed all seven who died in a lands hour of the hamlet, one at the watchman's gate in Cove, with the call
+never made (cuo-m3n.20). A red player is not. It runs beside every goal, in the session's look at each
 snapshot, and the session log has a `guards` record of each call. On ModernUO a guard then comes at once for any
 such one within 14 tiles of the caller and kills it; without a call, one comes only if a townsperson stood within 8
 tiles of the creature when it first struck (`GuardedRegion`). A lich that followed a hamlet resident home killed

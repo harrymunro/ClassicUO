@@ -843,6 +843,13 @@ def test_in_a_guarded_town_a_creature_turned_criminal_close_by_is_called_the_gua
         snap["player"]["x"], snap["mobiles"][0]["notoriety"], snap["mobiles"][0]["distance"] = x, noto, far
         asyncio.run(look(snap))
     assert len(said()) == 3
+    # cuo-m3n.20: a savage is red whatever it does; fighting close by, it is called on; standing about, or a red player, not.
+    for war, monster in ((False, True), (True, False), (True, True)):
+        s._guards_called -= Session.GUARDS_EVERY_S
+        snap["player"]["x"] = 1000
+        snap["mobiles"][0].update(name="a savage rider", notoriety="murderer", distance=4, war_mode=war, monster=monster)
+        asyncio.run(look(snap))
+    assert len(said()) == 4 and [r for r in logged if r["event"] == "guards"][-1]["on"] == ["a savage rider"]
 
 
 class Looks(FakeRpc):

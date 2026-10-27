@@ -4240,6 +4240,60 @@ uv run uo-brain hamlet-report logs/fleet/RUN --lands "south-west of Cove Cemeter
   is left is mostly Tamsin, 18 of 49 in the ten hours against 105 of 142 for the other three (hunt after hunt out
   east, and the bank straight from a hunt), and pieces broken by a death (a resurrection and a corpse walk between).
 
+### The lands hour with the bank chosen by its road (cuo-m3n.3, cuo-m3n.17, cuo-m3n.18, cuo-m3n.19)
+
+2026-10-27, the test server (2593), `hamlet-cove-lands.toml` on the brain frozen at ba83a7c7d (the bank by its road,
+the recount) and the client that plans from a given tile, headless, memory on, the residents' memories set aside.
+Single run. Not filmed.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-m3n17 uv run uo-brain fleet fleets/hamlet-cove-lands.toml \
+  --out logs/fleet/20261027-072845-hamlet-cove-lands-m3n17
+uv run uo-brain hamlet-report logs/fleet/20261027-072845-hamlet-cove-lands-m3n17
+```
+
+| | Brannoc | Wenna | Maren | Tamsin | the four |
+|---|---|---|---|---|---|
+| in Cove or its lands | 77% | 52% | 93% | 37% | 65% |
+| in Cove itself | 46% | 34% | 69% | 36% | 46% |
+| home between pieces of work | 3 of 4 | 3 of 3 | 3 of 3 | 4 of 5 | 13 of 15 |
+| kills, deaths | 3, 2 | 10, 3 | 4, 0 | 4, 2 | 21, 7 |
+
+$0.327 together ($0.315 an hour), 57 lines to a neighbour. Home between work 13 of 15 counts Maren's walks to her
+neighbours' homes as no pieces of work (they had made 22 of 26 before that change in the report).
+
+- **Six deaths of seven were the orc fort's:** Brannoc twice and Wenna twice at the fort or going back for a corpse
+  there, Tamsin twice on the road east of Cove by it (savages, and liches seen). The watchman's work there waits on
+  cuo-m3n.12.
+- **The bank by its road:** Tamsin banked 460 gold at Vesper's bank from her hunt by the cemetery (the nearest from
+  there by more than the margin, so nothing compared), 280 s there. Wenna, with no gold, bandages or potions after
+  losing her corpse at the fort, asked the bank for 200 gold from her house: East Britain 1457 steps with 234 priced,
+  Minoc 953 with 41, Vesper 847 with 63, so Minoc's, by 4 of 1158. South-west of Minoc, on ground priced for crowds of
+  fair fights (trolls, orcish mages, ettins, ogres), a troll and an orcish mage took her to 34% at 2489,803; she fled
+  400 tiles west, healed, and the trip walked her back the same way: dead at 2431,726 (cuo-m3n.19). The same walk
+  for Tamsin with nothing to heal by, afterwards, met nobody and arrived unhurt in 221 s.
+- **Maren's visits:** sent to look at Tamsin's arm, she walked to Tamsin's home four times in four minutes, each time
+  told only "arrived at Tamsin's home in 19 s"; Tamsin was out at the fort, and dead for the last two (cuo-m3n.18).
+- **Away:** Wenna's 52% and Tamsin's 37% are mostly the fort's deaths (resurrections, corpse walks) and their trips to
+  the banks of Minoc and Vesper; Wenna's farthest was 508 tiles, on the Minoc road.
+
+So a trip that is beaten below half its hits on the way, and is then 20 tiles back from there and further from the goal
+with nothing threatening in sight, stops and says so, and for half an hour a bank road near that spot isn't chosen
+while another is ([travel](goals.md#travel-banking-shops-and-hunting)); a trip begun hurt isn't taken for one driven back.
+A visit to a neighbour's home says whether they are there. Checked live on the test server, single runs:
+
+- **Driven back, staged:** with the character below half its hits and moved 30 tiles back 6 s into a walk east
+  (`[AgentGo`, standing in for a flight), the trip stopped after 6 s: "driven back on the way to 5845,1100: down to
+  32% of health at 5747,1100 by creatures, now 32 tiles back from there; the way to 5845,1100 goes past it again".
+  That was before the rule left out a trip begun hurt; the rule as it stands is checked by tests only. A real flight
+  on the way didn't come off in eleven stagings on the test field: against creatures that stand still or come at a
+  character on a straight road, it ran past them (lowest 72% to 100%), pushed through to the goal (28%), or died (two
+  ogre lords, 100% to 9% in one exchange; six creatures in 19 s).
+- **A neighbour's home:** with Maren's hamlet, "arrived at Brannoc's home in 17 s; Brannoc isn't here (not in
+  sight)" with him logged out, and as a ghost (the living don't see ghosts); "Brannoc is here, 0 tiles away,
+  unhurt" with him at his gate (now "beside you"); "Wenna isn't here (not in sight)".
+
 ## Calling the guards (cuo-m3n.14)
 
 2026-10-24, the soak server (2595), one headless warrior (Brutus, 95 hits) in Cove's street at 2262,1212, inside the
@@ -4266,6 +4320,31 @@ uv run uo-brain --port 5580 say "[AgentSpawn Lich 1 5 e 15"; uv run uo-brain --p
 - A lich that wasn't the staff's, led in from the cemetery, couldn't be staged: none was there, and the undead that
   were didn't follow the warrior 160 tiles into town.
 - In a told hour of the hamlet after it ([above](#a-second-told-hour-on-the-widened-ground)), nothing turned criminal near a resident in Cove, and nothing was called.
+
+### Savages, red whatever they do (cuo-m3n.20)
+
+2026-10-27, the same server, spot and warrior; a savage rider spawned 5 tiles east. The session's own call runs at
+each look (`Session.seen`), with the agent on but fighting, moving and looting off, so the rider strikes first (with
+the agent off the session's "Guards!" is refused: "misc is off"). Single runs.
+
+```bash
+cd brain
+uv run python scripts/guards_check.py 5580 SavageRider --say    # the line at the first strike, agent off
+```
+
+| run | the rider | the character |
+|---|---|---|
+| agent off, "Guards!" said at the first strike (`guards_check.py`) | killed by a guard a second later | 17 of 95 after the one strike |
+| the session's call with the agent off (twice) | called at the first blow, but the line was refused ("misc is off"): no guard | dead in 14 to 16 s |
+| the session's call, agent on but not fighting | went into war mode beside him at 11 s: "Guards!" then; killed by a guard a second later | unhurt |
+| the same again | the same, at 11 s | unhurt |
+| the control: nobody calls until he is below 40 hits | one blow at 12 s; called then, killed by a guard at 13 s | 23 of 95 |
+
+- A savage rider's notoriety stays "murderer" throughout (it is AlwaysMurderer); the server makes it criminal at its
+  first swing on an innocent, so a guard comes for it from then. The session now calls on a red creature in war mode
+  within 13 tiles, which it was a second before its first blow both times.
+- In the lands hour of 2026-10-27 ([above](#the-lands-hour-with-the-bank-chosen-by-its-road-cuo-m3n3-cuo-m3n17-cuo-m3n18-cuo-m3n19)) savages killed all seven who died; the guards
+  were called twice, both times on a lich.
 
 ## After a death
 
