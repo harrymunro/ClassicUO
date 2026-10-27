@@ -625,13 +625,18 @@ def test_a_plan_that_holds_for_a_look_sends_its_members_to_the_edge_to_look(tmp_
     assert asyncio.run(h.clear_to_go(looks, "Britain Graveyard", "nothing hostile in view. The party here: Isolde.")) == 0.8
     assert asyncio.run(h.clear_to_go(looks, "Britain Graveyard", "a lich (14 tiles off)")) == 0.2
     # After LOOKS looks that didn't send them in, the plan's hold is left to each planner.
-    assert asyncio.run(h.holds_for_a_look(looks, "Britain Graveyard"))
-    h.looked.extend([(time.time(), "Britain Graveyard")] * huddle.LOOKS)
-    assert not asyncio.run(h.holds_for_a_look(looks, "Britain Graveyard"))
-    h.looked.clear()
+    assert asyncio.run(h.holds_for_a_look(looks, "Britain Graveyard")) and h.looks_failed("Britain Graveyard") == 0
     out = asyncio.run(h.seen_from_edge("Britain Graveyard", "a lich (14 tiles off)"))
     assert out["reason"].startswith("the party looked from the edge of Britain Graveyard as the plan said") \
-        and out["reason"].endswith("a lich (14 tiles off)") and h.board()["rev"] == rev + 1 and len(h.looked) == 1
+        and out["reason"].endswith("a lich (14 tiles off)") and h.board()["rev"] == rev + 1
+    # Counted from the party's board, so a member who didn't hold the rally knows it too.
+    other = member(w, "Wystan", mem=False)[0]
+    w.db.execute("UPDATE party_board SET target = ? WHERE rev = ?", (scout, rev + 1))  # the new plan holds for a look again
+    assert other.looks_failed("Britain Graveyard") == 1 and other.looks_failed("Covetous") == 0
+    assert asyncio.run(other.holds_for_a_look(looks, "Britain Graveyard"))
+    w.db.execute("UPDATE party_board SET reason = ? WHERE rev = ?", (out["reason"], rev))  # ...and a second failed look
+    other = member(w, "Wystan", mem=False)[0]
+    assert not asyncio.run(other.holds_for_a_look(looks, "Britain Graveyard"))
     # Not a plan that holds them for something else (a raise, a rest).
     rest = "Hold at the Britain healer until Wystan is raised; then the graveyard."
     asyncio.run(member(w, "Roland", going_chat(NAMES[:2], target=rest), mem=False)[0].call("Wystan died"))

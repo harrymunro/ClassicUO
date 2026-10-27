@@ -26,10 +26,10 @@ password = "headless3"
 port = 5671
 profile = "npc"
 persona = { background = "a former soldier who took the watchman's post in a small coastal hamlet", temperament = "dutiful and gruff; slow to trust strangers, steady in a fight", trade = "watchman", wants = "to keep the orcs from ever reaching the houses" }
-long_goals = ["reach 85 swordsmanship", "keep the orcs to the south away from my neighbours"]
+long_goals = ["keep watch over Cove, so that nothing that comes in reaches my neighbours", "reach 85 swordsmanship"]   # the watch first (cuo-m3n.12)
 home = "Cove Gates"
 home_words = "the gatehouse by the east gate"
-work = "keeps watch over the hamlet: rounds of its posts with the watch goal (the east gate, the healer's house, the guard post to the north), fighting what comes into Cove; a sweep near the Cove Orc Fort to the south (the hunting area 'near Cove Orc Fort') only when what is there is a fair fight, and back on watch after it"
+work = "keeps watch over the hamlet: his day is rounds of its posts with the watch goal (the east gate, the healer's house, the guard post to the north), fighting what comes into Cove, and rest at the gatehouse between them; now and then a hunt on Cove's lands for his swordsmanship, where the fights are fair for one alone, and back on watch after it"
 posts = ["Cove Gates", "Cove healer", "Cove Guard Post"]   # the watch's round (cuo-m3n.12)
 prep = ["[AgentReset", "[AgentGo 2283 1209", "[AgentKit warrior", "[AgentSupplies bandages 50 gold 200"]
 

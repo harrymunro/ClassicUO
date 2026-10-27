@@ -635,7 +635,10 @@ personas and no talk.
     first there waited for whom the plan sends. With the plan sending its members in (2026-10-19): memory
     off, all five were sent at once and in the fight within 5.0, 14.0 and 6.6 s, the lich dead in 19 to
     35 s (three died in one run); memory on, every plan held the party back until a scout nobody made, and
-    nobody went in.
+    nobody went in. With the look from the edge (2026-10-27, memory on, five runs): in four the party looked,
+    went in behind the warrior with every member in within 3.9 to 4.8 s, and killed the lich every time (the
+    warrior died in two); in the fifth, on the first wording of the question, the plan wasn't read as waiting
+    for a look and nobody went ([results](results.md#a-party-that-goes-in-together)).
 
 ## A party for the player
 

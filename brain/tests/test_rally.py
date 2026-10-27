@@ -2006,6 +2006,14 @@ def test_a_plan_that_holds_the_party_back_until_it_has_looked_is_looked_at_from_
     out = asyncio.run(r.before_hunt(key, "Britain Graveyard", 1369, 1475, 15))
     assert out["formed"] and out["looked"]["clear"] and out["looked"]["p"] == [0.3, 0.7]
     assert "1 coming at the party" in out["looked"]["seen"] and roland.rally(key)["state"] == "go"
+    # ...and the fight coming to them while they look: in as one, whatever the yes/no says.
+    w.db.execute("DELETE FROM party_rally")
+    r = rally.Rally(Field(w, [here]), roland, plan="huddle")
+    r.sends, r.look = (lambda area: ["Roland", "Isolde"]), Look([0.1])
+    r.s.snaps = [here, here, at(1392, 1517, [companion("Isolde", 1), {**lich, "war_mode": True, "distance": 7, "dx": 7}],
+                                name="Roland")]
+    out = asyncio.run(r.before_hunt(key, "Britain Graveyard", 1369, 1475, 15))
+    assert out["formed"] and out["looked"]["clear"] and out["looked"]["contact"] and roland.rally(key)["state"] == "go"
     # A plan that sends them in now, or a leader's party: nothing is looked at.
     w.db.execute("DELETE FROM party_rally")
     r = rally.Rally(Field(w, [here]), roland, plan="huddle")

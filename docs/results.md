@@ -13,7 +13,7 @@
 - **Sessions towards a goal:** [Unattended runs](#unattended-runs), [Travel and errands](#travel-and-errands), [Routine hunt calls](#routine-hunt-calls), [Calling the guards](#calling-the-guards-cuo-m3n14), [After a death](#after-a-death), [After-action review run](#after-action-review-run)
 - **World knowledge and memory:** [World store and fact picking](#world-store-and-fact-picking), [UO Renaissance's map page](#uo-renaissances-map-page), [Map markers](#map-markers), [The planner with memories](#the-planner-with-memories), [Long-range memory over a long soak](#long-range-memory-over-a-long-soak)
 - **Several agents:** [Several agents on one server](#several-agents-on-one-server), [Headless clients](#headless-clients), [A party on one plan](#a-party-on-one-plan), [A party that helps, calls out and talks](#a-party-that-helps-calls-out-and-talks), [A party that goes in together](#a-party-that-goes-in-together), [NPCs with lives of their own](#npcs-with-lives-of-their-own), [A hamlet of AI residents](#a-hamlet-of-ai-residents)
-- **Public shards:** [Renaissance rules rehearsal](#renaissance-rules-rehearsal)
+- **Public shards:** [Renaissance rules rehearsal](#renaissance-rules-rehearsal), [Attended play](#attended-play-cuo-49t)
 
 ## Arena
 
@@ -3633,6 +3633,50 @@ uv run python scripts/plan_check.py --out bench/2026-10-19-plans-asked.json     
   are in within a few seconds" can't be shown there; with it off the five were in within 5 and 7 s in two
   runs and 14 s in one.
 
+**The party looks from the edge** (cuo-cym.14, 2026-10-27 15:18 to 16:45): a plan that holds the party back for
+a sighting sends those it names to the edge together; the one holding the rally looks, and they go in only if
+system one says what they see meets the plan's condition, or when the fight comes to them. The lich scene,
+`plan=huddle`, formed up, memory on (the members remember every earlier run's deaths to the lich), on the brain
+frozen at `src-frozen-27b`, the client in `bin/osx-arm64-next`, seven minutes between runs for the accounts.
+Run 1 was filmed (the clients filming themselves); the others headless. Runs 1 and 2 had the first wording of the
+question whether a plan waits for a look; run 3 on, the reworded one; run 5 also ends the look when something comes
+at the party within 8 tiles.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-27b uv run uo-brain fleet fleets/party-lich.toml --set plan=huddle --set form_up=true \
+  --out logs/fleet/20261027-155733-party-lich-huddle-look-3
+uv run python scripts/party_scene.py logs/fleet/20261027-155733-party-lich-huddle-look-3
+uv run python scripts/look_check.py --models decision1,jev --out bench/2026-10-27-look-asked.json   # the question, offline
+```
+
+| run | the plan's condition | read as a look | at the edge | first in | all in within | deaths | the lich dead |
+|---|---|---|---|---|---|---|---|
+| 1 (filmed) | "Scout ... first. Enter only if no lich is seen and only single or paired undead are in view" | 1.0 | no, no, then yes with a bone knight and a skeleton left in view (9 s) | Roland | 4.7 s | 0 | 24.5 s |
+| 2 | "Before entering, a fresh scout from the western edge ... must show no lich" | 0.22 to 0.29 | nobody sent: the wave came to them resting at the start | Corwin | 11.1 s | 1 | no |
+| 3 | "Hold at the western edge until a fresh scout confirms no lich in sight, then enter" | 1.0 | no, no as skeletons came, then yes (0.85) | Roland | 4.8 s | 0 | 41.3 s |
+| 4 | "Scout first from the western edge ... no lich" | yes | the lich in view: no for 30 s while the wave came at them | Roland | 3.9 s | 1 (Roland) | 35.0 s |
+| 5 | "Enter only after a fresh scout ... shows no lich and no pack of three or more" | yes | the lich in view: no; skeletons came at them, in as one at 4.6 s | Roland | 4.6 s | 1 (Roland) | 35.9 s |
+
+- **The first time a memory-on huddle fought the lich.** In the three runs of 2026-10-19 every plan waited for a
+  scout nobody made, and nobody went in. In four runs of five today the party went to the edge, looked and went
+  in together behind the warrior, every member in within 3.9 to 4.8 s of the first, and the lich died every time.
+  The acceptance (nobody in ahead of a fighter the plan expects; those it sends in within a few seconds of each
+  other) holds in the three runs on the current wording, 3 to 5.
+- **Run 2 is why the question was reworded:** "Before entering, a fresh scout ... must show no lich" was read as
+  waiting for something other than a look. On 29 held-back plans labelled beforehand (26 from 2026-10-11 to 19 and
+  three of today's), the first wording had Decision 1 right on 24, the reworded 27 (Jev 27 and 23); a choice
+  question was 27 too but twice sent members to look while a dead companion was also waited for. A small set,
+  and two of its cases are the ones the change was made for.
+- **Run 4 is why the look ends when the fight comes:** the bard looked on for 30 s, saying no each time, while the
+  lich and two bone knights walked up, and the party fought them at the edge with only what attacked each
+  (defend-only) until he gave up. Since run 5, something in war mode within 8 tiles, or anyone in the party
+  fighting, ends the look and they go in as one: in run 5 that came 4.6 s in.
+- **The warrior died in runs 4 and 5,** taking the wave as the point (11% and 15% before the end in runs 3 and
+  5 too). That is the formed-up fight's old weakness on this scene (three of fifteen fights before), not the look's.
+- **Plans that wait for more than a look aren't looked at:** in runs 3 and 5 the later plans waited for Roland to be
+  healed and restocked as well, and were read as no look (rightly); the party rested.
+
 **A second scene: casters and archers from two sides** (cuo-cym.11), 2026-10-14 02:52 to 06:58. Every
 party measure before was the lich scene. `fleets/party-casters.toml` stages the same five south of the
 Britain graveyard against three skeletal mages and two skeletons where the lich's wave stood, north-west,
@@ -4331,6 +4375,71 @@ $0.291 together ($0.280 an hour), 22 lines to a neighbour.
   2026-10-24 (76% to 94%); the first hour of 2026-10-27 comes to 77% that way, Wenna 61% with her three deaths.
   Whether those grounds are Cove's land is Harry's call (cuo-m3n.3).
 
+### A lands hour with the far grounds as lands and the watch offered (cuo-m3n.3, cuo-m3n.12, cuo-m3n.21)
+
+2026-10-27 15:18 to 16:20, `fleets/hamlet-cove-lands.toml` with its four lands (the two far grounds named since the
+design call that they are Cove's land, each within 150 tiles of it) and Brannoc's posts (the `watch` goal offered),
+on the brain frozen at `src-frozen-27b` (before the lands were told with what is too strong there, and before the
+watch was put first in Brannoc's long goals), headless, memory on, the residents' memories set aside. Single run.
+Not filmed.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-27b uv run uo-brain fleet fleets/hamlet-cove-lands.toml --out logs/fleet/20261027-151752-hamlet-cove-lands-27b
+uv run uo-brain hamlet-report logs/fleet/20261027-151752-hamlet-cove-lands-27b
+```
+
+| | Brannoc | Wenna | Maren | Tamsin | the four |
+|---|---|---|---|---|---|
+| in Cove or its lands | 98% | 85% | 74% | 65% | 81% |
+| ...counting only the first two lands | 1% | 69% | 73% | 40% | |
+| in Cove itself | 1% | 45% | 56% | 24% | |
+| home between pieces of work | 1 of 4 | 4 of 7 | 3 of 4 | 3 of 5 | 11 of 20 |
+| kills, deaths | 9, 0 | 14, 1 | 0, 1 | 18, 1 | 41, 3 |
+
+$0.308 together ($0.297 an hour), 24 lines to a neighbour.
+
+- **Every resident was in Cove or its lands most of the hour,** the first half of cuo-m3n.3's acceptance. Not
+  the second: Brannoc came home once between four hunts.
+- **The three deaths were all at the Cove Orc Fort in the first 12 minutes,** to savages and savage riders:
+  Wenna and Maren went there when their own ground was empty ("I'll try the orc fort lands to keep working
+  towards archery 85"), Tamsin for gold. Told only "Cove's lands, where its people work", they took the fort for
+  work like any other: filed and fixed as cuo-m3n.21 (each land is now told with what is too strong there for one
+  alone). Nobody died after.
+- **Brannoc never kept watch.** His planner's reflection pushed his first long goal, swordsmanship 80 to 85, and
+  every goal was a 15-minute hunt in the wilderness near 2400,1100, one of Cove's lands (9 kills, no deaths, 98% of
+  the hour on it). A watch gives few kills. The watch is now his first long goal and his work's first words.
+- **Tamsin banked 722 gold at Minoc's,** chosen by its road (949 steps, 41 priced, against Vesper's 873 and 63),
+  and hunted the north-east of Cove Guard Post for 15 kills.
+
+### The watchman's watch (cuo-m3n.12)
+
+2026-10-27, the test server, Brannoc (95 hits, a warrior's kit) alone at the east gate, the `watch` goal from the
+command line with his hamlet as the lands hour's fleet writes it (posts: the east gate, the healer's house, the
+guard post to the north), Decision 1 fighting. An orc set down 6 or 7 tiles west of him with `[AgentSpawn Orc` at
+70, 150 and 40 s in. Single runs. Not filmed.
+
+```bash
+cd brain
+uv run uo-brain --port 5671 do watch --hamlet logs/m3n12/Brannoc.hamlet.json --minutes 6 --judge jev --log logs/m3n12/watch1.jsonl
+uv run uo-brain --port 5671 say "[AgentSpawn Orc 1 7 w"
+```
+
+| | watch 1 (6 min) | watch 2 (7 min) | watch 3 (3 min) |
+|---|---|---|---|
+| the code | as first built | only what means harm counts as on the ground | ...and only what isn't a peaceful kind is fought |
+| posts walked | the gate only | the gate, the healer's house, the guard post, the gate | the gate, the healer's house |
+| the orc | came in war mode; the guards called once, killed | stood in the street, not in war mode: let be | gone for 1 s after it was set down, killed in 10 s |
+| what else it went for | the town's dogs and a magpie (seek and fight, 0.68 to 0.93) | nothing | nothing |
+| health at the end | 95/95 | 95/95 | 95/95 |
+
+- **First, the town's animals:** Cove's dogs, cats, rats and magpies are always about, and on the first watch
+  they counted as on the ground, so the watch never left its first post, and the fight loop went after a dog
+  and a magpie. Then only what was in war mode counted, and the second watch walked the whole round in 7
+  minutes but let an orc stand in the street. Now the watch takes on what the bestiary doesn't call a
+  peaceful kind, in war mode or not, and leaves the animals be: the third watch went for the orc in a second.
+- **Cost:** about 0.6 fight questions a second with animals in view, $0.002 in the first two minutes.
+
 ## Calling the guards (cuo-m3n.14)
 
 2026-10-24, the soak server (2595), one headless warrior (Brutus, 95 hits) in Cove's street at 2262,1212, inside the
@@ -4471,3 +4580,33 @@ Rehearsal on the local server switched to Renaissance rules
 | mage, 2 rounds | 8 of 8 kills, no deaths (before the Protection fix: 120 casts of Protection, no kills) |
 | item and rune names | resolved by single click within a few seconds of the corpse opening |
 | mage at the Britain graveyard travels to the West Britain bank | recalled by runebook |
+
+
+## Attended play (cuo-49t)
+
+2026-10-27, the test server, Tess (a warrior, 95 hits) alone on a client with `agent_attended_minutes` set to 1,
+in combat assist, nobody at the keyboard; once the agent said it was away, an orc set down 2 tiles off; 20 s later
+a mode turned on again from the command line. Two single runs, on the first build and on the one that also takes
+the character out of war mode. Not filmed.
+
+```bash
+cd brain
+UO_CLIENT_DIR=../bin/osx-arm64-27c uv run uo-brain --port 5590 client --headless --account headless7 --character Tess
+uv run uo-brain --port 5590 mode assist
+uv run python scripts/attended_check.py 5590   # waits for agent.away, sets an orc on her, then turns auto mode on
+```
+
+| | first build | out of war mode when away |
+|---|---|---|
+| away after | 60 s without input | 60 s |
+| the panel's journal | "you have been away 1 min: the agent waits until you are back" | the same |
+| the agent while away | attacked nothing, bandaged nothing, engaged 0 | the same |
+| the orc's health while away | 100% to 14% in 18 s | 100% to 20%, then gone, in 16 s |
+| the character's health | 95/95 throughout | 95 to 75 |
+| when a mode was turned on | back at once, bandaging and fighting as usual | back at once, bandaged to 95/95 in 6 s |
+
+- **The agent stops; the server doesn't:** on ModernUO a character that is attacked has its attacker set as its
+  combatant and swings back, war mode or not (`Mobile.AggressiveAction`, `CheckCombatTime`). That is the game's own
+  auto-defence, the same for any player who steps away from the keyboard, and the agent can't turn it off without
+  acting while the player is away (walking off, for one). What attended play promises is that the agent itself
+  does nothing then: no attack, no heal, no walk, no brain action ("the player is away from the keyboard").

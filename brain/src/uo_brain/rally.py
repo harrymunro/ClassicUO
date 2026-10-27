@@ -93,6 +93,7 @@ SPAWN_TILES = 120     # ...and how far round the hunt the world store's other sp
 LOOK_S = 40.0         # how long the one holding the rally looks before the plan is made again with what was seen
 LOOK_EVERY_S = 4.0    # ...asking again this often when what is in view has changed
 LOOK_CUT = 0.5        # system one's yes to "does what they see meet the plan's condition" at or above this: in
+LOOK_COMING_TILES = 8  # ...and something coming at the party this close ends the look: the fight has come to them
 TRAIL = 80            # the leader's last steps on the way in that are kept (one each 0.4 s of its walk)
 JUMP_TILES = 20       # two of them further apart than this: a recall, and what came before isn't the way in
 
@@ -194,6 +195,12 @@ def sight_words(snap: dict[str, Any], party: Party, bestiary: dict[int, dict[str
                                                                            else ", not coming at the party") + ")"
     return (("; ".join(parts) if parts else "nothing hostile in view")
             + f". The party here: {', '.join(dict.fromkeys(here))}.")
+
+
+def coming_at(snap: dict[str, Any], within: int) -> bool:
+    """A creature in war mode within `within` tiles: something is coming at the party."""
+    return any(m.get("monster") and not m.get("dead") and not m.get("pet") and m.get("war_mode")
+               and m.get("distance", 99) <= within for m in snap.get("mobiles") or [])
 
 
 def contact(snap: dict[str, Any]) -> bool:
@@ -621,7 +628,9 @@ class Rally:
                 asked.append(round(p, 3))
                 if p >= LOOK_CUT:
                     return {"clear": True, "seen": words, "p": asked, "s": round(time.monotonic() - began, 1)}
-            if contact(snap):
+            if contact(snap) or self.fighting() or coming_at(snap, LOOK_COMING_TILES):
+                # The fight came to them while they looked: they go in as one. Live (run 161525), the bard looked on for
+                # 30 s while the lich and two bone knights came at the party, and the warrior died at the edge.
                 return {"clear": True, "seen": words, "p": asked, "contact": True, "s": round(time.monotonic() - began, 1)}
             if time.monotonic() - began >= LOOK_S or s.interrupt.is_set():
                 break

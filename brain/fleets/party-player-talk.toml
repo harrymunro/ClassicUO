@@ -14,7 +14,7 @@
 # Local server only, as all talk. Swearing and hard ribbing are asked for (Harry, 2026-10-10).
 name = "party-player-talk"
 server_port = 2593
-hours = 0.2
+hours = 0.35   # 21 minutes: long enough for --fresh-words after the companions gather (cuo-cym.29)
 headless = true
 party = true
 plan = "player"

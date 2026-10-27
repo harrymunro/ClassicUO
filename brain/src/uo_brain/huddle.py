@@ -183,7 +183,6 @@ class Huddle:
         self._area: tuple[int, str | None] = (0, None)  # the hunting area the plan of that revision names
         self._go_now: dict[int, bool] = {}  # revision -> whether that plan sends the party in now (go_now_question)
         self._look: dict[int, bool] = {}    # revision -> whether what it waits for is a look from the edge (look_question)
-        self.looked: list[tuple[float, str]] = []  # (when, hunt) of each look from the edge that didn't send them in
 
     # ---- the store ------------------------------------------------------------------
 
@@ -252,7 +251,7 @@ class Huddle:
         plan = self.hunt_area()
         if board is None or plan is None or plan.lower() != area.lower():
             return False
-        if sum(1 for t, a in self.looked if a.lower() == area.lower() and time.time() - t < LOOKS_S) >= LOOKS:
+        if self.looks_failed(area) >= LOOKS:
             return False
         if await self.sends_in_now(judge, area):
             return False
@@ -261,6 +260,13 @@ class Huddle:
             self._look[board["rev"]] = p is not None and p >= GO_NOW_CUT
             self.log({"type": "huddle", "t": time.time(), "rev": board["rev"], "look": None if p is None else round(p, 3)})
         return self._look[board["rev"]]
+
+    def looks_failed(self, area: str) -> int:
+        """Looks from the edge of `area` in the last LOOKS_S that didn't send the party in, by the plans made on them:
+        one member holds the rally and looks, and every member reads this from the party's board."""
+        rows = self.world.db.execute("SELECT reason FROM party_board WHERE party = ? AND t > ? AND reason LIKE ?",
+                                     (self.party.party, time.time() - LOOKS_S, f"the party looked from the edge of %")).fetchall()
+        return sum(1 for r in rows if (r["reason"] or "").lower().startswith(f"the party looked from the edge of {area.lower()} "))
 
     async def clear_to_go(self, judge: Any, area: str, seen: str) -> float:
         """System one's yes to whether what the party sees from the edge meets the plan's condition (edge_question)."""
@@ -273,7 +279,6 @@ class Huddle:
     async def seen_from_edge(self, area: str, seen: str) -> dict[str, Any] | None:
         """A look from the edge that didn't send them in: a huddle at once, with what was seen, so the plan is made again
         on it (the plan waited for exactly this, so the gap between huddles doesn't apply)."""
-        self.looked.append((time.time(), area))
         return await self.call(f"the party looked from the edge of {area} as the plan said, and the plan's condition for "
                                f"going in wasn't met: {seen}")
 
