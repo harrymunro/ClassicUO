@@ -464,8 +464,9 @@ namespace ClassicUO.Agent
                 // stand, '#' nowhere, 'x' an impassable item, 'd' a door ('D' one blocked), 'h' a house's blocked tile (all of
                 // a house, or its walls when the player or the goal is in it), '@' the player. With goal_x/goal_y it
                 // plans the walk exactly as travel would (the first hop of a long one) and draws
-                // the path ('o'). With reach, ',' is what the planner can walk to from the player;
-                // with check, '-' marks tiles only the planner reaches and '+' tiles only the
+                // the path ('o'); with from_x/from_y/from_z it plans from there (the next hop, or another
+                // road), and says where the path ends (`end`). With reach, ',' is what the planner can walk
+                // to from the player; with check, '-' marks tiles only the planner reaches and '+' tiles only the
                 // client's own pathfinder does.
                 case "nav":
                     RequireInGame(world);
@@ -474,7 +475,10 @@ namespace ClassicUO.Agent
                     int goalX = Get(p, "goal_x", out JsonElement gx) ? gx.GetInt32() : px;
                     int goalY = Get(p, "goal_y", out JsonElement gy) ? gy.GetInt32() : py;
                     var navAvoid = Get(p, "avoid", out JsonElement na) && na.ValueKind == JsonValueKind.Array ? AgentAction.ReadAreas(na) : null;
-                    (NavGrid grid, TripPlan trip) = world.Agent.TravelView(goalX, goalY, rad, navAvoid);
+                    (int, int, int)? navFrom = Get(p, "from_x", out JsonElement fx) && Get(p, "from_y", out JsonElement fy)
+                        ? (fx.GetInt32(), fy.GetInt32(), Get(p, "from_z", out JsonElement fz) ? fz.GetInt32() : world.Player.Z)
+                        : null;
+                    (NavGrid grid, TripPlan trip) = world.Agent.TravelView(goalX, goalY, rad, navAvoid, navFrom);
                     var route = trip?.Path;
                     var onPath = new System.Collections.Generic.HashSet<(int, int)>();
 
@@ -624,6 +628,15 @@ namespace ClassicUO.Agent
                         {
                             w.WriteBoolean("hop", trip.Hop);
                             w.WriteNumber("priced_steps", trip.PricedSteps);
+
+                            if (route != null && route.Count > 0)
+                            {
+                                w.WriteStartArray("end");
+                                w.WriteNumberValue(route[^1].X);
+                                w.WriteNumberValue(route[^1].Y);
+                                w.WriteNumberValue(route[^1].Z);
+                                w.WriteEndArray();
+                            }
 
                             // The whole plan, every 8th tile and its last, for a plan wider than the drawing.
                             if (route != null && Get(p, "route", out JsonElement rt) && rt.GetBoolean())

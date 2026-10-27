@@ -107,6 +107,7 @@ class Session:
         self.hamlet = None  # hamlet.Hamlet: where a resident lives, its home a place for travel_to (cuo-m3n)
         self.deaths: list[tuple[int, int, float]] = []  # (x, y, wall time) of each death a corpse run was asked about
         self.box_no_gold: float | None = None  # when a withdrawal of gold last brought none (monotonic)
+        self.roads: dict[tuple[int, int, int, int], dict[str, Any] | None] = {}  # (start cell, goal) -> road()
         self._guards_called = -1e9  # when "Guards!" was last said (monotonic)
         self._hits_seen = 1 << 30   # the character's hits at the last look, for a fresh hit
         self._guarded: dict[tuple[int, int], bool] = {}  # 8-tile cell -> in a guarded region
@@ -645,11 +646,88 @@ class Session:
                 return known[0]
         return None
 
+    ROAD_CELL = 16      # roads planned from anywhere in a cell this wide are taken as one
+    ROAD_HOPS = 10      # a road is planned this many hops at most
+    PRICED_STEP = 5     # a step on priced ground counts as this many on open road
+    BANK_MARGIN = 1.25  # banks no further than this times the nearest are compared by their roads
+    BANK_NEAR = 150     # ...unless the nearest is this near: in or by a town, its road is short
+
+    async def road(self, x: int, y: int, snap: dict[str, Any]) -> dict[str, Any] | None:
+        """The road a trip to (x, y) would walk from here, planned hop by hop through the client's nav view without
+        setting off, each hop from where the last ends (100 to 200 ms of the game's time a hop): its steps, those on
+        the ground travel prices for this character (where stronger creatures spawn, as travel_to sends it) and its
+        `cost`, a priced step counting PRICED_STEP. None when travel finds no way, or the road is longer than
+        ROAD_HOPS hops. Kept for the session by the start's cell."""
+        sx, sy = self.where(snap)
+        key = (sx // self.ROAD_CELL, sy // self.ROAD_CELL, x, y)
+        if key in self.roads:
+            return self.roads[key]
+        dangers = self.world.dangers_between(sx, sy, x, y, snap["player"].get("hits_max") or 100)
+        avoid = {"avoid": [[d["x"], d["y"], d["r"], d["cost"]] for d in dangers]} if dangers else {}
+        road: dict[str, Any] | None = None
+        steps = priced = 0
+        ms = 0.0
+        start: dict[str, int] = {}
+        for hops in range(1, self.ROAD_HOPS + 1):
+            r = await self.rpc.call("nav", timeout=60, radius=4, goal_x=x, goal_y=y, **avoid, **start)
+            if "path" not in r:
+                break  # a client without the view
+            if "hop" not in r:
+                road = {"steps": steps, "priced": priced, "hops": hops - 1}  # already there
+                break
+            if r.get("path", -1) < 0 or not r.get("end"):
+                self.log("road", x=x, y=y, hops=hops, why=r.get("why") or "no route")
+                break
+            steps += r["path"]
+            priced += r.get("priced_steps", 0)
+            ms += r.get("plan_ms", 0)
+            if not r["hop"]:
+                road = {"steps": steps, "priced": priced, "hops": hops}
+                break
+            start = dict(zip(("from_x", "from_y", "from_z"), r["end"]))
+        if road is not None:
+            road |= {"cost": road["steps"] + self.PRICED_STEP * road["priced"], "plan_ms": round(ms)}
+        self.roads[key] = road
+        return road
+
+    async def safest_bank(self, snap: dict[str, Any]) -> tuple[dict[str, Any], str] | None:
+        """With no town named, the bank to go to and why: of the banks nearly as near as the nearest (within
+        BANK_MARGIN of its tiles, one place to each town's bank), the one whose road costs least, a step on the
+        ground where stronger creatures spawn counting PRICED_STEP. From Cove the East Britain bank is the
+        nearest by 76 to 100 tiles, and its road crosses 214 to 272 steps of such ground between the swamp and the
+        fields of fair fights, where the carrier died twice; Minoc's and Vesper's cross 20 to 63 (cuo-m3n.17). None when the
+        nearest is near enough (BANK_NEAR) or alone in the margin, or no road was found: then it is the nearest."""
+        here = self.where(snap)
+        found = self.world.find_place("bank", near=list(here), limit=12)
+        banks: list[dict[str, Any]] = []
+        for p in found:  # a town's banker, minter and bank stand together: one place to each
+            if not any(tiles(p["x"], p["y"], b["x"], b["y"]) <= 20 for b in banks):
+                banks.append(p)
+        if not banks:
+            return None
+        nearest = tiles(*here, banks[0]["x"], banks[0]["y"])
+        near = [b for b in banks if tiles(*here, b["x"], b["y"]) <= nearest * self.BANK_MARGIN][:3]
+        if nearest <= self.BANK_NEAR or len(near) < 2:
+            return None
+        if runed := [b for b in near if self.rune_for(b["name"], b["x"], b["y"], snap)]:
+            return runed[0], f"a rune goes to {runed[0]['name']}"
+        roads = [(b, await self.road(b["x"], b["y"], snap)) for b in near]
+        self.log("bank_roads", roads=[{"place": b["name"], "tiles": tiles(*here, b["x"], b["y"]), **(r or {"steps": None})}
+                                      for b, r in roads])
+        known = sorted(((b, r) for b, r in roads if r is not None), key=lambda br: br[1]["cost"])
+        if not known:
+            return None
+        (best, road), others = known[0], known[1:]
+        why = f"its road crosses {road['priced']} steps of dangerous ground in {road['steps']}"
+        if others:
+            why += "; " + ", ".join(f"{b['name']}'s {r['priced']} in {r['steps']}" for b, r in others)
+        return best, why
+
     async def bank(self, deposit: str = "gold,loot", withdraw: str = "", place: str | None = None) -> Result:
-        """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank or the one at
-        `place`. From Cove the banks of Vesper and Britain are as far, and which was nearer turned on
-        where in Cove the carrier stood: told to draw from the Vesper bank she had just walked to
-        safely, she went to Britain's and died on the way. Gold isn't asked of a box that held none in the last
+        """Deposit gold and loot, withdraw supplies ("bandage:100"), at the nearest bank (of those nearly as near,
+        the one with the safest road: safest_bank) or the one at `place`. From Cove the banks of Vesper and
+        Britain are as far, and which was nearer turned on where in Cove the carrier stood: told to draw from the
+        Vesper bank she had just walked to safely, she went to Britain's and died on the way. Gold isn't asked of a box that held none in the last
         BOX_EMPTY_S, unless gold has gone in since."""
         left_out = ""
         if self.box_no_gold is not None and time.monotonic() - self.box_no_gold < self.BOX_EMPTY_S:
@@ -660,6 +738,9 @@ class Session:
                 if not withdraw and not deposit.strip():
                     return Result(False, f"not going to the bank for gold: {ago}")
                 left_out = f"; gold left out: {ago}"
+        why = ""
+        if not place and (safest := await self.safest_bank(await self.snap())):
+            place, why = safest[0]["name"], f" (chosen by its road: {safest[1]})"
         bank, failed = await self.go_near("bank", 10, at=place)
         if failed:
             return failed
@@ -680,7 +761,7 @@ class Session:
             self.box_no_gold = time.monotonic()
         elif ok and (after.get("gold") or 0) < (before.get("gold") or 0):
             self.box_no_gold = None  # gold went in
-        return Result(ok, f"{bank['name']}: {detail}{left_out}",
+        return Result(ok, f"{bank['name']}{why}: {detail}{left_out}",
                       data | {"weight_before": before.get("weight"), "gold_before": before.get("gold")})
 
     async def vendor(self, kind: str, words: tuple[str, ...], exclude: set[int] = frozenset(),

@@ -440,6 +440,22 @@ def work(session: list[dict[str, Any]]) -> dict[str, Any]:
             "items_bought": bought, "gold_banked": banked, "trips": dict(sorted(trips.items(), key=lambda kv: -kv[1]))}
 
 
+def home_arrivals(session: list[dict[str, Any]]) -> list[tuple[float, bool]]:
+    """The moments the session says the resident got home (a trip home arrived, or found it there already): the
+    fleet's look at where each is comes every 30 s, and a resident who set out again within that wasn't seen at home.
+    In the lands hour of 2026-10-24 Wenna arrived home 3 s before her next hunt, and the report had her not home
+    between them."""
+    out = []
+    for x in session:
+        if x.get("type") == "session" and x.get("event") == "travelled" and x.get("to") == "home" \
+                and x.get("state") == "arrived":
+            out.append((x["t"], True))
+        elif x.get("type") == "goal_result" and x.get("tool") == "travel_to" \
+                and str((x.get("result") or {}).get("result", "")).startswith("already at home"):
+            out.append((x["t"], True))
+    return out
+
+
 def home_between_work(session: list[dict[str, Any]], homes: list[tuple[float, bool]]) -> dict[str, int]:
     """Of each piece of work and the next (goals of WORK_GOALS but a trip home), how many had the resident at home
     between them (cuo-m3n.3)."""
@@ -514,7 +530,8 @@ def report(out_dir: Path, world: Any = None, lands: list[dict[str, Any]] | None 
             continue
         n = len(wheres)
         inside = [(w["t"], h.inside(w["x"], w["y"])) for w in wheres]
-        homes = [(w["t"], h.at_home(w["x"], w["y"])) for w in wheres]
+        seen_home = [(w["t"], h.at_home(w["x"], w["y"])) for w in wheres]
+        homes = sorted(seen_home + home_arrivals(session))  # with the arrivals between two looks
         away = [(t, not on) for t, on in inside]
         arrivals = sum(1 for (_, a), (_, b) in zip(homes, homes[1:]) if b and not a)
         entry.update({
@@ -522,7 +539,7 @@ def report(out_dir: Path, world: Any = None, lands: list[dict[str, Any]] | None 
             "in_hamlet": round(sum(1 for _, on in inside if on) / n, 2),
             "in_hamlet_or_lands": round(sum(1 for w in wheres if h.at_work_or_home(w["x"], w["y"])) / n, 2),
             "home_between_work": home_between_work(session, homes),
-            "at_home": round(sum(1 for _, on in homes if on) / n, 2),
+            "at_home": round(sum(1 for _, on in seen_home if on) / n, 2),
             "came_home": arrivals,
             "longest_away_min": round(max((b - a for a, b in spells(away)), default=0) / 60, 1),
             "farthest": max(h.beyond(w["x"], w["y"]) for w in wheres),

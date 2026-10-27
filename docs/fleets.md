@@ -993,7 +993,12 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   them ("on Cove's lands (south-west of Cove Cemetery), 115 tiles from Cove and 165 from home") and, after 5
   minutes away, how long it has been away from home. `hamlet-report` adds the share of the run in the hamlet
   or its lands, and how many of a resident's pieces of work (hunts, sales, purchases, banking, trips but the
-  trip home) had it at home between one and the next. `fleets/hamlet-cove-lands.toml` is the four with their
+  trip home) had it at home between one and the next: at home in one of the fleet's looks at where each is
+  (every 30 s), or a trip home that arrived; homecomings count those arrivals too. Before 2026-10-27 only
+  the looks counted, and a resident who set out again within 30 s of getting home wasn't counted home (Wenna
+  arrived 3 s before her next hunt): recounted, the four lands hours below had home between work 11 of 15,
+  11 of 20, 13 of 20 and 16 of 22 where they said 4, 9, 10 and 8, and the control runs, which never go home,
+  still 2 of 36, 0 of 35 and 0 of 38 ([results](results.md#home-between-work-recounted-cuo-m3n3)). `fleets/hamlet-cove-lands.toml` is the four with their
   lands and their work put as short pieces with home between. Measured four times
   ([results](results.md#the-hamlets-lands-five-runs-cuo-m3n3-cuo-m3n11-cuo-m3n15)): in Cove or its lands 72% of the hour,
   as without them (66% to 81%), and home between pieces of work 4 of 15, with eight deaths to the savages by

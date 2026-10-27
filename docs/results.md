@@ -4175,6 +4175,71 @@ So a bank "at" a town is the nearest of the town's own banks, and a trip still o
 on ([travel](goals.md#travel-banking-shops-and-hunting)). From the east bank, "Britain" is that bank now, and from
 Cove too; the Vesper bank is not taken unless named, though its road is the safer.
 
+### The bank chosen by its road (cuo-m3n.17)
+
+2026-10-27, the test server (2593), one headless client as Tamsin (the hamlet's carrier, a warrior of 95 hits) with
+the client that plans from a given tile (`nav`'s `from_x`, `from_y`, `from_z`) and the brain that compares the
+nearer banks' roads before a bank trip with no town named. Each road is planned hop by hop from where the last
+hop ends, with the squares the trip would send (`World.dangers_between`), and costs its steps plus five for each
+step on priced ground. The trips are `do bank`, with no fight loop beside them. Single runs.
+
+```bash
+cd brain
+uv run uo-brain --port 5674 client --headless --account headless6 --password headless6 --character Tamsin --server-port 2593
+uv run uo-brain --port 5674 say "[AgentGo 2216 1194"          # her home in Cove; then [AgentKit warrior, [AgentSupplies
+uv run uo-brain --port 5674 do bank --deposit gold
+uv run uo-brain --port 5674 say "[AgentGo 1475 1645"          # a street in Britain
+uv run uo-brain --port 5674 do bank --deposit gold
+```
+
+| from | East Britain bank (566 tiles from her home) | Minoc's bank (642) | Vesper's bank (663) | chosen |
+|---|---|---|---|---|
+| her home, 2216,1194 | 1406 steps, 272 priced, cost 2766 | 946, 41, 1151 | 882, 63, 1197 | Minoc's |
+| the healer's house, 2244,1229 | 1480, 241, 2685 | 978, 41, 1183 | 864, 41, 1069 | Vesper's |
+| the gatehouse, 2283,1209 | 1426, 214, 2496 | 960, 20, 1060 | 811, 20, 911 | Vesper's |
+| Wenna's house, 2235,1187 | 1458, 234, 2628 | 953, 41, 1158 | 847, 63, 1162 | Minoc's |
+
+- **Never Britain's:** from four spots in Cove the East Britain bank's road cost 2.2 to 2.7 times the chosen one's,
+  with 214 to 272 steps on priced ground against 20 to 63. Minoc's bank, 21 tiles nearer than Vesper's from her
+  home, was a third bank in the margin (1.25 times the nearest), and between Minoc's and Vesper's it came down to a
+  few steps (1158 against 1162 from Wenna's). The bead asked for Vesper's; it is either of the two safe ones.
+- **The walk** from her home to Minoc's bank arrived in 215 s (418 tiles a hop, two hops), 300 gold banked, lowest
+  health 79 of 95 (a panther, wolves and an eagle on the way, bandaged). From the street in Britain the Britain
+  banker, 62 tiles off, was gone to without comparing anything (the nearest is within 150 tiles), in 15 s.
+- **Planning the three roads** took 144 to 404 ms of the game's time in all, over 6 to 8 calls (20 to 192 ms a road),
+  and is kept for the session: a second trip from the same 16-tile cell plans nothing.
+
+### Home between work, recounted (cuo-m3n.3)
+
+`hamlet-report` measured where a resident was from the fleet's look at each one every 30 s, so a resident who got
+home and set out again within 30 s wasn't seen there. In the lands hour of 2026-10-24 (lands-d) Wenna's trip home
+arrived at 9.75 minutes and her next hunt set out 3 s later; the report had her not home between them. Since
+2026-10-27 a trip home that arrived (the session's `travelled` record) counts as being at home then, for home
+between work and homecomings; time at home is still the looks. Every earlier run recounted, the same command:
+
+```bash
+cd brain
+uv run uo-brain hamlet-report logs/fleet/RUN --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort" --json
+```
+
+| run | home between work, as reported | recounted | homecomings, recounted |
+|---|---|---|---|
+| m3n.4's three told runs | 6 of 16, 5 of 12, 5 of 14 | 12 of 16, 8 of 12, 8 of 14 | 16, 12, 10 |
+| m3n.4's three control runs | 2 of 36, 0 of 35, 0 of 38 | the same | 3, 0, 0 |
+| told, 541e5d115 | 11 of 24 | 16 of 24 | 14 |
+| the lands, 541e5d115 | 4 of 15 | 11 of 15 | 16 |
+| the lands again, c72c1e616 | 9 of 20 | 11 of 20 | 12 |
+| and the empty ground, 4d93f759d | 10 of 20 | 13 of 20 | 19 |
+| and grounds named, dffc4b370 | 8 of 22 | 16 of 22 | 21 |
+| told, on the priced travel, 90c3f5dbd | 13 of 25 | 17 of 25 | 15 |
+| a second told hour, 3c9cfa38e | 7 of 23 | 11 of 23 | 14 |
+
+- **Told where they live, residents mostly do come home between pieces of work:** about half to three quarters
+  of the time in each told and lands hour (11 of 23 to 12 of 16; 123 of 191 in the ten), against 0 to 2 of 35 to
+  38 in the control, which never goes home; the old count had it at half or under in every told run but one. What
+  is left is mostly Tamsin, 18 of 49 in the ten hours against 105 of 142 for the other three (hunt after hunt out
+  east, and the bank straight from a hunt), and pieces broken by a death (a resurrection and a corpse walk between).
+
 ## Calling the guards (cuo-m3n.14)
 
 2026-10-24, the soak server (2595), one headless warrior (Brutus, 95 hits) in Cove's street at 2262,1212, inside the

@@ -240,6 +240,15 @@ def test_the_report_counts_the_lands_and_home_between_pieces_of_work():
     homes = [(50, False), (150, True), (250, False), (350, False)]
     # hunt -> sell had home between (the trip home isn't a piece of work); sell -> hunt didn't
     assert hamlet.home_between_work(session, homes) == {"pairs": 2, "home_between": 1}
+    # Home between two looks: a trip home that arrived at 270 s, the next hunt setting out at once.
+    session[3:3] = [{"type": "session", "event": "travelled", "t": 270, "to": "home", "state": "arrived"}]
+    assert hamlet.home_between_work(session, sorted(homes + hamlet.home_arrivals(session))) == \
+        {"pairs": 2, "home_between": 2}
+    assert hamlet.home_arrivals([{"type": "goal_result", "t": 5, "tool": "travel_to",
+                                  "result": {"ok": True, "result": "already at home"}},
+                                 {"type": "session", "event": "travelled", "t": 9, "to": "home", "state": "stuck"},
+                                 {"type": "session", "event": "travelled", "t": 9, "to": "Vesper", "state": "arrived"}]) \
+        == [(5, True)]
 
 
 def test_a_neighbours_home_is_a_place_to_go(tmp_path):

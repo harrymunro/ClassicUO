@@ -193,10 +193,13 @@ namespace ClassicUO.Agent
         }
 
         // For the `nav` view: the grid round the player, and the plan travel would make to (gx,
-        // gy) from here, without setting off.
-        public (NavGrid Grid, TripPlan Plan) TravelView(int gx, int gy, int radius, (int X, int Y, int R, int Cost)[] avoid = null)
+        // gy) from here, without setting off. With `from`, the plan starts there instead: the next hop
+        // of a long trip, or a road compared with another before choosing (cuo-m3n.17).
+        public (NavGrid Grid, TripPlan Plan) TravelView(int gx, int gy, int radius, (int X, int Y, int R, int Cost)[] avoid = null,
+            (int X, int Y, int Z)? from = null)
         {
             PlayerMobile p = _world.Player;
+            (int sx, int sy, int sz) = from ?? (p.X, p.Y, p.Z);
             (int ogx, int ogy) = (_travelGoalX, _travelGoalY);
             var oavoid = _travelAvoid;
             _travelGoalX = gx;
@@ -207,8 +210,8 @@ namespace ClassicUO.Agent
             {
                 RememberWhatIsInView();
                 NavGrid grid = LoadTravelGrid(p.X - radius, p.Y - radius, 2 * radius + 1, 2 * radius + 1, null);
-                TripPlan plan = gx == p.X && gy == p.Y ? null
-                    : AgentNav.PlanTrip((x0, y0, w, h) => LoadTravelGrid(x0, y0, w, h, null), p.X, p.Y, p.Z, gx, gy, 0, TravelLimits,
+                TripPlan plan = gx == sx && gy == sy ? null
+                    : AgentNav.PlanTrip((x0, y0, w, h) => LoadTravelGrid(x0, y0, w, h, null), sx, sy, (sbyte) sz, gx, gy, 0, TravelLimits,
                         _travelAvoid.Length != 0 ? OnPriced : null);
 
                 return (grid, plan);

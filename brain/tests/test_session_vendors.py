@@ -640,6 +640,85 @@ def test_a_bank_at_a_town_is_any_of_its_banks_the_nearest_first(tmp_path):
     w.close()
 
 
+class Roads(FakeRpc):
+    """The client's nav view, a road to each goal: its hops as (steps, priced steps)."""
+
+    def __init__(self, snap, roads):
+        super().__init__(snap)
+        self.roads = roads
+
+    async def call(self, method, **params):
+        if method != "nav":
+            return await super().call(method, **params)
+        self.calls.append((method, params))
+        hops = self.roads[(params["goal_x"], params["goal_y"])]
+        n = sum(1 for m, p in self.calls if m == "nav" and (p["goal_x"], p["goal_y"]) == (params["goal_x"], params["goal_y"]))
+        steps, priced = hops[n - 1]
+        return {"path": steps, "hop": n < len(hops), "priced_steps": priced, "end": [n, n, 5]}
+
+
+def test_with_no_town_named_the_bank_is_the_one_of_the_nearer_banks_whose_road_crosses_least_danger(tmp_path):
+    """cuo-m3n.17: from Cove the East Britain bank was the nearest by a few tiles, and its road crosses 107 to 208
+    steps of priced ground between the swamp and the fields of fair fights, where the carrier died twice; Vesper's
+    crosses 22."""
+    w = World.open("test", root=tmp_path)
+    w.add_place("bank", "East Britain bank", 1000, 1566, region="Britain")
+    w.add_place("bank", "Vesper banker", 1663, 1000, region="Vesper")
+    w.add_place("bank", "Vesper minter", 1665, 1001, region="Vesper")
+    w.add_place("bank", "Yew bank", 1000, 2200, region="Yew")
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["errand"] = {"state": "done", "detail": "moved 1 item", "moved": 1}
+    rpc = Roads(snap, {(1000, 1566): [(300, 60), (300, 47), (576, 0)], (1663, 1000): [(300, 0), (572, 22)]})
+    s = Session(rpc, w, None)
+    trips = []
+
+    async def walk(name, x, y, **kw):
+        trips.append(name)
+        from uo_brain.session import Result
+        return Result(True, "arrived")
+
+    s.travel_to = walk
+    r = asyncio.run(s.bank("gold", ""))
+    assert trips == ["Vesper banker"] and r.ok
+    assert r.summary == ("Vesper banker (chosen by its road: its road crosses 22 steps of dangerous ground in 872; "
+                         "East Britain bank's 107 in 1176): moved 1 item")
+    navs = [p for m, p in rpc.calls if m == "nav"]
+    assert len(navs) == 5  # three hops to Britain, two to Vesper, none to Yew (too far) or the minter (the same bank)
+    assert navs[1]["from_x"] == 1 and navs[1]["from_z"] == 5 and "from_x" not in navs[0]
+    # The roads are kept: the next trip from here plans none.
+    asyncio.run(s.bank("gold", ""))
+    assert trips[-1] == "Vesper banker" and len([m for m, _ in rpc.calls if m == "nav"]) == 5
+    # Near a bank, it is the nearest without comparing; and with a town named, that town's.
+    snap["player"].update(x=1010, y=1500)
+    asyncio.run(s.bank("gold", ""))
+    assert trips[-1] == "East Britain bank" and len([m for m, _ in rpc.calls if m == "nav"]) == 5
+    snap["player"].update(x=1000, y=1000)
+    asyncio.run(s.bank("gold", "", place="Britain"))
+    assert trips[-1] == "East Britain bank"
+    w.close()
+
+
+def test_a_bank_with_no_road_found_isnt_chosen_and_with_none_found_it_is_the_nearest(tmp_path):
+    w = World.open("test", root=tmp_path)
+    w.add_place("bank", "East Britain bank", 1000, 1566)
+    w.add_place("bank", "Vesper banker", 1663, 1000)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["errand"] = {"state": "done", "detail": "moved 1 item", "moved": 1}
+    rpc = Roads(snap, {(1000, 1566): [(300, 60), (-1, 0)], (1663, 1000): [(-1, 0)]})
+    s = Session(rpc, w, None)
+    trips = []
+
+    async def walk(name, x, y, **kw):
+        trips.append(name)
+        from uo_brain.session import Result
+        return Result(True, "arrived")
+
+    s.travel_to = walk
+    r = asyncio.run(s.bank("gold", ""))
+    assert trips == ["East Britain bank"] and r.summary == "East Britain bank: moved 1 item"
+    w.close()
+
+
 class Walking(FakeRpc):
     """A trip that moves `step` tiles a second, and arrives at the `arrive`th look, if given."""
 
