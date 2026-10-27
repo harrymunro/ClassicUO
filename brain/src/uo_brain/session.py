@@ -108,6 +108,7 @@ class Session:
         self.deaths: list[tuple[int, int, float]] = []  # (x, y, wall time) of each death a corpse run was asked about
         self.box_no_gold: float | None = None  # when a withdrawal of gold last brought none (monotonic)
         self.roads: dict[tuple[int, int, int, int], dict[str, Any] | None] = {}  # (start cell, goal) -> road()
+        self.driven_back: list[tuple[int, int, float]] = []  # (x, y, monotonic) of each trip driven back
         self._guards_called = -1e9  # when "Guards!" was last said (monotonic)
         self._hits_seen = 1 << 30   # the character's hits at the last look, for a fresh hit
         self._guarded: dict[tuple[int, int], bool] = {}  # 8-tile cell -> in a guarded region
@@ -129,6 +130,12 @@ class Session:
     GOING_TIMES = 3
     GOING_TILES = 20
     GOING_S = 60.0
+    # A trip on which the character falls below DRIVEN_LOW of its hits, and is then DRIVEN_TILES from where that was and
+    # further from the goal than it was there, with nothing threatening in sight, ends: driven back (cuo-m3n.19).
+    DRIVEN_LOW = 0.5
+    DRIVEN_TILES = 20
+    DRIVEN_NEAR = 24      # a bank road this near a spot that drove the character back...
+    DRIVEN_S = 1800.0     # ...in this long isn't chosen while another is
 
     def laggards(self, snap: dict[str, Any], to: tuple[int, int] | None = None) -> list[str]:
         """The party's members who have fallen behind the leader on a walk: alive, more than LAG_TILES
@@ -409,6 +416,9 @@ class Session:
         trail: list[list[int]] = [list(start)]
         travel: dict[str, Any] = {}
         lately: deque[tuple[float, list[int]]] = deque([(began, list(start))])
+        bestiary = self.world.bestiary()
+        hurt: dict[str, Any] | None = None  # the lowest the character fell on the way, below DRIVEN_LOW: where and by what
+        set_out_hits = snap["player"].get("hits") or 0  # set out hurt already: only a fall from there was on the way
 
         def in_time() -> bool:
             spent = time.monotonic() - began
@@ -431,6 +441,14 @@ class Session:
                 trail.append(pos)
             travel = snap["agent"].get("travel") or {}
             if travel.get("state") != "walking":
+                break
+            if not ghost and (hurt := self.hurt_on_the_way(snap, hurt, bestiary, set_out_hits)) \
+                    and self.driven(pos, hurt, (tx, ty), snap, bestiary):
+                # Beaten to a third on the Minoc road by a troll and an orcish mage, the hamlet's hunter fled 400 tiles
+                # west, healed, and the trip walked her back the same way; she died where she had been caught.
+                await self.act("stop")
+                travel = {**travel, "state": "driven back"}
+                self.driven_back.append((*hurt["at"], time.monotonic()))
                 break
             lagging = set(self.laggards(snap, (tx, ty))) if walking and together else set()
             left_behind &= lagging
@@ -467,12 +485,64 @@ class Session:
                  **{k: travel[k] for k in ("why", "stuck_why", "refused", "replans", "doors", "hops", "plans", "plan_ms_max",
                                            "avoiding", "priced_steps") if travel.get(k) not in (None, [])})
         if ok:
-            return Result(True, f"arrived at {name} in {seconds} s" + (", at a walk with the party" if walking else ""),
-                          {"seconds": seconds, "replans": travel.get("replans", 0),
+            visit = ""
+            if name.endswith("'s home") and getattr(self, "hamlet", None) is not None:
+                visit = "; " + self.at_their_home(name.removesuffix("'s home"), await self.snap())
+            return Result(True, f"arrived at {name} in {seconds} s" + (", at a walk with the party" if walking else "")
+                          + visit, {"seconds": seconds, "replans": travel.get("replans", 0),
                            **({"waited_for_the_party_s": round(waited)} if waited else {})})
+        if state == "driven back" and hurt:
+            by = ", ".join(hurt["by"]) or "creatures"
+            return Result(False, f"driven back on the way to {name}: down to {hurt['pct']}% of health at "
+                                 f"{hurt['at'][0]},{hurt['at'][1]} by {by}, now {tiles(*self.where(snap), *hurt['at'])} "
+                                 f"tiles back from there; the way to {name} goes past it again",
+                          {"seconds": seconds, "driven_back": hurt, "position": list(self.where(snap))})
         why = f" ({travel['why']})" if travel.get("why") else ""
         return Result(False, f"did not reach {name}: {state}{why}, {travel.get('left', '?')} tiles short",
                       {"seconds": seconds, "stuck_at": stuck, "position": list(self.where(snap))})
+
+    DRIVEN_FALL = 0.1  # ...a fall of at least this share of its hits since it set out
+
+    def hurt_on_the_way(self, snap: dict[str, Any], hurt: dict[str, Any] | None, bestiary: dict[str, Any] | None,
+                        set_out: int) -> dict[str, Any] | None:
+        """The lowest the character has fallen on a trip, once below DRIVEN_LOW of its hits and DRIVEN_FALL below what it
+        set out with: where, how low, and the threatening creatures within 12 tiles then. Not a trip begun hurt: one
+        home after a fight, on a road that leads away from the goal at first (from Cove to Britain it goes north round
+        the hills), would be 'driven back' 20 tiles out."""
+        p = snap["player"]
+        top = p.get("hits_max")
+        if not top or p["hits"] >= self.DRIVEN_LOW * top or p["hits"] > set_out - self.DRIVEN_FALL * top \
+                or (hurt and p["hits"] >= hurt["hits"]):
+            return hurt
+        by = sorted({m.get("name") or "a creature" for m in snap["mobiles"]
+                     if m.get("distance", 99) <= 12 and state.threatening(m, bestiary)})
+        return {"at": list(self.where(snap)), "hits": p["hits"], "pct": round(100 * p["hits"] / p["hits_max"]),
+                "by": by or (hurt or {}).get("by", [])}
+
+    def driven(self, pos: list[int], hurt: dict[str, Any], goal: tuple[int, int], snap: dict[str, Any],
+               bestiary: dict[str, Any] | None) -> bool:
+        """Whether a trip hurt badly on the way has been driven back: DRIVEN_TILES from where it was hurt, further from
+        the goal than it was there (in a straight line: a flight west from a road north-east is no nearer north), and
+        nothing threatening in sight, so the trip would walk back past it."""
+        hx, hy = hurt["at"]
+        return (tiles(*pos, hx, hy) >= self.DRIVEN_TILES
+                and math.hypot(pos[0] - goal[0], pos[1] - goal[1]) > math.hypot(hx - goal[0], hy - goal[1])
+                and not any(state.threatening(m, bestiary) for m in snap["mobiles"]))
+
+    @staticmethod
+    def at_their_home(who: str, snap: dict[str, Any]) -> str:
+        """Whether a neighbour whose home the character has come to is there, in sight, and how they are (cuo-m3n.18).
+        Maren went to Tamsin's home four times in four minutes to look at her arm, each time told only that she had
+        arrived; Tamsin was out at the orc fort, and dead for the last two."""
+        m = next((m for m in snap.get("mobiles") or [] if (m.get("name") or "").lower() == who.lower()), None)
+        if m is None:
+            return f"{who} isn't here (not in sight)"
+        who, away = m["name"], "beside you" if m["distance"] <= 1 else f"{m['distance']} tiles away"
+        if m.get("dead"):
+            return f"{who} is here, {away}, a ghost"
+        pct = m.get("hits_pct")
+        how = "" if pct is None else ", unhurt" if pct >= 95 else f", hurt ({pct}% of health)"
+        return f"{who} is here, {away}{how}"
 
     async def walk_with(self, leader: str, place: str | None = None, x: int | None = None, y: int | None = None,
                         distance: int = 3, timeout_s: float = 600) -> Result:
@@ -668,8 +738,9 @@ class Session:
         steps = priced = 0
         ms = 0.0
         start: dict[str, int] = {}
+        points: list[list[int]] = []  # every 8th tile of the road
         for hops in range(1, self.ROAD_HOPS + 1):
-            r = await self.rpc.call("nav", timeout=60, radius=4, goal_x=x, goal_y=y, **avoid, **start)
+            r = await self.rpc.call("nav", timeout=60, radius=4, goal_x=x, goal_y=y, route=True, **avoid, **start)
             if "path" not in r:
                 break  # a client without the view
             if "hop" not in r:
@@ -681,12 +752,13 @@ class Session:
             steps += r["path"]
             priced += r.get("priced_steps", 0)
             ms += r.get("plan_ms", 0)
+            points += r.get("route") or []
             if not r["hop"]:
                 road = {"steps": steps, "priced": priced, "hops": hops}
                 break
             start = dict(zip(("from_x", "from_y", "from_z"), r["end"]))
         if road is not None:
-            road |= {"cost": road["steps"] + self.PRICED_STEP * road["priced"], "plan_ms": round(ms)}
+            road |= {"cost": road["steps"] + self.PRICED_STEP * road["priced"], "plan_ms": round(ms), "points": points}
         self.roads[key] = road
         return road
 
@@ -712,15 +784,28 @@ class Session:
         if runed := [b for b in near if self.rune_for(b["name"], b["x"], b["y"], snap)]:
             return runed[0], f"a rune goes to {runed[0]['name']}"
         roads = [(b, await self.road(b["x"], b["y"], snap)) for b in near]
-        self.log("bank_roads", roads=[{"place": b["name"], "tiles": tiles(*here, b["x"], b["y"]), **(r or {"steps": None})}
+        # A road past where a trip was driven back lately is passed over while another is known (cuo-m3n.19).
+        lately = [(x, y, t) for x, y, t in self.driven_back if time.monotonic() - t < self.DRIVEN_S]
+        def drove_back(r: dict[str, Any]) -> tuple[int, int, float] | None:
+            return next(((x, y, t) for x, y, t in lately for px, py in r.get("points", [])
+                         if tiles(px, py, x, y) <= self.DRIVEN_NEAR), None)
+        self.log("bank_roads", roads=[{"place": b["name"], "tiles": tiles(*here, b["x"], b["y"]),
+                                       **({k: v for k, v in r.items() if k != "points"} if r else {"steps": None}),
+                                       **({"drove_back_at": list(d[:2])} if r and (d := drove_back(r)) else {})}
                                       for b, r in roads])
-        known = sorted(((b, r) for b, r in roads if r is not None), key=lambda br: br[1]["cost"])
+        known = sorted(((b, r) for b, r in roads if r is not None), key=lambda br: (drove_back(br[1]) is not None,
+                                                                                    br[1]["cost"]))
         if not known:
             return None
         (best, road), others = known[0], known[1:]
         why = f"its road crosses {road['priced']} steps of dangerous ground in {road['steps']}"
         if others:
             why += "; " + ", ".join(f"{b['name']}'s {r['priced']} in {r['steps']}" for b, r in others)
+        if passed := [(b, d) for b, r in others if (d := drove_back(r))]:
+            why += "; " + "; ".join(f"the road to {b['name']} drove you back at {d[0]},{d[1]} "
+                                    f"{(time.monotonic() - d[2]) / 60:.0f} min ago" for b, d in passed)
+        if drove_back(road):
+            why += "; every road here drove you back lately, this one too"
         return best, why
 
     async def bank(self, deposit: str = "gold,loot", withdraw: str = "", place: str | None = None) -> Result:

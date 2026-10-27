@@ -240,6 +240,9 @@ def test_the_report_counts_the_lands_and_home_between_pieces_of_work():
     homes = [(50, False), (150, True), (250, False), (350, False)]
     # hunt -> sell had home between (the trip home isn't a piece of work); sell -> hunt didn't
     assert hamlet.home_between_work(session, homes) == {"pairs": 2, "home_between": 1}
+    # A walk to a neighbour's home isn't a piece of work.
+    visits = session + [{"type": "goal", "t": 450, "tool": "travel_to", "args": {"place": "Tamsin's home"}}]
+    assert hamlet.home_between_work(visits, homes) == {"pairs": 2, "home_between": 1}
     # Home between two looks: a trip home that arrived at 270 s, the next hunt setting out at once.
     session[3:3] = [{"type": "session", "event": "travelled", "t": 270, "to": "home", "state": "arrived"}]
     assert hamlet.home_between_work(session, sorted(homes + hamlet.home_arrivals(session))) == \
@@ -270,3 +273,35 @@ def test_a_neighbours_home_is_a_place_to_go(tmp_path):
     s.hamlet = h
     assert s.resolve("Cove east gate", None, None) == (2285, 1209, "Brannoc's home")
     assert s.resolve("Cove healer", None, None)[2] == "Cove healer"  # the store's own places first
+
+
+def test_a_visit_to_a_neighbours_home_says_whether_they_are_there(tmp_path):
+    """cuo-m3n.18: Maren went to Tamsin's home four times in four minutes to look at her arm, each time told only that
+    she had arrived; Tamsin was out at the orc fort, and dead for the last two."""
+    import copy
+
+    from conftest import SNAPSHOT
+    from uo_brain.session import Session
+
+    h = maren()
+    h.neighbours[0]["home"] = "1100,1000"
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["travel"] = {"state": "arrived"}
+
+    class Rpc:
+        async def call(self, method, **params):
+            return copy.deepcopy(snap) if method == "snapshot" else {"status": "done"}
+
+    s = Session(Rpc(), World.open("local", tmp_path), None)
+    s.hamlet = h
+    s.recall_to = lambda *a: asyncio.sleep(0)  # no runes
+    r = asyncio.run(s.travel_to("Brannoc's home", recall=False))
+    assert r.ok and r.summary.endswith("; Brannoc isn't here (not in sight)")
+    snap["mobiles"].append({"serial": 9, "name": "Brannoc", "human": True, "monster": False, "notoriety": "innocent",
+                            "hits_pct": 60, "dead": False, "distance": 2, "dx": 2, "dy": 0})
+    assert asyncio.run(s.travel_to("Brannoc's home", recall=False)).summary.endswith(
+        "; Brannoc is here, 2 tiles away, hurt (60% of health)")
+    assert Session.at_their_home("brannoc", {"mobiles": [{"name": "Brannoc", "dead": True, "distance": 1}]}) == \
+        "Brannoc is here, beside you, a ghost"
+    # Not a neighbour's home: nothing said of who is there.
+    assert asyncio.run(s.travel_to(x=1100, y=1000, recall=False)).summary.startswith("arrived at 1100,1000 in")

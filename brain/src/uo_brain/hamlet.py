@@ -457,10 +457,13 @@ def home_arrivals(session: list[dict[str, Any]]) -> list[tuple[float, bool]]:
 
 
 def home_between_work(session: list[dict[str, Any]], homes: list[tuple[float, bool]]) -> dict[str, int]:
-    """Of each piece of work and the next (goals of WORK_GOALS but a trip home), how many had the resident at home
-    between them (cuo-m3n.3)."""
+    """Of each piece of work and the next (goals of WORK_GOALS but a trip home or to a neighbour's), how many had the
+    resident at home between them (cuo-m3n.3). A visit next door isn't going out to work: in the lands hour of
+    2026-10-27 Maren's eight walks to Tamsin's and Wenna's homes, a few houses off, made eight more pieces."""
+    def visit(place: str) -> bool:
+        return bool(HOME_WORDS.match(place) or NEIGHBOUR_HOME.match(place))
     starts = [x["t"] for x in session if x.get("type") == "goal" and x.get("tool") in WORK_GOALS
-              and not (x.get("tool") == "travel_to" and HOME_WORDS.match(str((x.get("args") or {}).get("place") or "")))]
+              and not (x.get("tool") == "travel_to" and visit(str((x.get("args") or {}).get("place") or "")))]
     pairs = list(zip(starts, starts[1:]))
     return {"pairs": len(pairs), "home_between": sum(1 for a, b in pairs if any(on and a < t < b for t, on in homes))}
 

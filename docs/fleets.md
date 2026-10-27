@@ -956,7 +956,10 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
 - **What a resident is told:** its planner's system prompt says where it lives, its home (and that
   `travel_to "home"` goes there), its work, its neighbours by name, trade and home (`travel_to "Brannoc's home"` goes
   to a neighbour's, and so do the words for it the store has no place for, "Cove gatehouse": taking the watchman the
-  bandages she had promised, Maren asked for "Cove east gate" and "Cove gatehouse" and went nowhere), and that its days begin
+  bandages she had promised, Maren asked for "Cove east gate" and "Cove gatehouse" and went nowhere; arriving, it is
+  told whether the neighbour is there, "Tamsin isn't here (not in sight)" or "Brannoc is here, 2 tiles away, hurt (60% of
+  health)": told only that she had arrived, Maren went to Tamsin's home four times in four minutes while Tamsin was out
+  at the orc fort, cuo-m3n.18), and that its days begin
   and end in the hamlet: work out, then home, rest at home, free time where the neighbours are, a long trip
   only for a reason. Each turn's situation says where it is against home and the hamlet ("at home (the
   healer's house), in Cove", "away from Cove: 131 tiles from it and 171 from home"). Its talk knows where
@@ -993,7 +996,7 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   them ("on Cove's lands (south-west of Cove Cemetery), 115 tiles from Cove and 165 from home") and, after 5
   minutes away, how long it has been away from home. `hamlet-report` adds the share of the run in the hamlet
   or its lands, and how many of a resident's pieces of work (hunts, sales, purchases, banking, trips but the
-  trip home) had it at home between one and the next: at home in one of the fleet's looks at where each is
+  trip home or to a neighbour's: a visit a few houses off isn't going out to work) had it at home between one and the next: at home in one of the fleet's looks at where each is
   (every 30 s), or a trip home that arrived; homecomings count those arrivals too. Before 2026-10-27 only
   the looks counted, and a resident who set out again within 30 s of getting home wasn't counted home (Wenna
   arrived 3 s before her next hunt): recounted, the four lands hours below had home between work 11 of 15,

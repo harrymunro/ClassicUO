@@ -843,3 +843,83 @@ def test_in_a_guarded_town_a_creature_turned_criminal_close_by_is_called_the_gua
         snap["player"]["x"], snap["mobiles"][0]["notoriety"], snap["mobiles"][0]["distance"] = x, noto, far
         asyncio.run(look(snap))
     assert len(said()) == 3
+
+
+class Looks(FakeRpc):
+    """A trip whose looks are scripted: each (x, y, hits, creatures in sight), then it arrives."""
+
+    def __init__(self, snap, looks):
+        super().__init__(snap)
+        self.looks, self.n = looks, 0
+
+    async def call(self, method, **params):
+        if method != "snapshot":
+            return await super().call(method, **params)
+        self.calls.append((method, params))
+        snap = copy.deepcopy(self.snap)
+        if self.n < len(self.looks):
+            x, y, hits, creatures = self.looks[self.n]
+            snap["player"].update(x=x, y=y, hits=hits, hits_max=87)
+            snap["mobiles"] = [{"serial": 0x200 + i, "name": c, "monster": True, "war_mode": True, "dead": False,
+                                "distance": 3, "dx": 3, "dy": 0, "notoriety": "gray"} for i, c in enumerate(creatures)]
+            snap["agent"]["travel"] = {"state": "walking", "left": 100}
+        else:
+            snap["agent"]["travel"] = {"state": "arrived"}
+        self.n += 1
+        return snap
+
+
+def test_a_trip_driven_back_ends_and_says_where_and_by_what(tmp_path):
+    """cuo-m3n.19: beaten to a third on the Minoc road by a troll and an orcish mage, the hamlet's hunter fled 400 tiles
+    west, healed, and the trip walked her back the same way; she died where she had been caught."""
+    w = World.open("test", root=tmp_path)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["mobiles"] = []
+    # The goal is north-east; she is caught on the way, flees west, and the creatures are left behind.
+    looks = [(1000, 1000, 87, []), (1040, 960, 60, ["a troll"]), (1050, 950, 30, ["a troll", "an orcish mage"]),
+             (1030, 955, 35, ["a troll"]), (1010, 960, 40, []), (1000, 962, 45, [])]
+    rpc = Looks(snap, looks)
+    s = Session(rpc, w, None)
+    r = asyncio.run(s.travel_to(x=1200, y=800, recall=False))
+    assert not r.ok and r.summary == ("driven back on the way to 1200,800: down to 34% of health at 1050,950 by a troll, "
+                                      "an orcish mage, now 40 tiles back from there; the way to 1200,800 goes past it again")
+    assert [m for m, p in rpc.calls if m == "act" and p.get("verb") == "stop"] and len(s.driven_back) == 1
+    # Hurt as badly but pushed on through, nearer the goal: the trip goes on and arrives.
+    looks = [(1000, 1000, 87, []), (1050, 950, 30, ["a troll"]), (1080, 920, 40, []), (1100, 900, 50, [])]
+    assert asyncio.run(Session(Looks(snap, looks), w, None).travel_to(x=1200, y=800, recall=False)).ok
+    # Set out hurt, and the road leads away from the goal at first: not driven back.
+    looks = [(1000, 1000, 30, []), (1000, 1010, 32, []), (990, 1030, 34, []), (990, 1040, 36, [])]
+    assert asyncio.run(Session(Looks(snap, looks), w, None).travel_to(x=1200, y=800, recall=False)).ok
+    # Set out hurt and hurt again on the way: that is.
+    looks = [(1000, 1000, 40, []), (1050, 950, 20, ["a troll"]), (1010, 960, 25, [])]
+    assert "driven back" in asyncio.run(Session(Looks(snap, looks), w, None).travel_to(x=1200, y=800,
+                                                                                         recall=False)).summary
+    # Driven back, but the creatures still in sight: not yet (the fight loop is still getting away).
+    looks = [(1000, 1000, 87, []), (1050, 950, 30, ["a troll"]), (1010, 960, 40, ["a troll"])]
+    assert asyncio.run(Session(Looks(snap, looks), w, None).travel_to(x=1200, y=800, recall=False)).ok
+    w.close()
+
+
+def test_a_bank_whose_road_drove_the_character_back_lately_isnt_chosen_while_another_is(tmp_path):
+    w = World.open("test", root=tmp_path)
+    w.add_place("bank", "Minoc minter", 1663, 1000)
+    w.add_place("bank", "Vesper banker", 1640, 1300)
+    snap = copy.deepcopy(SNAPSHOT)
+    snap["agent"]["errand"] = {"state": "done", "detail": "moved 1 item", "moved": 1}
+
+    class Routes(Roads):
+        async def call(self, method, **params):
+            r = await super().call(method, **params)
+            if method == "nav":
+                r["route"] = [[1300, 1000], [1600, 1000]] if params["goal_y"] == 1000 else [[1300, 1150], [1600, 1280]]
+            return r
+
+    rpc = Routes(snap, {(1663, 1000): [(660, 10)], (1640, 1300): [(700, 30)]})
+    s = Session(rpc, w, None)
+    s.driven_back = [(1310, 990, time.monotonic() - 600)]
+    chosen, why = asyncio.run(s.safest_bank(snap))
+    assert chosen["name"] == "Vesper banker"
+    assert why.endswith("; the road to Minoc minter drove you back at 1310,990 10 min ago")
+    s.driven_back = [(1310, 990, time.monotonic() - 3600)]  # long enough ago
+    assert asyncio.run(s.safest_bank(snap))[0]["name"] == "Minoc minter"
+    w.close()
