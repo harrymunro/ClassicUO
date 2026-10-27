@@ -59,12 +59,23 @@ namespace ClassicUO.Agent
 
         private uint _engaged;
         private const uint ENGAGE_OUT_OF_REACH_MS = 15000;
+        // Next to the creature in melee with no blow landing (none of its health taken) for this long, it is given up as
+        // out of reach too. In a lands hour of Cove a resident stood by an unhurt zombie in the cemetery for 14 minutes,
+        // bandaging, until her hunt's time was up (2026-10-27, cuo-m3n.22); a zombie set down on that tile later died in
+        // 5 s, and one with an invisible LOS blocker on its tile too, so it wasn't the ground or the sight between: the
+        // client's picture of that creature, or the server's of the attack, was not the other's.
+        public const uint ENGAGE_NO_BLOW_MS = 30000;
+        private uint _blowTarget, _noBlowSince;
+        private int _blowHits = -1;
         // A creature given up as out of reach isn't engaged again for this long unless it moves more than
         // 2 tiles, and a path search that failed isn't repeated to the same spot for PATH_RETRY_MS (cuo-2ct:
         // an NPC re-engaged a rat in the sewer below it for 20 minutes, its failed searches costing a core).
         private const uint UNREACHABLE_MS = 60000;
+        // ...and one no blow reached next to it for 5 minutes: it stands where it stood (the cemetery's zombie never moved),
+        // and re-engaged every minute it would hold the hunt as long as before, half a minute at a time.
+        private const uint NO_BLOW_HOLD_MS = 300000;
         private const uint PATH_RETRY_MS = 3000;
-        private readonly Dictionary<uint, (uint At, int X, int Y)> _unreachable = new Dictionary<uint, (uint, int, int)>();
+        private readonly Dictionary<uint, (uint At, int X, int Y, uint Hold)> _unreachable = new Dictionary<uint, (uint, int, int, uint)>();
         private uint _pathFailedAt;
         private (int X, int Y) _pathFailedTo;
 
@@ -880,9 +891,11 @@ namespace ClassicUO.Agent
         }
 
         // Swung at the player in the last 8 s, or a monster in war mode standing next to them.
+        // A creature next to the character in war mode is taken to be at it, unless no blow reached it there a moment ago
+        // (NoBlowLands): then only harm actually done counts.
         public bool IsAttackingMe(Mobile m) =>
             _attackers.TryGetValue(m.Serial, out uint at) && Time.Ticks - at < 8000
-            || m.InWarMode && m.Distance <= 1 && IsMonsterTarget(m);
+            || m.InWarMode && m.Distance <= 1 && IsMonsterTarget(m) && !Unreachable(m);
 
         public ClientSightTiles SightTiles => _sightTiles ??= new ClientSightTiles(_world);
 
@@ -1299,15 +1312,22 @@ namespace ClassicUO.Agent
             }
         }
 
-        // Given up as out of reach within UNREACHABLE_MS, and still within 2 tiles of where it was.
+        private static bool InMelee(int range, int distance) => range <= 1 && distance <= 1;
+
+        // Engaged in melee next to the creature, and none of its health taken since `noBlowSince` for ENGAGE_NO_BLOW_MS.
+        public static bool NoBlowLands(int range, int distance, uint now, uint noBlowSince) =>
+            InMelee(range, distance) && now - noBlowSince > ENGAGE_NO_BLOW_MS;
+
+        // Given up as out of reach within UNREACHABLE_MS (NO_BLOW_HOLD_MS for no blow landing), and still within 2 tiles of
+        // where it was.
         public bool Unreachable(Mobile m)
         {
-            if (!_unreachable.TryGetValue(m.Serial, out (uint At, int X, int Y) u))
+            if (!_unreachable.TryGetValue(m.Serial, out (uint At, int X, int Y, uint Hold) u))
             {
                 return false;
             }
 
-            if (Time.Ticks - u.At > UNREACHABLE_MS || Math.Max(Math.Abs(m.X - u.X), Math.Abs(m.Y - u.Y)) > 2)
+            if (Time.Ticks - u.At > u.Hold || Math.Max(Math.Abs(m.X - u.X), Math.Abs(m.Y - u.Y)) > 2)
             {
                 _unreachable.Remove(m.Serial);
 
@@ -2557,14 +2577,37 @@ namespace ClassicUO.Agent
             // A creature that stays out of reach (a bird, something behind a wall) is let go: travel
             // waits while the agent is engaged, and in a soak run a crossbill held a walk 10 tiles
             // short of the healer for 10 minutes.
+            int hits = m.HitsMax > 0 ? m.Hits * 100 / m.HitsMax : -1;
+
+            // Its health unknown (no status from the server yet), no blow can be told from none.
+            if (hits < 0 || _blowTarget != _engaged || hits < _blowHits || !InMelee(_engagedRange, m.Distance))
+            {
+                _blowTarget = _engaged;
+                _noBlowSince = now;
+            }
+
+            _blowHits = hits;
+
             if (m.Distance <= _engagedRange && sight)
             {
+                // One that swung at the character a moment ago is in the fight, whatever its health shows: it isn't let go.
+                bool swinging = _attackers.TryGetValue(_engaged, out uint swungAt) && now - swungAt < 8000;
+
+                if (NoBlowLands(_engagedRange, m.Distance, now, _noBlowSince) && !swinging && _engaged != _playerTarget)
+                {
+                    Journal.AddAgentEvent($"gave up on 0x{_engaged:X8}: no blow landed in {ENGAGE_NO_BLOW_MS / 1000} s next to it");
+                    _unreachable[_engaged] = (now, m.X, m.Y, NO_BLOW_HOLD_MS);
+                    _engaged = 0;
+
+                    return;
+                }
+
                 _engagedInReachAt = now;
             }
             else if (now - _engagedInReachAt > ENGAGE_OUT_OF_REACH_MS && _engaged != _playerTarget)
             {
                 Journal.AddAgentEvent($"gave up on 0x{_engaged:X8}: " + (sight ? "out of reach" : "out of sight"));
-                _unreachable[_engaged] = (now, m.X, m.Y);
+                _unreachable[_engaged] = (now, m.X, m.Y, UNREACHABLE_MS);
                 _engaged = 0;
 
                 return;

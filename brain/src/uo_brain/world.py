@@ -865,6 +865,33 @@ class World:
         good = sorted((a for a in areas.values() if a.pop("ok") and a["kinds"]), key=lambda a: a["distance"])
         return [{**a, "kinds": a["kinds"][:4]} for a in good[:limit]]
 
+    def grounds_named(self, name: str, your_hits: int, map: str = DEFAULT_MAP) -> list[dict[str, Any]]:
+        """The hunting grounds whose names hold `name`, when no area or region is called it: each with a few of its
+        creatures and those stronger than the character (`stronger`). A hunt of "Cove Cemetery" went to the ground
+        by the cemetery (a lich, a shade, a spectre) when the carrier's planner meant the boars south-west of it, the
+        "fair ground near home", and she stood by an unhurt zombie there for 15 minutes (2026-10-27)."""
+        from .state import threat_words
+        if self.db.execute("SELECT 1 FROM spawns WHERE stale = 0 AND map = ? COLLATE NOCASE "
+                           "AND (area = ? COLLATE NOCASE OR region = ? COLLATE NOCASE) LIMIT 1", (map, name, name)).fetchone():
+            return []
+        rows = self.db.execute("SELECT * FROM spawns WHERE stale = 0 AND map = ? COLLATE NOCASE AND source != 'seen' "
+                               "AND area LIKE ? ORDER BY area", (map, f"%{name}%")).fetchall()
+        creatures = self._creatures()
+        grounds: dict[str, dict[str, Any]] = {}
+        for r in rows:
+            g = grounds.setdefault(r["area"], {"area": r["area"], "kinds": [], "stronger": []})
+            c = creatures.get(r["creature"].lower())
+            if c is None:  # a camp's spawner (OrcCamp, RatCamp) or a kind the store has no stats for
+                continue
+            kind = (c["name"] or r["creature"]).removeprefix("a ").removeprefix("an ")
+            if kind not in g["kinds"]:
+                g["kinds"].append(kind)
+            if c is not None and (c["hits_max"] or c["hits_min"]) and not (c["fight_mode"] and c["fight_mode"] in PEACEFUL_MODES) \
+                    and threat_words({"hits": c["hits_max"] or c["hits_min"], "difficulty": c["difficulty"]}, your_hits) \
+                    .startswith(("stronger", "far stronger")) and kind not in g["stronger"]:
+                g["stronger"].append(kind)
+        return list(grounds.values())
+
     def hunting_spots(self, archetype: str = "warrior", level: str = "new", near: Any = None,
                       map: str = DEFAULT_MAP, limit: int = 5) -> list[dict[str, Any]]:
         """Areas whose spawns suit a character, best first. Towns are left out. Creatures

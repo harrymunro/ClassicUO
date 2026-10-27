@@ -222,6 +222,23 @@ class Session:
         return (f". Grounds within {self.GROUNDS_TILES} tiles where nothing is stronger than you: "
                 + "; ".join(f"{g['area']} ({g['distance']} tiles: {', '.join(g['kinds'])})" for g in found))
 
+    async def loosely_named(self, area: str) -> str:
+        """Why a hunt isn't gone on as named, or "": the name is part of several hunting grounds' names and none's own
+        (world.grounds_named). The carrier's planner named "Cove Cemetery" for the boars south-west of it, and the hunt
+        went to the lich's ground by the cemetery (2026-10-27): asked, the planner names the ground it means."""
+        hits = 100
+        if self.rpc is not None:
+            snap = await self.snap()
+            hits = ((snap or {}).get("player") or {}).get("hits_max") or 100
+        grounds = self.world.grounds_named(area, hits)
+        if len(grounds) < 2:
+            return ""
+        def words(g: dict[str, Any]) -> str:
+            stronger = f"; stronger than you: {', '.join(g['stronger'])}" if g["stronger"] else "; nothing stronger than you"
+            return f"{g['area']} ({', '.join(g['kinds'][:4]) or 'creatures not known'}{stronger})"
+        return (f"not hunting {area!r}: no hunting ground is called that, and it is part of the names of {len(grounds)}: "
+                + "; ".join(words(g) for g in grounds[:4]) + ". Hunt the one you mean by its full name")
+
     def last_leave(self) -> dict[str, Any] | None:
         """Where this character last left creatures behind, and how long ago: for its party's reports."""
         if not self.left_from:
@@ -1262,6 +1279,10 @@ class Session:
         old fixed rules. Walks around the spawn when it is quiet. rally_key: a party's hunt, which it
         forms up for at the edge and goes into as one (rally.py)."""
         forming = self.rally if rally_key else None
+        if loose := await self.loosely_named(area):
+            if forming is not None and self.leads_party and rally_key != "area":
+                forming.off(rally_key)
+            return Result(False, loose)
         spot = self.hunt_spot(area)
         if spot is not None and rally_key == "area":
             # A party with a planner each: one rally for the place, whatever each planner called it.

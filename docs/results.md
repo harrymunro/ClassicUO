@@ -4486,6 +4486,107 @@ $0.271 together ($0.257 an hour), 41 lines to a neighbour.
   last ground was empty, so I'll try a fair hunting ground near Cove"), 2 of 6. The grounds near Cove are thin for
   four: most hunts ended within five minutes with nothing in sight.
 
+### A trip over several grounds as one piece of work (cuo-m3n.3)
+
+Harry's call of 2026-10-27, made after the hour above came out 15 of 23 with the carrier 2 of 6: a trip over
+several grounds is one piece of work. Since then `hamlet-report` counts a hunt that follows a hunt with no home
+between them as the same trip (the same ground twice in a row too); a sale, a purchase, banking, a watch or a trip
+to a town still parts two pieces, and the report says how many hunts it joined. Goal by goal, the pairs were the
+trip's pairs plus those, with the same number home between. Every earlier run recounted:
+
+```bash
+cd brain
+uv run uo-brain hamlet-report logs/fleet/RUN --json
+```
+
+| run | home between work, goal by goal | a trip as one piece | the carrier, a trip as one piece |
+|---|---|---|---|
+| m3n.4's three told runs | 12 of 16, 8 of 12, 8 of 14 | 12 of 15, 8 of 10, 8 of 12 | 2 of 4, 2 of 3, 1 of 2 |
+| m3n.4's three control runs | 2 of 36, 0 of 35, 0 of 38 | 2 of 27, 0 of 25, 0 of 28 | 0 of 2, 0 of 6, 0 of 12 |
+| told, 541e5d115 | 16 of 24 | 16 of 22 | 1 of 5 |
+| the lands, 541e5d115 | 11 of 15 | 11 of 15 | 0 of 4 |
+| the lands again, c72c1e616 | 11 of 20 | 11 of 15 | 1 of 2 |
+| and the empty ground, 4d93f759d | 13 of 20 | 13 of 17 | 3 of 5 |
+| and grounds named, dffc4b370 | 16 of 22 | 16 of 21 | 4 of 6 |
+| told, on the priced travel, 90c3f5dbd | 17 of 25 | 17 of 23 | 3 of 5 |
+| a second told hour, 3c9cfa38e | 11 of 23 | 11 of 20 | 1 of 4 |
+| the lands, the bank by its road | 13 of 15 | 13 of 14 | 4 of 5 |
+| the lands, the trip driven back | 19 of 25 | 19 of 24 | 3 of 5 |
+| the lands, the far grounds named | 11 of 20 | 11 of 16 | 3 of 5 |
+| the lands, told their dangers | 15 of 23 | 15 of 19 | 2 of 3 |
+
+- **It still tells the told from the control:** told nothing of Cove, the residents were home between 0 to 2 of 25
+  to 28 pieces, against 55% to 93% in each told and lands hour (181 of 243 in the fourteen).
+- **Recounted, the hour above meets cuo-m3n.3's acceptance** (every resident in Cove or its lands most of the
+  hour, and home between most pieces of work: 4 of 6, 4 of 5, 5 of 5, 2 of 3). The check is a fresh hour, not the
+  recount: below.
+
+#### The lands hour to check it
+
+2026-10-27 18:38 to 19:40, the same file, on the brain frozen at `src-frozen-27d` (a0ce34432: the code of the hour
+above plus the playtest's fixes to talk), the client in `bin/osx-arm64` (attended play; before the fixes this hour
+led to, cuo-m3n.22 and cuo-m3n.23), headless, memory on, the residents' memories set aside (62). Single run. Not
+filmed.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-27d uv run uo-brain fleet fleets/hamlet-cove-lands.toml --out logs/fleet/20261027-183826-hamlet-cove-lands-27d
+uv run uo-brain hamlet-report logs/fleet/20261027-183826-hamlet-cove-lands-27d
+```
+
+| | Brannoc | Wenna | Maren | Tamsin | the four |
+|---|---|---|---|---|---|
+| in Cove or its lands | 81% | 59% | 90% | 93% | 81% |
+| in Cove itself | 37% | 8% | 41% | 7% | 23% |
+| home between pieces of work, a trip as one piece | 6 of 8 | 2 of 3 | 3 of 3 | 3 of 4 | 14 of 18 |
+| ...goal by goal | 6 of 8 | 2 of 6 | 3 of 3 | 3 of 4 | 14 of 21 |
+| kills, deaths | 18, 0 | 21, 0 | 9, 0 | 5, 0 | 53, 0 |
+
+$0.300 together ($0.290 an hour), 47 lines to a neighbour.
+
+- **cuo-m3n.3's acceptance, met:** every resident in Cove or its lands most of the hour, and home between most
+  pieces of work, a trip over several grounds counted as one (Harry's call). Goal by goal it would not be: Wenna's
+  first trip went over two grounds for 34 minutes (the ground south-west of the cemetery, empty, a rest out there,
+  then north-east of the guard post twice) before she came home. No deaths, as in the hour before.
+- **Wenna was on Cove's lands least (59%):** her last two hunts were north-east of the Cove Cemetery, a ground of
+  boars and cougars that isn't one of the four named.
+- **Brannoc kept watch twice, 20 minutes,** and hunted six times between; he left one hunt when a creature far
+  stronger than him came at him with a pig, and nothing came into Cove.
+- **Tamsin's two hunts named "Cove Cemetery" went to the lich's ground by it,** though her planner meant "the fair
+  ground south-west of Cove Cemetery" (its own words): the name is part of both grounds' names and the hunt took
+  the one at the place (fixed: cuo-m3n.23). On the first, a zombie stood next to her, unhurt, for 14 minutes,
+  while she used 33 of her 40 bandages and killed nothing until her hunt's time was up (fixed: cuo-m3n.22).
+
+#### What the hour led to (cuo-m3n.22, cuo-m3n.23)
+
+2026-10-27 19:41 to 20:14, the test server, Tess (a warrior, 95 hits) alone where Tamsin had stood (2452,1093, a
+fence to her east), on the client before the fix (`bin/osx-arm64` then) and after it (`bin/osx-arm64-27d`, a scratch
+build of the fix, in `bin/osx-arm64` since). Single runs. Not filmed.
+
+```bash
+cd brain
+UO_CLIENT_DIR=../bin/osx-arm64 uv run uo-brain --port 5590 client --headless --account headless7 --character Tess
+uv run uo-brain --port 5590 say "[AgentGo 2452 1093"
+uv run uo-brain --port 5590 say "[AgentSpawn Zombie 1 1 w still"     # then also "[AgentBuild wall 1 w 1 los"
+uv run uo-brain --port 5590 do hunt "near Cove Cemetery" --minutes 4 --profile npc --log logs/m3n22/old.jsonl
+# the same on UO_CLIENT_DIR=../bin/osx-arm64-27d, --minutes 12, logs/m3n22/new.jsonl; then the planner:
+uv run uo-brain --port 5590 session "earn some gold hunting at Cove Cemetery, then come home to Cove" --hours 0.1 \
+  --profile npc --no-memory --log logs/m3n23/session.jsonl
+```
+
+- **The stall, cuo-m3n.22:** ten earlier hamlet logs of 96 have a melee target next to the character with its
+  health unchanged for over a minute (6 to 17 minutes in five of them), so it isn't rare. It wasn't the ground or
+  the sight between: a still zombie set down on the tile beside hers died within 5 s on the old client, and so did
+  one with ModernUO's invisible LOS blocker on its tile. What is left is that the client's picture of that zombie
+  (next to her, unhurt, never moving for 14 minutes) wasn't the server's, or the attack was refused. The client now
+  gives such a creature up after 30 s with none of its health taken, unless it swung at the character in the last
+  8 s. On the lich's ground neither hunt stalled (2 kills each, in 4 and 12 minutes) and the new client gave
+  nothing up; the give-up itself is shown by unit tests only, not yet in a run.
+- **The name, cuo-m3n.23:** the planner's first goal was a hunt of "Cove Cemetery", refused before any walk with
+  the four grounds whose names hold it ("near Cove Cemetery (spectre, shade, wraith, lich; stronger than you:
+  lich)"); it chose "east of Cove Cemetery" ("Cove Cemetery's nearby ground has a lich, so I'll hunt ... where
+  nothing is stronger than a new warrior"), and later the lich's ground by its full name, for its gold.
+
 ### The watchman's watch (cuo-m3n.12)
 
 2026-10-27, the test server, Brannoc (95 hits, a warrior's kit) alone at the east gate, the `watch` goal from the

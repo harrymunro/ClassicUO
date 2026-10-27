@@ -984,3 +984,30 @@ def test_a_watch_walks_its_round_and_fights_only_on_the_hamlets_ground(tmp_path,
     assert r.summary.startswith("kept watch over Cove for ") and "came onto the ground: 1 an orc, 1 an orc captain; 2 kills" \
         in r.summary
     w.close()
+
+
+def test_a_hunt_named_by_part_of_several_grounds_names_is_asked_which(tmp_path):
+    """2026-10-27: the carrier's planner named "Cove Cemetery" for the boars south-west of it ("the fair ground near
+    home") and went to the lich's ground by the cemetery, where she stood by an unhurt zombie for 15 minutes."""
+    w = World.open("test", root=tmp_path)
+    w.replace_source("creatures", "fixture", [
+        {"type": "Boar", "name": "a boar", "hits_min": 15, "hits_max": 15, "difficulty": "weak", "fight_mode": "Aggressor"},
+        {"type": "Zombie", "name": "a zombie", "hits_min": 28, "hits_max": 42, "difficulty": "weak", "fight_mode": "Closest"},
+        {"type": "Lich", "name": "a lich", "hits_min": 103, "hits_max": 120, "difficulty": "strong", "fight_mode": "Closest"}])
+    w.replace_source("spawns", "fixture", [
+        {"area": area, "map": "Felucca", "x": x, "y": 1100, "walk_range": 20, "creature": kind, "max_count": 3,
+         "spawner": f"{area}:{kind}", "min_delay_s": 300, "max_delay_s": 600}
+        for area, x, kind in (("near Cove Cemetery", 2438, "Lich"), ("near Cove Cemetery", 2438, "Zombie"),
+                              ("south-west of Cove Cemetery", 2416, "Boar"), ("south-west of Cove Cemetery", 2416, "OrcCamp"))])
+    w.add_place("graveyard", "Cove Cemetery", 2438, 1100, source="test")
+    s = Session(FakeRpc(copy.deepcopy(SNAPSHOT)), w, judge=object())
+    r = asyncio.run(s.hunt("Cove Cemetery", 10))
+    assert not r.ok and r.summary == (
+        "not hunting 'Cove Cemetery': no hunting ground is called that, and it is part of the names of 2: near Cove "
+        "Cemetery (lich, zombie; stronger than you: lich); south-west of Cove Cemetery (boar; nothing stronger than "
+        "you). Hunt the one you mean by its full name")
+    assert not [c for c in s.rpc.calls if c[0] != "snapshot"], "nowhere walked"
+    # A ground's own name, and a name only one ground's holds, are hunted as before.
+    assert asyncio.run(s.loosely_named("south-west of Cove Cemetery")) == ""
+    assert asyncio.run(s.loosely_named("south-west of Cove")) == ""
+    w.close()

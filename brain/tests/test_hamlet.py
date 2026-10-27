@@ -183,7 +183,7 @@ def test_the_hamlet_report_measures_each_resident_against_it(tmp_path):
     assert m["samples"] == 41 and m["in_hamlet"] == 0.39 and m["at_home"] == 0.24 and m["came_home"] == 1
     assert m["longest_away_min"] == 12.0 and m["farthest"] == 131
     # No lands in this run: in the hamlet or its lands is in the hamlet; home came between the hunt and the sale.
-    assert m["in_hamlet_or_lands"] == 0.39 and m["home_between_work"] == {"pairs": 1, "home_between": 1}
+    assert m["in_hamlet_or_lands"] == 0.39 and m["home_between_work"] == {"pairs": 1, "home_between": 1, "hunts_joined": 0}
     assert [(s["minutes"], s["goal"]) for s in m["still_away"]] == [(11.0, "hunt(area=south-west of Cove Cemetery, minutes=15)")]
     assert m["work"]["kills"] == 3 and m["work"]["gold_from_sales"] == 120 and m["work"]["items_bought"] == 20
     assert m["work"]["goals"] == {"hunt": 1, "travel_to": 1, "sell": 1} and m["work"]["trips"] == {"home": 1}
@@ -240,19 +240,36 @@ def test_the_report_counts_the_lands_and_home_between_pieces_of_work():
                {"type": "goal", "t": 300, "tool": "hunt"}, {"type": "goal", "t": 400, "tool": "rest"}]
     homes = [(50, False), (150, True), (250, False), (350, False)]
     # hunt -> sell had home between (the trip home isn't a piece of work); sell -> hunt didn't
-    assert hamlet.home_between_work(session, homes) == {"pairs": 2, "home_between": 1}
+    assert hamlet.home_between_work(session, homes) == {"pairs": 2, "home_between": 1, "hunts_joined": 0}
     # A walk to a neighbour's home isn't a piece of work.
     visits = session + [{"type": "goal", "t": 450, "tool": "travel_to", "args": {"place": "Tamsin's home"}}]
-    assert hamlet.home_between_work(visits, homes) == {"pairs": 2, "home_between": 1}
+    assert hamlet.home_between_work(visits, homes) == {"pairs": 2, "home_between": 1, "hunts_joined": 0}
     # Home between two looks: a trip home that arrived at 270 s, the next hunt setting out at once.
     session[3:3] = [{"type": "session", "event": "travelled", "t": 270, "to": "home", "state": "arrived"}]
     assert hamlet.home_between_work(session, sorted(homes + hamlet.home_arrivals(session))) == \
-        {"pairs": 2, "home_between": 2}
+        {"pairs": 2, "home_between": 2, "hunts_joined": 0}
     assert hamlet.home_arrivals([{"type": "goal_result", "t": 5, "tool": "travel_to",
                                   "result": {"ok": True, "result": "already at home"}},
                                  {"type": "session", "event": "travelled", "t": 9, "to": "home", "state": "stuck"},
                                  {"type": "session", "event": "travelled", "t": 9, "to": "Vesper", "state": "arrived"}]) \
         == [(5, True)]
+
+
+def test_a_trip_over_several_grounds_is_one_piece_of_work():
+    """Harry, 2026-10-27, after Tamsin's 2 of 6 in the second lands hour: she went from an empty ground straight on to
+    the next ("The last ground was empty, so I'll try a fair hunting ground near Cove") and was counted not home between
+    them. Her goals that hour, minutes in."""
+    goal = lambda t, tool, place=None: {"type": "goal", "t": t * 60, "tool": tool,
+                                        **({"args": {"place": place}} if place else {"args": {"area": "a ground"}})}
+    session = [goal(0.1, "buy"), goal(0.6, "hunt"), goal(5.8, "hunt"), goal(12.0, "travel_to", "home"),
+               goal(14.2, "hunt"), goal(28.2, "travel_to", "home"), goal(30.7, "rest"), goal(35.9, "hunt"),
+               goal(41.7, "hunt"), goal(57.3, "hunt")]
+    homes = [(14.1 * 60, True), (30.6 * 60, True), (33 * 60, True)]
+    # buy -> trip (two grounds): not home; trip -> hunt: home; hunt -> trip (three hunts): home
+    assert hamlet.home_between_work(session, homes) == {"pairs": 3, "home_between": 2, "hunts_joined": 3}
+    # A hunt after the trip home is a new piece, and so is one after other work: a sale between two hunts parts them.
+    assert hamlet.home_between_work([goal(1, "hunt"), goal(2, "sell"), goal(3, "hunt")], []) == \
+        {"pairs": 2, "home_between": 0, "hunts_joined": 0}
 
 
 def test_a_neighbours_home_is_a_place_to_go(tmp_path):
@@ -348,7 +365,7 @@ def test_the_report_counts_a_watch_as_work_and_its_kills():
                {"type": "goal", "t": 3, "tool": "travel_to", "args": {"place": "home"}},
                {"type": "goal", "t": 5, "tool": "watch", "args": {"minutes": 10}}]
     assert hamlet.work(session)["kills"] == 3 and hamlet.work(session)["goals"]["watch"] == 2
-    assert hamlet.home_between_work(session, [(4, True)]) == {"pairs": 1, "home_between": 1}
+    assert hamlet.home_between_work(session, [(4, True)]) == {"pairs": 1, "home_between": 1, "hunts_joined": 0}
 
 
 def test_each_land_is_told_with_what_there_is_too_strong_for_one_alone(tmp_path):

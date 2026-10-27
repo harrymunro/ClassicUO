@@ -482,13 +482,23 @@ def home_arrivals(session: list[dict[str, Any]]) -> list[tuple[float, bool]]:
 def home_between_work(session: list[dict[str, Any]], homes: list[tuple[float, bool]]) -> dict[str, int]:
     """Of each piece of work and the next (goals of WORK_GOALS but a trip home or to a neighbour's), how many had the
     resident at home between them (cuo-m3n.3). A visit next door isn't going out to work: in the lands hour of
-    2026-10-27 Maren's eight walks to Tamsin's and Wenna's homes, a few houses off, made eight more pieces."""
+    2026-10-27 Maren's eight walks to Tamsin's and Wenna's homes, a few houses off, made eight more pieces.
+
+    A trip over several grounds is one piece of work (Harry, 2026-10-27, after Tamsin's 2 of 6): a hunt that follows
+    a hunt with no home between them is the same trip ("The last ground was empty, so I'll try a fair hunting ground
+    near Cove"), counted in `hunts_joined`; goal by goal the pairs were `pairs + hunts_joined`, with the same
+    `home_between`."""
     def visit(place: str) -> bool:
         return bool(HOME_WORDS.match(place) or NEIGHBOUR_HOME.match(place))
-    starts = [x["t"] for x in session if x.get("type") == "goal" and x.get("tool") in WORK_GOALS
-              and not (x.get("tool") == "travel_to" and visit(str((x.get("args") or {}).get("place") or "")))]
+    def home(a: float, b: float) -> bool:
+        return any(on and a < t < b for t, on in homes)
+    goals = [(x["t"], x.get("tool")) for x in session if x.get("type") == "goal" and x.get("tool") in WORK_GOALS
+             and not (x.get("tool") == "travel_to" and visit(str((x.get("args") or {}).get("place") or "")))]
+    starts = [t for (t, tool), (t0, before) in zip(goals, [(None, None)] + goals)
+              if not (tool == before == "hunt" and not home(t0, t))]
     pairs = list(zip(starts, starts[1:]))
-    return {"pairs": len(pairs), "home_between": sum(1 for a, b in pairs if any(on and a < t < b for t, on in homes))}
+    return {"pairs": len(pairs), "home_between": sum(1 for a, b in pairs if home(a, b)),
+            "hunts_joined": len(goals) - len(starts)}
 
 
 def evenings(session: list[dict[str, Any]]) -> dict[str, int]:
@@ -600,9 +610,11 @@ def markdown(r: dict[str, Any]) -> str:
             continue
         cost = (a.get("cost_per_hour_usd") or {}).get("total", 0) if isinstance(a.get("cost_per_hour_usd"), dict) else 0
         hb = a.get("home_between_work") or {"pairs": 0, "home_between": 0}
+        joined = hb.get("hunts_joined") or 0  # a trip over several grounds is one piece of work
         lands = f"{a['in_hamlet_or_lands']:.0%}" if "in_hamlet_or_lands" in a else ""
         lines.append(f"| {name} | {a.get('minutes')} | {a['in_hamlet']:.0%} | {lands} | {a['at_home']:.0%} | {a['came_home']} | "
-                     f"{hb['home_between']} of {hb['pairs']} | "
+                     f"{hb['home_between']} of {hb['pairs']}"
+                     f"{f' ({joined} more hunts on the same trips)' if joined else ''} | "
                      f"{a['longest_away_min']} | {a['farthest']} | {len(a['still_away'])} | "
                      f"{r['talked_with'].get(name, 0)} of {len(a['talk'])} | {cost:.3f} |")
     lines += ["", "| resident | goals | kills | gold from sales | bought | banked | deaths |", "|---|---|---|---|---|---|---|"]

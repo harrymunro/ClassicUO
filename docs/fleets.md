@@ -1050,7 +1050,11 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   them ("on Cove's lands (south-west of Cove Cemetery), 115 tiles from Cove and 165 from home") and, after 5
   minutes away, how long it has been away from home. `hamlet-report` adds the share of the run in the hamlet
   or its lands, and how many of a resident's pieces of work (hunts, sales, purchases, banking, trips but the
-  trip home or to a neighbour's: a visit a few houses off isn't going out to work) had it at home between one and the next: at home in one of the fleet's looks at where each is
+  trip home or to a neighbour's: a visit a few houses off isn't going out to work) had it at home between one and the next, a trip over
+  several grounds counting as one piece (a hunt straight after a hunt with no home between them: Harry's call of
+  2026-10-27, after the carrier went from an empty ground straight on to the next; the report says how many hunts
+  it joined, and recounted, the control runs are still 2 of 27, 0 of 25 and 0 of 28,
+  [results](results.md#a-trip-over-several-grounds-as-one-piece-of-work-cuo-m3n3)): at home in one of the fleet's looks at where each is
   (every 30 s), or a trip home that arrived; homecomings count those arrivals too. Before 2026-10-27 only
   the looks counted, and a resident who set out again within 30 s of getting home wasn't counted home (Wenna
   arrived 3 s before her next hunt): recounted, the four lands hours below had home between work 11 of 15,
@@ -1072,6 +1076,9 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   of work 11 of 20 and 15 of 23, the carrier going from an empty ground straight on to the next; three deaths at
   the fort in the first, none in the second, once each land was told with what is too strong there
   ([results](results.md#a-second-lands-hour-the-lands-told-with-their-dangers-and-the-watch-first-cuo-m3n3-cuo-m3n12-cuo-m3n21)).
+  With a trip over several grounds as one piece, a fresh hour met the measure: every resident in Cove or its lands
+  most of the hour (59% to 93%, 81% together) and home between most pieces of work (14 of 18; 14 of 21 goal by
+  goal), with no deaths ([results](results.md#the-lands-hour-to-check-it)).
 - **Its evenings** (cuo-m3n.5): `gather = "Cove healer"`, `gather_words = "the healer's house"`,
   `day_minutes = 60` and `evening_minutes = 15` in `[hamlet]` make a run days of an hour whose last quarter
   is the evening, on one clock for every resident (from the run's start). Each turn says the time of day ("day
