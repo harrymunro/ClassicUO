@@ -3677,6 +3677,49 @@ uv run python scripts/look_check.py --models decision1,jev --out bench/2026-10-2
 - **Plans that wait for more than a look aren't looked at:** in runs 3 and 5 the later plans waited for Roland to be
   healed and restocked as well, and were read as no look (rightly); the party rested.
 
+**A new person's words, by script** (cuo-cym.29, 2026-10-27 16:52, 17:08 and 17:24): what Harry was to play, played by
+`scripts/party_player.py --fresh-words` as the leader: 17 lines a new person might type, in lower case and loosely,
+none of them from the earlier playtests, each written down with what it means before the first run (memory:
+a script asks what its builder thought of, so these come from a player's side). Three companions, `fleets/party-
+player-talk.toml` (its run now 21 minutes), Decision 1 reading, Haiku writing the answers. The second run is on the
+fixes the first asked for. No person has played it.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-27d UO_CLIENT_DIR=../bin/osx-arm64-next uv run python scripts/party_player.py \
+  --fleet fleets/party-player-talk.toml --fresh-words --out logs/fleet/RUN       # writes RUN/fresh-words.json
+```
+
+| the line | meant | first run | second run (the fixes) |
+|---|---|---|---|
+| stick close to me lads | keep close | read as the follow they were on; distance unchanged | **close** ("Right at your elbow, Roland.") |
+| spread out a bit, youre crowding me | further off | loose | loose |
+| go easy, dont go chasing stuff | only what comes at us | reach: defend | defend |
+| ok go hard, clear the place out | fight everything | aggression only; reach stayed at defend | aggression, and reach wide for 2 of 3 |
+| shh keep it down for a bit | quiet | silent, but each said a sentence about it | **"Not another word."** from each |
+| ok you can talk again | talk | chatty | chatty |
+| grab any gold you see | loot | valuables (there is no gold-only level; gold is always taken) | valuables |
+| leave the loot | no looting | nothing | nothing |
+| anyone hurt? | a question to all | no order; three answers, 5 to 11 s | the same, 6 to 11 s |
+| tamer, hows the bear? | Thea, by what she plays | Thea alone | Thea, then Wystan answering her |
+| Isolde and Wystan wait here, then a walk of 12 tiles | those two stay, Thea comes | as meant (moved 0, 0, 6 tiles) | as meant |
+| everyone with me | all follow | all follow | all follow |
+| go wait for me at the healer | go there | all three to the Britain healer, willing 0.95 to 0.97 | the same |
+| actually nah, come back | call back | said aloud from out of earshot: nobody heard (the script's mistake: the guide says party chat) | in party chat: all three came; **but they answered aloud**, out of the leader's hearing |
+| what are you lot up to? / cheers guys, good work today / lol | talk; talk; nothing | said to nobody: they were at the healer | three answers; two answers; nothing |
+
+- **What it asked for, built:** told to be quiet, what a companion still owes (the word on that order, a refusal)
+  is said in its few plain words, not a written line; "stick close" to one already following is how close (a
+  follow to one following was taken for the follow it was on); and a line in party chat is answered in party chat,
+  both the word on an order and a written answer (the talk didn't hear the leader's party chat at all before; it now
+  hears the person's, not the agents' own, whose callouts can go there).
+- **A third run on all of it** (17:24, one more line, "where are you lot?" in party chat while they waited at the
+  healer): each answered in party chat, 6, 10 and 14 s after ("At the healer's, Roland."), and "come back" in party
+  chat brought all three back with answers the leader could read. The rest read as in the second run. One answer to
+  "what are you lot up to?", just back beside the leader, still said they were at the healer's.
+- **Left as it is:** one line is mostly read as speaking to one setting, so "go hard, clear the place out" can leave
+  how far they go for a fight as it was ([known limits](known-limits.md)).
+
 **A second scene: casters and archers from two sides** (cuo-cym.11), 2026-10-14 02:52 to 06:58. Every
 party measure before was the lich scene. `fleets/party-casters.toml` stages the same five south of the
 Britain graveyard against three skeletal mages and two skeletons where the lich's wave stood, north-west,
@@ -4411,6 +4454,37 @@ $0.308 together ($0.297 an hour), 24 lines to a neighbour.
   the hour on it). A watch gives few kills. The watch is now his first long goal and his work's first words.
 - **Tamsin banked 722 gold at Minoc's,** chosen by its road (949 steps, 41 priced, against Vesper's 873 and 63),
   and hunted the north-east of Cove Guard Post for 15 kills.
+
+### A second lands hour, the lands told with their dangers and the watch first (cuo-m3n.3, cuo-m3n.12, cuo-m3n.21)
+
+2026-10-27 16:28 to 17:31, the same file, on the brain frozen at `src-frozen-27c`: each land told with what is too
+strong there for one alone (cuo-m3n.21), and the watch Brannoc's first long goal and his work's first words.
+Headless, memory on, the residents' memories set aside. Single run. Not filmed.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-27c uv run uo-brain fleet fleets/hamlet-cove-lands.toml --out logs/fleet/20261027-162812-hamlet-cove-lands-27c
+uv run uo-brain hamlet-report logs/fleet/20261027-162812-hamlet-cove-lands-27c
+```
+
+| | Brannoc | Wenna | Maren | Tamsin | the four |
+|---|---|---|---|---|---|
+| in Cove or its lands | 92% | 84% | 87% | 91% | 89% |
+| in Cove itself | 70% | 30% | 44% | 13% | |
+| home between pieces of work | 4 of 6 | 4 of 6 | 5 of 5 | 2 of 6 | 15 of 23 |
+| kills, deaths | 1, 0 | 15, 0 | 1, 0 | 6, 0 | 23, 0 |
+
+$0.271 together ($0.257 an hour), 41 lines to a neighbour.
+
+- **No deaths, and nobody hunted the orc fort,** against three deaths there in the first 12 minutes of the hour
+  before; the residents now name their grounds as "a fair fight for one alone" when they choose them.
+- **Brannoc kept watch three times, 34 minutes** (15, 10 and 9 minutes, walking his round), and hunted four times
+  between; nothing came into Cove this hour, so the watches killed nothing. That is the watchman's acceptance: his
+  work, without dying more than once.
+- **Every resident was in Cove or its lands most of the hour again,** the first half of cuo-m3n.3's acceptance.
+  Home between pieces of work is three of four: Tamsin went from an empty ground straight on to the next twice ("The
+  last ground was empty, so I'll try a fair hunting ground near Cove"), 2 of 6. The grounds near Cove are thin for
+  four: most hunts ended within five minutes with nothing in sight.
 
 ### The watchman's watch (cuo-m3n.12)
 

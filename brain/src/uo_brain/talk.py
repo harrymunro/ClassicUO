@@ -410,6 +410,7 @@ class Ears:
         self.pace_factor = pace_factor  # ...for this share of that time (a fleet file's `pace = 0.7`)
         self.small_talk = small_talk  # they chat when they have time (cuo-cod.6)
         self.muted = False            # told to be quiet by a leader a person plays: only what it owes is said
+        self.leader_party = False     # ...whose last line came in party chat: answers to it go there too
         # How its companion half read a line of the leader's (companion.Companion.reading, by the line's number
         # in the journal): an order taken, a setting changed, who the line is for. None: nobody reads them.
         self.reader: Callable[[int], Any] | None = None
@@ -459,8 +460,11 @@ class Ears:
             # it is for (its companion half's reading), and by their pattern "Wystan stay" and "thea come", which
             # are orders to companions, were dropped from the talk as a pet's.
             judged = e.get("name") == self.person and self.reader is not None
+            # Party chat from the person who leads is speech too: out of earshot it is the only way to reach them
+            # (cuo-cym.29). Not the agents' own: a party's callouts can go there (callouts_to), and aren't talk.
+            spoken = e.get("type", "regular") in SPOKEN or e.get("type") == "party" and e.get("name") == self.person
             if e.get("source") == "speech" and e.get("name") in self.friends and text \
-                    and e.get("type", "regular") in SPOKEN and not text.startswith(e["name"]) \
+                    and spoken and not text.startswith(e["name"]) \
                     and (judged or not ERRAND_WORDS.match(text)):
                 # Heard either way (for the planner and memory), but a line that names another of the
                 # friends and not this character isn't one to answer: "Well met, Thea!" was answered by
@@ -486,6 +490,10 @@ class Ears:
                 # Who a line of the leader's is for is its companion half's reading where there is one (consider):
                 # by the names in it, a line that only mentions a companion ("Wystan shot it first") was that
                 # one's alone, and "you two" was anyone's.
+                if e["name"] == self.person:
+                    # The person who leads spoke in party chat (out of earshot, a call back): answered there too
+                    # (cuo-cym.29). Called back that way, three companions answered aloud, and the leader heard none.
+                    self.leader_party = e.get("type") == "party"
                 line = {"t": t, "who": e["name"], "text": said, "to": to, "seq": e.get("seq", 0),
                         "answered": bool(to) and self.me not in to and not judged or aside or now - t > LATE_S,
                         **({"aside": True} if aside else {}), **({"after": after} if after else {}),
@@ -613,9 +621,11 @@ class Ears:
         if judged:
             heard["to"] = list(reading.to)
         fighting = self.fighting(snap)
-        if owed and (fighting or not self.allowed(True)):
+        if owed and (fighting or self.muted or not self.allowed(True)):
+            # No line can be written now, or it was told to be quiet: its plain word. Told "shh keep it down for a
+            # bit", each of three companions answered with a written sentence about being silent (cuo-cym.29).
             self.settle(friend)
-            return await self.say_plain(reading, friend)  # no line can be written now: its plain word
+            return await self.say_plain(reading, friend)
         if led and heard is not None and not owed and (self.muted or now - heard["t"] > LATE_S):
             return self.settle(friend)  # told to be quiet; or too old to answer (a fight came between)
         direct = led and (owed or judged or any(
@@ -725,7 +735,7 @@ class Ears:
         text = getattr(reading, "plain", "")
         if not text:
             return None
-        await self.rpc.call("act", verb="say", text=text)
+        await self.out_loud(text, friend)
         now = time.time()
         self.floor.say(text, kind="callout")  # heard by the others, and not theirs to answer
         self.lines.append({"t": now, "who": self.me, "text": text, "answered": True, "aside": True})
@@ -842,9 +852,16 @@ class Ears:
         self.ready = None
         return await self.say(r)
 
+    async def out_loud(self, text: str, friend: str) -> None:
+        """A line aloud, or in party chat to a person who leads and last spoke there."""
+        if friend == self.person and self.leader_party:
+            await self.rpc.call("act", verb="party", kind="say", text=text)
+        else:
+            await self.rpc.call("act", verb="say", text=text)
+
     async def say(self, r: Ready) -> str:
         friend, text, args = r.friend, r.text, r.args
-        await self.rpc.call("act", verb="say", text=text)
+        await self.out_loud(text, friend)
         now = time.time()
         gives = str(args.get("gives") or "none")
         small = r.why == "chat" and gives == "none"

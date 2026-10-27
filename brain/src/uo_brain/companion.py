@@ -812,6 +812,7 @@ class Companion:
         self.stopping: asyncio.Event | None = None
         self.tables = 0
         self.acknowledge = acknowledge  # a word aloud when an order is taken (local server only, as all talk)
+        self.leader_party = False       # the leader's last line came in party chat: the word goes back there
         self.voice = voice              # voice.Voice: that word in its own voice, where it has one
         self.floor = floor              # talk.Floor: the word is on it, so the others hear it and don't answer it
         self.link = link                # mates.Mates: its callouts are a setting the leader can switch
@@ -879,7 +880,10 @@ class Companion:
         if not self.acknowledge:
             return ""
         line = (self.voice.pick(kind, **slots) if self.voice is not None and kind else "") or plain
-        await self.session.act("say", text=line)
+        if self.leader_party:
+            await self.session.act("party", kind="say", text=line)  # the leader called in party chat: out of earshot
+        else:
+            await self.session.act("say", text=line)
         if self.floor is not None:
             self.floor.say(line, kind="callout")
         return line
@@ -912,6 +916,8 @@ class Companion:
             if e.get("name") != self.leader or (self.serial and e.get("serial") not in (0, self.serial)):
                 continue  # only the leader, and once it is known, only that one of the name
             lines.append((e.get("seq", 0), e.get("text") or ""))
+            # Said in party chat (out of earshot): its word on the order goes back the same way (utter, cuo-cym.29).
+            self.leader_party = e.get("type") == "party"
         self.seq = max(self.seq, seq)
         return lines
 
@@ -1058,9 +1064,12 @@ class Companion:
                       f"{me} didn't take it as that: {me} carries on as before and agrees to nothing")
         # The settings the line speaks to, each then asked about by itself (set_by). How close it keeps isn't one
         # of them when the line is itself an order: "stay close", "hang back here" and "everyone on me" were read
-        # as both, and are orders.
+        # as both, and are orders. But a "come along" to one already coming along is how close: told "stick close to
+        # me lads" while following, three companions took it for the follow they were on and kept their distance
+        # (cuo-cym.29).
         which = self.settings.spoken_to(ans.choices["setting"].probabilities) if "setting" in ans.choices else []
-        which = [name for name in which if not (name == "distance" and r.order is not None)]
+        which = [name for name in which if not (name == "distance" and r.order is not None
+                                                and not (r.order == "follow" and self.mode == "follow"))]
         self.read += 1
         self.read_cost += ans.cost + sum(a.cost for a in got.values())
         self.log({"type": "order_read", "t": time.time(), "from": self.leader, "text": text[:200], "order": r.order,

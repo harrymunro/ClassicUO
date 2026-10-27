@@ -606,7 +606,8 @@ def test_the_leaders_word_changes_a_companions_settings(tmp_path):
         values={"feel free to loot": {"looting": ("valuables", 0.95)},
                 ("Wystan, you loot; the rest of you keep off.", "Isolde"): {"looting": ("nothing", 0.9)},
                 "Loot what you like, and no running.": {"looting": ("everything", 0.9), "fleeing": ("never", 0.99)},
-                "Give me some room, you're crowding me.": {"distance": ("loose", 0.9)}})
+                "Give me some room, you're crowding me.": {"distance": ("loose", 0.9)},
+                "Stay close.": {"distance": ("close", 0.9)}})
     seen = []
     c = companion.Companion(s, mine, log=seen.append)
     cfg = policy.PolicyConfig(escort="Harry", looting="nothing")
@@ -636,10 +637,13 @@ def test_the_leaders_word_changes_a_companions_settings(tmp_path):
     # How close it keeps is a setting too: the follow is asked for again at the new distance.
     asyncio.run(c.step())
     assert c.follow_tiles == standing.FOLLOW_TILES["loose"] and s.acts[-1] == ("follow", {"target": 0x700, "distance": 5})
-    # ...but not from a line that is itself an order: "stay close" is one, and is answered as one.
-    asked = len(s.judge.asked)
+    # ...and from a line that is itself an order only when it is the follow already in force: told "stick close to
+    # me lads" while following, three companions kept their distance (cuo-cym.29). "Stay close" to one following is
+    # how close: the follow it is on, and right at the leader's side.
+    acts = len(s.acts)
     asyncio.run(c.step())
-    assert len(s.judge.asked) == asked + 1 and c.follow_tiles == 5 and s.acts[-1] == ("say", {"text": "Still with you."})
+    assert c.follow_tiles == standing.FOLLOW_TILES["close"] and ("say", {"text": "Still with you."}) in s.acts[acts:]
+    assert ("say", {"text": "Right at your side."}) in s.acts[acts:]
     assert c.settings.to_log()["settings_changed"][0] == {"setting": "looting", "was": "nothing", "now": "valuables"}
     w.close()
 
@@ -1161,4 +1165,23 @@ def test_errands_and_one_of_after_the_review(tmp_path):
     c.job = {"kind": "buy", "item": "reagents", "says": "the shops", "words": "to buy reagents at the shops"}
     asyncio.run(c.run_errand())
     assert ("say", {"text": "Got 22 black pearl, 30 blood moss, coming back."}) in s.acts
+    w.close()
+
+
+def test_a_line_in_party_chat_is_answered_in_party_chat(tmp_path):
+    """cuo-cym.29: called back in party chat from out of earshot, three companions came and answered aloud, and the
+    leader heard none of it. Its word goes back the way the line came; aloud again after a line said aloud."""
+    w = World.open("local", root=tmp_path)
+    mine = party.Party(w, "p1", "Isolde", "Harry", MEMBERS)
+    harry = person("Harry", 5, 5, 0)
+    s = Walker([
+        view([harry]),
+        view([harry], [said(11, "Harry", "Stay here.", kind="party")], seq=11, follow={"state": "following"}),
+        view([harry], [said(12, "Harry", "Come on, with me!")], seq=12),
+    ])
+    c = companion.Companion(s, mine)
+    for _ in range(3):
+        asyncio.run(c.step())
+    assert ("party", {"kind": "say", "text": "Staying here."}) in s.acts
+    assert ("say", {"text": "Right behind you."}) in s.acts and ("say", {"text": "Staying here."}) not in s.acts
     w.close()

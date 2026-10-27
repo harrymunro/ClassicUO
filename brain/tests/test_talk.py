@@ -10,11 +10,13 @@ from test_planner import FakeSession, call, reply, scripted
 
 class Rpc:
     def __init__(self):
-        self.said = []
+        self.said, self.party = [], []
 
     async def call(self, method, **params):
         if method == "act" and params.get("verb") == "say":
             self.said.append(params["text"])
+        if method == "act" and params.get("verb") == "party" and params.get("kind") == "say":
+            self.party.append(params["text"])
         return {}
 
 
@@ -699,9 +701,35 @@ def test_told_to_be_quiet_it_answers_nothing_but_what_it_owes(tmp_path):
     ears.hear(s)
     assert asyncio.run(ears.consider(s)) is None and ears.judge.asked == [] and ears.rpc.said == []
     assert ears.due(s) is None  # and the line isn't kept to answer later
-    s = snap([roland(2, "ok you can chat")], 2, around("Roland"))
+    # What it owes while quiet (the word on being told to be quiet, a refusal) is said in its few plain words: told
+    # "shh keep it down for a bit", three companions each wrote a sentence about being silent (cuo-cym.29).
+    s = snap([roland(2, "shh keep it down")], 2, around("Roland"))
+    ears.hear(s)
+    reads[2] = Read(to=["Isolde"], owed="Isolde says nothing now but a word on an order.", plain="Not another word.")
+    asyncio.run(ears.consider(s))
+    assert ears.rpc.said[-1:] == ["Not another word."] and ears.judge.asked == []
+    # Told it may talk again (the change has unmuted it by the time the line is answered), it answers in its own words.
+    ears.muted = False
+    reads[3] = Read(to=["Isolde"], owed="Isolde talks freely again.", plain="Talking again, then.")
+    s = snap([roland(3, "ok you can chat")], 3, around("Roland"))
     ears.hear(s)
     assert asyncio.run(ears.consider(s)) == "All well with Isolde."
+
+
+def test_a_person_who_leads_and_speaks_in_party_chat_is_answered_there(tmp_path):
+    """cuo-cym.29: called back in party chat from out of earshot, the companions answered aloud, and the leader, far
+    off, saw none of it."""
+    w = World(tmp_path / "w.sqlite")
+    reads = {1: Read(to=["Isolde"], owed="Isolde says nothing now but a word on an order.", plain="Not another word.")}
+    ears = led(w, "Isolde", reads)
+    ears.muted = True
+    s = snap([{**roland(1, "quiet, all of you"), "type": "party"}], 1, around("Roland"))
+    ears.hear(s)
+    asyncio.run(ears.consider(s))
+    assert ears.rpc.party == ["Not another word."] and ears.rpc.said == [] and ears.leader_party
+    s = snap([roland(2, "and you?")], 2, around("Roland"))
+    ears.hear(s)
+    assert not ears.leader_party  # said aloud: answered aloud
 
 
 def test_a_leaders_words_arent_dropped_as_a_pets_when_they_are_read(tmp_path):

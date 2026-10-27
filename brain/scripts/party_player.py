@@ -429,7 +429,11 @@ async def main() -> None:
             ("WALK", "the leader walks 12 tiles off: who stayed", 0),
             ("everyone with me", "order to all: follow", 12),
             ("go wait for me at the healer", "go somewhere (the nearest healer), each agreeing or not", 30),
-            ("actually nah, come back", "call back: those who went come back to the leader", 45),
+            ("where are you lot?", "a question in party chat while they are away: each answers, in party chat", 25),
+            # In party chat: they are at the healer, beyond the 18 tiles speech carries (the guide says so; said
+            # aloud in the first run, 2026-10-27 16:52, it reached nobody and the lines after it were said to nobody).
+            ("actually nah, come back", "call back, in party chat: those who went come back to the leader", 45),
+            ("BACK", "wait up to 90 s for them to be beside the leader again", 0),
             ("what are you lot up to?", "a question to all: each answers", 25),
             ("cheers guys, good work today", "talk, no order: thanks, at most a word back", 15),
             ("lol", "nothing: no order, no reading as one", 10),
@@ -437,6 +441,12 @@ async def main() -> None:
         fresh = []
         for line, meant, wait_s in LINES:
             t0 = time.time()
+            if line == "BACK":
+                snap = await wait(90, lambda s: len(beside(s, 8)) == len(names))
+                fresh.append({"line": "(waits for them to come back)", "meant": meant, "beside": beside(snap, 8),
+                              "after_s": round(time.time() - t0, 1)})
+                note("fresh words: back", **fresh[-1])
+                continue
             if line == "WALK":
                 stood = places(await look())
                 here = (await look())["player"]
@@ -447,7 +457,7 @@ async def main() -> None:
                               "stayed": [n for n, d in steps.items() if d <= 2], "came": [n for n, d in steps.items() if d >= 6]})
                 note("fresh words: walked off", **fresh[-1])
                 continue
-            answers = await tell(line, wait_s)
+            answers = await tell(line, wait_s, party_chat="party chat" in meant)
             await asyncio.sleep(2.0)
             reads = {}
             for kind in ("order_read", "setting_read", "place_read", "whom_read"):

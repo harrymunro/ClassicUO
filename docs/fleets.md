@@ -662,6 +662,9 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --ta
 uv run python scripts/party_player.py --stranger talk2:5665:Corwin
 # what a person tried in the first five minutes: loot and stop, off to the inn, a question to all of them
 uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --playtest --own-words
+# what a new person might type (2026-10-27): how close, how hard, quiet, loot, questions, two by name, the healer
+# and back in party chat; each line with what it means, the readings in RUN/fresh-words.json
+uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --fresh-words
 ```
 
 - **What a companion goes by:** a character someone plays posts no goals and reports nothing, so each
@@ -773,8 +776,10 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
     setting off ("Off to the inn, then.") and one on arriving, and waits there. A walk that gets stuck
     four times is given up: it comes back to you and says so.
   - **Yours again** when you come within 8 tiles of where it waits, or when you call it back ("come
-    back", "back to me"; in party chat when it is out of earshot). Called back with you out of view,
-    it goes to where it last saw you.
+    back", "back to me"; in party chat when it is out of earshot: said aloud from further than 18 tiles it
+    reaches nobody). Called back with you out of view, it goes to where it last saw you. A line in party
+    chat is answered in party chat, its word on an order and its talk alike (cuo-cym.29: called back that way,
+    three came and answered aloud, out of your hearing).
   - **How well it reads where** ([measured](results.md#a-party-that-goes-in-together), one companion):
     the kind of place meant on 17 of 20 lines, and on 9 of 10 written afterwards; whether to go on 12
     moments of 12 (Jev 7). A place by its name on 6 of 6 lines written after the wording was settled
@@ -855,7 +860,12 @@ uv run python scripts/party_player.py --fleet fleets/party-player-talk.toml --pl
     right.
   - **A change is acted on at once:** told to loot in the quiet after a fight, a companion goes to the
     corpses then, not when the fight loop next looks.
-  - **How close to keep isn't read from a line that is itself an order:** "stay close" is an order.
+  - **How close to keep isn't read from a line that is itself an order:** "stay close" is an order. Except a
+    follow to one already following: "stick close to me lads" then sets how close (cuo-cym.29; read as the
+    follow they were on, it changed nothing, live).
+  - **Told to be quiet,** what a companion still owes (its word on that very order, a refusal) is said in its
+    few plain words ("Not another word."), not a written line: told "shh keep it down for a bit", each of three
+    wrote a sentence about being silent.
   - **How well it reads** ([measured](results.md#a-party-that-goes-in-together), each line for three
     companions): all 171 readings on the lines the questions were written with, and 134 of 156 on 52
     lines written afterwards (Jev 154 and 132). Most of what went wrong there was a remark or a request
@@ -1054,9 +1064,14 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   sent off their emptied ground to the fort and the liches; then, with the refusal naming grounds nothing
   stronger holds, 63% and 8 of 22 with four deaths, the hunter at a named ground 200 tiles out. On 2026-10-27,
   twice more: 65% and 57%, home between work 13 of 15 and 19 of 25, with 7 deaths to savages and then 2. The
-  carrier is the one most away, on a hunting ground 159 tiles east and the banks; counting that ground and the
-  hunter's 200 tiles out as lands, every resident was there most of the hour in two of the last three hours
-  ([results](results.md#a-second-lands-hour-with-the-trip-driven-back-and-the-neighbours-home)).
+  carrier is the one most away, on a hunting ground east of Cove and the banks; counting that ground and the
+  hunter's north of it as lands, every resident was there most of the hour in two of the last three hours
+  ([results](results.md#a-second-lands-hour-with-the-trip-driven-back-and-the-neighbours-home)). Since the same day
+  those two are named in the file (a design call: they are as near Cove as the first two), and in two more hours
+  every resident was in Cove or its lands most of the hour (81% and 89% of the four together); home between pieces
+  of work 11 of 20 and 15 of 23, the carrier going from an empty ground straight on to the next; three deaths at
+  the fort in the first, none in the second, once each land was told with what is too strong there
+  ([results](results.md#a-second-lands-hour-the-lands-told-with-their-dangers-and-the-watch-first-cuo-m3n3-cuo-m3n12-cuo-m3n21)).
 - **Its evenings** (cuo-m3n.5): `gather = "Cove healer"`, `gather_words = "the healer's house"`,
   `day_minutes = 60` and `evening_minutes = 15` in `[hamlet]` make a run days of an hour whose last quarter
   is the evening, on one clock for every resident (from the run's start). Each turn says the time of day ("day
