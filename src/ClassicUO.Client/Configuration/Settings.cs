@@ -108,6 +108,11 @@ namespace ClassicUO.Configuration
         // for realistic travel, a run only in danger. In game: -agent pace walk|run.
         [JsonPropertyName("agent_travel_pace")] public string AgentTravelPace { get; set; } = "run";
 
+        // Attended play (Agent/AgentController.cs, cuo-49t): with no input from the player for this many minutes the
+        // agent does nothing at all, not even heal, until they touch the controls again; 0 is off. A public shard's
+        // profile sets it: UO Renaissance's rules forbid killing monsters unattended by any means.
+        [JsonPropertyName("agent_attended_minutes")] public int AgentAttendedMinutes { get; set; }
+
         // Start with the window hidden and draw nothing (GameController.Headless): for NPCs and
         // benchmark lanes. The -headless command-line option overrides it for one launch.
         [JsonPropertyName("headless")] public bool Headless { get; set; }

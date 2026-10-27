@@ -31,6 +31,7 @@ def cove_store(root):
         w.replace_source("places", "fixture", [
             {"kind": "healer", "name": "Cove healer", "map": "Felucca", "x": 2245, "y": 1231, "region": "Cove"},
             {"kind": "landmark", "name": "Cove Gates", "map": "Felucca", "x": 2285, "y": 1209, "region": "Cove"},
+            {"kind": "landmark", "name": "Cove Guard Post", "map": "Felucca", "x": 2218, "y": 1116, "region": "Cove"},
             {"kind": "fisherman", "name": "Cove fisherman", "map": "Felucca", "x": 2256, "y": 1181, "region": "Cove"},
             {"kind": "provisioner", "name": "Cove provisioner", "map": "Felucca", "x": 2216, "y": 1192, "region": "Cove"}])
 
@@ -214,7 +215,7 @@ def test_on_the_hamlets_lands_is_at_work_and_the_turn_says_how_long_since_home()
     h.where(2245, 1231, now=60 * 30)  # home again: the count starts over
     assert "away from home" not in h.where(2240, 1200, now=60 * 33)
     words = maren(lands=[WOODS]).words()
-    assert "Cove's lands, where its people work: south-west of Cove Cemetery (round 2390,1180)" in words
+    assert "Cove's lands, where its people work: south-west of Cove Cemetery (round 2390,1180; fair fights for one alone)" in words
     assert "between one piece of work and the next, come home" in words
     assert Hamlet.from_json(maren(lands=[WOODS]).to_json()).lands == [WOODS]
     assert "lands" not in maren().to_json() and "lands" not in maren().words()
@@ -305,3 +306,74 @@ def test_a_visit_to_a_neighbours_home_says_whether_they_are_there(tmp_path):
         "Brannoc is here, beside you, a ghost"
     # Not a neighbour's home: nothing said of who is there.
     assert asyncio.run(s.travel_to(x=1100, y=1000, recall=False)).summary.startswith("arrived at 1100,1000 in")
+
+
+def test_a_watch_has_posts_the_watchman_is_told_of_and_a_land_is_within_reach_of_the_hamlet(tmp_path):
+    """cuo-m3n.12: the watchman's work is a watch over the hamlet, a round of posts named in the fleet file; cuo-m3n.3:
+    a hamlet's land is within LANDS_TILES of it, so a ground can't be named after a run to make the measure come out."""
+    cove_store(tmp_path)
+    f = fleet.load(fleet.BRAIN_DIR / "fleets" / "hamlet-cove.toml")
+    assert f.agents[0].posts == ["Cove Gates", "Cove healer", "Cove Guard Post"] and not f.agents[1].posts
+    h = fleet.hamlet_of(f, root=tmp_path)
+    brannoc = h["known"]["Brannoc"]
+    assert [p["name"] for p in brannoc.posts] == ["Cove Gates", "Cove healer", "Cove Guard Post"]
+    assert brannoc.posts[0] == {"name": "Cove Gates", "x": 2285, "y": 1209} and not h["known"]["Wenna"].posts
+    assert "the `watch` goal walks a round of its posts" in brannoc.words()
+    assert "watch" not in h["known"]["Wenna"].words().split("Brannoc")[0]
+    again = Hamlet.from_json(json.loads(json.dumps(brannoc.to_json())))
+    assert again.posts == brannoc.posts
+    from test_planner import world
+    s = FakeSession(world(tmp_path / "planner"))
+    s.hamlet = brannoc
+    assert "watch" in [t["function"]["name"] for t in planner.Planner(s, "", chat_fn=scripted(), memory=False).tools]
+    s.hamlet = h["known"]["Wenna"]
+    assert "watch" not in [t["function"]["name"] for t in planner.Planner(s, "", chat_fn=scripted(), memory=False).tools]
+    # A land 150 tiles out is the hamlet's; one further isn't.
+    with World.open("local", tmp_path) as w:
+        w.replace_source("spawns", "fixture", [
+            {"map": "Felucca", "area": "near", "region": "", "x": 2435, "y": 1180, "walk_range": 5, "creature": "Boar"},
+            {"map": "Felucca", "area": "far", "region": "", "x": 2436, "y": 1180, "walk_range": 5, "creature": "Boar"}])
+    lands = tmp_path / "lands.toml"
+    body = (fleet.BRAIN_DIR / "fleets" / "hamlet-cove.toml").read_text().replace('edge = 10', 'edge = 10\nlands = [LANDS]')
+    lands.write_text(body.replace("LANDS", '"near"'))
+    assert [x["name"] for x in fleet.hamlet_of(fleet.load(lands), root=tmp_path)["lands"]] == ["near"]
+    lands.write_text(body.replace("LANDS", '"near", "far"'))
+    with pytest.raises(ValueError, match=r"within 150 tiles of Cove: not far \(151 tiles out\)"):
+        fleet.hamlet_of(fleet.load(lands), root=tmp_path)
+
+
+def test_the_report_counts_a_watch_as_work_and_its_kills():
+    session = [{"type": "goal", "t": 1, "tool": "watch", "args": {"minutes": 10}},
+               {"type": "session", "t": 2, "event": "watched", "kills": 3, "minutes": 10},
+               {"type": "goal", "t": 3, "tool": "travel_to", "args": {"place": "home"}},
+               {"type": "goal", "t": 5, "tool": "watch", "args": {"minutes": 10}}]
+    assert hamlet.work(session)["kills"] == 3 and hamlet.work(session)["goals"]["watch"] == 2
+    assert hamlet.home_between_work(session, [(4, True)]) == {"pairs": 1, "home_between": 1}
+
+
+def test_each_land_is_told_with_what_there_is_too_strong_for_one_alone(tmp_path):
+    """cuo-m3n.21: told only "Cove's lands, where its people work", three residents hunted the orc fort's savages in the
+    first 12 minutes of a lands hour and died there."""
+    with World.open("local", tmp_path) as w:
+        w.replace_source("creatures", "fixture", [
+            {"type": "Savage", "name": "a savage", "hits_min": 96, "hits_max": 115, "difficulty": "strong"},
+            {"type": "Orc", "name": "an orc", "hits_min": 58, "hits_max": 72, "difficulty": "weak"},
+            {"type": "Lich", "name": "a lich", "hits_min": 103, "hits_max": 120, "difficulty": "strong"},
+            {"type": "Boar", "name": "a boar", "hits_min": 15, "hits_max": 15, "difficulty": "weak"}])
+        w.replace_source("spawns", "fixture", [
+            {"map": "Felucca", "area": "the fort", "region": "", "x": 2160, "y": 1360, "walk_range": 10, "creature": "Savage",
+             "max_count": 2},
+            {"map": "Felucca", "area": "the fort", "region": "", "x": 2165, "y": 1365, "walk_range": 10, "creature": "Orc",
+             "max_count": 6},
+            {"map": "Felucca", "area": "the wilds", "region": "", "x": 2400, "y": 1100, "walk_range": 10, "creature": "Boar",
+             "max_count": 9},
+            {"map": "Felucca", "area": "the wilds", "region": "", "x": 2410, "y": 1110, "walk_range": 10, "creature": "Lich",
+             "max_count": 1}])
+        fort, wilds = fleet.land_of(w, "the fort"), fleet.land_of(w, "the wilds")
+    assert fort["strong"] == ["a savage"] and fort["mostly"] and wilds["strong"] == ["a lich"] and not wilds["mostly"]
+    h = maren(lands=[fort, wilds, {"name": "the woods", "x": 2400, "y": 1170, "r": 25}])
+    words = h.words()
+    assert "the fort (round 2162,1362; a savage there is too strong for one alone: not a ground to work on your own)" in words
+    assert "the wilds (round 2405,1105; a lich there is too strong for one alone: keep clear of them)" in words
+    assert "the woods (round 2400,1170; fair fights for one alone)" in words
+    assert Hamlet.from_json(json.loads(json.dumps(h.to_json()))).lands == h.lands

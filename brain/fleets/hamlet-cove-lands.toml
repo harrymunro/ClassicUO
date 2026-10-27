@@ -13,7 +13,9 @@ rules = "realistic"   # people with lives of their own walk, talk at a human pac
 [hamlet]
 name = "Cove"
 edge = 10
-lands = ["south-west of Cove Cemetery", "near Cove Orc Fort"]
+# The grounds its residents work, each within 150 tiles of Cove (hamlet.LANDS_TILES): the two far ones, where Tamsin and
+# Wenna hunted when theirs were empty, are as near Cove as the first two (138 and 121 tiles from its area; 2026-10-27).
+lands = ["south-west of Cove Cemetery", "near Cove Orc Fort", "wilderness near 2400,1100", "north-east of Cove Guard Post"]
 
 [[agent]]
 name = "Brannoc"
@@ -25,7 +27,8 @@ persona = { background = "a former soldier who took the watchman's post in a sma
 long_goals = ["reach 85 swordsmanship", "keep the orcs to the south away from my neighbours"]
 home = "Cove Gates"
 home_words = "the gatehouse by the east gate"
-work = "keeps the hamlet safe: short sweeps of ten minutes or so to thin out the orcs near the Cove Orc Fort to the south (the hunting area 'near Cove Orc Fort') before they come north, and back on watch at the gate between sweeps"
+work = "keeps watch over the hamlet: rounds of its posts with the watch goal (the east gate, the healer's house, the guard post to the north), fighting what comes into Cove; a sweep near the Cove Orc Fort to the south (the hunting area 'near Cove Orc Fort') only when what is there is a fair fight, and back on watch after it"
+posts = ["Cove Gates", "Cove healer", "Cove Guard Post"]   # the watch's round (cuo-m3n.12)
 prep = ["[AgentReset", "[AgentGo 2283 1209", "[AgentKit warrior", "[AgentSupplies bandages 50 gold 200"]
 
 [[agent]]

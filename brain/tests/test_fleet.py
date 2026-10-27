@@ -260,7 +260,7 @@ def test_a_fleet_file_says_what_strategy_its_characters_start_with(tmp_path, mon
             'goal = "hunt"\n[[agent]]\nname = "B"\naccount = "b"\npassword = "b"\nport = 2\n{own}')
     f.write_text(body.format(top="", own=""))
     fl = fleet.load(f)
-    assert fl.strategy is None and not fl.form_up
+    assert fl.strategy is None and fl.form_up  # a party with a leader's plan forms up unless it says (cuo-cym.12)
     asyncio.run(fleet.log_in(fl, fl.agents[0]))
     assert not [c for c in calls if c[1] == "strategy"]  # left as the client has it
     f.write_text(body.format(top='strategy = ""\nform_up = true\n', own='strategy = "Stay behind the warrior."\n'))
@@ -389,3 +389,18 @@ def test_a_run_ended_by_a_closed_terminal_or_a_kill_stops_its_brains_first(tmp_p
         last = [json.loads(line) for line in (tmp_path / f"run-{sig}" / "fleet.jsonl").open()][-1]
         assert last["type"] == "stopped" and last["brains_running"] == ["Garrick", "Ilsa", "Torv"]
     assert stopped == [["Garrick", "Ilsa", "Torv"]] * 2
+
+
+def test_a_party_forms_up_by_default_unless_its_file_says_or_a_person_leads(tmp_path):
+    """cuo-cym.12: form_up is on for a party with a planner to form up on, off when the file says, and off for a party
+    a person leads (plan = "player"), and off outside a party."""
+    def load(top):
+        f = tmp_path / "p.toml"
+        f.write_text(f'name = "p"\n{top}[[agent]]\nname = "A"\naccount = "a"\npassword = "a"\nport = 1\ngoal = "hunt"\n'
+                     '[[agent]]\nname = "B"\naccount = "b"\npassword = "b"\nport = 2\ngoal = "hunt"\n')
+        return fleet.load(f)
+    assert load('party = true\nleader = "A"\n').form_up
+    assert load('party = true\nleader = "A"\nplan = "huddle"\n').form_up
+    assert not load('party = true\nleader = "A"\nform_up = false\n').form_up
+    assert not load('party = true\nleader = "Harry"\nplan = "player"\n').form_up
+    assert not load('').form_up

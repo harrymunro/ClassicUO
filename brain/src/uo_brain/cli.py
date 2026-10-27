@@ -317,6 +317,10 @@ def main() -> None:
     h.add_argument("area")
     h.add_argument("--minutes", type=float, default=10)
     add_run_args(h, shard=False)
+    wa = dsub.add_parser("watch", help="keep watch over a hamlet: a round of the resident's posts, fighting what comes "
+                                       "into it (cuo-m3n.12)")
+    wa.add_argument("--minutes", type=float, default=10)  # --hamlet (add_run_args): the resident's, with its posts
+    add_run_args(wa, shard=False)
     r = dsub.add_parser("rest")
     r.add_argument("seconds", type=float, nargs="?", default=30)
     r.add_argument("--defend", action="store_true",
@@ -1139,6 +1143,7 @@ async def session_cmd(rpc: AgentRpc, args) -> None:
         huddle = Huddle(party, session, args.goal, log=write)
         if session.rally is not None:
             session.rally.sends = huddle.going  # the rally waits for whom the plan sends (cuo-cym.14)
+            session.rally.look = huddle  # ...and looks from the edge when the plan holds the party back to look first
     escorting = party is not None and args.party_plan == "player"
     plan = Planner(session, args.goal, model=args.planner_model, log=write, on_goal=show,
                    machines_allowed=not args.no_machines, escalate=not args.no_escalate,
@@ -1274,7 +1279,7 @@ async def do_goal(rpc: AgentRpc, args) -> None:
     from .world import World
 
     world = World.open(args.shard)
-    judge = make_judge(args) if args.goal == "hunt" or getattr(args, "defend", False) else None
+    judge = make_judge(args) if args.goal in ("hunt", "watch") or getattr(args, "defend", False) else None
     if judge is not None:
         set_budget(args)
     log = args.log.open("a") if getattr(args, "log", None) else None
@@ -1305,6 +1310,10 @@ async def do_goal(rpc: AgentRpc, args) -> None:
                 session.facts_mode = args.facts
                 session.machine = runner_of(args)
                 res = await session.hunt(args.area, args.minutes)
+            case "watch":
+                from . import hamlet as hamlets
+                session.hamlet = hamlets.load(args.hamlet) if args.hamlet else None
+                res = await session.watch(args.minutes)
             case "resurrect":
                 res = await session.resurrect()
             case "recover-corpse":

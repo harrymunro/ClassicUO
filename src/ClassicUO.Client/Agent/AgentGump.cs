@@ -251,7 +251,8 @@ namespace ClassicUO.Agent
             }
 
             string doing = Doing();
-            string status = !_agent.HumanActive ? "now: " + doing
+            string status = _agent.Away ? $"waiting for you: no input for {_agent.AttendedMs / 60000} min (attended play)"
+                : !_agent.HumanActive ? "now: " + doing
                 : _agent.Mode == AgentMode.Assist ? "you're driving; " + doing
                 : "you have the controls";
             y = AddWrapped(status, PAD, y, INNER, _agent.HumanActive ? GOLD : WHITE) + 4;

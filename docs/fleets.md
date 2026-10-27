@@ -165,7 +165,7 @@ KEY=VALUE` overrides one for a run (repeatable), which is how the comparisons in
 | `roleplay` | false | gestures and emotes on events |
 | `walk` | false | walk trips together, run only in danger or to catch up |
 | `plan` | "leader" | one plan: the leader's, agreed in a huddle with a planner each ("huddle"), or a person's, whose character leads and isn't one of the agents ("player": [below](#a-party-for-the-player)) |
-| `form_up` | false | form up at the edge of a hunt, go in as one, keep to the line and fall back to the rally point |
+| `form_up` | true for the leader's plan or a huddle, false for `plan = "player"` | form up at the edge of a hunt, go in as one, keep to the line and fall back to the rally point. On by default since 2026-10-27 (cuo-cym.12): the fleets whose results were taken without it (`party-lich`, `party-casters`, `party-leader-down`, `party-walk`, `party-inn`, `party-inn-exit`) say `form_up = false`, and their formed-up runs were `--set form_up=true` |
 | `rally_map` | false | with `form_up`: the rally point is chosen from the client's map, a few tiles back the way the party came with a way out behind it, and a second point further back for one badly hurt at the first |
 | `game_party` | false | make the party in the game too: invitations, the right to loot the party's kills, party chat |
 | `callouts_to` | "say" | where callouts are said: aloud (`say`), in the game's party chat (`party`, with `game_party`), or `both` |
@@ -607,6 +607,24 @@ personas and no talk.
     that area is refused ("the party's plan holds the party back from the Britain Graveyard for now: nobody
     goes in on their own"), and its planner chooses something else. Live with memory on, the plan said to
     enter only after a scout and the bard's planner hunted the graveyard alone, 15 s ahead of the rest.
+  - **...and looks from the edge** (cuo-cym.14, 2026-10-27): with memory on, every plan the members agreed
+    said to go in only after a fresh scout, nobody was ever given that, and the party never fought. Now,
+    when the plan holds the party back for something a look would settle (a second yes/no for system one,
+    kind `order`, `huddle.look_question`: a scout, a sighting, how many there are, whether the way is
+    clear; not a raise, a rest or supplies), those it names are sent to the hunt together, as for one it
+    sends in now, and the rally holds them at the edge. The one holding it looks: what is in view goes to
+    system one with the plan (`huddle.edge_question`: does what they see meet the plan's condition?), in
+    words such as "4 x skeleton (13 tiles off, weak: an easy kill, 1 coming at the party); a bone knight
+    (15 tiles off, a fair fight, not coming at the party). The party here: Corwin, Isolde, Thea, Wystan,
+    Roland.", asked again whenever that changes (every 4 s at most) for up to 40 s. Yes: the word is given
+    and they go in as one, behind a fighter as always. A fight that comes to them: in as one. No: the
+    rally is called off with what was seen ("seen from the edge of Britain Graveyard: ...; the plan's
+    condition for going in isn't met"), every member's hunt ends there (nobody walks on in alone: before,
+    a member whose rally didn't form went on to the centre of the spawn), and a huddle is called at once
+    with the sighting, so the plan is made again on what was seen. After two looks at one hunt in 15
+    minutes that didn't send them in, the plan's hold is left to each planner. One the plan sends to look
+    isn't refused its hunt by the hold. The fight loop runs through all of it, so what comes at them while
+    they look is fought.
   - **Measured** ([results](results.md#a-party-that-goes-in-together)): with memory off, when every
     planner chooses the hunt, all five were in the fight within 7.0, 5.2 and 3.6 s of each other in
     three runs. With memory on, in three more, those who came were in within 6.4, 4.5 and 15.4 s of
@@ -976,9 +994,24 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   (goals by kind, kills, gold from sales, things bought, gold banked, trips by where to), lines said to and
   heard from each neighbour, deaths and cost an hour, and what its memory keeps of each neighbour from the
   run.
+- **A watch** (cuo-m3n.12): an agent with `posts = ["Cove Gates", "Cove healer", "Cove Guard Post"]` (places
+  or `"x,y"`) keeps watch over the hamlet, and its planner is offered the `watch` goal (3 to 20 minutes):
+  it walks the round of its posts, the nearest first, stands at each two minutes when nothing is about, and
+  fights what comes onto the hamlet's ground (its area, its edge and 8 tiles beyond) and isn't a kind the
+  bestiary calls peaceful, or attacks it; nothing off the ground is chased, and the guards are called as at
+  any look ([calling the guards](playing.md#calling-the-guards)). It ends when the time is up, on a death, or hurt with
+  nothing to heal by, and says what came and what was killed ("kept watch over Cove for 3.0 min at Cove
+  Gates, Cove healer: came onto the ground: 1 Varguk; 1 kills"). The report counts a watch as a piece of
+  work and its kills as kills. `uo-brain do watch --hamlet FILE --minutes 5` runs one alone (the fleet
+  writes each resident's hamlet as `RUN/NAME.hamlet.json`). Before, the watchman's work was short sweeps
+  at the Cove Orc Fort, and every sweep met savages stronger than him; the deaths of the lands hours were
+  savages and a lich come into Cove, which a watch is for. Checked live three times: on the first the
+  town's dogs and magpies were taken for what had come (fixed: only what isn't peaceful), on the second
+  he walked the whole round in 7 minutes, on the third an orc set down in the street was gone for at once
+  and killed.
 - **`fleets/hamlet-cove.toml`:** four residents of Cove (Felucca), a guarded hamlet with a healer, a
   provisioner, an armourer and weaponsmith and a fisherman, and no bank or inn: Brannoc the watchman at the
-  east gate (the orcs near the Cove Orc Fort to the south), Wenna the hunter in the small house on the
+  east gate (a watch over the hamlet since 2026-10-27; before, sweeps of the orcs near the Cove Orc Fort to the south), Wenna the hunter in the small house on the
   square (the beasts south-west of the Cove Cemetery), Maren the healer's apprentice at the healer's house,
   and Tamsin the carrier above the provisioner's (coin to a bank in Vesper or Britain). On the npc profile,
   headless, walking (`rules = "realistic"`), on their own accounts and ports (headless3-6, 5671-5674), so
@@ -991,8 +1024,16 @@ uv run uo-brain hamlet-report logs/fleet/<time>-hamlet-cove
   23 to 41 against 3 to 37, as they talk wherever they meet. $0.06 to $0.07 a resident an hour.
 - **Its lands** (cuo-m3n.3): `lands = ["south-west of Cove Cemetery", "near Cove Orc Fort"]` in `[hamlet]`
   names the grounds its residents work, each a hunting area of the world store (the square round its
-  spawns, plus 10 tiles). The planner is told them as the hamlet's lands ("working there is part of life in
-  Cove; between one piece of work and the next, come home"); each turn's situation says when a resident is on
+  spawns, plus 10 tiles) whose centre is within 150 tiles of the hamlet (`hamlet.LANDS_TILES`: a fleet
+  naming one further out doesn't start, so a ground can't be named after a run to make the measure come
+  out; Cove's four are 118 to 138 tiles out, and every town's bank three times as far). The planner is told
+  them as the hamlet's lands ("working there is part of life in Cove; between one piece of work and the
+  next, come home"), each with what spawns there too strong for one alone (the world store's strong and
+  deadly kinds, cuo-m3n.21): "near Cove Orc Fort (round 2163,1363; a savage and a savage rider there are too
+  strong for one alone: not a ground to work on your own)" when they are a fifth or more of what spawns
+  there, "...: keep clear of them" when fewer (a lich among 29 animals), "fair fights for one alone"
+  otherwise. Told only the names, three residents hunted the fort's savages in the first 12 minutes of a
+  lands hour and died there. Each turn's situation says when a resident is on
   them ("on Cove's lands (south-west of Cove Cemetery), 115 tiles from Cove and 165 from home") and, after 5
   minutes away, how long it has been away from home. `hamlet-report` adds the share of the run in the hamlet
   or its lands, and how many of a resident's pieces of work (hunts, sales, purchases, banking, trips but the

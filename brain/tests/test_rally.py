@@ -1952,3 +1952,90 @@ def test_one_who_walked_on_doesnt_make_one_who_cant_take_blows_go_in_first(tmp_p
     out = asyncio.run(r.before_hunt(key, "Britain Graveyard", 1369, 1475, 15))
     assert out["gone_ahead"] == ["Roland"] and out["point"] == "Roland" and out["waited_s"] < 1.0
     w.close()
+
+
+def test_a_plan_that_holds_the_party_back_until_it_has_looked_is_looked_at_from_the_edge(tmp_path, monkeypatch):
+    """cuo-cym.14: with memory on every plan the huddle agreed said to go in only after a fresh scout, nobody was ever
+    sent, and the lich was never fought. Those the plan names go to the edge together; the first there looks, and the
+    party goes in only if what it sees meets the plan's condition. Otherwise the rally is called off with what was
+    seen, the others are told, and the plan is made again on it."""
+    monkeypatch.setattr(rally, "POINT_WAITS_S", 0.0)
+    monkeypatch.setattr(rally, "LOOK_EVERY_S", 0.0)
+    monkeypatch.setattr(rally, "LOOK_S", 0.3)
+    w = World.open("local", root=tmp_path)
+    w.replace_source("creatures", "fixture", [{"type": "Lich", "name": "a lich", "body": 24, "hits_min": 103, "hits_max": 120,
+                                                "difficulty": "strong"}])
+    hunting(w, {"Roland": (1392, 1517), "Isolde": (1393, 1517)})
+    roland = party.Party(w, "p1", "Roland", "Roland", NAMES)
+    key = "hunt:britain graveyard"
+    lich = {**monster(0x300, "a lich", 24, 14), "war_mode": False}
+    here = at(1392, 1517, [companion("Isolde", 1), lich], name="Roland")
+
+    class Look:
+        def __init__(self, ps):
+            self.ps, self.asked, self.seen = list(ps), [], []
+
+        async def holds_for_a_look(self, judge, area):
+            return area == "Britain Graveyard"
+
+        async def clear_to_go(self, judge, area, seen):
+            self.asked.append(seen)
+            return self.ps.pop(0) if len(self.ps) > 1 else self.ps[0]
+
+        async def seen_from_edge(self, area, seen):
+            self.seen.append(seen)
+
+    r = rally.Rally(Field(w, [here]), roland, plan="huddle")
+    r.sends, r.look = (lambda area: ["Roland", "Isolde"]), Look([0.2])
+    out = asyncio.run(r.before_hunt(key, "Britain Graveyard", 1369, 1475, 15))
+    seen = "a lich (14 tiles off, stronger than the party here: a hard fight, not coming at the party). The party here: Roland, Isolde."
+    assert not out["formed"] and out["called_off"] and out["looked"]["seen"] == seen and r.look.asked == [seen]
+    assert out["why"] == f"seen from the edge of Britain Graveyard: {seen}; the plan's condition for going in isn't met"
+    assert r.look.seen == [seen] and roland.rally(key)["state"] == "off" and roland.rally(key)["why"] == out["why"]
+    # The one who closed up on him is told why, and doesn't go in.
+    isolde = party.Party(w, "p1", "Isolde", "Roland", NAMES)
+    j = asyncio.run(rally.Rally(Field(w, [at(1393, 1517, name="Isolde")]), isolde, plan="huddle")
+                    .join(key, "Britain Graveyard", 1369, 1475, 15, on="Roland"))
+    assert not j["formed"] and j["called_off"] and j["why"] == out["why"]
+    # What they see meets it: the word is given, as for any hunt.
+    w.db.execute("DELETE FROM party_rally")
+    r = rally.Rally(Field(w, [here]), roland, plan="huddle")
+    r.sends, r.look = (lambda area: ["Roland", "Isolde"]), Look([0.3, 0.7])
+    lich_coming = at(1392, 1517, [companion("Isolde", 1), {**lich, "war_mode": True, "distance": 12, "dx": 12}], name="Roland")
+    r.s.snaps = [here, here, lich_coming]
+    out = asyncio.run(r.before_hunt(key, "Britain Graveyard", 1369, 1475, 15))
+    assert out["formed"] and out["looked"]["clear"] and out["looked"]["p"] == [0.3, 0.7]
+    assert "1 coming at the party" in out["looked"]["seen"] and roland.rally(key)["state"] == "go"
+    # A plan that sends them in now, or a leader's party: nothing is looked at.
+    w.db.execute("DELETE FROM party_rally")
+    r = rally.Rally(Field(w, [here]), roland, plan="huddle")
+    r.sends, r.look = (lambda area: ["Roland", "Isolde"]), Look([0.0])
+    r.look.holds_for_a_look = lambda judge, area: asyncio.sleep(0, False)
+    out = asyncio.run(r.before_hunt(key, "Britain Graveyard", 1369, 1475, 15))
+    assert out["formed"] and "looked" not in out and r.look.asked == []
+    w.close()
+
+
+def test_a_hunt_whose_rally_was_called_off_isnt_walked_into(tmp_path):
+    """A rally called off (a look that didn't send them in, a leader's hunt refused) ends the hunt: before, a member
+    whose rally didn't form walked on to the centre of the spawn as if there had been no rally."""
+    w = World(tmp_path / "w.sqlite")
+    w.add_place("graveyard", "Britain Graveyard", 1369, 1475, source="test")
+    s = Session(rpc=None, world=w)
+    walked = []
+
+    class Off:
+        async def before_hunt(self, *a):
+            return {"formed": False, "called_off": True, "why": "seen from the edge: a lich"}
+
+    async def walk(*a, **kw):
+        walked.append(a)
+        return Result(True, "arrived")
+
+    async def defended(work):
+        return await work
+
+    s.travel_to, s.defended, s.judge = walk, defended, object()
+    r = asyncio.run(s._hunt("Britain Graveyard", 1369, 1475, 15, 5, 10, 85, None, Off(), "hunt:britain graveyard"))
+    assert not r.ok and r.summary == "did not hunt Britain Graveyard: seen from the edge: a lich" and walked == []
+    w.close()

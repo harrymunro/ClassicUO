@@ -765,6 +765,7 @@ namespace ClassicUO.Agent
 
             w.WriteEndObject();
             w.WriteBoolean("human_active", agent.HumanActive);
+            w.WriteBoolean("away", agent.Away);
             w.WriteNumber("ms_since_human", agent.LastHumanInput == 0 ? -1 : (long) (Time.Ticks - agent.LastHumanInput));
             w.WriteBoolean("bandaging", agent.Bandaging);
             w.WriteNumber("heal_potion_ready_ms", agent.HealPotionReadyInMs);

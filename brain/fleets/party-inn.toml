@@ -23,6 +23,8 @@ server_port = 2593
 hours = 0.45
 headless = true
 party = true
+form_up = false   # its results were taken before a party formed up by default (cuo-cym.12): --set form_up=true to
+#                   form up, as the formed-up runs in docs/results.md were
 leader = "Roland"
 rules = "realistic"   # walks its trips together and its own errands, a human pace, small talk, emotes (cuo-iqb)
 

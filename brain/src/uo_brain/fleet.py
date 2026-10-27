@@ -86,6 +86,7 @@ class Agent:
     home: str = ""          # a hamlet's resident: its home, a place or "x,y" (cuo-m3n)
     home_words: str = ""    # ...how it speaks of it ("the healer's house")
     work: str = ""          # ...and its work, in words
+    posts: list[str] = field(default_factory=list)  # ...and the posts of a watch it keeps, places or "x,y" (cuo-m3n.12)
 
 
 @dataclass
@@ -117,7 +118,9 @@ class Fleet:
     memory: bool = True      # false: every brain runs without its character's memory, so repeat runs are independent
     plan: str = "leader"     # a party's one plan: the leader's (cuo-4ar), or agreed in a huddle, a planner each (cuo-bih)
     walk: bool = False       # a party walks its trips together and runs only in danger (cuo-cod.7)
-    form_up: bool = False    # a party forms up at the edge of a hunt, goes in as one and falls back there (cuo-cym.1)
+    # A party forms up at the edge of a hunt, goes in as one and falls back there (cuo-cym.1): on unless the file says,
+    # for a party with a planner to form up on (the leader's plan or a huddle), since 2026-10-27 (cuo-cym.12).
+    form_up: bool = False
     rally_map: bool = False  # ...to a rally point chosen from the client's map, with a second one behind it (cuo-cym.13)
     game_party: bool = False  # the party is made in the game too: invitations, loot rights, party chat (cuo-cym.3)
     raise_fallen: bool = False  # a party raises its fallen where they fell (cuo-cym.4); `raise` in the file
@@ -134,6 +137,12 @@ class Fleet:
     # A hamlet its agents live in (cuo-m3n): name (a region of the world store), edge (tiles round it that count),
     # told (false: the residents aren't told, and are still measured against it: the control).
     hamlet: dict[str, Any] | None = None
+
+
+# Plans whose party forms up at the edge of a hunt unless its file says form_up = false (cuo-cym.12): on the casters'
+# scene the defaults lost 5 members in six runs and formed up none; on the lich scene 4 in six against 3 in fifteen.
+# A party for a person (plan = "player") has nobody's planner to form up on.
+FORM_UP_PLANS = ("leader", "huddle")
 
 
 def parse_setting(spec: str) -> tuple[str, Any]:
@@ -169,7 +178,7 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                     bool(a.get("talk", data.get("talk", True))), bool(a.get("headless", headless)),
                     {str(k): str(v) for k, v in (a.get("env") or {}).items()}, str(a.get("travel") or ""),
                     str(a["strategy"]) if "strategy" in a else None, str(a.get("home") or ""),
-                    str(a.get("home_words") or ""), str(a.get("work") or ""))
+                    str(a.get("home_words") or ""), str(a.get("work") or ""), [str(x) for x in a.get("posts") or []])
               for a in data.get("agent") or []]
     if hamlet is not None:
         if not isinstance(hamlet, dict) or not hamlet.get("name"):
@@ -219,7 +228,7 @@ def load(path: Path, settings: list[str] | None = None) -> Fleet:
                  persuade=bool(data.get("persuade", True)), judge_reach=bool(data.get("judge_reach", True)),
                  hear_leader=bool(data.get("hear_leader", True)), leader_port=int(data.get("leader_port", 0)),
                  roleplay=bool(data.get("roleplay", False)), walk=bool(data.get("walk", False)),
-                 form_up=bool(data.get("form_up", False)), game_party=bool(data.get("game_party", False)),
+                 form_up=bool(data.get("form_up", party and plan in FORM_UP_PLANS)), game_party=bool(data.get("game_party", False)),
                  rally_map=bool(data.get("rally_map", False)),
                  callouts_to=callouts_to, raise_fallen=bool(data.get("raise", False)),
                  memory=bool(data.get("memory", True)), plan=plan,
@@ -241,12 +250,20 @@ def hamlet_of(fleet: Fleet, shard: str = "local", root: Path | None = None) -> d
         if region is None:
             raise ValueError(f"no region called {fleet.hamlet['name']!r} in the world store")
         homes = {}
+        posts: dict[str, list[dict[str, Any]]] = {}
         for a in fleet.agents:
             try:
                 x, y, label = w.resolve(a.home)
             except WorldError as e:
                 raise ValueError(f"{a.name}'s home: {e}") from None
             homes[a.name] = {"x": x, "y": y, "words": a.home_words or label}
+        for a in fleet.agents:
+            for post in a.posts:
+                try:
+                    px, py, plabel = w.resolve(post)
+                except WorldError as e:
+                    raise ValueError(f"{a.name}'s post {post!r}: {e}") from None
+                posts.setdefault(a.name, []).append({"name": plabel if "," not in post else post, "x": px, "y": py})
         lands = [land_of(w, name) for name in fleet.hamlet.get("lands") or []]
         gather = None
         if fleet.hamlet.get("gather"):
@@ -257,6 +274,12 @@ def hamlet_of(fleet: Fleet, shard: str = "local", root: Path | None = None) -> d
                 raise ValueError(f"the hamlet's gathering place: {e}") from None
             gather = {"name": glabel, "x": gx, "y": gy, "words": fleet.hamlet.get("gather_words") or glabel}
     rects = [tuple(r) for r in region.rects]
+    from .hamlet import LANDS_TILES
+    # A hamlet's land is a ground near it (cuo-m3n.3, 2026-10-27): its centre within LANDS_TILES of the hamlet's area,
+    # so a file can't name a ground after a run to make the measure come out.
+    if far := [f"{land['name']} ({Hamlet(region.name, rects).beyond(land['x'], land['y'])} tiles out)" for land in lands
+               if Hamlet(region.name, rects).beyond(land["x"], land["y"]) > LANDS_TILES]:
+        raise ValueError(f"the hamlet's lands are within {LANDS_TILES} tiles of {region.name}: not {', '.join(far)}")
     began = time.time()  # the run's first day, the same clock for every resident
     known = {}
     for a in fleet.agents:
@@ -266,7 +289,7 @@ def hamlet_of(fleet: Fleet, shard: str = "local", root: Path | None = None) -> d
         known[a.name] = Hamlet(region.name, rects, fleet.hamlet["edge"], a.name, (homes[a.name]["x"], homes[a.name]["y"]),
                                homes[a.name]["words"], a.work, others, lands, gather,
                                fleet.hamlet.get("day_minutes", 60) * 60, fleet.hamlet.get("evening_minutes", 15) * 60,
-                               began)
+                               began, posts=posts.get(a.name, []))
     return {"name": region.name, "rects": [list(r) for r in rects], "edge": fleet.hamlet["edge"],
             "told": fleet.hamlet["told"], "homes": homes, **({"lands": lands} if lands else {}),
             **({"gather": gather, "began": began} if gather else {}), "known": known}
@@ -286,7 +309,15 @@ def land_of(world: Any, name: str) -> dict[str, Any]:
     cx = round(sum(s["x"] for s in spawns) / len(spawns))
     cy = round(sum(s["y"] for s in spawns) / len(spawns))
     r = max(chebyshev(cx, cy, s["x"], s["y"]) + min(int(s.get("range") or 10), 15) for s in spawns) + LAND_EDGE
-    return {"name": str(spawns[0].get("area") or name), "x": cx, "y": cy, "r": r}
+    # ...and what spawns there too strong for one alone (cuo-m3n.21): told only "Cove's lands, where its people work",
+    # three residents hunted the orc fort's savages in the first 12 minutes of a lands hour and died there.
+    made = [(c, int(c.get("max_count") or 1)) for s in spawns for c in s.get("creatures") or []]
+    strong = sorted({str(c.get("name") or c.get("type")) for c, _ in made if c.get("difficulty") in ("strong", "deadly")})
+    # ...and whether they are much of it (a fifth or more of what spawns there): a lich at one spot of a wide ground of 29
+    # animals and undead is something to keep clear of; five savages among the orc fort's 19 are the fort.
+    most = sum(n for c, n in made if c.get("difficulty") in ("strong", "deadly")) * 5 >= sum(n for _, n in made)
+    return {"name": str(spawns[0].get("area") or name), "x": cx, "y": cy, "r": r,
+            **({"strong": strong, "mostly": most} if strong else {})}
 
 
 # ---------------------------------------------------------------- running it

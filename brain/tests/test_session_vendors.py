@@ -930,3 +930,57 @@ def test_a_bank_whose_road_drove_the_character_back_lately_isnt_chosen_while_ano
     s.driven_back = [(1310, 990, time.monotonic() - 3600)]  # long enough ago
     assert asyncio.run(s.safest_bank(snap))[0]["name"] == "Minoc minter"
     w.close()
+
+
+def test_a_watch_walks_its_round_and_fights_only_on_the_hamlets_ground(tmp_path, monkeypatch):
+    """cuo-m3n.12: the watchman's work is a watch over Cove, a round of posts, not sweeps at the orc fort, where every
+    sweep met savages stronger than him."""
+    from uo_brain import session as sessions
+    from uo_brain.hamlet import Hamlet
+    from uo_brain.session import Result
+    w = World(tmp_path / "w.sqlite")
+    snap = copy.deepcopy(SNAPSHOT)  # at 1000,1000, an orc beside it and its captain 6 tiles west
+    snap["agent"]["engaged"] = 0
+    s = Session(FakeRpc(snap), w, judge=object())
+    assert asyncio.run(s.watch(5)).summary == "no watch to keep: you have no posts"
+    s.hamlet = Hamlet("Cove", [(990, 990, 1010, 1010)], 2, "Brannoc", (1000, 1000), "the gatehouse",
+                      posts=[{"name": "the gate", "x": 1000, "y": 1000}, {"name": "the healer's", "x": 995, "y": 1008}])
+    s.WATCH_POST_S = 0.0
+    walked, given = [], {}
+
+    async def walk(place=None, x=None, y=None, **kw):
+        walked.append(place)
+        return Result(True, "arrived")
+
+    async def defended(work):
+        return await work
+
+    class Stats:
+        def summary(self):
+            return {"client_stats": {"kills": 2}}
+
+    w.replace_source("creatures", "fixture", [{"type": "Dog", "name": "a dog", "body": 217, "hits_min": 20, "hits_max": 20,
+                                                "difficulty": "weak", "fight_mode": "None"}])
+    quiet = copy.deepcopy(snap)
+    quiet["mobiles"] = [{**snap["mobiles"][0], "serial": 0x103, "name": "a dog", "body": 217, "war_mode": False}]  # peaceful
+
+    async def run(rpc, judge, lcfg, pcfg, log, stop, on_snapshot=None, **kw):
+        given["pcfg"], given["minutes"] = pcfg, lcfg.duration_s / 60
+        on_snapshot(copy.deepcopy(snap))   # the orc and its captain on the ground: it stays
+        on_snapshot(copy.deepcopy(quiet))  # quiet: on to the next post
+        await asyncio.sleep(0)
+        return Stats()
+
+    s.travel_to, s.defended = walk, defended
+    monkeypatch.setattr(sessions.loop, "run", run)
+    r = asyncio.run(s.watch(12))
+    assert walked == ["the gate"] and given["minutes"] == 12
+    # Its ground is the hamlet, its edge and WATCH_TILES beyond: 1020 is on it (2 + 8 past 1009), 1021 isn't.
+    assert given["pcfg"].ground(1019, 1000) and not given["pcfg"].ground(1020, 1000)
+    assert given["pcfg"].looting == "nothing"
+    assert ("act", {"verb": "travel", "x": 995, "y": 1008, "distance": 2}) in s.rpc.calls
+    assert r.ok and r.data["posts"] == ["the gate", "the healer's"] and r.data["kills"] == 2
+    assert r.data["came"] == {"an orc": 1, "an orc captain": 1}
+    assert r.summary.startswith("kept watch over Cove for ") and "came onto the ground: 1 an orc, 1 an orc captain; 2 kills" \
+        in r.summary
+    w.close()

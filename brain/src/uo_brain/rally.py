@@ -89,6 +89,10 @@ ROOM = 5              # ...and room for a party when this many of the nine tiles
 MAP_TILES = 32        # how far round the leader the client's map is asked for: the second point and its way out
 MAP_S = 3.0           # ...and how long the client is given to answer: the party stands at the edge meanwhile
 SPAWN_TILES = 120     # ...and how far round the hunt the world store's other spawns are looked for
+# A plan that holds the party back until it has seen the ground (a huddle's, cuo-cym.14): the party looks from the edge.
+LOOK_S = 40.0         # how long the one holding the rally looks before the plan is made again with what was seen
+LOOK_EVERY_S = 4.0    # ...asking again this often when what is in view has changed
+LOOK_CUT = 0.5        # system one's yes to "does what they see meet the plan's condition" at or above this: in
 TRAIL = 80            # the leader's last steps on the way in that are kept (one each 0.4 s of its walk)
 JUMP_TILES = 20       # two of them further apart than this: a recall, and what came before isn't the way in
 
@@ -165,6 +169,31 @@ def hostile_near(snap: dict[str, Any], within: int, bestiary: dict[int, dict[str
     near = [m for m in snap.get("mobiles") or [] if threatening(m, bestiary) and not m.get("pet")
             and not m.get("summon") and m["distance"] <= within]
     return min(near, key=lambda m: m["distance"]) if near else None
+
+
+def sight_words(snap: dict[str, Any], party: Party, bestiary: dict[int, dict[str, Any]] | None = None) -> str:
+    """What the party sees from where it stands, in words for a yes/no: the creatures in view by kind (how many, how
+    near, how strong for this character, whether any is coming at the party), and who of the party is here."""
+    from .state import known_creature, threat_words
+    p = snap.get("player") or {}
+    kinds: dict[str, list[dict[str, Any]]] = {}
+    for m in snap.get("mobiles") or []:
+        if m.get("monster") and not m.get("dead"):
+            kinds.setdefault(str(m.get("name") or "a creature"), []).append(m)
+    here = [party.me, *(m["name"] for m in snap.get("mobiles") or []
+                        if m.get("name") in party.companions and not m.get("dead") and m.get("distance", 99) <= GATHER_TILES + 4)]
+    parts = []
+    for name, ms in sorted(kinds.items(), key=lambda kv: min(m.get("distance", 99) for m in kv[1])):
+        near = min(m.get("distance", 99) for m in ms)
+        known = known_creature(bestiary or {}, ms[0]) if bestiary else None
+        how = threat_words(known, (p.get("hits_max") or 100) * len(set(here))).replace("you", "the party here") \
+            if known else ""
+        coming = sum(1 for m in ms if m.get("war_mode") or m.get("attacking_me"))
+        parts.append(f"{len(ms)} x {name.removeprefix('a ').removeprefix('an ')}" if len(ms) > 1 else name)
+        parts[-1] += f" ({near} tiles off" + (f", {how}" if how else "") + (f", {coming} coming at the party" if coming
+                                                                           else ", not coming at the party") + ")"
+    return (("; ".join(parts) if parts else "nothing hostile in view")
+            + f". The party here: {', '.join(dict.fromkeys(here))}.")
 
 
 def contact(snap: dict[str, Any]) -> bool:
@@ -337,6 +366,9 @@ class Rally:
         self.shout: Callable[..., Any] | None = None  # mates.Mates.shout: the leader's "form up" and "in we go"
         # huddle.Huddle.going: whom the party's plan sends to a hunt (its area's name), or None when it doesn't say
         self.sends: Callable[[str], list[str] | None] | None = None
+        # huddle.Huddle: whether the party's plan holds it back from a hunt until it has looked, and the yes/no on what
+        # it sees from the edge (cuo-cym.14); None, a leader's party: nothing is looked at first.
+        self.look: Any = None
         self.formed = 0       # hunts this member went into from a rally
         self.waited_s = 0.0   # a leader's waits at the edge, together
         self._current: tuple[float, dict[str, Any] | None] = (0.0, None)
@@ -538,6 +570,17 @@ class Rally:
             ahead = past()
         waited = time.monotonic() - held
         self.waited_s += waited
+        looked: dict[str, Any] = {}
+        if hunting is not None and self.look is not None and snap.get("in_game") and not snap["player"].get("dead") \
+                and await self.look.holds_for_a_look(getattr(s, "judge", None), hunting):
+            # The plan holds the party back until it has seen the ground: they look from here, together.
+            looked = await self.look_from_edge(hunting, snap, seen)
+            if not looked.get("clear"):
+                why = f"seen from the edge of {hunting}: {looked['seen']}; the plan's condition for going in isn't met"
+                party.rally_go(key, "off", why)
+                await self.look.seen_from_edge(hunting, looked["seen"])
+                return {"formed": False, "called_off": True, "why": why, "looked": looked, "waited_s": round(waited, 1),
+                        "with": sorted(set(want) - set(still)), "without": still}
         sighted = "sighted" in seen
         if hunting is None:
             point = point_of(party.members, stats, party.leader)
@@ -557,8 +600,38 @@ class Rally:
                 **({"formed_at": list(here)} if at != here else {}), **({"back": list(back)} if back else {}),
                 "waited_s": round(waited, 1), "with": sorted(set(want) - set(still)), "without": still,
                 **({"plan_sends": sent} if sent else {}), **({"waited_for_fighter": fighter} if fighter else {}),
-                **({"gone_ahead": ahead} if ahead else {}),
+                **({"gone_ahead": ahead} if ahead else {}), **({"looked": looked} if looked else {}),
                 **({"contact": True} if snap.get("in_game") and contact(snap) else {})}
+
+    async def look_from_edge(self, area: str, snap: dict[str, Any], seen: dict[str, Any]) -> dict[str, Any]:
+        """From the rally at the edge, look at the ground the plan holds the party back from: what is in view, put to
+        system one with the plan (huddle.edge_question), again whenever what is in view changes, for LOOK_S. clear: yes
+        came (or a fight came to them, and they go in as one); seen: what was in view, in words. With memory on every
+        plan the huddle agreed held the party back until a scout had looked, nobody was ever sent, and the lich was
+        never fought (cuo-cym.14)."""
+        s = self.s
+        began = time.monotonic()
+        asked: list[float] = []
+        words, said = "", None
+        while True:
+            words = sight_words(snap, self.party, s.world.bestiary())
+            if words != said:
+                said = words
+                p = await self.look.clear_to_go(getattr(s, "judge", None), area, words)
+                asked.append(round(p, 3))
+                if p >= LOOK_CUT:
+                    return {"clear": True, "seen": words, "p": asked, "s": round(time.monotonic() - began, 1)}
+            if contact(snap):
+                return {"clear": True, "seen": words, "p": asked, "contact": True, "s": round(time.monotonic() - began, 1)}
+            if time.monotonic() - began >= LOOK_S or s.interrupt.is_set():
+                break
+            await asyncio.sleep(LOOK_EVERY_S)
+            snap = await s.snap()
+            if not snap.get("in_game") or snap["player"].get("dead"):
+                break
+            s.seen(snap)
+            seen["look"](snap)
+        return {"clear": False, "seen": words, "p": asked, "s": round(time.monotonic() - began, 1)}
 
     async def lead(self, key: str, name: str, cx: int, cy: int, radius: int) -> dict[str, Any]:
         seen: dict[str, Any] = {}
@@ -668,7 +741,8 @@ class Rally:
             r = party.rally(key)
             if r is not None and r["state"] in ("go", "off"):
                 out = {"formed": r["state"] == "go", "sighted": r["sighted"], "point": r["point"]} \
-                    if r["state"] == "go" else {"formed": False, "why": "the leader's hunt was called off"}
+                    if r["state"] == "go" else {"formed": False, "called_off": True,
+                                                "why": r.get("why") or "the leader's hunt was called off"}
                 break
             if r is not None and held_since is None:
                 held_since = time.monotonic()

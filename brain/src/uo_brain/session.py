@@ -110,6 +110,7 @@ class Session:
         self.roads: dict[tuple[int, int, int, int], dict[str, Any] | None] = {}  # (start cell, goal) -> road()
         self.driven_back: list[tuple[int, int, float]] = []  # (x, y, monotonic) of each trip driven back
         self._guards_called = -1e9  # when "Guards!" was last said (monotonic)
+        self.guards_calls = 0       # how often it has said so, for a watch's result
         self._hits_seen = 1 << 30   # the character's hits at the last look, for a fresh hit
         self._guarded: dict[tuple[int, int], bool] = {}  # 8-tile cell -> in a guarded region
         self._calls: set[asyncio.Task] = set()  # lines said from a snapshot hook, kept until sent
@@ -279,6 +280,7 @@ class Session:
         if not on or not self.guarded(p["x"], p["y"]):
             return
         self._guards_called = now
+        self.guards_calls += 1
         task = asyncio.get_running_loop().create_task(self.rpc.call("act", verb="say", text="Guards!"))
         self._calls.add(task)
         task.add_done_callback(self._calls.discard)
@@ -1075,6 +1077,110 @@ class Session:
         return Result(True, f"rested {round(time.monotonic() - began)} s",
                       {"health": f"{p['hits']}/{p['hits_max']}", "mana": f"{p['mana']}/{p['mana_max']}"})
 
+    # ------------------------------------------------------------ keeping watch (cuo-m3n.12)
+
+    WATCH_TILES = 8       # beyond the hamlet's own edge, the ground a watch keeps
+    WATCH_POST_S = 120.0  # at a post this long with nothing on the ground, the watch walks on to the next
+    WATCH_LOW_HP = 30     # health % under which a watch with nothing to heal by ends
+
+    async def watch(self, minutes: float = 10, log_path: Path | None = None) -> Result:
+        """Keep watch over the hamlet: walk a round of the resident's posts (Hamlet.posts), the nearest first, and stand a
+        while at each with the fight loop on, fighting what comes onto the hamlet's ground (its area, its edge and
+        WATCH_TILES beyond) or attacks the character, and going after nothing off it. The guards are called as at any
+        look (call_guards). It ends when time is up, on a death, or hurt with nothing to heal by. The hamlet's watchman
+        was given short sweeps at the Cove Orc Fort, and every sweep met savages stronger than him; the deaths of the
+        lands hours were savages and a lich come into Cove, at his gate and at the healer's house (cuo-m3n.12)."""
+        hamlet = self.hamlet
+        if hamlet is None or not hamlet.posts:
+            return Result(False, "no watch to keep: you have no posts")
+        if self.judge is None:
+            return Result(False, "no judge to fight with")
+        snap = await self.snap()
+        if not snap.get("in_game") or snap["player"]["dead"]:
+            return Result(False, "dead or out of the game: resurrect first")
+        p = snap["player"]
+        posts = hamlet.posts
+        first = min(range(len(posts)), key=lambda i: tiles(p["x"], p["y"], posts[i]["x"], posts[i]["y"]))
+        order = posts[first:] + posts[:first]
+        post = order[0]
+        r = await self.defended(self.travel_to(post["name"], post["x"], post["y"], distance=2))
+        if not r.ok:
+            return Result(False, f"could not get to {post['name']} to keep watch: {r.summary}", r.data)
+        reach = hamlet.edge + self.WATCH_TILES
+        bestiary = self.world.bestiary()
+
+        def ground(x: int, y: int) -> bool:
+            return hamlet.beyond(x, y) <= reach
+
+        await self.rpc.call("mode", mode="auto")
+        stop = asyncio.Event()
+        why: list[str] = []
+        first_snap: dict[str, Any] = {}
+        last: dict[str, Any] = {}
+        at = 0                    # the post it is at, or walking to, in `order`
+        since = time.monotonic()  # when it got there (or was last busy there)
+        walked: list[str] = [post["name"]]
+        came: dict[int, str] = {}  # serial -> what came onto the ground
+        calls0 = self.guards_calls
+
+        def look(snap: dict[str, Any]) -> None:
+            nonlocal first_snap, last, at, since
+            first_snap = first_snap or snap
+            last = snap
+            self.seen(snap)
+            note_threats(self.world, snap, self._threat_noted)
+            if not snap.get("in_game"):
+                return
+            me = snap["player"]
+            if me.get("dead"):
+                why.append("died")
+            elif self.interrupt.is_set():
+                why.append("interrupted")
+            elif me.get("hits_max") and 100 * me["hits"] / me["hits_max"] < self.WATCH_LOW_HP \
+                    and not (me.get("supplies") or {}).get("bandages") and not (me.get("supplies") or {}).get("heal_potions"):
+                why.append(f"hurt ({me['hits']}/{me['hits_max']}) with nothing to heal by")
+            # What could start a fight on the ground (state.threatening: not a kind the bestiary calls peaceful, unless
+            # it is fighting): the hamlet's dogs, cats and rats are always about, and counted as on it they kept the
+            # first live watch at one post for six minutes.
+            on = [m for m in snap.get("mobiles") or [] if state.threatening(m, bestiary)
+                  and ground(me["x"] + m.get("dx", 99), me["y"] + m.get("dy", 99))]
+            for m in on:
+                came.setdefault(m["serial"], str(m.get("name") or "a creature"))
+            walking = (snap["agent"].get("travel") or {}).get("state") == "walking"
+            if on or snap["agent"].get("engaged") or walking:
+                since = time.monotonic() if on or snap["agent"].get("engaged") else since
+            elif time.monotonic() - since >= self.WATCH_POST_S and len(order) > 1:
+                # Quiet at this post: on to the next of the round.
+                at = (at + 1) % len(order)
+                nxt = order[at]
+                walked.append(nxt["name"])
+                since = time.monotonic()
+                asyncio.get_running_loop().create_task(self.act("travel", x=nxt["x"], y=nxt["y"], distance=2,
+                                                                **self.paced()))
+            if why:
+                stop.set()
+
+        began = time.monotonic()
+        stats = await loop.run(self.rpc, self.judge, loop.LoopConfig(duration_s=minutes * 60),
+                               replace(self.pcfg, ground=ground, looting="nothing"), log_path or self.decisions_log, stop,
+                               archetype=self.archetype, on_snapshot=look, bestiary=self.world.bestiary())
+        s = stats.summary()["client_stats"]
+        mins = round((time.monotonic() - began) / 60, 1)
+        p1 = (last or first_snap).get("player") or {}
+        kinds: dict[str, int] = {}
+        for name in came.values():
+            kinds[name] = kinds.get(name, 0) + 1
+        data = {"minutes": mins, "kills": s.get("kills", 0), "deaths": s.get("deaths", 0),
+                "posts": walked, "came": kinds, "guards_called": self.guards_calls - calls0,
+                "health": f"{p1.get('hits')}/{p1.get('hits_max')}",
+                "stopped_because": why[0] if why else f"{minutes} minutes up"}
+        self.log("watched", **data)
+        seen = ", ".join(f"{n} {k}" for k, n in kinds.items()) or "nothing"
+        return Result(data["deaths"] == 0 and why[:1] != ["died"],
+                      f"kept watch over {hamlet.name} for {mins} min at {', '.join(dict.fromkeys(walked))}: came onto "
+                      f"the ground: {seen}; {data['kills']} kills" + (f", the guards called {data['guards_called']} times"
+                      if data["guards_called"] else "") + f"; stopped because {data['stopped_because']}", data)
+
     # ------------------------------------------------------------ hunting
 
     def fallen_beside(self, snap: dict[str, Any]) -> bool:
@@ -1188,6 +1294,10 @@ class Session:
             formed = await self.defended(forming.before_hunt(rally_key, name, cx, cy, radius))
             if self.interrupt.is_set():
                 return Result(False, f"did not hunt {name}: interrupted while the party formed up", {"formed_up": formed})
+            if formed.get("called_off"):
+                # Called off at the edge (a look that didn't meet the plan's condition, cuo-cym.14; a leader's hunt that
+                # isn't coming): nobody walks on in alone.
+                return Result(False, f"did not hunt {name}: {formed.get('why')}", {"formed_up": formed})
         if formed.get("formed") and formed.get("sighted"):
             r = Result(True, f"formed up with the party at the edge of {name}")
         else:

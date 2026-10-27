@@ -93,6 +93,15 @@ namespace ClassicUO.Agent
         // or at a run. A trip the brain asks for at a pace goes at it.
         public bool TravelWalks { get; set; } = Settings.GlobalSettings?.AgentTravelPace == "walk";
 
+        // Attended play (agent_attended_minutes, cuo-49t): with no input from the player this long, the agent does
+        // nothing until they are back. 0: off. The moment a mode is turned on counts as input.
+        public uint AttendedMs { get; set; } = (uint) Math.Max(0, Settings.GlobalSettings?.AgentAttendedMinutes ?? 0) * 60_000;
+        private uint _modeSetAt;
+        private bool _wasAway;
+
+        public bool Away => AttendedMs > 0 && Mode != AgentMode.Off
+                            && Time.Ticks - Math.Max(_lastHumanInput, _modeSetAt) > AttendedMs;
+
         private ClientSightTiles _sightTiles;
         private readonly Dictionary<uint, uint> _sightDenied = new Dictionary<uint, uint>();
         private readonly Dictionary<(int, int), uint> _groundDenied = new Dictionary<(int, int), uint>();
@@ -348,6 +357,7 @@ namespace ClassicUO.Agent
         {
             EnsureProfileLoaded();
             Mode = mode;
+            _modeSetAt = Time.Ticks;
 
             foreach (AgentBehavior b in AgentModes.AllBehaviors)
             {
@@ -748,6 +758,33 @@ namespace ClassicUO.Agent
                 return;
             }
 
+            // Away from the keyboard on a shard that wants attended play: nothing at all until the player is back.
+            if (Away != _wasAway)
+            {
+                _wasAway = !_wasAway;
+
+                if (_wasAway)
+                {
+                    ClearTasks();
+                    Suggestion = null;
+
+                    // Out of the war mode the agent's fights put it in, as a player who steps away would be. The server's
+                    // own auto-defence still swings back at an attacker (it sets the combatant on any aggression).
+                    if (player.InWarMode)
+                    {
+                        GameActions.RequestWarMode(player, false);
+                    }
+                }
+
+                Journal.AddAgentEvent(_wasAway ? $"you have been away {AttendedMs / 60000} min: the agent waits until you are back"
+                                               : "you are back: the agent carries on");
+            }
+
+            if (_wasAway)
+            {
+                return;
+            }
+
             if (now >= _nextReflex)
             {
                 _nextReflex = now + REFLEX_INTERVAL_MS;
@@ -781,6 +818,13 @@ namespace ClassicUO.Agent
             if (a.Verb == "hint")
             {
                 return Execute(a);
+            }
+
+            if (!a.Manual && Away)
+            {
+                Stats.Blocked++;
+
+                return ("blocked", "the player is away from the keyboard (agent_attended_minutes)");
             }
 
             if (!a.Manual)

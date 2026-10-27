@@ -34,3 +34,23 @@ down and the game server up; the page quotes are from the Wayback Machine):
 - **Line of sight:** the profile asks for RunUO's rule (`"agent_sight_rule": "runuo"`), because the shard runs a RunUO of its own: no door clause, the one-unit allowance kept ([what differs](playing.md#line-of-sight)). Its staff reworked "the RunUO LOS code" without publishing what they changed, so the shard's exact rule can only be measured there. In a first session watch the client's counters: `agent.stats.not_in_sight` (the shard refusing a target) against `aimed_unseen` (aims the client's own rule counted as out of sight). A refusal with no such aim is a place where the shard is stricter than the rule in force. The other way round, the client holding back where the shard would allow, doesn't show in them.
 - **Places:** the shard publishes no marker file for towns and dungeons (only `house.txt`, the players' houses), but its map page draws them from lines in its own script. `tools/uor/uor_map_markers.py PAGE.html --out brain/worlds/uor/uor-map-page.map` turns a saved copy of the page into a UOAM file, and `uo-brain world --shard uor import-markers brain/worlds/uor/uor-map-page.map --maps Felucca` makes them places ([what it gave](results.md#uo-renaissances-map-page)). The page has no banks, healers or shops: those still need the shard's own files or a first walk round a town. The page and the file made from it are the shard's work and stay out of the repo (`brain/worlds/` is gitignored).
 - **Rules:** the shard's own launcher installs ClassicUO and staff recommend it, but its Code of Conduct still lists "Non Electronic Arts (EA) or Origin Systems (OSI) Clients" as not allowed, names Razor as the only approved third-party program, says no software other than Razor may be used for repetitive tasks, and that "you may not kill monsters unattended using any means". Ask staff before connecting with the agent on.
+
+### Before the first session there
+
+What is left is Harry's: nothing has connected to the shard, and nobody has asked its staff anything (the plan,
+2026-10-27, cuo-49t).
+
+1. **Ask its staff** whether ClassicUO with a helper that fights beside you, at the keyboard, is allowed (its
+   Discord; a draft is in the project notes).
+2. **If yes:** an account (made at first login) and the shard's own files from its launcher. Its website was
+   still not answering on 2026-10-27.
+3. **Check the setup:** `python3 -I tools/uor/preflight.py [--settings bin/osx-arm64/settings.uor.json]
+   [--data DIR]` reads the profile and the data folder and connects to nothing: the login server, no
+   encryption, client 5.0.8.3, RunUO's line of sight, attended play on, no brain started by the client, the
+   shard's own 5.0.8.3 files and not the stock 7.x data (which has `.uop` files the 5.0.8.3 client never had),
+   the client built, and the `uor` world store. Each line it can't tick says what to do; exit code 0 when all
+   are ticked.
+4. **Play attended, in combat assist.** The profile sets `agent_attended_minutes` to 3: with no input from
+   you for three minutes the agent does nothing at all, takes the character out of war mode, and waits for
+   you ([attended play](playing.md#safety-rules)). The shard forbids killing monsters unattended by any means.
+

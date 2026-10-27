@@ -82,6 +82,9 @@ class PolicyConfig:
     # The creatures system one judged part of the leader's fight, beyond the escort rule's tiles (escort.py, cuo-cym.25):
     # their serials. A leader who shoots or casts from range is fought beside before the creature closes.
     escort_also: frozenset[int] = frozenset()
+    # A watch's ground (session.watch, cuo-m3n.12): a test (x, y) -> bool of the tiles that are the watch's to keep.
+    # What is off it is let be unless it attacks the character: the watchman keeps the hamlet, and doesn't chase.
+    ground: Any = None
     # Set from the player's strategy (strategy.py).
     allow_flee: bool = True
     target_priority: str = "current_first"
@@ -352,6 +355,15 @@ def decide(sit: Situation, ans: Answers, mem: Memory, cfg: PolicyConfig, now: fl
                                                       and (h.distance <= 1 or from_leader(h) <= 1))
         if cfg.focus and (named := sit.hostile_by_serial(cfg.focus)) is not None:
             named.allowed = True  # the leader named it: whether or not it stands in war mode by either of them
+    if cfg.ground is not None:
+        # On watch: only what could start a fight on the watch's ground (not a kind the bestiary calls peaceful, unless
+        # it is fighting), or what is on the character (cuo-m3n.12). Live, the watchman went after the hamlet's dogs and
+        # magpies on his first watch, and let an orc stand in the street on his second.
+        px, py = sit.player.get("x", 0), sit.player.get("y", 0)
+        for h in sit.hostiles:
+            raw = mobile(sit, h.serial) or {}
+            h.allowed = h.allowed and (attacking_me(sit, h) or "peaceful" not in h.info
+                                       and bool(cfg.ground(px + raw.get("dx", 99), py + raw.get("dy", 99))))
     sit.past_rally = now < mem.back_until
     end_fall_back(sit, mem, now)
     if now < mem.no_seek_until:

@@ -116,6 +116,11 @@ async def main() -> None:
                          "Sweet Dreams inn, says 'wait here', walks out into the street beyond the inn's wall and calls "
                          "them out aloud; who heard it, directly or passed on from the leader's client, and who came "
                          "(cuo-cym.28)")
+    ap.add_argument("--fresh-words", action="store_true",
+                    help="only this, after the invitations: what a new person might say, none of it from the earlier "
+                         "playtests, each line with what it means written down before the run (cuo-cym.29): how close to "
+                         "keep, how hard to fight, quiet and talk again, gold and no looting, questions to all and to one "
+                         "by what it plays, two of them by name, somewhere and back, small talk, nothing at all")
     ap.add_argument("--errand", action="store_true",
                     help="only this, after the invitations: one companion sent by name to buy 10 bandages at the healer "
                          "and come back (cuo-cym.27); what it bought, what it said, how soon it was back")
@@ -399,6 +404,79 @@ async def main() -> None:
         await r.close()
         client.stop(proc)
         print(json.dumps({"run": out.name, "settings": args.settings, "walls": walls}, indent=1))
+        return
+
+    if args.fresh_words:
+        # cuo-cym.29: Harry's second playtest, played by script. The lines are what a new person might type, in
+        # lower case and without care, written with what each means before the run (memory: a script asks what the
+        # builder thought of, so these come from a player's side: settings, questions, names, places, nothing).
+        phase = "fresh words"
+        await say(r, "Follow me.")
+        await walk(START[0], START[1] - 10)
+        mage, archer, tamer = names[0], names[1], names[2]
+        LINES = [
+            ("stick close to me lads", "setting: keep close (distance)", 12),
+            ("spread out a bit, youre crowding me", "setting: keep further off (distance)", 12),
+            ("go easy, dont go chasing stuff", "setting: fight only what comes at us (reach/aggression)", 12),
+            ("ok go hard, clear the place out", "setting: fight everything (aggression)", 12),
+            ("shh keep it down for a bit", "setting: talk off; nobody answers, or one word", 12),
+            ("ok you can talk again", "setting: talk on", 12),
+            ("grab any gold you see", "setting: loot gold", 12),
+            ("leave the loot", "setting: loot nothing", 12),
+            ("anyone hurt?", "a question to all: each answers, none is an order", 25),
+            ("tamer, hows the bear?", f"a question to {tamer} by what she plays: {tamer} answers", 20),
+            (f"{mage} and {archer} wait here", f"order to two by name: {mage} and {archer} stay; {tamer} comes along", 8),
+            ("WALK", "the leader walks 12 tiles off: who stayed", 0),
+            ("everyone with me", "order to all: follow", 12),
+            ("go wait for me at the healer", "go somewhere (the nearest healer), each agreeing or not", 30),
+            ("actually nah, come back", "call back: those who went come back to the leader", 45),
+            ("what are you lot up to?", "a question to all: each answers", 25),
+            ("cheers guys, good work today", "talk, no order: thanks, at most a word back", 15),
+            ("lol", "nothing: no order, no reading as one", 10),
+        ]
+        fresh = []
+        for line, meant, wait_s in LINES:
+            t0 = time.time()
+            if line == "WALK":
+                stood = places(await look())
+                here = (await look())["player"]
+                await walk(here["x"] + 12, here["y"])
+                snap = await wait(4)
+                steps = moved(stood, places(snap))
+                fresh.append({"line": "(the leader walks 12 tiles east)", "meant": meant, "tiles_each_moved": steps,
+                              "stayed": [n for n, d in steps.items() if d <= 2], "came": [n for n, d in steps.items() if d >= 6]})
+                note("fresh words: walked off", **fresh[-1])
+                continue
+            answers = await tell(line, wait_s)
+            await asyncio.sleep(2.0)
+            reads = {}
+            for kind in ("order_read", "setting_read", "place_read", "whom_read"):
+                for n, ds in logged(kind, t0 - 0.5).items():
+                    for d in ds:
+                        reads.setdefault(n, []).append({"kind": kind, **{k: v for k, v in d.items()
+                                                                         if k not in ("t", "type", "from", "state")}})
+            orders = {n: [{k: d.get(k) for k in ("order", "place", "refused", "why", "said", "arrived") if d.get(k) is not None}
+                          for d in ds] for n, ds in logged("order", t0 - 0.5).items()}
+            snap = await look()
+            fresh.append({"line": line, "meant": meant, "answers": [f"{a['who']} ({a['after_s']} s): {a['text']}" for a in answers],
+                          "reads": reads, "orders": orders, "beside_after": beside(snap, 8)})
+            note("fresh words", **{k: v for k, v in fresh[-1].items() if k != "reads"})
+            if line == "go wait for me at the healer":
+                # Give them the walk: those who agreed are on their way when "come back" is said.
+                await wait(8)
+            await asyncio.sleep(2.0)
+        companions.send_signal(signal.SIGINT)
+        try:
+            companions.wait(45)
+        except subprocess.TimeoutExpired:
+            companions.kill()
+        await r.call("mode", mode="off")
+        await say(r, "[AgentDisrupt restore quiet")
+        await r.close()
+        client.stop(proc)
+        (out / "fresh-words.json").write_text(json.dumps(fresh, indent=1))
+        print(json.dumps({"run": out.name, "fresh_words": fresh, "party_report": f"uv run uo-brain party-report {out}"},
+                         indent=1))
         return
 
     if args.errand:

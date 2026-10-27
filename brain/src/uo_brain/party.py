@@ -78,7 +78,8 @@ TABLE_WAIT_S = 180.0  # a follower at the inn waits this long for the table: lon
 def ensure(world: World) -> None:
     world.db.executescript(SCHEMA)
     # A store from before the huddle's rally (host), or the second point behind the rally point (cuo-cym.13).
-    for column, kind in (("host", "TEXT"), ("back_x", "INTEGER"), ("back_y", "INTEGER")):
+    # ...or why a rally was called off (cuo-cym.14).
+    for column, kind in (("host", "TEXT"), ("back_x", "INTEGER"), ("back_y", "INTEGER"), ("why", "TEXT")):
         add_column(world, "party_rally", column, kind)
 
 
@@ -268,14 +269,14 @@ class Party:
         self.world.db.commit()
         return self.rally(key)  # type: ignore[return-value]
 
-    def rally_go(self, key: str, state: str = "go") -> None:
-        """The word to go in ("go"), or that there is nothing to form up for after all ("off")."""
-        self.world.db.execute("UPDATE party_rally SET state = ?, go_t = ? WHERE party = ? AND key = ?",
-                              (state, time.time(), self.party, key))
+    def rally_go(self, key: str, state: str = "go", why: str = "") -> None:
+        """The word to go in ("go"), or that there is nothing to form up for after all ("off", and why)."""
+        self.world.db.execute("UPDATE party_rally SET state = ?, go_t = ?, why = ? WHERE party = ? AND key = ?",
+                              (state, time.time(), why or None, self.party, key))
         if state == "off":
             self.world.db.execute(
-                "INSERT OR IGNORE INTO party_rally (party, key, x, y, state, t, go_t) VALUES (?, ?, 0, 0, 'off', ?, ?)",
-                (self.party, key, time.time(), time.time()))
+                "INSERT OR IGNORE INTO party_rally (party, key, x, y, state, t, go_t, why) VALUES (?, ?, 0, 0, 'off', ?, ?, ?)",
+                (self.party, key, time.time(), time.time(), why or None))
         self.world.db.commit()
 
     def rally(self, key: str | None = None) -> dict[str, Any] | None:
@@ -289,7 +290,8 @@ class Party:
             return None
         return {"key": r["key"], "x": r["x"], "y": r["y"], "point": r["point"] or "", "state": r["state"],
                 "sighted": bool(r["sighted"]), "t": r["t"], "go_t": r["go_t"], "host": r["host"] or "",
-                "back": (r["back_x"], r["back_y"]) if r["back_x"] is not None and r["back_y"] is not None else None}
+                "back": (r["back_x"], r["back_y"]) if r["back_x"] is not None and r["back_y"] is not None else None,
+                "why": r["why"] or ""}
 
     def section(self, me_at: tuple[int, int] | None = None, leading: bool = True) -> str:
         """The party, for a planner: for its leader, who follows it and how each is; for a member of a

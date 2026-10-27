@@ -283,6 +283,17 @@ def from_goal(tool: str, args: dict[str, Any], result: dict[str, Any], at: float
         if seen := text.split("; stronger creatures seen: ", 1)[1] if "; stronger creatures seen: " in text else "":
             notes.append(Note(f"Stronger creatures seen: {seen}.", tags=("danger",), source="goal", importance=3))
         return notes
+    if tool == "watch" and "minutes" in result:
+        # A watch over a hamlet (cuo-m3n.12): what came, and a death on it.
+        came = ", ".join(f"{n} {k}" for k, n in (result.get("came") or {}).items()) or "nothing"
+        kills = int(result.get("kills") or 0)
+        if int(result.get("deaths") or 0):
+            notes.append(Note(f"Died keeping watch ({stamp}): {came} came; {result.get('stopped_because')}.",
+                              tags=("death", "watch"), source="death", importance=5))
+        else:
+            notes.append(Note(f"Kept watch {result.get('minutes')} min ({stamp}): {came} came, {kills} kills.",
+                              tags=("watch",), source="goal", importance=2 if kills else 1))
+        return notes
     if not ok and tool in ("travel_to", "bank", "buy", "sell"):
         what = {"travel_to": f"travel to {args.get('place')}", "bank": "bank",
                 "buy": f"buy {args.get('count')} {args.get('item')}", "sell": f"sell {args.get('items', 'loot')}"}[tool]

@@ -565,3 +565,75 @@ def test_a_member_doesnt_hunt_the_plans_area_while_the_plan_holds_the_party_back
     asyncio.run(plan.carry_out("hunt", {"area": "Britain Graveyard", "minutes": 5, "why": "now"}))
     assert hunted == ["Covetous", "Britain Graveyard"]
     w.close()
+
+
+class Looks(GoNow):
+    """System one stood in for: the plan holds them back (go_now no), for a look when its target says to scout."""
+
+    async def ask(self, state, questions):
+        from uo_brain import judge
+        self.asked += 1
+        out = judge.Answers(model="test", cost=0.00001)
+        target = state["plan"]["target"].lower()
+        out.nouls.update({"go_now": 0.1, "look": 0.9 if "scout" in target else 0.1,
+                          "clear": 0.8 if "nothing hostile" in state.get("seen", "") else 0.2})
+        return out
+
+
+def test_a_plan_that_holds_for_a_look_sends_its_members_to_the_edge_to_look(tmp_path, monkeypatch):
+    """cuo-cym.14: with memory on, every plan said "enter only after a fresh scout", and nobody was sent. Now those it
+    names go to the edge together to look (the rally looks, rally.Rally.look_from_edge); their own hunts of it are
+    still refused while it holds; and after LOOKS looks that didn't send them in, the hold is the planners' again."""
+    monkeypatch.setattr(huddle, "BRING_S", 0.2)
+    w = World.open("local", root=tmp_path)
+    w.insert("spawns", {"area": "Britain Graveyard", "map": "Felucca", "x": 1369, "y": 1475, "walk_range": 30,
+                        "creature": "Skeleton", "max_count": 3, "spawner": "a", "source": "modernuo:Graveyards.json",
+                        "last_seen": "2026-10-19T00:00:00+00:00"})
+    scout = "Hold at the Britain Graveyard's west edge; enter only after a fresh scout shows the lich alone."
+    roland, _, _ = member(w, "Roland", going_chat(NAMES[:2], target=scout), mem=False)
+    asyncio.run(roland.call("the party has come together and has no plan yet"))
+    looks = Looks()
+
+    from uo_brain.session import Session
+
+    def step(name):
+        h, p, s = member(w, name, mem=False)
+        s.judge, s.rally = looks, object()
+        s.hunt_spot = lambda area: Session.hunt_spot(s, area)
+
+        async def hunt(area, minutes, **_):
+            s.goals.append(("hunt", area, minutes))
+            return Result(True, "hunted", {"kills": 0})
+
+        s.hunt = hunt
+        chat = scripted(reply(call("hunt", {"area": "Britain Graveyard", "minutes": 5, "why": "my own idea"})))
+        plan = planner.Planner(s, GOAL, chat_fn=chat, escalate=False, memory=False, party=p, huddle=h)
+        plan.party_waited = plan.pack_checked = True
+        asyncio.run(plan.step())
+        return plan, h, len(chat.seen)
+
+    plan, h, asked = step("Isolde")
+    rev = roland.board()["rev"]
+    assert asked == 0 and plan.looking == rev and plan.history[-1].tool == "hunt"
+    assert "to the edge of Britain Graveyard, to look" in plan.history[-1].args["why"]
+    assert asyncio.run(plan.held_back("Britain Graveyard")) == ""  # the rally holds it at the edge
+    # Wystan isn't named: his own hunt of it is refused while the plan holds.
+    plan, _, asked = step("Wystan")
+    assert asked == 1 and plan.looking is None and plan.history[-1].result["result"].startswith(
+        "the party's plan holds the party back from Britain Graveyard")
+    # The look from the edge: system one on what they see; one that doesn't send them in calls a huddle at once.
+    assert asyncio.run(h.clear_to_go(looks, "Britain Graveyard", "nothing hostile in view. The party here: Isolde.")) == 0.8
+    assert asyncio.run(h.clear_to_go(looks, "Britain Graveyard", "a lich (14 tiles off)")) == 0.2
+    # After LOOKS looks that didn't send them in, the plan's hold is left to each planner.
+    assert asyncio.run(h.holds_for_a_look(looks, "Britain Graveyard"))
+    h.looked.extend([(time.time(), "Britain Graveyard")] * huddle.LOOKS)
+    assert not asyncio.run(h.holds_for_a_look(looks, "Britain Graveyard"))
+    h.looked.clear()
+    out = asyncio.run(h.seen_from_edge("Britain Graveyard", "a lich (14 tiles off)"))
+    assert out["reason"].startswith("the party looked from the edge of Britain Graveyard as the plan said") \
+        and out["reason"].endswith("a lich (14 tiles off)") and h.board()["rev"] == rev + 1 and len(h.looked) == 1
+    # Not a plan that holds them for something else (a raise, a rest).
+    rest = "Hold at the Britain healer until Wystan is raised; then the graveyard."
+    asyncio.run(member(w, "Roland", going_chat(NAMES[:2], target=rest), mem=False)[0].call("Wystan died"))
+    assert not asyncio.run(member(w, "Isolde", mem=False)[0].holds_for_a_look(looks, "Britain Graveyard"))
+    w.close()

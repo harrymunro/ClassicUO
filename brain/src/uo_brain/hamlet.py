@@ -60,8 +60,11 @@ STILL_S = 600      # standing still this long away from home is a spell worth na
 STILL_TILES = 3    # ...within this many tiles of where the spell began
 SAMPLE_S = 30.0    # the fleet looks where each resident is this often
 LAND_EDGE = 10     # tiles round a land's spawns that are still that land
+# A land's centre is at most this far from the hamlet's area (cuo-m3n.3, 2026-10-27): Cove's four grounds are 118 to 138
+# tiles out, a minute or so at a walk, and every town's bank is three times further (437 tiles and more).
+LANDS_TILES = 150
 AWAY_SAID_MIN = 5  # away from home this many minutes or more, each turn says how long
-WORK_GOALS = ("hunt", "sell", "buy", "bank", "restock", "travel_to")
+WORK_GOALS = ("hunt", "sell", "buy", "bank", "restock", "travel_to", "watch")
 GATHER_S = 150.0   # the first at an evening's gathering waits this long for the others
 GATHER_SOME_S = 60.0  # ...or this long once one other has come
 GATHER_TILES = 8   # close enough to the gathering place to be at it
@@ -91,6 +94,8 @@ class Hamlet:
     evening_s: float = 900.0
     began: float | None = None    # when the run's first day began (epoch), the same for every resident
     run: str = ""                 # the run's name, for the evening table's place in the shared store
+    # A watch this resident keeps (cuo-m3n.12): its posts in the order walked (name, x, y), the `watch` goal's round.
+    posts: list[dict[str, Any]] = field(default_factory=list)
     # When this resident was last seen at home (time.monotonic), for each turn's words: not part of what it knows.
     home_at: float | None = field(default=None, compare=False)
 
@@ -223,10 +228,24 @@ class Hamlet:
                 + (f" travel_to \"{self.neighbours[0]['name']}'s home\" goes to a neighbour's."
                    if any(n.get("home") for n in self.neighbours) else ""))
         if self.lands:
-            lines.append(f"{self.name}'s lands, where its people work: "
-                         + "; ".join(f"{land['name']} (round {land['x']},{land['y']})" for land in self.lands)
+            def land(x: dict[str, Any]) -> str:
+                # What holds a land that is too strong for one alone (cuo-m3n.21).
+                if not x.get("strong"):
+                    return f"{x['name']} (round {x['x']},{x['y']}; fair fights for one alone)"
+                kinds = x["strong"]
+                said = kinds[0] if len(kinds) == 1 else ", ".join(kinds[:-1]) + " and " + kinds[-1]
+                return (f"{x['name']} (round {x['x']},{x['y']}; {said} there {'is' if len(kinds) == 1 else 'are'} too "
+                        "strong for one alone: " + ("not a ground to work on your own)" if x.get("mostly")
+                                                   else "keep clear of them)"))
+            lines.append(f"{self.name}'s lands, where its people work: " + "; ".join(land(x) for x in self.lands)
                          + f". Working there is part of life in {self.name}; between one piece of work and the next, "
                          "come home.")
+        if self.posts:
+            lines.append(f"{me} keeps watch over {self.name}: the `watch` goal walks a round of its posts ("
+                         + "; ".join(f"{p['name']} ({p['x']},{p['y']})" for p in self.posts)
+                         + f"), standing a while at each, and fights what comes into {self.name} or to its edge, and "
+                         "nothing beyond; the guards are called on a criminal or a savage fighting close by in the "
+                         "guarded town. Between watches, rest at home.")
         if self.gather:
             lines.append(f"Of an evening the neighbours gather at {self.gather['words']} to talk the day over: the "
                          f"`evening` goal, offered then. A day here is {self.day_s / 60:.0f} minutes, and its last "
@@ -245,7 +264,8 @@ class Hamlet:
                 "home": list(self.home) if self.home else None, "home_words": self.home_words, "work": self.work,
                 "neighbours": self.neighbours, **({"lands": self.lands} if self.lands else {}),
                 **({"gather": self.gather, "day_s": self.day_s, "evening_s": self.evening_s, "began": self.began}
-                   if self.gather else {}), **({"run": self.run} if self.run else {})}
+                   if self.gather else {}), **({"run": self.run} if self.run else {}),
+                **({"posts": self.posts} if self.posts else {})}
 
     @classmethod
     def from_json(cls, d: dict[str, Any]) -> "Hamlet":
@@ -254,10 +274,13 @@ class Hamlet:
                    str(d.get("me") or ""), (int(home[0]), int(home[1])) if home else None,
                    str(d.get("home_words") or ""), str(d.get("work") or ""),
                    [{str(k): str(v) for k, v in n.items()} for n in d.get("neighbours") or []],
-                   [{"name": str(x["name"]), "x": int(x["x"]), "y": int(x["y"]), "r": int(x["r"])} for x in d.get("lands") or []],
+                   [{"name": str(x["name"]), "x": int(x["x"]), "y": int(x["y"]), "r": int(x["r"]),
+                     **({"strong": [str(k) for k in x["strong"]], "mostly": bool(x.get("mostly"))} if x.get("strong") else {})}
+                    for x in d.get("lands") or []],
                    dict(d["gather"]) if d.get("gather") else None, float(d.get("day_s") or 3600.0),
                    float(d.get("evening_s") or 900.0), float(d["began"]) if d.get("began") is not None else None,
-                   str(d.get("run") or ""))
+                   str(d.get("run") or ""),
+                   [{"name": str(x["name"]), "x": int(x["x"]), "y": int(x["y"])} for x in d.get("posts") or []])
 
 
 def load(path: Path) -> Hamlet:
@@ -428,7 +451,7 @@ def work(session: list[dict[str, Any]]) -> dict[str, Any]:
         if x.get("type") != "session":
             continue
         event = x.get("event")
-        if event == "hunted":
+        if event in ("hunted", "watched"):
             kills += int(x.get("kills") or 0)
         elif event == "sell" and x.get("ok"):
             sold += max(int(x.get("gold") or 0), 0)

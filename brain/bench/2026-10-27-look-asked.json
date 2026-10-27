@@ -1,0 +1,185 @@
+{
+ "started": "2026-10-27T15:47:42",
+ "cut": 0.5,
+ "plans": 29,
+ "models": {
+  "decision1": {
+   "A (as built)": {
+    "right": "24/29",
+    "looked_when_it_waits_for_more": 3,
+    "no_look_when_a_look_settles_it": 2,
+    "wrong": [
+     {
+      "i": 14,
+      "want": false,
+      "p": 0.531,
+      "target": "Hold off the Britain Graveyard for now. Isolde is dead (a ghost at 1428,1542), so nobody enters until she is raised or brought back to the g"
+     },
+     {
+      "i": 21,
+      "want": false,
+      "p": 0.991,
+      "target": "Hold at the Britain graveyard edge (about 1390,1528) and scout a clear window before any hunt. Isolde is dead (a ghost at 1480,1611), so no "
+     },
+     {
+      "i": 25,
+      "want": false,
+      "p": 0.963,
+      "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry yet. Enter only after a fresh sighting shows no lich and no sk"
+     },
+     {
+      "i": 27,
+      "want": true,
+      "p": 0.294,
+      "target": "Hunt the undead at the Britain Graveyard, single or paired undead only, all five together. Before entering, a fresh scout from the western e"
+     },
+     {
+      "i": 28,
+      "want": true,
+      "p": 0.245,
+      "target": "Hunt the undead at the Britain Graveyard, single or paired undead only, all five together. Enter only after a fresh scout from the western e"
+     }
+    ],
+    "ms": 321,
+    "cost_usd_a_plan": 1.73e-05
+   },
+   "B (noul reworded)": {
+    "right": "27/29",
+    "looked_when_it_waits_for_more": 1,
+    "no_look_when_a_look_settles_it": 1,
+    "wrong": [
+     {
+      "i": 19,
+      "want": true,
+      "p": 0.119,
+      "target": "Hold off the Britain Graveyard for now. Rest at the Britain healer; Wystan scouts the western edge (1390,1528) for a fresh all-clear. Enter "
+     },
+     {
+      "i": 25,
+      "want": false,
+      "p": 0.562,
+      "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry yet. Enter only after a fresh sighting shows no lich and no sk"
+     }
+    ],
+    "ms": 283,
+    "cost_usd_a_plan": 1.86e-05
+   },
+   "C (a choice)": {
+    "right": "27/29",
+    "looked_when_it_waits_for_more": 2,
+    "no_look_when_a_look_settles_it": 0,
+    "wrong": [
+     {
+      "i": 21,
+      "want": false,
+      "p": 0.962,
+      "target": "Hold at the Britain graveyard edge (about 1390,1528) and scout a clear window before any hunt. Isolde is dead (a ghost at 1480,1611), so no "
+     },
+     {
+      "i": 25,
+      "want": false,
+      "p": 0.989,
+      "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry yet. Enter only after a fresh sighting shows no lich and no sk"
+     }
+    ],
+    "ms": 295,
+    "cost_usd_a_plan": 1.67e-05
+   }
+  },
+  "jev": {
+   "A (as built)": {
+    "right": "27/29",
+    "looked_when_it_waits_for_more": 1,
+    "no_look_when_a_look_settles_it": 1,
+    "wrong": [
+     {
+      "i": 0,
+      "want": false,
+      "p": 0.52,
+      "target": "Hunt the undead at the Britain Graveyard, the lich first, then the skeletons. Stop and regroup first: a lich and a skeleton were just seen t"
+     },
+     {
+      "i": 19,
+      "want": true,
+      "p": 0.33,
+      "target": "Hold off the Britain Graveyard for now. Rest at the Britain healer; Wystan scouts the western edge (1390,1528) for a fresh all-clear. Enter "
+     }
+    ],
+    "ms": 176,
+    "cost_usd_a_plan": 3.01e-05
+   },
+   "B (noul reworded)": {
+    "right": "23/29",
+    "looked_when_it_waits_for_more": 0,
+    "no_look_when_a_look_settles_it": 6,
+    "wrong": [
+     {
+      "i": 8,
+      "want": true,
+      "p": 0.47,
+      "target": "Hunt the undead at the Britain Graveyard, single or paired only, all four of us together, now. Wystan stays out (no bandages, dead-to-the-fi"
+     },
+     {
+      "i": 9,
+      "want": true,
+      "p": 0.27,
+      "target": "Hunt the undead at the Britain Graveyard, from the western road: pull one or two at a time, never three. Only enter with all five alive and "
+     },
+     {
+      "i": 11,
+      "want": true,
+      "p": 0.43,
+      "target": "Hunt the undead at the Britain Graveyard, but only once all five are bunched and alive and no lich is seen near the western entry or eastern"
+     },
+     {
+      "i": 16,
+      "want": true,
+      "p": 0.2,
+      "target": "Hold. Do not enter the Britain Graveyard now. A lich was seen with four skeletons and the party is too weak for that pack. Regroup at the Br"
+     },
+     {
+      "i": 19,
+      "want": true,
+      "p": 0.14,
+      "target": "Hold off the Britain Graveyard for now. Rest at the Britain healer; Wystan scouts the western edge (1390,1528) for a fresh all-clear. Enter "
+     },
+     {
+      "i": 20,
+      "want": true,
+      "p": 0.17,
+      "target": "Hold at the Britain graveyard edge and scout a clear window before any hunt. No entry until no lich is in view near the western entrance (14"
+     }
+    ],
+    "ms": 165,
+    "cost_usd_a_plan": 3.14e-05
+   },
+   "C (a choice)": {
+    "right": "26/29",
+    "looked_when_it_waits_for_more": 2,
+    "no_look_when_a_look_settles_it": 1,
+    "wrong": [
+     {
+      "i": 19,
+      "want": true,
+      "p": 0.46,
+      "target": "Hold off the Britain Graveyard for now. Rest at the Britain healer; Wystan scouts the western edge (1390,1528) for a fresh all-clear. Enter "
+     },
+     {
+      "i": 21,
+      "want": false,
+      "p": 0.72,
+      "target": "Hold at the Britain graveyard edge (about 1390,1528) and scout a clear window before any hunt. Isolde is dead (a ghost at 1480,1611), so no "
+     },
+     {
+      "i": 25,
+      "want": false,
+      "p": 0.63,
+      "target": "Hold at the western edge of the Britain Graveyard (about 1390,1528). No entry yet. Enter only after a fresh sighting shows no lich and no sk"
+     }
+    ],
+    "ms": 177,
+    "cost_usd_a_plan": 3.05e-05
+   }
+  }
+ }
+}

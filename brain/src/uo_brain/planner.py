@@ -156,7 +156,7 @@ def machine_tool() -> dict[str, Any]:
 
 
 GOALS = {"travel_to", "hunt", "bank", "buy", "sell", "rest", "set_strategy", "set_machine", "resurrect",
-         "recover_corpse", "finish", "restock", "inn", "evening"}
+         "recover_corpse", "finish", "restock", "inn", "evening", "watch"}
 # Goals that are a member's own business: a party forming up for a hunt doesn't wait for one who is on these
 # (rally.expected; a follower says the same of its resurrection, its corpse and its restock, party.Follower.own).
 OWN_BUSINESS = ("bank", "buy", "sell", "restock", "resurrect", "recover_corpse")
@@ -188,6 +188,21 @@ def evening_tool(place: str) -> dict[str, Any]:
         "parameters": {"type": "object", "properties": {
             "why": {"type": "string", "description": "One short sentence for the player: why this goal now."}},
             "required": ["why"]}}}
+
+
+def watch_tool(hamlet: Any) -> dict[str, Any]:
+    """A hamlet watchman's work (cuo-m3n.12): a round of the posts, fighting what comes into the hamlet."""
+    return {"type": "function", "function": {
+        "name": "watch",
+        "description": f"Keep watch over {hamlet.name}: walk a round of your posts ("
+                       + ", ".join(p["name"] for p in hamlet.posts) + "), the nearest first, standing a while at "
+                       f"each, and fight whatever comes into {hamlet.name} or to its edge; nothing beyond it is "
+                       "chased. The guards are called on a criminal, or a savage fighting close by, in the guarded "
+                       "town. Ends when the time is up, on a death, or hurt with nothing to heal by.",
+        "parameters": {"type": "object", "properties": {
+            "minutes": {"type": "number", "description": "How long at most, 3 to 20."},
+            "why": {"type": "string", "description": "One short sentence for the player: why this goal now."}},
+            "required": ["minutes", "why"]}}}
 
 
 def restock_tool(own: bool = False) -> dict[str, Any]:
@@ -293,6 +308,7 @@ class Planner:
         self.ends_at: float | None = None  # when the session's hours are up (run): no hunt is begun to outlast it
         self.on_errand = False  # carrying out a goal of its own (OWN_BUSINESS): a huddle's rally doesn't wait for it
         self.steered: set[int] = set()  # the huddle's plans (revisions) whose hunt this member was sent on (cuo-cym.14)
+        self.looking: int | None = None  # ...and the one it was sent to look at from the edge first (steer)
         self.party_waited = party is None  # a party's planner waits once, at the start, for the others to join
         self.started = time.monotonic()
         # The character's own memory (memory.py), in the shard's store: by default whenever the session has
@@ -323,7 +339,8 @@ class Planner:
             + ([restock_tool(own=huddle is not None)] if party is not None else []) \
             + ([inn_tool()] if party is not None and table is not None else []) \
             + ([evening_tool(hamlet.gather["words"])] if party is None and table is not None
-               and (hamlet := getattr(session, "hamlet", None)) is not None and hamlet.gather else [])
+               and (hamlet := getattr(session, "hamlet", None)) is not None and hamlet.gather else []) \
+            + ([watch_tool(hamlet)] if (hamlet := getattr(session, "hamlet", None)) is not None and hamlet.posts else [])
         # Jev picks the few memories each call sees (memory.Picker), and answers the recall tool.
         self.picker = memories.Picker(self.memory, getattr(session, "judge", None), log=self.log) \
             if self.memory else None
@@ -484,13 +501,18 @@ class Planner:
         return await self.carry_out(tool, args, chosen=True)
 
     def steer(self, area: str, rev: int) -> tuple[str, dict[str, Any]]:
-        """The hunt goal a huddle's plan sends this member on (sent_in), noted as the plan's, not its planner's."""
+        """The hunt goal a huddle's plan sends this member on (sent_in), noted as the plan's, not its planner's. One
+        the plan holds back until the ground is seen goes to the edge with the others to look, and in only if what
+        they see meets the plan's condition (rally.Rally.look_from_edge, cuo-cym.14)."""
         self.steered.add(rev)
         # Read as the member's own: the plan's watcher (Huddle.watch) cuts a goal short when a plan it hasn't read is on
         # the board, and cut the hunt it was sent on two seconds in, 51 tiles short (run 20261019-154246).
         self.huddle.read()
-        self.log({"type": "planner", "t": time.time(), "steered": {"rev": rev, "area": area}})
-        return "hunt", {"area": area, "minutes": STEER_MINUTES, "why": f"the party's plan sends me into {area} with the others"}
+        look = self.looking == rev
+        self.log({"type": "planner", "t": time.time(), "steered": {"rev": rev, "area": area, **({"look": True} if look else {})}})
+        return "hunt", {"area": area, "minutes": STEER_MINUTES,
+                        "why": f"the party's plan sends me with the others to the edge of {area}, to look and go in only if "
+                               "it is as the plan wants" if look else f"the party's plan sends me into {area} with the others"}
 
     async def held_back(self, area: str) -> str:
         """Why a hunt of its own choosing is refused, or "": a huddle member whose party forms up doesn't hunt the area
@@ -507,6 +529,9 @@ class Planner:
             here = None
         if plan is None or here is None or here[2].lower() != plan.lower():
             return ""
+        board = self.huddle.board() or {}
+        if self.looking is not None and self.looking == board.get("rev"):
+            return ""  # sent with the others to look from the edge (steer): the rally holds them there
         if await self.huddle.sends_in_now(getattr(self.session, "judge", None), plan):
             return ""
         board = self.huddle.board() or {}
@@ -535,8 +560,12 @@ class Planner:
             return None  # a mage with nothing to cast with; bandages are healing, and a fighter fights without them
         # ...and only a plan that sends the party in now: one that says hold, scout first or go in only on a sighting
         # named all five as going all the same (huddle.go_now_question).
-        if not await self.huddle.sends_in_now(getattr(self.session, "judge", None), area):
-            return None
+        judge = getattr(self.session, "judge", None)
+        if not await self.huddle.sends_in_now(judge, area):
+            # ...or one that holds them back until the ground is seen: they go to the edge together and look (cuo-cym.14).
+            if not await self.huddle.holds_for_a_look(judge, area):
+                return None
+            self.looking = board["rev"]
         return area, board["rev"]
 
     JOIN_WAIT_S = 90.0
@@ -698,7 +727,7 @@ class Planner:
         if tool == "recover_corpse" and self.party is not None and self.corpse_at:
             # Where, for the others to come back with the leader (party.Follower.follow).
             args = {**args, "x": self.corpse_at[0], "y": self.corpse_at[1]}
-        if tool == "hunt":
+        if tool in ("hunt", "watch"):
             try:
                 minutes = max(3.0, min(20.0, float(args.get("minutes") or 10)))
             except (TypeError, ValueError):
@@ -784,6 +813,8 @@ class Planner:
                             self.won = None
                         if r.ok and self.heart:
                             self.heart.note("an evening at the inn with the party, talking the hunt over")
+                case "watch":
+                    r = await s.watch(float(args["minutes"]))
                 case "evening":
                     hamlet = getattr(s, "hamlet", None)
                     if self.table is None or hamlet is None or not hamlet.gather:

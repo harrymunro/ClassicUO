@@ -99,6 +99,41 @@ def go_now_question(area: str) -> dict[str, Any]:
                                   "back; or stop the hunt."}}
 
 
+def look_question(area: str) -> dict[str, Any]:
+    """Of a plan that doesn't send the party in yet: whether what it waits for is something the party could see for
+    itself from the edge. With memory on, every plan said to go in only after a fresh scout, nobody was sent, and the
+    party never fought the lich (cuo-cym.14). Worded so on 29 held-back plans labelled before any model saw them
+    (bench/2026-10-27-look-plans.json, scripts/look_check.py): Decision 1 27 right, against 24 for the first wording,
+    which read "Before entering, a fresh scout from the western edge must show no lich" as not a look (0.29), live."""
+    return {"type": "noul",
+            "instructions": {"role": "A party of adventurers in the game Ultima Online agreed a plan in a huddle (`plan`). It "
+                                     f"doesn't send them into the fight at {area} straight away.",
+                             "question": f"Before they go into {area}, is the one thing the plan waits for a look at the "
+                                         "ground (a scout of it, a sighting, a count of what is there, whether a lich is "
+                                         "in view), which the party could make together from the edge?"},
+            "criteria": {"true": "Yes: scout first, go in only if no lich is seen, only if single or paired undead are in "
+                                 "view, only once a clear window is seen, a clear count of what is there.",
+                         "false": "No: it waits first for something else as well: someone raised or back, healed or rested, "
+                                  "a pet, supplies, a regroup somewhere else; or the hunt is off or elsewhere."}}
+
+
+def edge_question(area: str) -> dict[str, Any]:
+    """At the edge, with the ground in view: whether what the party sees meets the plan's condition for going in."""
+    return {"type": "noul",
+            "instructions": {"role": "A party of adventurers in the game Ultima Online agreed a plan (`plan`) that holds them "
+                                     f"back from the fight at {area} until they have seen the ground. They stand together "
+                                     "at its edge now, and `seen` is what is in view from there.",
+                             "question": f"Does what they see now meet the plan's condition for going into {area}?"},
+            "criteria": {"true": "Yes: what the plan waited to see is so: the way is clear enough, what it named is few, "
+                                 "apart or alone, and what it feared isn't there; they can go in now as it says.",
+                         "false": "No: what the plan feared is in view, or more than it would take on at once; they "
+                                  "should stay out."}}
+
+
+LOOKS = 2          # failed looks at one hunt in LOOKS_S, and its plan's hold is left to the members' planners
+LOOKS_S = 900.0
+
+
 def plan_state(board: dict[str, Any]) -> dict[str, Any]:
     return {"plan": {"target": board.get("target"), "roles": board.get("roles"), "rally": board.get("rally"),
                      **({"going": board["going"]} if board.get("going") else {})}}
@@ -147,6 +182,8 @@ class Huddle:
         self.dangers_seen: set[str] = set()
         self._area: tuple[int, str | None] = (0, None)  # the hunting area the plan of that revision names
         self._go_now: dict[int, bool] = {}  # revision -> whether that plan sends the party in now (go_now_question)
+        self._look: dict[int, bool] = {}    # revision -> whether what it waits for is a look from the edge (look_question)
+        self.looked: list[tuple[float, str]] = []  # (when, hunt) of each look from the edge that didn't send them in
 
     # ---- the store ------------------------------------------------------------------
 
@@ -206,6 +243,52 @@ class Huddle:
             self._go_now[board["rev"]] = p >= GO_NOW_CUT
             self.log({"type": "huddle", "t": time.time(), "rev": board["rev"], "go_now": round(p, 3)})
         return self._go_now[board["rev"]]
+
+    async def holds_for_a_look(self, judge: Any, area: str) -> bool:
+        """Whether the plan on the board holds the party back from its hunt at `area` until it has seen the ground
+        (look_question), asked once a revision; not after LOOKS failed looks at that hunt in LOOKS_S. No when the plan
+        sends them in now or names another hunt, and without system one (cuo-cym.14)."""
+        board = self.board()
+        plan = self.hunt_area()
+        if board is None or plan is None or plan.lower() != area.lower():
+            return False
+        if sum(1 for t, a in self.looked if a.lower() == area.lower() and time.time() - t < LOOKS_S) >= LOOKS:
+            return False
+        if await self.sends_in_now(judge, area):
+            return False
+        if board["rev"] not in self._look:
+            p = await self.yes(judge, plan_state(board), "look", look_question(area))
+            self._look[board["rev"]] = p is not None and p >= GO_NOW_CUT
+            self.log({"type": "huddle", "t": time.time(), "rev": board["rev"], "look": None if p is None else round(p, 3)})
+        return self._look[board["rev"]]
+
+    async def clear_to_go(self, judge: Any, area: str, seen: str) -> float:
+        """System one's yes to whether what the party sees from the edge meets the plan's condition (edge_question)."""
+        board = self.board() or {}
+        p = await self.yes(judge, {**plan_state(board), "seen": seen}, "clear", edge_question(area))
+        self.log({"type": "huddle", "t": time.time(), "rev": board.get("rev"), "edge": seen[:300],
+                  "clear": None if p is None else round(p, 3)})
+        return p or 0.0
+
+    async def seen_from_edge(self, area: str, seen: str) -> dict[str, Any] | None:
+        """A look from the edge that didn't send them in: a huddle at once, with what was seen, so the plan is made again
+        on it (the plan waited for exactly this, so the gap between huddles doesn't apply)."""
+        self.looked.append((time.time(), area))
+        return await self.call(f"the party looked from the edge of {area} as the plan said, and the plan's condition for "
+                               f"going in wasn't met: {seen}")
+
+    async def yes(self, judge: Any, state: dict[str, Any], key: str, question: dict[str, Any]) -> float | None:
+        """One of the plan's yes/nos for system one (Decision 1, kind order), or None without one or an answer."""
+        if judge is None or getattr(judge, "name", "") == "heuristic":
+            return None
+        try:
+            with costs.kind("order"):
+                ans = await judge.ask(state, {key: question})
+        except Exception as e:  # noqa: BLE001 - no answer: no
+            self.log({"type": "huddle", "t": time.time(), "error": f"{key}: {type(e).__name__}: {e}"[:200]})
+            return None
+        self.cost += ans.cost
+        return float(ans.nouls.get(key, 0.0))
 
     def rows(self, hid: int) -> list[dict[str, Any]]:
         return [dict(r) for r in self.world.db.execute(

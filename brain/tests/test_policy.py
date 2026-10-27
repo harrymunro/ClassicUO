@@ -766,3 +766,26 @@ def test_the_loop_counts_seeks_that_find_no_path(snapshot):
         asyncio.run(loop.decide_once(rpc, Seek(), sit, mem, CFG, loop.RunStats(), io.StringIO()))
     assert rpc.walks == 2 and mem.no_path == {0x101}
     assert state.build(snapshot, set(), [], no_path=mem.no_path).hostiles == []
+
+
+def test_on_watch_only_what_is_on_the_watchs_ground_or_on_the_character_is_fought(snapshot):
+    """cuo-m3n.12: a watch keeps the hamlet and doesn't chase what is off its ground."""
+    snapshot["mobiles"][0].update({"distance": 6, "dx": 6, "war_mode": True, "attacking_me": False})  # at 1006,1000
+    snapshot["mobiles"][1].update({"distance": 6, "dx": -6, "war_mode": True})                     # at 994,1002
+    ground = lambda x, y: x >= 1000  # the hamlet lies east
+    sit = state.build(snapshot, set(), [])
+    policy.decide(sit, answers("seek", target="t1"), policy.Memory(), policy.PolicyConfig(ground=ground))
+    assert [h.serial for h in sit.hostiles if h.allowed] == [0x100]
+    # A dog the bestiary calls peaceful, on the ground, is let be; an orc standing idle there isn't.
+    dog = {**snapshot["mobiles"][0], "serial": 0x103, "name": "a dog", "body": 217, "war_mode": False, "dx": 3, "distance": 3}
+    idle = {**snapshot["mobiles"][0], "serial": 0x104, "war_mode": False, "dx": 4, "distance": 4}
+    beasts = {217: {"type": "Dog", "name": "a dog", "hits": 20, "difficulty": "weak", "peaceful": True},
+              17: {"type": "Orc", "name": "an orc", "hits": 60, "difficulty": "weak"}}
+    sit = state.build({**snapshot, "mobiles": [*snapshot["mobiles"], dog, idle]}, set(), [], bestiary=beasts)
+    policy.decide(sit, answers("seek", target="t1"), policy.Memory(), policy.PolicyConfig(ground=ground))
+    assert sorted(h.serial for h in sit.hostiles if h.allowed) == [0x100, 0x104]
+    # ...unless it is on the character.
+    snapshot["mobiles"][1].update({"distance": 1, "dx": -1, "attacking_me": True})
+    sit = state.build(snapshot, set(), [])
+    policy.decide(sit, answers("fight", target="t1"), policy.Memory(), policy.PolicyConfig(ground=ground))
+    assert sorted(h.serial for h in sit.hostiles if h.allowed) == [0x100, 0x101]
