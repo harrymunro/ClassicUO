@@ -4294,6 +4294,43 @@ A visit to a neighbour's home says whether they are there. Checked live on the t
   sight)" with him logged out, and as a ghost (the living don't see ghosts); "Brannoc is here, 0 tiles away,
   unhurt" with him at his gate (now "beside you"); "Wenna isn't here (not in sight)".
 
+#### A second lands hour, with the trip driven back and the neighbour's home
+
+2026-10-27 09:13 to 10:16, the same file, server and client, on the brain frozen at 2c8c7c3e8 (the driven-back trip,
+the neighbour's home; not the guards' call on savages, which came after), headless, memory on, the residents'
+memories set aside. Single run. Not filmed.
+
+```bash
+cd brain
+PYTHONPATH=$PWD/src-frozen-m3n19 uv run uo-brain fleet fleets/hamlet-cove-lands.toml \
+  --out logs/fleet/20261027-091308-hamlet-cove-lands-m3n19
+uv run uo-brain hamlet-report logs/fleet/20261027-091308-hamlet-cove-lands-m3n19
+uv run uo-brain hamlet-report RUN --json --lands "south-west of Cove Cemetery" --lands "near Cove Orc Fort" \
+  --lands "wilderness near 2400,1100" --lands "north-east of Cove Guard Post"     # with the far grounds as lands
+```
+
+| | Brannoc | Wenna | Maren | Tamsin | the four |
+|---|---|---|---|---|---|
+| in Cove or its lands | 63% | 80% | 75% | 12% | 57% |
+| ...with the two far grounds as lands | 84% | 88% | 76% | 76% | 81% |
+| in Cove itself | 34% | 48% | 68% | 7% | 39% |
+| home between pieces of work | 5 of 5 | 7 of 8 | 4 of 6 | 3 of 6 | 19 of 25 |
+| kills, deaths | 7, 1 | 15, 0 | 0, 1 | 9, 0 | 31, 2 |
+
+$0.291 together ($0.280 an hour), 22 lines to a neighbour.
+
+- **Two deaths, both in the first three minutes,** to savage riders just east of Cove (Brannoc on his first sweep,
+  Maren on her way home from the woods); none after. Nothing turned criminal near a resident in the guards' ground.
+- **Tamsin** hunted the wilderness near 2400,1100, 159 tiles east and outside the lands, for 15 minutes three times,
+  coming home between but setting straight out again (never seen at home in a 30 s look); between them she banked
+  503 gold at Vesper's, chosen by its road (654 steps with 47 priced, against Minoc's 790 with 47), 284 s there and
+  413 s home. Maren, with her corpse lost to the riders, named Vesper's bank herself for 200 gold, 372 s there.
+- **Neither fix was called on:** no trip was driven back and nobody walked to a neighbour's home in this hour.
+- **With the far grounds as lands** (Tamsin's wilderness near 2400,1100 and Wenna's ground north-east of Cove Guard
+  Post, 159 and 200 tiles out), every resident was in Cove or on them most of the hour, as in the lands hour of
+  2026-10-24 (76% to 94%); the first hour of 2026-10-27 comes to 77% that way, Wenna 61% with her three deaths.
+  Whether those grounds are Cove's land is Harry's call (cuo-m3n.3).
+
 ## Calling the guards (cuo-m3n.14)
 
 2026-10-24, the soak server (2595), one headless warrior (Brutus, 95 hits) in Cove's street at 2262,1212, inside the
